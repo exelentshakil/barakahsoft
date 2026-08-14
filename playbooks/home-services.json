@@ -1,0 +1,50 @@
+{
+  "slug": "home-services",
+  "industry_label": "Home Services",
+  "converting_recipes": [
+    "Lead with the phone-ring outcome, not the aesthetics — the buyer's real question is 'will my phone ring', per PRD §3a",
+    "Show a same-day/emergency response CTA above the fold if hours/service data supports it",
+    "Put a service-area map or postcode list near the top — trade buyers filter on 'do they cover me' before anything else",
+    "Use real before/after or job photos over any stock image when available"
+  ],
+  "local_seo_patterns": [
+    "One H2 per real scraped service, worded as a search query (e.g. 'Emergency Boiler Repair in Coleraine')",
+    "One H2 per real scraped service area town — never invent a town not present in facts",
+    "NAP in the footer as text, not just an image, with tel: and mailto: links",
+    "LocalBusiness JSON-LD subtype matched to the trade (Plumber, Electrician, RoofingContractor, etc.)"
+  ],
+  "facebook_ad_angles": [
+    "Before/after or job-site photo + 'Free instant homepage redesign, see it in 48h'",
+    "Screen-recording of the AI build happening live — the build itself is the hook",
+    "Local trust angle: 'Serving [town] since [year]' when years_in_business is a real fact"
+  ],
+  "trust_signals": [
+    "Real Google rating + review count from Places (never a rounded-up or invented number)",
+    "Licenses/certifications only if present in scraped facts or provided by the operator",
+    "Years in business only if stated on their existing site or provided directly"
+  ],
+  "forbidden_slop": [
+    "Generic handshake stock photos",
+    "Generic laptop/office stock photos unrelated to the trade",
+    "\"World-class\", \"cutting-edge\", \"state-of-the-art\" and similar generic-AI-cliché phrases",
+    "Invented review counts or testimonials not present in facts",
+    "Invented service-area towns not present in facts"
+  ],
+  "photo_queries": {
+    "hero": "professional tradesperson at work van",
+    "proof": "before after home renovation",
+    "team": "local contractor team job site"
+  },
+  "faq_seed_questions": [
+    "How much does it cost?",
+    "Do you offer financing?",
+    "How quickly can you get to me?",
+    "Are you insured?",
+    "What's your warranty or guarantee?",
+    "What areas do you cover?",
+    "Do you offer free quotes?",
+    "What happens during the appointment?",
+    "Do you work weekends or evenings?",
+    "How do I book?"
+  ]
+}

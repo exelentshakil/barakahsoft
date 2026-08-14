@@ -1,0 +1,49 @@
+{
+  "slug": "karting-recreation",
+  "industry_label": "Karting / Outdoor Recreation",
+  "converting_recipes": [
+    "Lead with the redesign visuals, not the ad-preview — this buyer's own customers judge them on the experience they can see (closer to Creative/Agency-Adjacent framing per PRD §3a than pure Home Services)",
+    "Group-booking and party-package flows convert better than a single 'book now' — surface Corporate/Stag-Hen/Kids as distinct paths, mirroring their real nav",
+    "Weather-dependency is the #1 objection for outdoor recreation — answer it directly in the FAQ, don't bury it",
+    "Group size and age/height restrictions belong near the top of any package section — the #1 pre-booking question"
+  ],
+  "local_seo_patterns": [
+    "One H2 per real scraped package/event type (e.g. Corporate Events, Team Building, Stag & Hen, Kids)",
+    "One H2 for the primary location/town from Places",
+    "NAP in the footer as text with tel:/mailto:, matching the visible Google Business Profile listing exactly",
+    "LocalBusiness JSON-LD subtype: SportsActivityLocation or similar"
+  ],
+  "facebook_ad_angles": [
+    "Action shot (kart on track) + 'Free instant homepage redesign, see it in 48h'",
+    "Group-booking angle: 'Planning a stag/hen/corporate day? See your new site first'",
+    "Real review-count trust angle if Places data supports it"
+  ],
+  "trust_signals": [
+    "Real Google rating + review count from Places — cross-check any on-site review claim (e.g. a banner number) against the real Places figure before using it",
+    "Safety equipment / certification mentions only if present in scraped facts",
+    "Years in operation only if stated on their existing site"
+  ],
+  "forbidden_slop": [
+    "Generic stock go-kart photos unrelated to the actual track/venue",
+    "\"Adrenaline rush\", \"heart-pumping action\" and similar generic extreme-sports cliché copy",
+    "Invented review counts or testimonials not present in facts",
+    "Invented age/weight/height restrictions not present in facts — verify with the operator before publishing"
+  ],
+  "photo_queries": {
+    "hero": "outdoor go kart track racing",
+    "proof": "karting helmet action shot",
+    "team": "outdoor recreation group event"
+  },
+  "faq_seed_questions": [
+    "How much does it cost per person?",
+    "What's the minimum age or height?",
+    "What happens if it rains?",
+    "Do you take group/corporate bookings?",
+    "Is insurance included?",
+    "How long does a session last?",
+    "Do I need to book in advance?",
+    "What should I wear?",
+    "Do you host birthday parties?",
+    "How do I book?"
+  ]
+}

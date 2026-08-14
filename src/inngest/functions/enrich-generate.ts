@@ -1,0 +1,144 @@
+import { inngest } from "@/inngest/client";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { generateHeadline, generateSubhead, type Facts, type GenerationContext } from "@/lib/ai";
+import { detectIndustry, loadPlaybook } from "@/lib/playbooks";
+import { deriveServiceCandidates } from "@/lib/derive-services";
+import { generateServiceSection, generateDifferentiatorSection, generateFaqSections } from "@/lib/generate-section";
+import { runPhotoWaterfall } from "@/lib/photo-waterfall";
+import { researchCompetitors } from "@/lib/research-competitors";
+import type { PageInventory } from "@/lib/scrape/extract-text";
+import type { FunnelPageSection } from "@/types/database";
+
+// enrich.generate — RedesignEngine stage 2 (plan §5): detect_industry +
+// load_playbook + ResearchCompetitors + GenerateSectionContent x N (hero,
+// differentiator, services, FAQ) + PhotoWaterfall -> one artifacts row with
+// funnel_pages. Areas are intentionally left empty here — real service-area
+// data isn't reliably extractable from Places' free-tier fields yet, and
+// the grounding rule ("never invent a service area") means an empty list
+// beats a fabricated one. Add real area extraction before scaling past case 0.
+export const enrichGenerate = inngest.createFunction(
+  { id: "enrich-generate" },
+  { event: "scrape/completed" },
+  async ({ event, step }) => {
+    const { lead_id } = event.data as { lead_id: string };
+    const admin = createAdminClient();
+
+    await step.run("mark-enriching", async () => {
+      await admin.from("leads").update({ status: "enriching" }).eq("id", lead_id);
+      await admin.from("build_jobs").insert({ lead_id, stage: "enrich", status: "running", pages_total: 1 });
+    });
+
+    const { scrapeResults, placeId } = await step.run("load-scrape-results", async () => {
+      const [{ data: scrape }, { data: lead }] = await Promise.all([
+        admin.from("scrape_results").select("*").eq("lead_id", lead_id).single(),
+        admin.from("leads").select("place_id").eq("id", lead_id).single(),
+      ]);
+      if (!scrape) throw new Error(`enrich-generate: no scrape_results for lead ${lead_id}`);
+      return { scrapeResults: scrape, placeId: lead?.place_id ?? undefined };
+    });
+
+    const facts = scrapeResults.facts as Facts;
+    const placesRaw = scrapeResults.places_raw as { lat: number | null; lng: number | null } | null;
+    const location = placesRaw?.lat != null && placesRaw?.lng != null ? { lat: placesRaw.lat, lng: placesRaw.lng } : null;
+
+    const industry = await step.run("detect-industry", async () => {
+      const detected = detectIndustry(facts);
+      await admin.from("leads").update({ industry: detected }).eq("id", lead_id);
+      return detected;
+    });
+
+    const playbook = loadPlaybook(industry);
+    const town = (facts.town as string) || null;
+
+    // Real local competitors, not a generic prompt in a vacuum — the
+    // explicit ask: research 5-10 real businesses in this niche/location
+    // and let their real headlines/brand colors inform tone before writing
+    // this business's own copy. Also seeds the Phase 8 Competitors tab.
+    const competitorResearch = await step.run("research-competitors", async () => {
+      const research = await researchCompetitors(playbook.industry_label, location, placeId);
+      await admin
+        .from("scrape_results")
+        .update({ facts: { ...facts, competitors: research.competitors, design_brief: research.designBrief } })
+        .eq("lead_id", lead_id);
+      return research;
+    });
+
+    const genContext: GenerationContext = { industryLabel: playbook.industry_label, town, designBrief: competitorResearch.designBrief };
+
+    const sections = await step.run("generate-sections", async () => {
+      const [headline, subhead] = await Promise.all([generateHeadline(facts, genContext), generateSubhead(facts, genContext)]);
+      const heroSection: FunnelPageSection = { slug: "hero", kind: "hero", h2: headline, body_content: subhead, media_asset_ids: [], cta: null };
+
+      const differentiator = await generateDifferentiatorSection(facts, genContext);
+
+      const serviceCandidates = deriveServiceCandidates((facts.pages as PageInventory[]) ?? []);
+      const serviceSections = await Promise.all(
+        serviceCandidates.map((c) => generateServiceSection(facts, c.name, c.slug, []))
+      );
+
+      const faqSections = await generateFaqSections(facts, playbook.faq_seed_questions);
+
+      return { heroSection, differentiator, serviceSections, faqSections };
+    });
+
+    await step.run("run-photo-waterfall", async () => {
+      const requiredSlots = [
+        { slotHint: "hero", playbookQueryKey: "hero" },
+        { slotHint: "proof", playbookQueryKey: "proof" },
+        ...sections.serviceSections.map((s) => ({ slotHint: `service:${s.slug}`, playbookQueryKey: "team" })),
+      ];
+      await runPhotoWaterfall(lead_id, facts, playbook, requiredSlots);
+    });
+
+    await step.run("save-artifact", async () => {
+      const { data: shell } = await admin.from("template_shells").select("id").eq("slug", "home-services-v1").single();
+      if (!shell) throw new Error("enrich-generate: home-services-v1 template shell not found — did migrations run?");
+
+      const { data: mediaAssets } = await admin.from("media_assets").select("id, slot_hint").eq("lead_id", lead_id);
+      const mediaBySlot = new Map((mediaAssets ?? []).map((m) => [m.slot_hint, m.id]));
+
+      const funnelPages: FunnelPageSection[] = [
+        { ...sections.heroSection, media_asset_ids: mediaBySlot.has("hero") ? [mediaBySlot.get("hero")!] : [] },
+        { ...sections.differentiator, media_asset_ids: [] },
+        ...sections.serviceSections.map((s) => ({
+          slug: s.slug,
+          kind: s.kind,
+          h2: s.h2,
+          body_content: s.body_content,
+          media_asset_ids: mediaBySlot.has(`service:${s.slug}`) ? [mediaBySlot.get(`service:${s.slug}`)!] : [],
+          cta: s.cta,
+        })),
+        ...sections.faqSections.map((f) => ({ slug: f.slug, kind: f.kind, h2: f.h2, body_content: f.body_content, media_asset_ids: [], cta: f.cta })),
+      ];
+
+      // Grounding warnings from GenerateSectionContent aren't a hard gate
+      // (PRD §7 stage 5: a human makes the final call) — surfaced as
+      // qa_notes so QAReviewPanel shows the reviewer exactly what to check
+      // instead of re-reading every section from scratch.
+      const groundingWarnings = [
+        ...sections.differentiator.groundingWarnings.map((w) => `[Why choose us] ${w}`),
+        ...sections.serviceSections.flatMap((s) => s.groundingWarnings.map((w) => `[${s.h2}] ${w}`)),
+        ...sections.faqSections.flatMap((f) => f.groundingWarnings.map((w) => `[${f.h2}] ${w}`)),
+      ];
+
+      await admin.from("artifacts").upsert(
+        {
+          lead_id,
+          template_shell_id: shell.id,
+          extracted_assets: { guarantee: "Straightforward pricing, no surprises — confirmed before any work begins." },
+          funnel_pages: funnelPages,
+          qa_notes: groundingWarnings.length > 0 ? groundingWarnings.join("\n") : null,
+        },
+        { onConflict: "lead_id" }
+      );
+    });
+
+    await step.run("mark-enrich-complete", async () => {
+      await admin.from("build_jobs").update({ status: "complete", pages_done: 1 }).eq("lead_id", lead_id).eq("stage", "enrich");
+    });
+
+    await step.sendEvent("emit-enrich-completed", { name: "enrich/completed", data: { lead_id } });
+
+    return { lead_id };
+  }
+);

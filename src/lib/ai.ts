@@ -1,0 +1,137 @@
+// generate_* atoms — one Gemini-backed generator per content slot, each with
+// a rule-based fallback so the pipeline never hard-fails on a missing key.
+// Every function takes the lead's full scrape_results.facts blob (the
+// grounding source) plus a small slot-specific argument, and returns plain
+// text. Callers must still run the result through validate_grounding
+// (src/lib/grounding.ts) before it's trusted into artifacts.funnel_pages.
+
+export type Facts = Record<string, unknown>;
+
+// Populated by enrich-generate.ts from the playbook + ResearchCompetitors
+// molecule (src/lib/research-competitors.ts) — industryLabel isn't in facts
+// (it lives on leads.industry / the playbook, not the scrape), and
+// designBrief grounds tone against real local competitors rather than
+// writing in a vacuum, per the explicit ask to research the niche/location
+// before generating copy.
+export interface GenerationContext {
+  industryLabel: string;
+  town: string | null;
+  designBrief: string;
+}
+
+async function callGemini(prompt: string, model = "gemini-3.6-flash"): Promise<string | null> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.error("[ai] GEMINI_API_KEY is not set in this environment");
+    return null;
+  }
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+      }
+    );
+    if (!res.ok) {
+      const body = await res.text().catch(() => "<unreadable body>");
+      throw new Error(`Gemini API ${res.status}: ${body}`);
+    }
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    return text?.trim() || null;
+  } catch (err) {
+    console.error("[ai] Gemini call failed —", err);
+    return null;
+  }
+}
+
+function factsString(facts: Facts, keys: string[]): string {
+  return keys
+    .map((k) => (facts[k] != null ? `${k}: ${JSON.stringify(facts[k])}` : null))
+    .filter(Boolean)
+    .join("\n");
+}
+
+function contextBlock(context: GenerationContext): string {
+  return context.designBrief ? `\n\nCategory context: ${context.designBrief}` : "";
+}
+
+export async function generateHeadline(facts: Facts, context: GenerationContext): Promise<string> {
+  const businessName = (facts.business_name as string) || "This business";
+  const town = context.town || "";
+  const prompt = `Write a single homepage H1 headline (under 10 words, no emoji, no exclamation marks) for a local ${context.industryLabel} business in ${town || "their area"}, based only on these real facts:\n${factsString(
+    facts,
+    ["business_name", "town", "differentiators", "years_in_business"]
+  )}${contextBlock(context)}\n\nReply with the headline text only, nothing else.`;
+
+  const generated = await callGemini(prompt);
+  if (generated) return generated.replace(/^"|"$/g, "");
+
+  return town ? `${context.industryLabel} in ${town}` : `${businessName} — ${context.industryLabel}`;
+}
+
+export async function generateSubhead(facts: Facts, context: GenerationContext): Promise<string> {
+  const prompt = `Write a single homepage subheadline (one sentence, under 25 words, no emoji) for a ${context.industryLabel} business that supports the headline with a concrete trust signal, based only on these real facts:\n${factsString(
+    facts,
+    ["business_name", "years_in_business", "review_count", "rating", "service_area", "differentiators"]
+  )}${contextBlock(context)}\n\nReply with the subheadline text only, nothing else. If there is no real trust signal in the facts, write a plain statement of what the business does instead of inventing one.`;
+
+  const generated = await callGemini(prompt);
+  if (generated) return generated.replace(/^"|"$/g, "");
+
+  const reviewCount = facts.review_count as number | undefined;
+  const rating = facts.rating as number | undefined;
+  if (reviewCount && rating) return `Rated ${rating} from ${reviewCount} real reviews.`;
+  return "Local, reliable, and ready to help.";
+}
+
+export async function generateServiceLine(facts: Facts, service: string): Promise<string> {
+  const prompt = `Write one short service-card description (1-2 sentences, under 30 words, no emoji) for the "${service}" service, based only on these real facts about the business:\n${factsString(
+    facts,
+    ["business_name", "town", "service_area", "differentiators"]
+  )}\n\nDo not invent pricing, guarantees, or claims not present in the facts. Reply with the description text only.`;
+
+  const generated = await callGemini(prompt);
+  if (generated) return generated.replace(/^"|"$/g, "");
+  return `Professional ${service.toLowerCase()} from a local team you can trust.`;
+}
+
+export async function generateDifferentiator(facts: Facts, context: GenerationContext): Promise<string> {
+  const prompt = `Write one short "why choose us" claim (one sentence, under 20 words, no emoji) for a ${context.industryLabel} business, grounded ONLY in these real facts — do not invent anything not present here:\n${factsString(
+    facts,
+    ["years_in_business", "review_count", "rating", "certifications", "guarantee", "differentiators"]
+  )}${contextBlock(context)}\n\nReply with the claim text only. If none of the facts support a real differentiator, write "Local team, straightforward pricing, no surprises."`;
+
+  const generated = await callGemini(prompt);
+  if (generated) return generated.replace(/^"|"$/g, "");
+  return "Local team, straightforward pricing, no surprises.";
+}
+
+export async function generateAuditNarrative(facts: Facts): Promise<string> {
+  const pagespeed = facts.pagespeed as Record<string, unknown> | undefined;
+  const prompt = `Write a 2-3 sentence plain-English summary of this business's current website performance for a non-technical owner, based only on these real PageSpeed facts (never invent a number not present here):\n${JSON.stringify(
+    pagespeed ?? {}
+  )}\n\nReply with the summary text only, no markdown.`;
+
+  const generated = await callGemini(prompt);
+  if (generated) return generated;
+
+  const mobileScore = (pagespeed?.mobile as Record<string, unknown> | undefined)?.score;
+  return mobileScore
+    ? `Your current site scores ${mobileScore}/100 on mobile speed — there's real room to convert more of your traffic into calls.`
+    : "We weren't able to pull a speed score for your current site.";
+}
+
+export async function generateFaqAnswer(question: string, facts: Facts): Promise<string> {
+  const prompt = `Answer this FAQ question in 1-3 sentences, grounded ONLY in these real facts about the business — never invent a price, policy, or claim not present here. If the facts don't answer it, give a generic honest answer that tells the visitor to call to confirm.\n\nQuestion: ${question}\n\nFacts:\n${factsString(
+    facts,
+    ["business_name", "hours", "service_area", "phone", "guarantee", "certifications", "price_range"]
+  )}\n\nReply with the answer text only.`;
+
+  const generated = await callGemini(prompt);
+  if (generated) return generated;
+  return `Great question — call us and we'll confirm the details for your specific situation.`;
+}
