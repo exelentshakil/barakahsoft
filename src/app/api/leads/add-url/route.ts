@@ -34,7 +34,13 @@ export async function POST(req: Request) {
 
   if (error || !lead) return NextResponse.json({ error: error?.message ?? "Could not create lead" }, { status: 500 });
 
-  await inngest.send({ name: "lead/intake.submitted", data: { lead_id: lead.id } });
+  // Best-effort — a flaky Inngest connection should never mask that the lead
+  // itself was saved successfully (mirrors /api/intake).
+  try {
+    await inngest.send({ name: "lead/intake.submitted", data: { lead_id: lead.id } });
+  } catch (err) {
+    console.error("[add-url] inngest.send failed", err);
+  }
 
   return NextResponse.json({ lead_id: lead.id });
 }

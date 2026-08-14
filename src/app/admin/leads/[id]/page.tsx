@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { LeadDetailTabs } from "@/components/admin/LeadDetailTabs";
 import { OverviewTab } from "@/components/admin/lead-tabs/OverviewTab";
 import { RedesignTab } from "@/components/admin/lead-tabs/RedesignTab";
@@ -16,7 +16,9 @@ import type { CompetitorCandidate } from "@/lib/google/places";
 // atomic breakdown's admin page spec.
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
+  // Service-role client — these tables have RLS enabled with zero policies,
+  // so the session-bound client (which respects RLS) silently returns nothing.
+  const supabase = createAdminClient();
 
   const { data: lead } = await supabase.from("leads").select("*").eq("id", id).single<Lead>();
   if (!lead) notFound();

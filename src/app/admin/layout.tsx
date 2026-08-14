@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
@@ -9,7 +10,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { count: newLeadsCount } = await supabase
+  // Service-role client — `leads` has RLS enabled with zero policies, so the
+  // session-bound client above (which respects RLS) would silently return 0.
+  const { count: newLeadsCount } = await createAdminClient()
     .from("leads")
     .select("id", { count: "exact", head: true })
     .eq("status", "new");

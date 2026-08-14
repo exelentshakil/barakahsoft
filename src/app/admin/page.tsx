@@ -1,12 +1,14 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AddUrlDialog } from "@/components/admin/AddUrlDialog";
 
 export default async function AdminLeadsPage() {
-  const supabase = await createClient();
+  // Service-role client — `leads` has RLS enabled with zero policies, so the
+  // session-bound client (which respects RLS) silently returns nothing here.
+  const supabase = createAdminClient();
   const { data: leads } = await supabase
     .from("leads")
     .select("id, business_name, source_url, status, created_at")
