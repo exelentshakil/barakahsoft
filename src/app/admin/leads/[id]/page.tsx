@@ -52,7 +52,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           {
             id: "map",
             label: "Map grid",
-            content: <MapGridTab businessName={lead.business_name || lead.source_url} address={address} competitors={competitors} />,
+            content: <MapGridTab address={address} competitors={competitors} />,
           },
           { id: "competitors", label: "Competitors", content: <CompetitorsTab competitors={competitors} designBrief={designBrief} /> },
           { id: "close", label: "How to close", content: <HowToCloseTab steps={closePlanSteps ?? []} /> },

@@ -6,16 +6,17 @@ import type { CompetitorCandidate } from "@/lib/google/places";
 // plain Google Maps search links — the operator's "here's the competitive
 // landscape" view, not an interactive map product in its own right.
 export function MapGridTab({
-  businessName,
   address,
   competitors,
 }: {
-  businessName: string;
   address: string | null;
   competitors: CompetitorCandidate[];
 }) {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
-  const mapQuery = address || businessName;
+  // Business name alone is too generic to geolocate reliably (a short or
+  // common name can match an unrelated place worldwide) — only map once
+  // the scrape has produced a real address.
+  const mapQuery = address;
 
   return (
     <div className="space-y-6">
