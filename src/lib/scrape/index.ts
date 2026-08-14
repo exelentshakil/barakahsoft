@@ -1,6 +1,6 @@
 import { fetchSiteHtml } from "@/lib/scrape/fetch-site";
 import { extractPhotos } from "@/lib/scrape/extract-photos";
-import { extractPageInventory, extractContactInfoFromPage } from "@/lib/scrape/extract-text";
+import { extractPageInventory, extractContactInfoFromPage, deriveSiteName } from "@/lib/scrape/extract-text";
 import { extractExistingSchema } from "@/lib/scrape/extract-schema";
 import { extractLogoColor } from "@/lib/scrape/extract-logo-color";
 import { rankPhotoQuality, type RankedPhoto } from "@/lib/scrape/rank-photos";
@@ -25,7 +25,12 @@ export async function scrapeBusiness(leadId: string, sourceUrl: string, business
   const existingSchema = homepage ? extractExistingSchema(homepage) : [];
   const logoColor = homepage ? extractLogoColor(homepage) : { logoUrl: null, brandColorHex: null, brandColorHsl: null };
 
-  const places = await callPlacesApi(businessNameHint || new URL(sourceUrl).hostname, contactInfo.phones[0]);
+  // The site's own declared name (from its <title>) is a far more reliable
+  // Places query than businessNameHint — for real leads that's the intake
+  // form's "name" field, i.e. the submitter's own contact name, not a
+  // business name, and using it here matched Places to unrelated people.
+  const siteName = deriveSiteName(pageInventory[0]?.title ?? null);
+  const places = await callPlacesApi(siteName ?? new URL(sourceUrl).hostname, contactInfo.phones[0]);
   const gbpPhotoUrls = (places?.photo_refs ?? [])
     .map((ref) => resolvePlacesPhotoUrl(ref))
     .filter((url): url is string => !!url);
@@ -33,7 +38,7 @@ export async function scrapeBusiness(leadId: string, sourceUrl: string, business
   const pagespeed = await callPagespeedApi(sourceUrl);
 
   const facts = {
-    business_name: businessNameHint ?? places?.name ?? null,
+    business_name: places?.name ?? siteName ?? businessNameHint ?? null,
     source_url: sourceUrl,
     pages: pageInventory,
     nap: {

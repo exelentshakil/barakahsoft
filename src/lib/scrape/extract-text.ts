@@ -76,3 +76,13 @@ export function extractContactInfoFromPage(page: FetchedPage): ExtractedContactI
   const bodyText = $("body").text();
   return extractContactInfo($, bodyText);
 }
+
+// Titles are typically "Business Name | Tagline" or "Business Name - City" —
+// take the first segment as the real business name. This is the site's own
+// declared identity, and should outrank anything a lead-capture form collects
+// (that field is the submitter's own contact name, not the business's).
+export function deriveSiteName(title: string | null): string | null {
+  if (!title) return null;
+  const first = title.split(/[|\-–—]/)[0]?.trim();
+  return first && first.length > 1 ? first : null;
+}
