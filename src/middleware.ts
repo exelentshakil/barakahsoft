@@ -27,10 +27,28 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (request.nextUrl.pathname.startsWith("/admin") && !user) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("next", request.nextUrl.pathname);
-    return NextResponse.redirect(loginUrl);
+  if (request.nextUrl.pathname.startsWith("/admin")) {
+    if (!user) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("next", request.nextUrl.pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // Any Supabase user can complete a magic-link sign-in — being logged in
+    // is not being authorized. `accounts` is the allowlist; add/remove
+    // operators directly in Supabase (insert/delete a row by email).
+    const { data: account } = await supabase
+      .from("accounts")
+      .select("email")
+      .eq("email", user.email)
+      .maybeSingle();
+
+    if (!account) {
+      await supabase.auth.signOut();
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("error", "not_authorized");
+      return NextResponse.redirect(loginUrl);
+    }
   }
 
   return response;

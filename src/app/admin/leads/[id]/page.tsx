@@ -7,6 +7,8 @@ import { AuditTab } from "@/components/admin/lead-tabs/AuditTab";
 import { MapGridTab } from "@/components/admin/lead-tabs/MapGridTab";
 import { CompetitorsTab } from "@/components/admin/lead-tabs/CompetitorsTab";
 import { HowToCloseTab } from "@/components/admin/lead-tabs/HowToCloseTab";
+import { EditLeadDialog } from "@/components/admin/EditLeadDialog";
+import { DeleteLeadButton } from "@/components/admin/DeleteLeadButton";
 import { Badge } from "@/components/ui/badge";
 import type { Lead, Artifact, ScrapeResults, ClosePlanStep } from "@/types/database";
 import type { CompetitorCandidate } from "@/lib/google/places";
@@ -41,7 +43,11 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           <h1 className="font-display text-2xl font-semibold">{lead.business_name || lead.source_url}</h1>
           <p className="text-sm text-muted-foreground">{lead.source_url}</p>
         </div>
-        <Badge variant="outline">{lead.status}</Badge>
+        <div className="flex items-center gap-1">
+          <Badge variant="outline">{lead.status}</Badge>
+          <EditLeadDialog leadId={lead.id} businessName={lead.business_name} sourceUrl={lead.source_url} />
+          <DeleteLeadButton leadId={lead.id} />
+        </div>
       </div>
 
       <LeadDetailTabs
