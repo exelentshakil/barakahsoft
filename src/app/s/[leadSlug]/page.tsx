@@ -60,6 +60,9 @@ export default async function LeadSitePage({ params }: { params: Promise<{ leadS
 
   return (
     <>
+      {/* next/font/google can't do per-request fonts — this is a real
+          Google Fonts CDN link, App Router hoists it into <head>. */}
+      {payload.fontStylesheetUrl && <link rel="stylesheet" href={payload.fontStylesheetUrl} />}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
       {faqSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
       <HomeServicesV1Shell payload={payload} />

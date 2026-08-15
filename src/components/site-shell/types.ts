@@ -31,6 +31,8 @@ export interface SitePayload {
   socialUrls: string[];
   brandColorHsl: string | null;
   logoUrl: string | null;
+  fontFamily: string | null;
+  fontStylesheetUrl: string | null;
   innerPagesBuilt: boolean;
   leadSlug: string;
   sectionVariants: Record<string, string>;

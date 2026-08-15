@@ -21,9 +21,19 @@ import type { SitePayload } from "@/components/site-shell/types";
 // falling back to each kind's default (= this file's original markup) when
 // a selection is missing or invalid. See src/components/site-shell/sections/.
 export function HomeServicesV1Shell({ payload }: { payload: SitePayload }) {
-  const style = payload.brandColorHsl
-    ? ({ ["--primary" as string]: payload.brandColorHsl, ["--ring" as string]: payload.brandColorHsl } as React.CSSProperties)
-    : undefined;
+  const cssVars: Record<string, string> = {};
+  if (payload.brandColorHsl) {
+    cssVars["--primary"] = payload.brandColorHsl;
+    cssVars["--ring"] = payload.brandColorHsl;
+  }
+  if (payload.fontFamily) {
+    // Real per-lead font, quoted and falling back to the site's default —
+    // same per-payload CSS-variable override pattern as brand color above.
+    const fontStack = `"${payload.fontFamily}", var(--font-sans)`;
+    cssVars["--font-sans"] = fontStack;
+    cssVars["--font-display"] = fontStack;
+  }
+  const style = Object.keys(cssVars).length > 0 ? (cssVars as React.CSSProperties) : undefined;
 
   const Hero = resolveSectionVariant("hero", payload.sectionVariants.hero);
   const Proof = resolveSectionVariant("proof", payload.sectionVariants.proof);

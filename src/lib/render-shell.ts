@@ -62,6 +62,8 @@ export function renderShell(
     socialUrls: (facts.social_urls as string[]) ?? [],
     brandColorHsl: (facts.brand_color_hsl as string) ?? null,
     logoUrl: (facts.logo_url as string) ?? null,
+    fontFamily: (facts.font as { googleFontFamily?: string } | undefined)?.googleFontFamily ?? null,
+    fontStylesheetUrl: (facts.font as { googleFontStylesheetUrl?: string } | undefined)?.googleFontStylesheetUrl ?? null,
     innerPagesBuilt: artifact.inner_pages_built,
     leadSlug: lead.slug,
     sectionVariants: artifact.section_variant_selections ?? {},

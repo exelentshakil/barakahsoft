@@ -3,6 +3,7 @@ import { extractPhotos } from "@/lib/scrape/extract-photos";
 import { extractPageInventory, extractContactInfoFromPage, deriveSiteName } from "@/lib/scrape/extract-text";
 import { extractExistingSchema } from "@/lib/scrape/extract-schema";
 import { extractLogoColor } from "@/lib/scrape/extract-logo-color";
+import { extractFont } from "@/lib/scrape/extract-font";
 import { rankPhotoQuality, type RankedPhoto } from "@/lib/scrape/rank-photos";
 import { captionUnlabeledPhotos } from "@/lib/scrape/caption-photos";
 import { callPlacesApi, resolvePlacesPhotoUrl } from "@/lib/google/places";
@@ -26,6 +27,7 @@ export async function scrapeBusiness(leadId: string, sourceUrl: string, business
   const contactInfo = homepage ? extractContactInfoFromPage(homepage) : { phones: [], emails: [], socialUrls: [] };
   const existingSchema = homepage ? extractExistingSchema(homepage) : [];
   const logoColor = homepage ? extractLogoColor(homepage) : { logoUrl: null, brandColorHex: null, brandColorHsl: null };
+  const font = homepage ? extractFont(homepage) : { googleFontFamily: null, googleFontStylesheetUrl: null };
 
   // The site's own declared name (from its <title>) is a far more reliable
   // Places query than businessNameHint — for real leads that's the intake
@@ -60,6 +62,7 @@ export async function scrapeBusiness(leadId: string, sourceUrl: string, business
     logo_url: logoColor.logoUrl,
     brand_color_hex: logoColor.brandColorHex,
     brand_color_hsl: logoColor.brandColorHsl,
+    font,
     site_photos: captionedSitePhotos.slice(0, 30),
     gbp_photo_urls: gbpPhotoUrls,
     pagespeed: { mobile: pagespeed.mobile, desktop: pagespeed.desktop },
