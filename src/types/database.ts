@@ -12,7 +12,7 @@ export type LeadStatus =
   | "paid"
   | "live";
 
-export type MediaAssetSource = "site" | "gbp" | "unsplash" | "pexels" | "upload";
+export type MediaAssetSource = "site" | "gbp" | "unsplash" | "pexels" | "upload" | "generated-video";
 
 export interface Account {
   id: string;

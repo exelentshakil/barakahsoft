@@ -43,12 +43,14 @@ export function renderShell(
 
   const heroMedia = heroSection?.imageUrl ?? mediaAssets.find((m) => m.slot_hint === "hero")?.public_url ?? null;
   const proofMedia = mediaAssets.find((m) => m.slot_hint === "proof")?.public_url ?? null;
+  const heroVideoMedia = mediaAssets.find((m) => m.slot_hint === "hero-video")?.public_url ?? null;
 
   return {
     businessName: lead.business_name || (facts.business_name as string) || new URL(lead.source_url).hostname,
     headline: heroSection?.h2 || (facts.business_name as string) || "Welcome",
     subhead: heroSection?.body_content || "",
     heroImageUrl: heroMedia,
+    heroVideoUrl: heroVideoMedia,
     proof: {
       rating: (facts.rating as number) ?? null,
       reviewCount: (facts.review_count as number) ?? null,

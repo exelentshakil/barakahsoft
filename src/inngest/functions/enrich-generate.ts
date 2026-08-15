@@ -15,6 +15,7 @@ import {
 import { runPhotoWaterfall } from "@/lib/photo-waterfall";
 import { researchCompetitors } from "@/lib/research-competitors";
 import { loadSectionVariantCatalog, selectSectionVariants } from "@/lib/compose-sections";
+import { buildHeroVideoPrompt, startHeroVideoGeneration, checkHeroVideoOperation, storeHeroVideo } from "@/lib/google/veo";
 import type { PageInventory } from "@/lib/scrape/extract-text";
 import type { FunnelPageSection } from "@/types/database";
 
@@ -83,6 +84,31 @@ export const enrichGenerate = inngest.createFunction(
       const catalog = await loadSectionVariantCatalog(industry);
       return selectSectionVariants(facts, playbook, competitorResearch, catalog);
     });
+
+    // Phase H — only bother generating if the composed hero variant would
+    // actually use it (an AI pick from the same catalog compose-sections
+    // already draws from). Bounded poll: ~2.5 min at 10s intervals, then
+    // gives up and lets HeroVideoBackground's own static-hero fallback
+    // handle it -- never blocks the rest of the pipeline on a slow/failed
+    // video job.
+    if (composition.selections.hero === "video-background") {
+      const operationName = await step.run("start-hero-video", async () => {
+        const prompt = buildHeroVideoPrompt(playbook.industry_label, town);
+        return startHeroVideoGeneration(prompt);
+      });
+
+      if (operationName) {
+        const MAX_POLLS = 15;
+        for (let i = 0; i < MAX_POLLS; i++) {
+          await step.sleep(`wait-hero-video-${i}`, "10s");
+          const status = await step.run(`check-hero-video-${i}`, () => checkHeroVideoOperation(operationName));
+          if (status.done) {
+            if (status.videoUri) await step.run("store-hero-video", () => storeHeroVideo(lead_id, status.videoUri!));
+            break;
+          }
+        }
+      }
+    }
 
     const sections = await step.run("generate-sections", async () => {
       const [headline, subhead] = await Promise.all([generateHeadline(facts, genContext), generateSubhead(facts, genContext)]);

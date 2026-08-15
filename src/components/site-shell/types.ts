@@ -12,6 +12,7 @@ export interface SitePayload {
   headline: string;
   subhead: string;
   heroImageUrl: string | null;
+  heroVideoUrl: string | null;
   proof: {
     rating: number | null;
     reviewCount: number | null;
