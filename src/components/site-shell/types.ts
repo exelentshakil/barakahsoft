@@ -22,6 +22,9 @@ export interface SitePayload {
   guarantee: string;
   services: ResolvedSection[];
   areas: ResolvedSection[];
+  // v3 (Phase L) — real service x area combination pages, only populated
+  // once enrich-expand.ts has run and found real extractable area names.
+  locationServices: ResolvedSection[];
   faq: FunnelPageSection[];
   // Phase E — each null unless real facts genuinely grounded it (never
   // rendered just to hit a section count).
@@ -43,6 +46,11 @@ export interface SitePayload {
   fontFamily: string | null;
   fontStylesheetUrl: string | null;
   innerPagesBuilt: boolean;
+  // v3 (Phase L) — whether enrich-expand.ts has finished for this lead.
+  // Orthogonal to innerPagesBuilt (payment/indexability): about/faq/legal/
+  // location pages need real expanded content to exist at all, regardless
+  // of whether the site has gone live.
+  fullSiteBuilt: boolean;
   leadSlug: string;
   sectionVariants: Record<string, string>;
 }

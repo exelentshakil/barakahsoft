@@ -1,4 +1,12 @@
-import { generateServiceLine, generateDifferentiator, generateFaqAnswer, type Facts, type GenerationContext } from "@/lib/ai";
+import {
+  generateServiceLine,
+  generateServiceLongBody,
+  generateLocationServiceBody,
+  generateDifferentiator,
+  generateFaqAnswer,
+  type Facts,
+  type GenerationContext,
+} from "@/lib/ai";
 import { validateGrounding } from "@/lib/grounding";
 import type { FunnelPageSection } from "@/types/database";
 
@@ -23,6 +31,36 @@ export async function generateServiceSection(
     cta: "Get a free quote",
     groundingWarnings: pass ? [] : reasons,
   };
+}
+
+// v3 (Phase L) — the deeper standalone-page content, generated only in
+// enrich-expand.ts and merged into an existing service section's
+// long_body_content field (not a new funnel_pages entry). Returns null
+// (never a fabricated fallback) when generation fails or facts don't
+// support it -- the standalone page template falls back to body_content.
+export async function generateServiceLongBodySection(
+  facts: Facts,
+  service: string,
+  slug: string,
+  context: GenerationContext
+): Promise<{ longBody: string | null; groundingWarnings: string[] }> {
+  const longBody = await generateServiceLongBody(facts, service, slug, context);
+  if (!longBody) return { longBody: null, groundingWarnings: [] };
+  const { pass, reasons } = validateGrounding(longBody, facts);
+  return { longBody, groundingWarnings: pass ? [] : reasons };
+}
+
+// Same shape for a real service x area combination page.
+export async function generateLocationServiceSection(
+  facts: Facts,
+  service: string,
+  area: string,
+  context: GenerationContext
+): Promise<{ longBody: string | null; groundingWarnings: string[] }> {
+  const longBody = await generateLocationServiceBody(facts, service, area, context);
+  if (!longBody) return { longBody: null, groundingWarnings: [] };
+  const { pass, reasons } = validateGrounding(longBody, facts);
+  return { longBody, groundingWarnings: pass ? [] : reasons };
 }
 
 export async function generateDifferentiatorSection(

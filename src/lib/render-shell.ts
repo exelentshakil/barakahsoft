@@ -31,6 +31,7 @@ export function renderShell(
 
   const services = resolvedSections.filter((s) => s.kind === "service");
   const areas = resolvedSections.filter((s) => s.kind === "area");
+  const locationServices = resolvedSections.filter((s) => s.kind === "location-service");
   const faq = resolvedSections.filter((s) => s.kind === "faq");
   const differentiatorSection = resolvedSections.find((s) => s.kind === "differentiator");
   const heroSection = resolvedSections.find((s) => s.kind === "hero");
@@ -60,6 +61,7 @@ export function renderShell(
     guarantee: (artifact.extracted_assets?.guarantee as string) || "",
     services,
     areas,
+    locationServices,
     faq,
     trustStrip,
     expertise,
@@ -79,6 +81,7 @@ export function renderShell(
     fontFamily: (facts.font as { googleFontFamily?: string } | undefined)?.googleFontFamily ?? null,
     fontStylesheetUrl: (facts.font as { googleFontStylesheetUrl?: string } | undefined)?.googleFontStylesheetUrl ?? null,
     innerPagesBuilt: artifact.inner_pages_built,
+    fullSiteBuilt: artifact.full_site_status === "complete",
     leadSlug: lead.slug,
     sectionVariants: artifact.section_variant_selections ?? {},
   };

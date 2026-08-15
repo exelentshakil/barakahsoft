@@ -89,6 +89,42 @@ export async function generateServiceLine(facts: Facts, service: string, slug?: 
   return town ? `Professional ${service.toLowerCase()} serving ${town}.` : `Professional ${service.toLowerCase()} from a local team you can trust.`;
 }
 
+// v3 (Phase L) — genuinely deeper standalone-page SEO copy, generated only
+// in enrich-expand.ts once a lead is qualified (not the fast homepage
+// pass). Same grounding discipline as generateServiceLine, just a much
+// larger constraint/digest budget since this is real organic-search
+// investment, not a card blurb. Returns null (not a generic fallback
+// string) on total failure — a long-form page with no real content to say
+// is worse than falling back to the short body_content the page template
+// already has.
+export async function generateServiceLongBody(facts: Facts, service: string, slug: string, context: GenerationContext): Promise<string | null> {
+  const servicePage = findRelevantPage(facts, slug ?? service);
+  const relevantPages = findRelevantPages(facts, slug ?? service);
+  const digest = await researchDigest(relevantPages, service);
+  const prompt = `Write a genuinely useful, detailed standalone webpage section (600-900 words, plain prose in 4-6 paragraphs separated by blank lines, no headings, no emoji, no bullet lists) about the "${service}" service for a ${context.industryLabel} business${context.town ? ` in ${context.town}` : ""}. Cover what the service actually involves, why it matters, and what makes this specific business's approach real and credible — grounded ONLY in the real facts below, never invented:\n${buildRichContext(
+    facts,
+    { relevantPage: servicePage, maxChars: 4000 }
+  )}${digest ? `\n\nAdditional real research on "${service}":\n${digest}` : ""}\n\nDo not invent pricing, guarantees, certifications, or claims not present in the facts above. If the real facts genuinely don't support 600+ words without inventing anything, write as much genuine, grounded content as they do support. Reply with the body text only.`;
+
+  const generated = await draftCritiqueRevise(prompt, digest, "600-900 words, plain prose paragraphs, no invented claims");
+  return generated ? generated.trim() : null;
+}
+
+// Same shape as generateServiceLongBody, for a location x service
+// combination page (e.g. "Roof Repair in Park Slope, Brooklyn") -- area is
+// a real string extracted by extract-service-areas.ts, never invented.
+export async function generateLocationServiceBody(facts: Facts, service: string, area: string, context: GenerationContext): Promise<string | null> {
+  const relevantPages = findRelevantPages(facts, service);
+  const digest = await researchDigest(relevantPages, `${service} in ${area}`);
+  const prompt = `Write a genuinely useful, detailed standalone webpage section (500-800 words, plain prose in 4-6 paragraphs separated by blank lines, no headings, no emoji, no bullet lists) about "${service}" specifically for customers in "${area}", for a ${context.industryLabel} business. Cover what the service involves and why this business is a credible choice for someone in that specific area — grounded ONLY in the real facts below, never invented (never invent details about the area itself beyond its name, never invent that the business has a physical presence there beyond what the facts state):\n${buildRichContext(
+    facts,
+    { maxChars: 4000 }
+  )}${digest ? `\n\nAdditional real research:\n${digest}` : ""}\n\nDo not invent pricing, guarantees, certifications, local landmarks, or claims not present in the facts above. If the real facts genuinely don't support 500+ words without inventing anything, write as much genuine, grounded content as they do support. Reply with the body text only.`;
+
+  const generated = await draftCritiqueRevise(prompt, digest, "500-800 words, plain prose paragraphs, no invented claims");
+  return generated ? generated.trim() : null;
+}
+
 export async function generateDifferentiator(facts: Facts, context: GenerationContext): Promise<string> {
   const homepage = findRelevantPage(facts);
   const digest = await researchDigest(findRelevantPages(facts), "why choose this business");

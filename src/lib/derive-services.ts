@@ -32,15 +32,24 @@ const STOPLIST = [
   "sign in",
 ];
 
-const MAX_SERVICES = 15;
+export const MAX_SERVICES = 15;
 
-export function deriveServiceCandidates(pages: PageInventory[]): { name: string; slug: string }[] {
+// v3 -- enrich-generate.ts's fast homepage pass caps this to a handful of
+// top services (FAST_PASS_SERVICE_CAP); enrich-expand.ts calls this again
+// uncapped once a lead is qualified, so the same real nav-derived ordering
+// just gets more of the list rather than a second, different derivation.
+export function deriveServiceCandidates(pages: PageInventory[], cap: number = MAX_SERVICES): { name: string; slug: string }[] {
   const seen = new Map<string, string>();
 
   for (const page of pages) {
     for (const link of page.navLinks) {
       const clean = link.text.trim();
       if (!clean || clean.length > 60) continue;
+      // Real bug found in production data: a tel: nav link's visible text
+      // ("(917) 440-1800") was slipping through as a "service" once the
+      // uncapped v3 expansion pass reached far enough into the nav list. A
+      // real service name always has letters in it.
+      if (!/[a-zA-Z]/.test(clean)) continue;
       if (STOPLIST.includes(clean.toLowerCase())) continue;
       const slug = slugifyText(clean);
       if (!slug || seen.has(slug)) continue;
@@ -49,6 +58,6 @@ export function deriveServiceCandidates(pages: PageInventory[]): { name: string;
   }
 
   return Array.from(seen.entries())
-    .slice(0, MAX_SERVICES)
+    .slice(0, cap)
     .map(([slug, name]) => ({ name, slug }));
 }

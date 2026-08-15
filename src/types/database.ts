@@ -98,6 +98,11 @@ export interface FunnelPageSection {
   // Optional, additive — structured extras a section variant might need
   // beyond the baseline fields above. Old entries simply lack it.
   variant_props?: Record<string, unknown>;
+  // Longer-form standalone-page SEO copy, generated only by
+  // enrich-expand.ts once a lead is qualified. Optional/additive -- fast-
+  // pass sections simply lack it, and the standalone page templates fall
+  // back to body_content when absent.
+  long_body_content?: string;
 }
 
 export interface Artifact {
@@ -118,6 +123,14 @@ export interface Artifact {
   // in the DB (migration 00000000000016) so old rows still parse cleanly.
   section_variant_selections: Record<string, string>;
   composition_rationale: string | null;
+  // v3 (Phase L) -- whether the full multi-page site (remaining services,
+  // location-service pages, about/faq/legal) has been built for this lead.
+  // Orthogonal to inner_pages_built (a post-payment routing/indexability
+  // gate) -- this is a separate, pre-payment "operator qualified this lead,
+  // build the rest" gate, flipped automatically by enrich-expand.ts the
+  // moment the lead is QA-approved, not by a payment event.
+  full_site_status: "pending" | "building" | "complete" | "failed";
+  full_site_built_at: string | null;
 }
 
 export type BuildJobStage =

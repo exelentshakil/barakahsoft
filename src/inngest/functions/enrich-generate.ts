@@ -19,13 +19,18 @@ import { buildHeroVideoPrompt, startHeroVideoGeneration, checkHeroVideoOperation
 import type { PageInventory } from "@/lib/scrape/extract-text";
 import type { FunnelPageSection } from "@/types/database";
 
+// v3 (Phase L) — this is now the FAST homepage-only pass: services are
+// capped to the top few real ones (see FAST_PASS_SERVICE_CAP below). The
+// rest, plus real service-area extraction and deeper standalone-page copy,
+// happen in enrich-expand.ts once an operator QA-approves the lead —
+// "areas intentionally left empty" no longer describes the whole pipeline,
+// just this fast pass.
+const FAST_PASS_SERVICE_CAP = 6;
+
 // enrich.generate — RedesignEngine stage 2 (plan §5): detect_industry +
 // load_playbook + ResearchCompetitors + GenerateSectionContent x N (hero,
 // differentiator, services, FAQ) + PhotoWaterfall -> one artifacts row with
-// funnel_pages. Areas are intentionally left empty here — real service-area
-// data isn't reliably extractable from Places' free-tier fields yet, and
-// the grounding rule ("never invent a service area") means an empty list
-// beats a fabricated one. Add real area extraction before scaling past case 0.
+// funnel_pages.
 export const enrichGenerate = inngest.createFunction(
   { id: "enrich-generate" },
   { event: "scrape/completed" },
@@ -121,7 +126,7 @@ export const enrichGenerate = inngest.createFunction(
     // video job.
     if (composition.selections.hero === "video-background") {
       const operationName = await step.run("start-hero-video", async () => {
-        const prompt = buildHeroVideoPrompt(playbook.industry_label, town);
+        const prompt = buildHeroVideoPrompt(playbook.industry_label, town, playbook.hero_video_cinematography);
         return startHeroVideoGeneration(prompt);
       });
 
@@ -144,7 +149,14 @@ export const enrichGenerate = inngest.createFunction(
 
       const differentiator = await generateDifferentiatorSection(facts, genContext);
 
-      const serviceCandidates = deriveServiceCandidates((facts.pages as PageInventory[]) ?? []);
+      // v3 (Phase L) — the fast homepage pass caps services to a handful of
+      // top real ones; the rest are only generated once an operator
+      // QA-approves the lead (enrich-expand.ts, triggered by the same
+      // lead/qa.approved event deliver-send.ts already listens to). This is
+      // the one real cost lever — everything else on the homepage (hero,
+      // FAQ, trust sections, video) stays full quality since that IS the
+      // "max wow factor" sales artifact, not the wasteful part.
+      const serviceCandidates = deriveServiceCandidates((facts.pages as PageInventory[]) ?? [], FAST_PASS_SERVICE_CAP);
       const serviceSections = await Promise.all(
         serviceCandidates.map((c) => generateServiceSection(facts, c.name, c.slug, []))
       );

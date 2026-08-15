@@ -18,7 +18,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ leadSlu
   if (result.payload.innerPagesBuilt) {
     for (const service of result.payload.services) urls.push(`${base}/services/${service.slug}`);
     for (const area of result.payload.areas) urls.push(`${base}/areas/${area.slug}`);
-    urls.push(`${base}/contact`, `${base}/booking`);
+    urls.push(`${base}/contact`, `${base}/booking`, `${base}/about`, `${base}/faq`, `${base}/privacy`, `${base}/terms`);
+
+    // v3 (Phase L) -- only real once enrich-expand.ts has actually run and
+    // found real extractable area names, same gate the route itself uses.
+    if (result.payload.fullSiteBuilt) {
+      for (const section of result.payload.locationServices) urls.push(`${base}/locations/${section.slug}`);
+    }
   }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
