@@ -37,7 +37,7 @@ export async function startHeroVideoGeneration(prompt: string): Promise<string |
       headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
       body: JSON.stringify({
         instances: [{ prompt }],
-        parameters: { aspectRatio: "16:9", resolution: "720p", durationSeconds: "8" },
+        parameters: { aspectRatio: "16:9", resolution: "720p", durationSeconds: 8 },
       }),
     });
     if (!res.ok) {
