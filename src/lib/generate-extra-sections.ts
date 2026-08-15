@@ -1,5 +1,6 @@
-import { callGemini, type Facts, type GenerationContext } from "@/lib/ai";
-import { findRelevantPage, buildRichContext } from "@/lib/facts-context";
+import type { Facts, GenerationContext } from "@/lib/ai";
+import { findRelevantPage, findRelevantPages, buildRichContext } from "@/lib/facts-context";
+import { draftCritiqueRevise, researchDigest } from "@/lib/generate-with-critique";
 import { validateGrounding } from "@/lib/grounding";
 import { countTrustSignals, findLicenseInsuranceMention } from "@/lib/trust-signals";
 import { parseJsonResponse } from "@/lib/parse-json-response";
@@ -57,12 +58,13 @@ export async function generateExpertiseSection(
   if (!hasDifferentiatorPhoto && signals.count < 2) return null;
 
   const homepage = findRelevantPage(facts);
+  const digest = await researchDigest(findRelevantPages(facts), "why choose this business, expertise, differentiators");
   const prompt = `Write 3-4 short bullet points (each under 15 words, no emoji) titled "Why choose us" for a ${context.industryLabel} business, grounded ONLY in these real facts — never invent a claim not present here:\n${buildRichContext(
     facts,
     { relevantPage: homepage }
-  )}\n\nReply with strict JSON only, no markdown: {"bullets": ["...", "..."]}. If fewer than 2 real bullets can be grounded, reply {"bullets": []}.`;
+  )}${digest ? `\n\nAdditional real research:\n${digest}` : ""}\n\nReply with strict JSON only, no markdown: {"bullets": ["...", "..."]}. If fewer than 2 real bullets can be grounded, reply {"bullets": []}.`;
 
-  const raw = await callGemini(prompt);
+  const raw = await draftCritiqueRevise(prompt, digest, "3-4 bullets, each under 15 words, valid JSON: {\"bullets\": [...]}");
   const parsed = raw ? parseJsonResponse(raw) : null;
   const bullets = Array.isArray(parsed?.bullets) ? (parsed!.bullets as unknown[]).filter((b): b is string => typeof b === "string") : [];
 
@@ -105,12 +107,14 @@ export function generateCtaBannerSection(facts: Facts, businessName: string): Se
 // NONE sentinel when the real content doesn't describe a real sequence.
 export async function generateProcessSection(facts: Facts, context: GenerationContext): Promise<SectionResult> {
   const page = findRelevantPage(facts, "how it works") ?? findRelevantPage(facts, "process") ?? findRelevantPage(facts);
+  const relevantPages = findRelevantPages(facts, "how it works process steps");
+  const digest = await researchDigest(relevantPages, "the business's real process or steps, if genuinely described");
   const prompt = `Look at this real business's real page content below. If it genuinely describes a numbered/sequential process (e.g. "1. Free estimate 2. We schedule 3. We do the work"), extract 3-5 real steps as JSON: {"steps": [{"title": "...", "description": "..."}]}. If the content does NOT genuinely describe a real sequential process, reply with the exact string NONE and nothing else — never invent a process that isn't really described.\n\nReal facts:\n${buildRichContext(
     facts,
     { relevantPage: page }
-  )}`;
+  )}${digest ? `\n\nAdditional real research:\n${digest}` : ""}`;
 
-  const raw = await callGemini(prompt);
+  const raw = await draftCritiqueRevise(prompt, digest, 'valid JSON {"steps": [{"title","description"}]} of 3-5 real steps, or exactly NONE', "NONE");
   if (!raw || raw.trim() === "NONE") return null;
 
   const parsed = parseJsonResponse(raw);
@@ -138,12 +142,13 @@ export async function generateProcessSection(facts: Facts, context: GenerationCo
 // audience-segments — same shape as process: real or skipped, never invented.
 export async function generateAudienceSegmentsSection(facts: Facts, context: GenerationContext): Promise<SectionResult> {
   const homepage = findRelevantPage(facts);
+  const digest = await researchDigest(findRelevantPages(facts), "different types of customers this business serves, if genuinely differentiated");
   const prompt = `Look at this real ${context.industryLabel} business's real page content below. If it genuinely differentiates between different types of customers it serves (e.g. residential vs commercial, homeowners vs property managers), extract 2-4 real segments as JSON: {"segments": [{"label": "...", "description": "..."}]}. If the content does NOT genuinely differentiate buyer types, reply with the exact string NONE and nothing else — never invent a segment that isn't really described.\n\nReal facts:\n${buildRichContext(
     facts,
     { relevantPage: homepage }
-  )}`;
+  )}${digest ? `\n\nAdditional real research:\n${digest}` : ""}`;
 
-  const raw = await callGemini(prompt);
+  const raw = await draftCritiqueRevise(prompt, digest, 'valid JSON {"segments": [{"label","description"}]} of 2-4 real segments, or exactly NONE', "NONE");
   if (!raw || raw.trim() === "NONE") return null;
 
   const parsed = parseJsonResponse(raw);

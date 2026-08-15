@@ -6,7 +6,10 @@
 
 import type { Facts } from "@/lib/ai";
 
-const GENERIC_SLOP_PHRASES = [
+// Exported for generate-with-critique.ts's critique prompt, which reuses
+// this exact list as one of its scoring criteria instead of inventing a
+// separate, possibly-inconsistent quality bar.
+export const GENERIC_SLOP_PHRASES = [
   "world-class",
   "cutting-edge",
   "state-of-the-art",

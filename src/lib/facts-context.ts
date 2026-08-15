@@ -32,6 +32,28 @@ export function findRelevantPage(facts: Facts, matchHint?: string | null): PageI
   return best ?? pages[0];
 }
 
+// Same scoring as findRelevantPage but returns the top N (default 3) instead
+// of just the single best match — used by generate-with-critique.ts's
+// research pass, which synthesizes across several real pages rather than
+// one truncated slice.
+export function findRelevantPages(facts: Facts, matchHint?: string | null, limit = 3): PageInventory[] {
+  const pages = (facts.pages as PageInventory[] | undefined) ?? [];
+  if (pages.length === 0) return [];
+  if (!matchHint) return pages.slice(0, limit);
+
+  const hint = matchHint.toLowerCase();
+  const scored = pages.map((page) => {
+    let score = 0;
+    if (page.url.toLowerCase().includes(hint)) score += 3;
+    if (page.title?.toLowerCase().includes(hint)) score += 2;
+    if (page.headings.some((h) => h.toLowerCase().includes(hint))) score += 2;
+    if (page.navLinks.some((l) => l.text.toLowerCase().includes(hint) || l.href.toLowerCase().includes(hint))) score += 1;
+    return { page, score };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, limit).map((s) => s.page);
+}
+
 const BASE_FACT_KEYS = ["business_name", "town", "rating", "review_count", "hours", "nap"];
 
 // Real, always-populated fields (see scrapeBusiness in src/lib/scrape/index.ts)
