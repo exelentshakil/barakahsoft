@@ -85,6 +85,34 @@ export const enrichGenerate = inngest.createFunction(
       return selectSectionVariants(facts, playbook, competitorResearch, catalog);
     });
 
+    // v3 — "the homepage should be a masterpiece" applies unconditionally
+    // for every new lead, not just when the AI composition step happens to
+    // pick it: these ten kinds now have one clearly best-in-class variant,
+    // so use it directly instead of leaving it to chance (same "one single
+    // premium design, not several competing options" philosophy as the rest
+    // of v3). Never touches already-delivered leads — this only runs inside
+    // enrich-generate.ts, which only ever executes once per brand-new lead;
+    // the plain variants stay the untouched registry.ts fallback for legacy
+    // artifacts and any total composition failure. hero is skipped when the
+    // AI already picked video-background — an even stronger premium
+    // experience that shouldn't be downgraded.
+    const PREMIUM_VARIANT_OVERRIDES: Record<string, string> = {
+      hero: "split-image-premium",
+      proof: "stat-grid-premium",
+      "services-grid": "card-grid-premium",
+      reviews: "carousel-premium",
+      "trust-strip": "badges-premium",
+      expertise: "split-glow-premium",
+      "cta-banner": "gradient-premium",
+      process: "timeline-premium",
+      "audience-segments": "cards-premium",
+      certifications: "glow-premium",
+    };
+    for (const [kind, premiumSlug] of Object.entries(PREMIUM_VARIANT_OVERRIDES)) {
+      if (kind === "hero" && composition.selections.hero === "video-background") continue;
+      composition.selections[kind] = premiumSlug;
+    }
+
     // Phase H — only bother generating if the composed hero variant would
     // actually use it (an AI pick from the same catalog compose-sections
     // already draws from). Bounded poll: ~2.5 min at 10s intervals, then

@@ -1,18 +1,57 @@
 "use client";
 
-import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { useEffect, useRef, useState, createContext, useContext } from "react";
+import { cn } from "@/lib/utils";
 
 type RevealVariant = "fade-up" | "fade-in" | "scale-in";
 
-const VARIANTS: Record<RevealVariant, Variants> = {
-  "fade-up": { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } },
-  "fade-in": { hidden: { opacity: 0 }, visible: { opacity: 1 } },
-  "scale-in": { hidden: { opacity: 0, scale: 0.94 }, visible: { opacity: 1, scale: 1 } },
+const HIDDEN_CLASSES: Record<RevealVariant, string> = {
+  "fade-up": "opacity-0 translate-y-6",
+  "fade-in": "opacity-0",
+  "scale-in": "opacity-0 scale-95",
 };
+const VISIBLE_CLASSES = "opacity-100 translate-y-0 scale-100";
+
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mq.matches);
+    const onChange = () => setReduced(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return reduced;
+}
+
+function useInViewOnce(ref: React.RefObject<HTMLElement | null>) {
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "0px 0px -10% 0px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref]);
+  return inView;
+}
 
 // Scroll-triggered entrance animation, used once per section/card instead
-// of everything just appearing instantly -- respects prefers-reduced-motion
-// (via useReducedMotion, falls back to a plain fade with no movement).
+// of everything just appearing instantly. Plain CSS transition + a native
+// IntersectionObserver -- not framer-motion's animate/whileInView engine,
+// which was observed getting stuck mid-transition (opacity frozen at a
+// fraction, never resolving) for above-the-fold content in the installed
+// version. Same real scroll-reveal effect, no dependency on whatever is
+// broken there. Respects prefers-reduced-motion (renders fully visible,
+// no transition, immediately).
 export function Reveal({
   children,
   variant = "fade-up",
@@ -24,46 +63,78 @@ export function Reveal({
   delay?: number;
   className?: string;
 }) {
-  const reduceMotion = useReducedMotion();
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInViewOnce(ref);
+  const reduceMotion = usePrefersReducedMotion();
+
+  if (reduceMotion) {
+    return <div className={className}>{children}</div>;
+  }
+
   return (
-    <motion.div
-      className={className}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-80px" }}
-      variants={reduceMotion ? VARIANTS["fade-in"] : VARIANTS[variant]}
-      transition={{ duration: reduceMotion ? 0.2 : 0.5, delay, ease: "easeOut" }}
+    <div
+      ref={ref}
+      className={cn("transition-all duration-500 ease-out", inView ? VISIBLE_CLASSES : HIDDEN_CLASSES[variant], className)}
+      style={{ transitionDelay: `${delay}s` }}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
-// Staggers its direct motion children in on scroll -- wrap a grid/list's
-// items each in a plain motion.div (variants inherited from this parent)
-// for services-grid/process-steps/badge-row style reveals.
+const StaggerContext = createContext(0.08);
+
+// Staggers its direct RevealItem children in on scroll -- pass each item's
+// list index to RevealItem (e.g. `.map((x, i) => <RevealItem index={i}>)`)
+// to get an increasing delay; the group's own inView state is shared via
+// a data attribute + MutationObserver rather than each item running its
+// own separate IntersectionObserver.
 export function RevealGroup({ children, className, stagger = 0.08 }: { children: React.ReactNode; className?: string; stagger?: number }) {
-  const reduceMotion = useReducedMotion();
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInViewOnce(ref);
+  const reduceMotion = usePrefersReducedMotion();
   return (
-    <motion.div
-      className={className}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ staggerChildren: reduceMotion ? 0 : stagger }}
-    >
-      {children}
-    </motion.div>
+    <div ref={ref} className={className} data-in-view={inView || reduceMotion ? "true" : "false"}>
+      <StaggerContext.Provider value={reduceMotion ? 0 : stagger}>{children}</StaggerContext.Provider>
+    </div>
   );
 }
 
-// One item inside a RevealGroup -- inherits hidden/visible from the parent's
-// whileInView state rather than triggering its own viewport observer.
-export function RevealItem({ children, variant = "fade-up", className }: { children: React.ReactNode; variant?: RevealVariant; className?: string }) {
-  const reduceMotion = useReducedMotion();
+// One item inside a RevealGroup -- reads whether the group is in view from
+// the DOM (data-in-view, set by the parent) via a MutationObserver, and
+// applies `index * stagger` as its own transition delay.
+export function RevealItem({
+  children,
+  variant = "fade-up",
+  className,
+  index = 0,
+}: {
+  children: React.ReactNode;
+  variant?: RevealVariant;
+  className?: string;
+  index?: number;
+}) {
+  const stagger = useContext(StaggerContext);
+  const itemRef = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const groupEl = itemRef.current?.closest("[data-in-view]");
+    if (!groupEl) return;
+    const check = () => setInView(groupEl.getAttribute("data-in-view") === "true");
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(groupEl, { attributes: true, attributeFilter: ["data-in-view"] });
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <motion.div className={className} variants={reduceMotion ? VARIANTS["fade-in"] : VARIANTS[variant]} transition={{ duration: reduceMotion ? 0.2 : 0.5, ease: "easeOut" }}>
+    <div
+      ref={itemRef}
+      className={cn("transition-all duration-500 ease-out", inView ? VISIBLE_CLASSES : HIDDEN_CLASSES[variant], className)}
+      style={{ transitionDelay: inView ? `${index * stagger}s` : "0s" }}
+    >
       {children}
-    </motion.div>
+    </div>
   );
 }
