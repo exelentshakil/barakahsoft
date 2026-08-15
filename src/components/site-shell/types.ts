@@ -29,6 +29,7 @@ export interface SitePayload {
   logoUrl: string | null;
   innerPagesBuilt: boolean;
   leadSlug: string;
+  sectionVariants: Record<string, string>;
 }
 
 export function sectionHref(payload: Pick<SitePayload, "innerPagesBuilt" | "leadSlug">, kind: "services" | "areas", slug: string): string {

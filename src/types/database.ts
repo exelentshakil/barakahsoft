@@ -91,6 +91,9 @@ export interface FunnelPageSection {
   body_content: string;
   media_asset_ids: string[];
   cta: string | null;
+  // Optional, additive — structured extras a section variant might need
+  // beyond the baseline fields above. Old entries simply lack it.
+  variant_props?: Record<string, unknown>;
 }
 
 export interface Artifact {
@@ -106,6 +109,11 @@ export interface Artifact {
   last_edited_at: string | null;
   last_edited_by: string | null;
   created_at: string;
+  // Which section-variant renders in each fixed slot (kind -> variant_slug),
+  // picked per lead by enrich-generate's composition step. Defaults to '{}'
+  // in the DB (migration 00000000000016) so old rows still parse cleanly.
+  section_variant_selections: Record<string, string>;
+  composition_rationale: string | null;
 }
 
 export type BuildJobStage =

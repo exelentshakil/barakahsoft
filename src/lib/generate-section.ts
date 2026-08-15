@@ -12,7 +12,7 @@ export async function generateServiceSection(
   slug: string,
   mediaAssetIds: string[]
 ): Promise<FunnelPageSection & { groundingWarnings: string[] }> {
-  const body = await generateServiceLine(facts, service);
+  const body = await generateServiceLine(facts, service, slug);
   const { pass, reasons } = validateGrounding(body, facts);
   return {
     slug,

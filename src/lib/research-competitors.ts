@@ -2,6 +2,7 @@ import { searchNearbyCompetitors, resolveCompetitorWebsite, type CompetitorCandi
 import { fetchSiteHtml } from "@/lib/scrape/fetch-site";
 import { extractLogoColor } from "@/lib/scrape/extract-logo-color";
 import { extractPageInventory } from "@/lib/scrape/extract-text";
+import { extractStructuralSignals, type CompetitorStructuralSignals } from "@/lib/scrape/extract-structural-signals";
 
 const MAX_COMPETITORS_TO_LIST = 8;
 const MIN_COMPETITORS_BEFORE_WIDENING = 3;
@@ -16,12 +17,23 @@ export interface CompetitorDesignSignal {
   website: string;
   headline: string | null;
   brandColorHex: string | null;
+  structural: CompetitorStructuralSignals;
+}
+
+export interface StructuralSummary {
+  sampleSize: number;
+  heroImagePct: number;
+  statsAboveFoldPct: number;
+  testimonialPct: number;
+  galleryPct: number;
+  avgNavLinks: number;
 }
 
 export interface CompetitorResearch {
   competitors: CompetitorCandidate[];
   designSignals: CompetitorDesignSignal[];
   designBrief: string;
+  structuralSummary: StructuralSummary;
 }
 
 // ResearchCompetitors molecule — the user's explicit ask: ground the
@@ -63,11 +75,13 @@ export async function researchCompetitors(
       if (!homepage) continue;
       const inventory = extractPageInventory(homepage);
       const logoColor = extractLogoColor(homepage);
+      const structural = extractStructuralSignals(homepage);
       designSignals.push({
         name: c.name,
         website: c.website!,
         headline: inventory.headings[0] ?? null,
         brandColorHex: logoColor.brandColorHex,
+        structural,
       });
     } catch (err) {
       console.error("[research-competitors] failed to scrape", c.website, err);
@@ -83,5 +97,25 @@ export async function researchCompetitors(
           .join("; ")}.${colors.length > 0 ? ` Common brand colors in this space: ${colors.join(", ")}.` : ""} Write something that fits this category's expectations without copying any of these phrases verbatim.`
       : "";
 
-  return { competitors: withWebsites, designSignals, designBrief };
+  const structuralSummary = summarizeStructuralSignals(designSignals);
+
+  return { competitors: withWebsites, designSignals, designBrief, structuralSummary };
+}
+
+function summarizeStructuralSignals(signals: CompetitorDesignSignal[]): StructuralSummary {
+  const n = signals.length;
+  if (n === 0) {
+    return { sampleSize: 0, heroImagePct: 0, statsAboveFoldPct: 0, testimonialPct: 0, galleryPct: 0, avgNavLinks: 0 };
+  }
+  const pct = (predicate: (s: CompetitorStructuralSignals) => boolean) =>
+    Math.round((signals.filter((s) => predicate(s.structural)).length / n) * 100);
+
+  return {
+    sampleSize: n,
+    heroImagePct: pct((s) => s.heroImagePresent),
+    statsAboveFoldPct: pct((s) => s.statsAboveFold),
+    testimonialPct: pct((s) => s.testimonialPresent),
+    galleryPct: pct((s) => s.galleryPresent),
+    avgNavLinks: Math.round(signals.reduce((sum, s) => sum + s.structural.navLinkCount, 0) / n),
+  };
 }

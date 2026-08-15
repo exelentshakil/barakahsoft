@@ -54,5 +54,6 @@ export function renderShell(
     logoUrl: (facts.logo_url as string) ?? null,
     innerPagesBuilt: artifact.inner_pages_built,
     leadSlug: lead.slug,
+    sectionVariants: artifact.section_variant_selections ?? {},
   };
 }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { Artifact, Lead } from "@/types/database";
@@ -78,6 +78,13 @@ export function QAReviewPanel({ lead, artifact }: { lead: Lead; artifact: Artifa
           ))}
         </div>
       </div>
+
+      {artifact.composition_rationale && (
+        <div className="flex gap-2 rounded-md border border-border bg-accent/40 p-3 text-xs text-muted-foreground">
+          <Sparkles className="h-4 w-4 shrink-0" />
+          <p>{artifact.composition_rationale}</p>
+        </div>
+      )}
 
       {artifact.qa_notes && (
         <div className="flex gap-2 rounded-md border border-warning/30 bg-warning/10 p-3 text-xs text-warning-foreground">

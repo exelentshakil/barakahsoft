@@ -6,6 +6,7 @@ import { deriveServiceCandidates } from "@/lib/derive-services";
 import { generateServiceSection, generateDifferentiatorSection, generateFaqSections } from "@/lib/generate-section";
 import { runPhotoWaterfall } from "@/lib/photo-waterfall";
 import { researchCompetitors } from "@/lib/research-competitors";
+import { loadSectionVariantCatalog, selectSectionVariants } from "@/lib/compose-sections";
 import type { PageInventory } from "@/lib/scrape/extract-text";
 import type { FunnelPageSection } from "@/types/database";
 
@@ -64,6 +65,16 @@ export const enrichGenerate = inngest.createFunction(
     });
 
     const genContext: GenerationContext = { industryLabel: playbook.industry_label, town, designBrief: competitorResearch.designBrief };
+
+    // Which pre-built, hand-QA'd section variant renders in each fixed
+    // slot — a real per-lead pick grounded in this lead's own facts and the
+    // live competitor research above, not one static layout for everyone.
+    // Any invalid/missing pick safely falls back to the default variant at
+    // render time (src/components/site-shell/sections/registry.ts).
+    const composition = await step.run("select-section-variants", async () => {
+      const catalog = await loadSectionVariantCatalog(industry);
+      return selectSectionVariants(facts, playbook, competitorResearch, catalog);
+    });
 
     const sections = await step.run("generate-sections", async () => {
       const [headline, subhead] = await Promise.all([generateHeadline(facts, genContext), generateSubhead(facts, genContext)]);
@@ -128,6 +139,8 @@ export const enrichGenerate = inngest.createFunction(
           extracted_assets: { guarantee: "Straightforward pricing, no surprises — confirmed before any work begins." },
           funnel_pages: funnelPages,
           qa_notes: groundingWarnings.length > 0 ? groundingWarnings.join("\n") : null,
+          section_variant_selections: composition.selections,
+          composition_rationale: composition.rationale || null,
         },
         { onConflict: "lead_id" }
       );

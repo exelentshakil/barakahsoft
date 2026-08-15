@@ -5,7 +5,20 @@
 // text. Callers must still run the result through validate_grounding
 // (src/lib/grounding.ts) before it's trusted into artifacts.funnel_pages.
 
+import { findRelevantPage, buildRichContext } from "@/lib/facts-context";
+
 export type Facts = Record<string, unknown>;
+
+function reviewLine(facts: Facts): string | null {
+  const reviewCount = facts.review_count as number | undefined;
+  const rating = facts.rating as number | undefined;
+  return reviewCount && rating ? `Rated ${rating} from ${reviewCount} real reviews.` : null;
+}
+
+function firstPhone(facts: Facts): string | null {
+  const nap = facts.nap as { phones?: string[] } | undefined;
+  return nap?.phones?.[0] ?? null;
+}
 
 // Populated by enrich-generate.ts from the playbook + ResearchCompetitors
 // molecule (src/lib/research-competitors.ts) — industryLabel isn't in facts
@@ -19,7 +32,9 @@ export interface GenerationContext {
   designBrief: string;
 }
 
-async function callGemini(prompt: string, model = "gemini-3.6-flash"): Promise<string | null> {
+// Exported for compose-sections.ts's section-variant selection call — same
+// Gemini wrapper, different caller, no need to duplicate the REST call.
+export async function callGemini(prompt: string, model = "gemini-3.6-flash"): Promise<string | null> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     console.error("[ai] GEMINI_API_KEY is not set in this environment");
@@ -48,13 +63,6 @@ async function callGemini(prompt: string, model = "gemini-3.6-flash"): Promise<s
   }
 }
 
-function factsString(facts: Facts, keys: string[]): string {
-  return keys
-    .map((k) => (facts[k] != null ? `${k}: ${JSON.stringify(facts[k])}` : null))
-    .filter(Boolean)
-    .join("\n");
-}
-
 function contextBlock(context: GenerationContext): string {
   return context.designBrief ? `\n\nCategory context: ${context.designBrief}` : "";
 }
@@ -62,9 +70,10 @@ function contextBlock(context: GenerationContext): string {
 export async function generateHeadline(facts: Facts, context: GenerationContext): Promise<string> {
   const businessName = (facts.business_name as string) || "This business";
   const town = context.town || "";
-  const prompt = `Write a single homepage H1 headline (under 10 words, no emoji, no exclamation marks) for a local ${context.industryLabel} business in ${town || "their area"}, based only on these real facts:\n${factsString(
+  const homepage = findRelevantPage(facts);
+  const prompt = `Write a single homepage H1 headline (under 10 words, no emoji, no exclamation marks) for a local ${context.industryLabel} business in ${town || "their area"}, based only on these real facts about their actual business (including their own site's real headings/content below — use it, don't write generic category copy when specific real services or language are available):\n${buildRichContext(
     facts,
-    ["business_name", "town", "differentiators", "years_in_business"]
+    { relevantPage: homepage }
   )}${contextBlock(context)}\n\nReply with the headline text only, nothing else.`;
 
   const generated = await callGemini(prompt);
@@ -74,40 +83,45 @@ export async function generateHeadline(facts: Facts, context: GenerationContext)
 }
 
 export async function generateSubhead(facts: Facts, context: GenerationContext): Promise<string> {
-  const prompt = `Write a single homepage subheadline (one sentence, under 25 words, no emoji) for a ${context.industryLabel} business that supports the headline with a concrete trust signal, based only on these real facts:\n${factsString(
+  const homepage = findRelevantPage(facts);
+  const prompt = `Write a single homepage subheadline (one sentence, under 25 words, no emoji) for a ${context.industryLabel} business that supports the headline with a concrete trust signal, based only on these real facts (including their own site's real content below):\n${buildRichContext(
     facts,
-    ["business_name", "years_in_business", "review_count", "rating", "service_area", "differentiators"]
+    { relevantPage: homepage }
   )}${contextBlock(context)}\n\nReply with the subheadline text only, nothing else. If there is no real trust signal in the facts, write a plain statement of what the business does instead of inventing one.`;
 
   const generated = await callGemini(prompt);
   if (generated) return generated.replace(/^"|"$/g, "");
 
-  const reviewCount = facts.review_count as number | undefined;
-  const rating = facts.rating as number | undefined;
-  if (reviewCount && rating) return `Rated ${rating} from ${reviewCount} real reviews.`;
-  return "Local, reliable, and ready to help.";
+  return reviewLine(facts) ?? "Local, reliable, and ready to help.";
 }
 
-export async function generateServiceLine(facts: Facts, service: string): Promise<string> {
-  const prompt = `Write one short service-card description (1-2 sentences, under 30 words, no emoji) for the "${service}" service, based only on these real facts about the business:\n${factsString(
+export async function generateServiceLine(facts: Facts, service: string, slug?: string): Promise<string> {
+  const servicePage = findRelevantPage(facts, slug ?? service);
+  const prompt = `Write one short service-card description (1-2 sentences, under 30 words, no emoji) for the "${service}" service, based only on these real facts about the business — prefer real detail from their own site's content below about this specific service over generic category language:\n${buildRichContext(
     facts,
-    ["business_name", "town", "service_area", "differentiators"]
+    { relevantPage: servicePage }
   )}\n\nDo not invent pricing, guarantees, or claims not present in the facts. Reply with the description text only.`;
 
   const generated = await callGemini(prompt);
   if (generated) return generated.replace(/^"|"$/g, "");
-  return `Professional ${service.toLowerCase()} from a local team you can trust.`;
+  const town = facts.town as string | undefined;
+  return town ? `Professional ${service.toLowerCase()} serving ${town}.` : `Professional ${service.toLowerCase()} from a local team you can trust.`;
 }
 
 export async function generateDifferentiator(facts: Facts, context: GenerationContext): Promise<string> {
-  const prompt = `Write one short "why choose us" claim (one sentence, under 20 words, no emoji) for a ${context.industryLabel} business, grounded ONLY in these real facts — do not invent anything not present here:\n${factsString(
+  const homepage = findRelevantPage(facts);
+  const prompt = `Write one short "why choose us" claim (one sentence, under 20 words, no emoji) for a ${context.industryLabel} business, grounded ONLY in these real facts — do not invent anything not present here (including their own site's real content below):\n${buildRichContext(
     facts,
-    ["years_in_business", "review_count", "rating", "certifications", "guarantee", "differentiators"]
+    { relevantPage: homepage }
   )}${contextBlock(context)}\n\nReply with the claim text only. If none of the facts support a real differentiator, write "Local team, straightforward pricing, no surprises."`;
 
   const generated = await callGemini(prompt);
   if (generated) return generated.replace(/^"|"$/g, "");
-  return "Local team, straightforward pricing, no surprises.";
+
+  return (
+    reviewLine(facts) ??
+    (firstPhone(facts) ? "A real local number you can call — no call center, no script." : "Local team, straightforward pricing, no surprises.")
+  );
 }
 
 export async function generateAuditNarrative(facts: Facts): Promise<string> {
@@ -126,12 +140,15 @@ export async function generateAuditNarrative(facts: Facts): Promise<string> {
 }
 
 export async function generateFaqAnswer(question: string, facts: Facts): Promise<string> {
-  const prompt = `Answer this FAQ question in 1-3 sentences, grounded ONLY in these real facts about the business — never invent a price, policy, or claim not present here. If the facts don't answer it, give a generic honest answer that tells the visitor to call to confirm.\n\nQuestion: ${question}\n\nFacts:\n${factsString(
+  const faqPage = findRelevantPage(facts, "faq") ?? findRelevantPage(facts);
+  const prompt = `Answer this FAQ question in 1-3 sentences, grounded ONLY in these real facts about the business (including their own site's real content below) — never invent a price, policy, or claim not present here. If the facts don't answer it, give a generic honest answer that tells the visitor to call to confirm.\n\nQuestion: ${question}\n\nFacts:\n${buildRichContext(
     facts,
-    ["business_name", "hours", "service_area", "phone", "guarantee", "certifications", "price_range"]
+    { relevantPage: faqPage }
   )}\n\nReply with the answer text only.`;
 
   const generated = await callGemini(prompt);
   if (generated) return generated;
-  return `Great question — call us and we'll confirm the details for your specific situation.`;
+
+  const phone = firstPhone(facts);
+  return phone ? `Great question — call ${phone} and we'll confirm the details for your specific situation.` : `Great question — call us and we'll confirm the details for your specific situation.`;
 }
