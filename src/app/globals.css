@@ -10,6 +10,13 @@
     --card-foreground: 222 47% 11%;
     --primary: 234 89% 56%;
     --primary-foreground: 210 40% 98%;
+    /* Split H/S/L channels of --primary, kept in sync by
+       shell-style.ts's getShellStyle() for real per-lead brand colors --
+       every gradient/blob/glow utility below is built from these three,
+       never a second hardcoded color, so it stays on-brand for any lead. */
+    --primary-h: 234;
+    --primary-s: 89%;
+    --primary-l: 56%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 97%;
@@ -26,6 +33,13 @@
     --danger: 0 72% 51%;
     --danger-foreground: 0 72% 97%;
     --radius: 0.75rem;
+    /* Colored, primary-tinted shadows for premium contexts -- registered as
+       boxShadow.lift/boxShadow.glow in tailwind.config.ts (shadow-lift,
+       shadow-glow classes) instead of the flat neutral shadow-card/popover. */
+    --shadow-lift: 0 8px 24px -4px hsl(var(--primary-h) var(--primary-s) var(--primary-l) / 0.25),
+      0 2px 8px -2px hsl(var(--primary-h) var(--primary-s) var(--primary-l) / 0.15);
+    --shadow-glow: 0 0 0 1px hsl(var(--primary-h) var(--primary-s) var(--primary-l) / 0.15),
+      0 8px 40px -8px hsl(var(--primary-h) var(--primary-s) var(--primary-l) / 0.4);
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -63,6 +77,26 @@
 }
 
 @layer utilities {
+  /* Premium primitives (v3) -- every one built from --primary-h/-s/-l so it
+     stays on-brand for whatever real color a lead's site uses, never a
+     second hardcoded color. */
+  .text-gradient-primary {
+    background-image: linear-gradient(
+      135deg,
+      hsl(var(--primary-h) var(--primary-s) var(--primary-l)),
+      hsl(var(--primary-h) var(--primary-s) calc(var(--primary-l) - 18%))
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+  .decor-blob {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(60px);
+    background: radial-gradient(circle, hsl(var(--primary-h) var(--primary-s) var(--primary-l) / 0.35), transparent 70%);
+    pointer-events: none;
+  }
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--border)) transparent;
