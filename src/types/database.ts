@@ -44,6 +44,10 @@ export interface Lead {
   place_id: string | null;
   custom_domain: string | null;
   meta_pixel_click_id: string | null;
+  // The client's own Facebook Pixel ID for their delivered site — separate
+  // from meta_pixel_click_id above, which is BarakahSoft's own lead-gen
+  // funnel tracking.
+  facebook_pixel_id: string | null;
   delivered_at: string | null;
   paid_at: string | null;
   live_at: string | null;

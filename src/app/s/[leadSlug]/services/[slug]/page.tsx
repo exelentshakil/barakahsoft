@@ -4,6 +4,7 @@ import { getSiteData } from "@/lib/get-site-data";
 import { SectionRenderer } from "@/components/site-shell/SectionRenderer";
 import { MegaMenu } from "@/components/site-shell/MegaMenu";
 import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
+import { getShellStyle } from "@/components/site-shell/shell-style";
 
 // Generic route — one file handles every service slug via params.slug.
 // The only thing payment changes (plan §6): this route 404s pre-payment
@@ -34,10 +35,10 @@ export default async function ServicePage({ params }: { params: Promise<{ leadSl
   if (!service) notFound();
 
   return (
-    <>
+    <div style={getShellStyle(payload)}>
       <MegaMenu payload={payload} />
       <SectionRenderer section={service} standalone />
       <PremiumFooter payload={payload} />
-    </>
+    </div>
   );
 }

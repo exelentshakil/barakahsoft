@@ -18,6 +18,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ leadSlu
   if (result.payload.innerPagesBuilt) {
     for (const service of result.payload.services) urls.push(`${base}/services/${service.slug}`);
     for (const area of result.payload.areas) urls.push(`${base}/areas/${area.slug}`);
+    urls.push(`${base}/contact`, `${base}/booking`);
   }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>

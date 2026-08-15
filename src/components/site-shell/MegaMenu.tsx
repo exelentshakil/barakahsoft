@@ -70,7 +70,10 @@ export function MegaMenu({ payload }: { payload: SitePayload }) {
           <a href="#faq" className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent">
             FAQ
           </a>
-          <a href="#contact" className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent">
+          <a
+            href={payload.innerPagesBuilt ? `/s/${payload.leadSlug}/contact` : "#contact"}
+            className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+          >
             Contact
           </a>
         </nav>
@@ -111,7 +114,11 @@ export function MegaMenu({ payload }: { payload: SitePayload }) {
           <a href="#faq" onClick={() => setMobileOpen(false)} className="block py-2 text-sm font-medium">
             FAQ
           </a>
-          <a href="#contact" onClick={() => setMobileOpen(false)} className="block py-2 text-sm font-medium">
+          <a
+            href={payload.innerPagesBuilt ? `/s/${payload.leadSlug}/contact` : "#contact"}
+            onClick={() => setMobileOpen(false)}
+            className="block py-2 text-sm font-medium"
+          >
             Contact
           </a>
         </nav>

@@ -4,6 +4,7 @@ import { getSiteData } from "@/lib/get-site-data";
 import { SectionRenderer } from "@/components/site-shell/SectionRenderer";
 import { MegaMenu } from "@/components/site-shell/MegaMenu";
 import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
+import { getShellStyle } from "@/components/site-shell/shell-style";
 
 // Same mechanism as services/[slug] — see that file's comment for why
 // payment only flips a boolean gate rather than regenerating content.
@@ -31,10 +32,10 @@ export default async function AreaPage({ params }: { params: Promise<{ leadSlug:
   if (!area) notFound();
 
   return (
-    <>
+    <div style={getShellStyle(payload)}>
       <MegaMenu payload={payload} />
       <SectionRenderer section={area} standalone />
       <PremiumFooter payload={payload} />
-    </>
+    </div>
   );
 }

@@ -45,7 +45,12 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
         </div>
         <div className="flex items-center gap-1">
           <Badge variant="outline">{lead.status}</Badge>
-          <EditLeadDialog leadId={lead.id} businessName={lead.business_name} sourceUrl={lead.source_url} />
+          <EditLeadDialog
+            leadId={lead.id}
+            businessName={lead.business_name}
+            sourceUrl={lead.source_url}
+            facebookPixelId={lead.facebook_pixel_id}
+          />
           <DeleteLeadButton leadId={lead.id} />
         </div>
       </div>

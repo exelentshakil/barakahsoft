@@ -12,15 +12,18 @@ export function EditLeadDialog({
   leadId,
   businessName,
   sourceUrl,
+  facebookPixelId,
 }: {
   leadId: string;
   businessName: string | null;
   sourceUrl: string;
+  facebookPixelId?: string | null;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(businessName ?? "");
   const [url, setUrl] = useState(sourceUrl);
+  const [pixelId, setPixelId] = useState(facebookPixelId ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +35,7 @@ export function EditLeadDialog({
       const res = await fetch(`/api/leads/${leadId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ business_name: name, source_url: url }),
+        body: JSON.stringify({ business_name: name, source_url: url, facebook_pixel_id: pixelId }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong");
@@ -65,6 +68,19 @@ export function EditLeadDialog({
           <div>
             <Label htmlFor="edit-source-url">Website URL</Label>
             <Input id="edit-source-url" required type="url" value={url} onChange={(e) => setUrl(e.target.value)} className="mt-1" />
+          </div>
+          <div>
+            <Label htmlFor="edit-pixel-id">Client's Facebook Pixel ID (optional)</Label>
+            <Input
+              id="edit-pixel-id"
+              placeholder="e.g. 123456789012345"
+              value={pixelId}
+              onChange={(e) => setPixelId(e.target.value)}
+              className="mt-1"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              For tracking on the client&apos;s own delivered site once they provide it — separate from our own ad tracking.
+            </p>
           </div>
           {error && <p className="text-sm text-danger">{error}</p>}
           <Button type="submit" disabled={submitting} className="w-full">

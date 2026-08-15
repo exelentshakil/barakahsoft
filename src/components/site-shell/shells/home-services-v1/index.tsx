@@ -3,6 +3,7 @@ import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
 import { StickyMobileCTA } from "@/components/site-shell/StickyMobileCTA";
 import { SectionRenderer } from "@/components/site-shell/SectionRenderer";
 import { resolveSectionVariant } from "@/components/site-shell/sections/registry";
+import { getShellStyle } from "@/components/site-shell/shell-style";
 import type { SitePayload } from "@/components/site-shell/types";
 
 // The first template shell (plan §7/§8: reused for both Home Services and
@@ -21,19 +22,7 @@ import type { SitePayload } from "@/components/site-shell/types";
 // falling back to each kind's default (= this file's original markup) when
 // a selection is missing or invalid. See src/components/site-shell/sections/.
 export function HomeServicesV1Shell({ payload }: { payload: SitePayload }) {
-  const cssVars: Record<string, string> = {};
-  if (payload.brandColorHsl) {
-    cssVars["--primary"] = payload.brandColorHsl;
-    cssVars["--ring"] = payload.brandColorHsl;
-  }
-  if (payload.fontFamily) {
-    // Real per-lead font, quoted and falling back to the site's default —
-    // same per-payload CSS-variable override pattern as brand color above.
-    const fontStack = `"${payload.fontFamily}", var(--font-sans)`;
-    cssVars["--font-sans"] = fontStack;
-    cssVars["--font-display"] = fontStack;
-  }
-  const style = Object.keys(cssVars).length > 0 ? (cssVars as React.CSSProperties) : undefined;
+  const style = getShellStyle(payload);
 
   const Hero = resolveSectionVariant("hero", payload.sectionVariants.hero);
   const TrustStrip = resolveSectionVariant("trust-strip", payload.sectionVariants["trust-strip"]);

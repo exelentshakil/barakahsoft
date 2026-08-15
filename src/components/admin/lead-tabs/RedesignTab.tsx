@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { QAReviewPanel } from "@/components/admin/QAReviewPanel";
+import { SectionContentEditor } from "@/components/admin/SectionContentEditor";
 import type { Lead, Artifact } from "@/types/database";
 
 export function RedesignTab({ lead, artifact }: { lead: Lead; artifact: Artifact | null }) {
@@ -20,7 +21,10 @@ export function RedesignTab({ lead, artifact }: { lead: Lead; artifact: Artifact
         <iframe src={`/s/${lead.slug}`} className="h-[900px] w-full" title="Generated site preview" />
       </div>
 
-      <QAReviewPanel lead={lead} artifact={artifact} />
+      <div className="space-y-6">
+        <QAReviewPanel lead={lead} artifact={artifact} />
+        <SectionContentEditor leadId={lead.id} sections={artifact.funnel_pages} />
+      </div>
     </div>
   );
 }
