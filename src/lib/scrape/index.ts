@@ -4,6 +4,7 @@ import { extractPageInventory, extractContactInfoFromPage, deriveSiteName } from
 import { extractExistingSchema } from "@/lib/scrape/extract-schema";
 import { extractLogoColor } from "@/lib/scrape/extract-logo-color";
 import { rankPhotoQuality, type RankedPhoto } from "@/lib/scrape/rank-photos";
+import { captionUnlabeledPhotos } from "@/lib/scrape/caption-photos";
 import { callPlacesApi, resolvePlacesPhotoUrl } from "@/lib/google/places";
 import { callPagespeedApi } from "@/lib/google/pagespeed";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -19,6 +20,7 @@ export async function scrapeBusiness(leadId: string, sourceUrl: string, business
 
   const photoCandidates = pages.flatMap(extractPhotos);
   const rankedSitePhotos: RankedPhoto[] = await rankPhotoQuality(photoCandidates);
+  const captionedSitePhotos = await captionUnlabeledPhotos(rankedSitePhotos);
 
   const pageInventory = pages.map(extractPageInventory);
   const contactInfo = homepage ? extractContactInfoFromPage(homepage) : { phones: [], emails: [], socialUrls: [] };
@@ -58,7 +60,7 @@ export async function scrapeBusiness(leadId: string, sourceUrl: string, business
     logo_url: logoColor.logoUrl,
     brand_color_hex: logoColor.brandColorHex,
     brand_color_hsl: logoColor.brandColorHsl,
-    site_photos: rankedSitePhotos.slice(0, 30),
+    site_photos: captionedSitePhotos.slice(0, 30),
     gbp_photo_urls: gbpPhotoUrls,
     pagespeed: { mobile: pagespeed.mobile, desktop: pagespeed.desktop },
   };

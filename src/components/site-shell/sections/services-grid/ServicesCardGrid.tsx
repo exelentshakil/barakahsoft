@@ -14,10 +14,16 @@ export function ServicesCardGrid({ payload }: { payload: SitePayload }) {
             <a
               key={service.slug}
               href={`#${service.slug}`}
-              className="rounded-xl border border-border bg-card p-6 shadow-card transition-shadow hover:shadow-popover"
+              className="overflow-hidden rounded-xl border border-border bg-card shadow-card transition-shadow hover:shadow-popover"
             >
-              <h3 className="font-semibold">{service.h2}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{service.body_content}</p>
+              {service.imageUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={service.imageUrl} alt={service.h2} className="h-40 w-full object-cover" />
+              )}
+              <div className="p-6">
+                <h3 className="font-semibold">{service.h2}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{service.body_content}</p>
+              </div>
             </a>
           ))}
         </div>

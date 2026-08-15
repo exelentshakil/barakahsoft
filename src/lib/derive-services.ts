@@ -32,7 +32,7 @@ const STOPLIST = [
   "sign in",
 ];
 
-const MAX_SERVICES = 8;
+const MAX_SERVICES = 15;
 
 export function deriveServiceCandidates(pages: PageInventory[]): { name: string; slug: string }[] {
   const seen = new Map<string, string>();

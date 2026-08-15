@@ -12,7 +12,12 @@ export function ServicesIconList({ payload }: { payload: SitePayload }) {
         <div className="mt-10 grid gap-x-8 gap-y-5 sm:grid-cols-2">
           {payload.services.map((service) => (
             <a key={service.slug} href={`#${service.slug}`} className="flex gap-3 rounded-lg p-2 transition-colors hover:bg-accent">
-              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+              {service.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={service.imageUrl} alt={service.h2} className="h-14 w-14 shrink-0 rounded-lg object-cover" />
+              ) : (
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+              )}
               <div>
                 <h3 className="font-semibold">{service.h2}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{service.body_content}</p>

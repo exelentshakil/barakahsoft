@@ -3,6 +3,50 @@ import { searchUnsplash } from "@/lib/unsplash";
 import { searchPexels } from "@/lib/pexels";
 import type { Playbook } from "@/lib/playbooks";
 import type { MediaAssetSource } from "@/types/database";
+import type { CaptionedPhoto } from "@/lib/scrape/caption-photos";
+
+const MIN_QUALITY_FLOOR = 40;
+
+// A slot hint is "kind" or "kind:topic" (e.g. "hero", "service:gutter-repair",
+// "area:park-slope") — the part after the colon is the real semantic topic.
+function slotTopic(slotHint: string): string[] {
+  const colonIndex = slotHint.indexOf(":");
+  const raw = colonIndex >= 0 ? slotHint.slice(colonIndex + 1) : slotHint;
+  return raw
+    .replace(/[-_]/g, " ")
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((w) => w.length > 2);
+}
+
+// Picks the best unused real site photo for a slot by cheap keyword overlap
+// between the slot's topic and everything real we know about the photo
+// (alt text, an AI-inferred caption for hashed/alt-less images, the nearest
+// real heading/section text it sat next to on the source page) — not a
+// second AI call, just scoring against context Phase C1/C2 already captured.
+// Blind ranked-order consumption meant a lead with 12 real services only
+// ever got 3 real photos used total; this lets every slot find its own
+// best-matching unused photo instead.
+function pickBestSitePhoto(sitePhotos: CaptionedPhoto[], slot: RequiredSlot, usedUrls: Set<string>): CaptionedPhoto | null {
+  const topicWords = slotTopic(slot.slotHint);
+
+  let best: CaptionedPhoto | null = null;
+  let bestScore = -Infinity;
+
+  for (const photo of sitePhotos) {
+    if (usedUrls.has(photo.url) || photo.qualityScore < MIN_QUALITY_FLOOR) continue;
+    const haystack = `${photo.alt ?? ""} ${photo.inferredCaption ?? ""} ${photo.nearestHeading ?? ""} ${photo.sectionText ?? ""} ${photo.url}`.toLowerCase();
+    const matches = topicWords.filter((w) => haystack.includes(w)).length;
+    const semanticScore = topicWords.length > 0 ? (matches / topicWords.length) * 100 : 0;
+    const finalScore = photo.qualityScore * 0.4 + semanticScore * 0.6;
+    if (finalScore > bestScore) {
+      bestScore = finalScore;
+      best = photo;
+    }
+  }
+
+  return best;
+}
 
 // copy_to_storage atom — downloads a source URL and re-uploads into this
 // lead's Storage folder. Every image on a generated site must live here;
@@ -41,12 +85,13 @@ interface RequiredSlot {
 // as a media_assets row with the correct source tag + attribution.
 export async function runPhotoWaterfall(
   leadId: string,
-  facts: { site_photos?: { url: string; alt: string | null; qualityScore: number }[]; gbp_photo_urls?: string[] },
+  facts: { site_photos?: CaptionedPhoto[]; gbp_photo_urls?: string[] },
   playbook: Playbook,
   requiredSlots: RequiredSlot[]
 ) {
   const admin = createAdminClient();
-  const sitePhotos = [...(facts.site_photos ?? [])].sort((a, b) => b.qualityScore - a.qualityScore);
+  const sitePhotos = facts.site_photos ?? [];
+  const usedUrls = new Set<string>();
   const gbpPhotos = [...(facts.gbp_photo_urls ?? [])];
 
   for (const slot of requiredSlots) {
@@ -55,11 +100,12 @@ export async function runPhotoWaterfall(
     let attributionName: string | null = null;
     let attributionUrl: string | null = null;
 
-    // 1. Theirs first — site photos, ranked, then GBP photos.
-    const nextSitePhoto = sitePhotos.shift();
-    if (nextSitePhoto && nextSitePhoto.qualityScore >= 40) {
-      sourceUrl = nextSitePhoto.url;
+    // 1. Theirs first — best semantic+quality match, then GBP photos.
+    const bestSitePhoto = pickBestSitePhoto(sitePhotos, slot, usedUrls);
+    if (bestSitePhoto) {
+      sourceUrl = bestSitePhoto.url;
       source = "site";
+      usedUrls.add(bestSitePhoto.url);
     } else if (gbpPhotos.length > 0) {
       sourceUrl = gbpPhotos.shift()!;
       source = "gbp";

@@ -93,10 +93,16 @@ export const enrichGenerate = inngest.createFunction(
     });
 
     await step.run("run-photo-waterfall", async () => {
+      // One slot per service (up to MAX_SERVICES=15) plus a differentiator
+      // slot and a handful of gallery slots so real surplus site photos get
+      // used instead of sitting unconsumed in facts.site_photos — a lead
+      // with 12 real services previously only ever got 3 real photos used.
       const requiredSlots = [
         { slotHint: "hero", playbookQueryKey: "hero" },
         { slotHint: "proof", playbookQueryKey: "proof" },
+        { slotHint: "differentiator", playbookQueryKey: "team" },
         ...sections.serviceSections.map((s) => ({ slotHint: `service:${s.slug}`, playbookQueryKey: "team" })),
+        ...Array.from({ length: 6 }, (_, i) => ({ slotHint: `gallery:${i + 1}`, playbookQueryKey: "team" })),
       ];
       await runPhotoWaterfall(lead_id, facts, playbook, requiredSlots);
     });
@@ -110,7 +116,7 @@ export const enrichGenerate = inngest.createFunction(
 
       const funnelPages: FunnelPageSection[] = [
         { ...sections.heroSection, media_asset_ids: mediaBySlot.has("hero") ? [mediaBySlot.get("hero")!] : [] },
-        { ...sections.differentiator, media_asset_ids: [] },
+        { ...sections.differentiator, media_asset_ids: mediaBySlot.has("differentiator") ? [mediaBySlot.get("differentiator")!] : [] },
         ...sections.serviceSections.map((s) => ({
           slug: s.slug,
           kind: s.kind,

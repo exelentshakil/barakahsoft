@@ -12,7 +12,12 @@ export function AreaList({ payload }: { payload: SitePayload }) {
         <div className="mt-8 columns-2 gap-6 sm:columns-3">
           {payload.areas.map((area) => (
             <a key={area.slug} href={`#${area.slug}`} className="mb-3 flex items-center gap-2 break-inside-avoid text-sm hover:text-primary">
-              <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
+              {area.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={area.imageUrl} alt="" className="h-6 w-6 shrink-0 rounded-full object-cover" />
+              ) : (
+                <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
+              )}
               {area.h2}
             </a>
           ))}

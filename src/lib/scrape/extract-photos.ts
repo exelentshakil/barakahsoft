@@ -11,6 +11,12 @@ export interface PhotoCandidate {
   alt: string | null;
   sourcePage: string;
   kind: "img" | "og" | "twitter" | "favicon" | "apple-touch" | "json-ld" | "css-bg" | "lazy";
+  // DOM context for photos that can genuinely sit inside real page content
+  // (img/lazy/css-bg only — og/twitter/favicon/json-ld have no meaningful
+  // position). Lets downstream steps match a photo to a specific topic
+  // (Phase C2 captioning, Phase C3 slot matching) instead of ranking blind.
+  nearestHeading: string | null;
+  sectionText: string | null;
 }
 
 function resolveUrl(url: string, base: string): string | null {
@@ -19,6 +25,46 @@ function resolveUrl(url: string, base: string): string | null {
   } catch {
     return null;
   }
+}
+
+const SECTION_LIKE_SELECTOR = 'section, article, li, div[class*="service" i], div[class*="card" i], div[class*="item" i]';
+
+// Climbs from an element to the nearest containing "block" (a section/card/
+// list-item, or a div that looks like one) and the closest heading either
+// inside that block or immediately preceding it — a cheap, real signal for
+// "what is this photo actually next to," not an AI guess.
+function nearestContext(startNode: ReturnType<cheerio.CheerioAPI>): { nearestHeading: string | null; sectionText: string | null } {
+  let node = startNode;
+  let sectionText: string | null = null;
+  let heading: string | null = null;
+
+  for (let i = 0; i < 6 && node.length; i++) {
+    if (!sectionText && node.is(SECTION_LIKE_SELECTOR)) {
+      const text = node.text().replace(/\s+/g, " ").trim();
+      if (text) sectionText = text.slice(0, 300);
+    }
+    if (!heading) {
+      const h = node.find("h1, h2, h3, h4").first();
+      const text = h.text().trim();
+      if (text) heading = text;
+    }
+    if (sectionText && heading) break;
+    node = node.parent();
+  }
+
+  if (!heading) {
+    let prev = startNode.closest(SECTION_LIKE_SELECTOR).prev();
+    for (let i = 0; i < 3 && prev.length; i++) {
+      if (/^h[1-4]$/i.test((prev.prop("tagName") as string) || "")) {
+        const text = prev.text().trim();
+        if (text) heading = text;
+        break;
+      }
+      prev = prev.prev();
+    }
+  }
+
+  return { nearestHeading: heading, sectionText };
 }
 
 function extractFromJsonLd($: cheerio.CheerioAPI, pageUrl: string): PhotoCandidate[] {
@@ -32,7 +78,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI, pageUrl: string): PhotoCandida
         const urls = Array.isArray(image) ? image : image ? [image] : [];
         for (const u of urls) {
           const resolved = typeof u === "string" ? resolveUrl(u, pageUrl) : null;
-          if (resolved) candidates.push({ url: resolved, alt: null, sourcePage: pageUrl, kind: "json-ld" });
+          if (resolved) candidates.push({ url: resolved, alt: null, sourcePage: pageUrl, kind: "json-ld", nearestHeading: null, sectionText: null });
         }
       }
     } catch {
@@ -50,16 +96,17 @@ export function extractPhotos(page: FetchedPage): PhotoCandidate[] {
     const src = $(el).attr("src") || $(el).attr("data-src");
     const alt = $(el).attr("alt") || null;
     const kind = $(el).attr("data-src") && !$(el).attr("src") ? "lazy" : "img";
+    const context = nearestContext($(el));
     if (src) {
       const resolved = resolveUrl(src, page.url);
-      if (resolved) candidates.push({ url: resolved, alt, sourcePage: page.url, kind });
+      if (resolved) candidates.push({ url: resolved, alt, sourcePage: page.url, kind, ...context });
     }
     const srcset = $(el).attr("srcset");
     if (srcset) {
       const largest = srcset.split(",").pop()?.trim().split(" ")[0];
       if (largest) {
         const resolved = resolveUrl(largest, page.url);
-        if (resolved) candidates.push({ url: resolved, alt, sourcePage: page.url, kind: "img" });
+        if (resolved) candidates.push({ url: resolved, alt, sourcePage: page.url, kind: "img", ...context });
       }
     }
   });
@@ -69,32 +116,32 @@ export function extractPhotos(page: FetchedPage): PhotoCandidate[] {
     const largest = srcset?.split(",").pop()?.trim().split(" ")[0];
     if (largest) {
       const resolved = resolveUrl(largest, page.url);
-      if (resolved) candidates.push({ url: resolved, alt: null, sourcePage: page.url, kind: "img" });
+      if (resolved) candidates.push({ url: resolved, alt: null, sourcePage: page.url, kind: "img", ...nearestContext($(el)) });
     }
   });
 
   const ogImage = $('meta[property="og:image"]').attr("content");
   if (ogImage) {
     const resolved = resolveUrl(ogImage, page.url);
-    if (resolved) candidates.push({ url: resolved, alt: null, sourcePage: page.url, kind: "og" });
+    if (resolved) candidates.push({ url: resolved, alt: null, sourcePage: page.url, kind: "og", nearestHeading: null, sectionText: null });
   }
 
   const twitterImage = $('meta[name="twitter:image"]').attr("content");
   if (twitterImage) {
     const resolved = resolveUrl(twitterImage, page.url);
-    if (resolved) candidates.push({ url: resolved, alt: null, sourcePage: page.url, kind: "twitter" });
+    if (resolved) candidates.push({ url: resolved, alt: null, sourcePage: page.url, kind: "twitter", nearestHeading: null, sectionText: null });
   }
 
   const favicon = $('link[rel~="icon"]').first().attr("href");
   if (favicon) {
     const resolved = resolveUrl(favicon, page.url);
-    if (resolved) candidates.push({ url: resolved, alt: null, sourcePage: page.url, kind: "favicon" });
+    if (resolved) candidates.push({ url: resolved, alt: null, sourcePage: page.url, kind: "favicon", nearestHeading: null, sectionText: null });
   }
 
   const appleTouch = $('link[rel="apple-touch-icon"]').first().attr("href");
   if (appleTouch) {
     const resolved = resolveUrl(appleTouch, page.url);
-    if (resolved) candidates.push({ url: resolved, alt: null, sourcePage: page.url, kind: "apple-touch" });
+    if (resolved) candidates.push({ url: resolved, alt: null, sourcePage: page.url, kind: "apple-touch", nearestHeading: null, sectionText: null });
   }
 
   $("[style]").each((_, el) => {
@@ -102,7 +149,7 @@ export function extractPhotos(page: FetchedPage): PhotoCandidate[] {
     const match = style.match(/background-image:\s*url\(['"]?([^'")]+)['"]?\)/);
     if (match) {
       const resolved = resolveUrl(match[1], page.url);
-      if (resolved) candidates.push({ url: resolved, alt: null, sourcePage: page.url, kind: "css-bg" });
+      if (resolved) candidates.push({ url: resolved, alt: null, sourcePage: page.url, kind: "css-bg", ...nearestContext($(el)) });
     }
   });
 

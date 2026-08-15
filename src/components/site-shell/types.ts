@@ -1,5 +1,9 @@
 import type { FunnelPageSection } from "@/types/database";
 
+// A funnel_pages entry with its media_asset_ids resolved to real Storage
+// URLs — render-shell.ts does this once, generically, for every section.
+export type ResolvedSection = FunnelPageSection & { imageUrl: string | null; imageUrls: string[] };
+
 // The resolved props a template shell renders from — assembled once by
 // render-shell.ts (render_shell atom) from an artifact + its scrape facts,
 // so the shell components themselves never touch Supabase directly.
@@ -15,8 +19,8 @@ export interface SitePayload {
   };
   differentiator: string;
   guarantee: string;
-  services: FunnelPageSection[];
-  areas: FunnelPageSection[];
+  services: ResolvedSection[];
+  areas: ResolvedSection[];
   faq: FunnelPageSection[];
   reviews: { author_name: string; rating: number; text: string }[];
   nap: {

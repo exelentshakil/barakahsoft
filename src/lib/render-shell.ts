@@ -19,13 +19,23 @@ export function renderShell(
     return id ? mediaById.get(id)?.public_url ?? null : null;
   }
 
-  const services = artifact.funnel_pages.filter((s) => s.kind === "service");
-  const areas = artifact.funnel_pages.filter((s) => s.kind === "area");
-  const faq = artifact.funnel_pages.filter((s) => s.kind === "faq");
-  const differentiatorSection = artifact.funnel_pages.find((s) => s.kind === "differentiator");
-  const heroSection = artifact.funnel_pages.find((s) => s.kind === "hero");
+  // Resolve real photo URLs for EVERY section once, generically — not
+  // special-cased to hero/proof. Services/areas previously got a real photo
+  // assigned by the waterfall but never had it resolved to a URL here, so
+  // the card components had nothing to render even when a photo existed.
+  const resolvedSections = artifact.funnel_pages.map((s) => ({
+    ...s,
+    imageUrl: firstImageFor(s),
+    imageUrls: s.media_asset_ids.map((id) => mediaById.get(id)?.public_url).filter((u): u is string => !!u),
+  }));
 
-  const heroMedia = heroSection ? firstImageFor(heroSection) : mediaAssets.find((m) => m.slot_hint === "hero")?.public_url ?? null;
+  const services = resolvedSections.filter((s) => s.kind === "service");
+  const areas = resolvedSections.filter((s) => s.kind === "area");
+  const faq = resolvedSections.filter((s) => s.kind === "faq");
+  const differentiatorSection = resolvedSections.find((s) => s.kind === "differentiator");
+  const heroSection = resolvedSections.find((s) => s.kind === "hero");
+
+  const heroMedia = heroSection?.imageUrl ?? mediaAssets.find((m) => m.slot_hint === "hero")?.public_url ?? null;
   const proofMedia = mediaAssets.find((m) => m.slot_hint === "proof")?.public_url ?? null;
 
   return {
@@ -40,7 +50,7 @@ export function renderShell(
     },
     differentiator: differentiatorSection?.body_content || "",
     guarantee: (artifact.extracted_assets?.guarantee as string) || "",
-    services: services.map((s) => ({ ...s, media_asset_ids: s.media_asset_ids })),
+    services,
     areas,
     faq,
     reviews: ((facts.reviews as { author_name: string; rating: number; text: string }[]) ?? []).slice(0, 6),
