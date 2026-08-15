@@ -27,7 +27,7 @@ export const renderBuild = inngest.createFunction(
 
     await step.run("screenshot-and-mark-qa", async () => {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-      const screenshotUrl = await screenshotPage(`${siteUrl}/s/${leadSlug}`, "mobile");
+      const screenshotUrl = await screenshotPage(`${siteUrl}/s/${leadSlug}`, lead_id, "mobile");
 
       await admin.from("artifacts").update({ screenshot_url: screenshotUrl, qa_status: "pending" }).eq("lead_id", lead_id);
       await admin.from("leads").update({ status: "qa_pending" }).eq("id", lead_id);
