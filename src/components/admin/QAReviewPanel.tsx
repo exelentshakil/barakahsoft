@@ -2,23 +2,29 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, XCircle, AlertTriangle, Sparkles } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, Sparkles, Phone, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { Artifact, Lead } from "@/types/database";
 
-// One-tap mobile approve/reject against the PRD §7 stage-5 checklist: zero
-// emoji, every claim grounded, no unbalanced whitespace, all sections
-// present, disclaimer trade-appropriate. Grounding warnings collected
-// during generation (enrich-generate.ts) surface as qa_notes so the
-// reviewer isn't re-reading every section from scratch — the checklist
-// below is what the reviewer confirms by eye, not something the code
-// re-derives here (this is a human gate, not another automated check).
+// CRO-focused checklist — the previous version only checked AI-writing
+// quality (emoji, grounding, whitespace). This is what actually predicts
+// whether a real visitor converts: does the value prop land before any
+// scrolling, is the phone number impossible to miss, do real photos (not
+// stock) show up early, is trust established fast, does the CTA repeat.
+// The 3 writing-quality items that still matter are kept at the bottom —
+// grounding/emoji are already automated via validateGrounding and surfaced
+// as qa_notes below, so this is confirming the reviewer read them, not a
+// second manual re-check of the same thing.
 const CHECKLIST_ITEMS = [
-  "Zero emoji anywhere on the page",
-  "Every claim is grounded — no invented reviews, stats, or service areas",
+  "Above-the-fold clarity — headline + phone/CTA visible without scrolling on mobile",
+  "Phone number is prominent and click-to-call in the header/hero",
+  "Real photos (not stock-feeling) in the hero and most service cards",
+  "A trust signal (rating, reviews, or certification) appears within the first two sections",
+  "The primary CTA repeats down the page, not just once at the top",
+  "Mobile tap targets are large enough and the sticky mobile CTA is present",
   "No unbalanced whitespace or empty-looking sections",
-  "All required sections present or a real reason one's missing (e.g. no service areas in facts)",
+  "Grounding warnings below (if any) have been read and resolved",
   "Disclaimer/footer copy reads as trade-appropriate, not generic",
 ];
 
@@ -31,6 +37,13 @@ export function QAReviewPanel({ lead, artifact }: { lead: Lead; artifact: Artifa
   const [error, setError] = useState<string | null>(null);
 
   const allChecked = checked.every(Boolean);
+
+  // Computable from data already on hand — non-blocking hints, not a
+  // replacement for the human checklist above (approval still gates on the
+  // manual ticks, per PRD's "human makes the final call").
+  const hasPhoneCta = artifact.funnel_pages.some((s) => s.kind === "cta-banner");
+  const serviceAndAreaSections = artifact.funnel_pages.filter((s) => s.kind === "service" || s.kind === "area");
+  const sectionsWithPhoto = serviceAndAreaSections.filter((s) => s.media_asset_ids.length > 0).length;
 
   async function submitDecision(decision: "approved" | "rejected") {
     setSubmitting(true);
@@ -62,6 +75,21 @@ export function QAReviewPanel({ lead, artifact }: { lead: Lead; artifact: Artifa
 
   return (
     <div className="space-y-4 rounded-lg border border-border bg-card p-4 shadow-card">
+      <div className="flex flex-wrap gap-2">
+        <span
+          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
+            hasPhoneCta ? "bg-success/10 text-success" : "bg-warning/10 text-warning-foreground"
+          }`}
+        >
+          <Phone className="h-3 w-3" /> {hasPhoneCta ? "Phone CTA present" : "No mid-page phone CTA"}
+        </span>
+        {serviceAndAreaSections.length > 0 && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2.5 py-1 text-xs font-medium text-muted-foreground">
+            <ImageIcon className="h-3 w-3" /> {sectionsWithPhoto}/{serviceAndAreaSections.length} services/areas have real photos
+          </span>
+        )}
+      </div>
+
       <div>
         <p className="font-medium">QA checklist</p>
         <div className="mt-3 space-y-2">
