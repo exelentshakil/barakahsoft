@@ -1,6 +1,7 @@
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeroStatForward } from "@/components/site-shell/sections/hero/HeroStatForward";
+import { Reveal } from "@/components/site-shell/primitives/Reveal";
 import type { SitePayload } from "@/components/site-shell/types";
 
 // Only selected when a real video was actually generated for this lead --
@@ -10,6 +11,11 @@ import type { SitePayload } from "@/components/site-shell/types";
 // means an incomplete generation never produces a blank hero on a live page.
 // Muted/autoPlay is not just a style choice -- Veo 3.1 has no API switch to
 // disable audio, so this is what actually delivers the approved "no audio" hero.
+//
+// v3 (Phase M) -- the "sell me -> sold" closing moment: badge/headline/
+// subhead/CTA stagger in over the footage instead of appearing instantly,
+// framing it as a deliberate reveal rather than ambient background motion.
+// Veo itself can't do reliable text overlays, so this is built here.
 export function HeroVideoBackground({ payload }: { payload: SitePayload }) {
   if (!payload.heroVideoUrl) return <HeroStatForward payload={payload} />;
 
@@ -29,24 +35,34 @@ export function HeroVideoBackground({ payload }: { payload: SitePayload }) {
       </div>
       <div className="mx-auto max-w-4xl px-6 py-24 text-center">
         {payload.proof.rating && (
-          <div className="mx-auto mb-6 flex w-fit items-center gap-1.5 rounded-full border border-border bg-card px-4 py-1.5 shadow-card">
-            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-            <span className="text-sm font-bold">{payload.proof.rating}</span>
-            <span className="text-sm text-muted-foreground">({payload.proof.reviewCount ?? 0} real reviews)</span>
-          </div>
+          <Reveal variant="fade-in" delay={0.2}>
+            <div className="mx-auto mb-6 flex w-fit items-center gap-1.5 rounded-full border border-border bg-card px-4 py-1.5 shadow-card">
+              <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+              <span className="text-sm font-bold">{payload.proof.rating}</span>
+              <span className="text-sm text-muted-foreground">({payload.proof.reviewCount ?? 0} real reviews)</span>
+            </div>
+          </Reveal>
         )}
-        <h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">{payload.headline}</h1>
-        {payload.subhead && <p className="mx-auto mt-5 max-w-lg text-lg text-muted-foreground">{payload.subhead}</p>}
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Button asChild size="lg">
-            <a href="#contact">Get a free quote</a>
-          </Button>
-          {payload.nap.phone && (
-            <Button asChild variant="outline" size="lg">
-              <a href={`tel:${payload.nap.phone}`}>Call {payload.nap.phone}</a>
+        <Reveal delay={0.45}>
+          <h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">{payload.headline}</h1>
+        </Reveal>
+        {payload.subhead && (
+          <Reveal delay={0.65}>
+            <p className="mx-auto mt-5 max-w-lg text-lg text-muted-foreground">{payload.subhead}</p>
+          </Reveal>
+        )}
+        <Reveal delay={0.85}>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Button asChild size="lg">
+              <a href="#contact">Get a free quote</a>
             </Button>
-          )}
-        </div>
+            {payload.nap.phone && (
+              <Button asChild variant="outline" size="lg">
+                <a href={`tel:${payload.nap.phone}`}>Call {payload.nap.phone}</a>
+              </Button>
+            )}
+          </div>
+        </Reveal>
       </div>
     </section>
   );

@@ -20,10 +20,14 @@ function apiKeyOrNull(): string | null {
 
 // Generic, industry/location-appropriate mood footage -- same grounding
 // category as an Unsplash fallback photo, never a claim about this specific
-// business's real work.
-export function buildHeroVideoPrompt(industryLabel: string, town: string | null): string {
+// business's real work. `cinematographyHint` (from the playbook's
+// `hero_video_cinematography`) adds real industry-specific shot direction
+// when available -- falls back to the original generic sentence when a
+// playbook doesn't have one, no breaking change.
+export function buildHeroVideoPrompt(industryLabel: string, town: string | null, cinematographyHint?: string): string {
   const place = town ? ` in ${town}` : "";
-  return `Cinematic establishing shot representative of a professional ${industryLabel} business${place}, golden hour lighting, slow smooth camera movement, photorealistic, no text overlay, no on-screen graphics, no readable signage, no people's faces in focus.`;
+  const shot = cinematographyHint ? `, ${cinematographyHint}` : "";
+  return `Cinematic establishing shot representative of a professional ${industryLabel} business${place}${shot}, golden hour lighting, slow smooth camera movement, photorealistic, no text overlay, no on-screen graphics, no readable signage, no people's faces in focus.`;
 }
 
 // Kicks off the long-running job, returns the operation name to poll.

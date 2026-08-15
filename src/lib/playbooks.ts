@@ -12,6 +12,11 @@ export interface Playbook {
   forbidden_slop: string[];
   photo_queries: Record<string, string>;
   faq_seed_questions: string[];
+  // v3 (Phase M) -- optional industry-specific cinematography language
+  // appended to the generic Veo hero-video prompt (src/lib/google/veo.ts).
+  // Optional so a playbook without one falls back to today's generic
+  // sentence -- no breaking change.
+  hero_video_cinematography?: string;
 }
 
 const PLAYBOOKS_DIR = path.join(process.cwd(), "playbooks");
