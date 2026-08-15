@@ -3,6 +3,7 @@ import type { Playbook } from "@/lib/playbooks";
 import type { CompetitorResearch } from "@/lib/research-competitors";
 import type { PageInventory } from "@/lib/scrape/extract-text";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { parseJsonResponse } from "@/lib/parse-json-response";
 
 export interface SectionVariantCatalogRow {
   section_kind: string;
@@ -105,14 +106,4 @@ function describeFactsRichness(facts: Facts): string {
   if (reviewCount && rating) parts.push(`${reviewCount} real reviews at ${rating} rating`);
   if (sitePhotos + gbpPhotos > 0) parts.push(`${sitePhotos + gbpPhotos} real photos available`);
   return parts.length > 0 ? parts.join("; ") : "minimal real content available";
-}
-
-function parseJsonResponse(raw: string): Record<string, unknown> | null {
-  const cleaned = raw.trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
-  try {
-    const parsed = JSON.parse(cleaned);
-    return typeof parsed === "object" && parsed !== null ? (parsed as Record<string, unknown>) : null;
-  } catch {
-    return null;
-  }
 }

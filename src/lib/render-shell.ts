@@ -34,6 +34,12 @@ export function renderShell(
   const faq = resolvedSections.filter((s) => s.kind === "faq");
   const differentiatorSection = resolvedSections.find((s) => s.kind === "differentiator");
   const heroSection = resolvedSections.find((s) => s.kind === "hero");
+  const trustStrip = resolvedSections.find((s) => s.kind === "trust-strip") ?? null;
+  const expertise = resolvedSections.find((s) => s.kind === "expertise") ?? null;
+  const ctaBanner = resolvedSections.find((s) => s.kind === "cta-banner") ?? null;
+  const process = resolvedSections.find((s) => s.kind === "process") ?? null;
+  const audienceSegments = resolvedSections.find((s) => s.kind === "audience-segments") ?? null;
+  const certifications = resolvedSections.find((s) => s.kind === "certifications") ?? null;
 
   const heroMedia = heroSection?.imageUrl ?? mediaAssets.find((m) => m.slot_hint === "hero")?.public_url ?? null;
   const proofMedia = mediaAssets.find((m) => m.slot_hint === "proof")?.public_url ?? null;
@@ -53,6 +59,12 @@ export function renderShell(
     services,
     areas,
     faq,
+    trustStrip,
+    expertise,
+    ctaBanner,
+    process,
+    audienceSegments,
+    certifications,
     reviews: ((facts.reviews as { author_name: string; rating: number; text: string }[]) ?? []).slice(0, 6),
     nap: {
       phone: (facts.nap as { phones?: string[] })?.phones?.[0] ?? null,

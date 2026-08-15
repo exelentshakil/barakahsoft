@@ -8,8 +8,28 @@ import { serviceAreaVariants, serviceAreaDefaultVariant } from "@/components/sit
 import { faqVariants, faqDefaultVariant } from "@/components/site-shell/sections/faq";
 import { guaranteeVariants, guaranteeDefaultVariant } from "@/components/site-shell/sections/guarantee";
 import { ctaVariants, ctaDefaultVariant } from "@/components/site-shell/sections/cta";
+import { trustStripVariants, trustStripDefaultVariant } from "@/components/site-shell/sections/trust-strip";
+import { expertiseVariants, expertiseDefaultVariant } from "@/components/site-shell/sections/expertise";
+import { ctaBannerVariants, ctaBannerDefaultVariant } from "@/components/site-shell/sections/cta-banner";
+import { processVariants, processDefaultVariant } from "@/components/site-shell/sections/process";
+import { audienceSegmentsVariants, audienceSegmentsDefaultVariant } from "@/components/site-shell/sections/audience-segments";
+import { certificationsVariants, certificationsDefaultVariant } from "@/components/site-shell/sections/certifications";
 
-export type SectionKind = "hero" | "proof" | "services-grid" | "reviews" | "service-area" | "faq" | "guarantee" | "cta";
+export type SectionKind =
+  | "hero"
+  | "proof"
+  | "services-grid"
+  | "reviews"
+  | "service-area"
+  | "faq"
+  | "guarantee"
+  | "cta"
+  | "trust-strip"
+  | "expertise"
+  | "cta-banner"
+  | "process"
+  | "audience-segments"
+  | "certifications";
 
 type SectionComponent = ComponentType<{ payload: SitePayload }>;
 
@@ -26,6 +46,12 @@ export const SECTION_VARIANT_REGISTRY: Record<SectionKind, Record<string, Sectio
   faq: faqVariants,
   guarantee: guaranteeVariants,
   cta: ctaVariants,
+  "trust-strip": trustStripVariants,
+  expertise: expertiseVariants,
+  "cta-banner": ctaBannerVariants,
+  process: processVariants,
+  "audience-segments": audienceSegmentsVariants,
+  certifications: certificationsVariants,
 };
 
 export const DEFAULT_VARIANT: Record<SectionKind, string> = {
@@ -37,6 +63,12 @@ export const DEFAULT_VARIANT: Record<SectionKind, string> = {
   faq: faqDefaultVariant,
   guarantee: guaranteeDefaultVariant,
   cta: ctaDefaultVariant,
+  "trust-strip": trustStripDefaultVariant,
+  expertise: expertiseDefaultVariant,
+  "cta-banner": ctaBannerDefaultVariant,
+  process: processDefaultVariant,
+  "audience-segments": audienceSegmentsDefaultVariant,
+  certifications: certificationsDefaultVariant,
 };
 
 export function resolveSectionVariant(kind: SectionKind, selection: string | undefined): SectionComponent {

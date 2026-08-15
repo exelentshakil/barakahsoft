@@ -1,4 +1,5 @@
 import { callGemini } from "@/lib/ai";
+import { parseJsonResponse } from "@/lib/parse-json-response";
 import type { RankedPhoto } from "@/lib/scrape/rank-photos";
 
 export interface CaptionedPhoto extends RankedPhoto {
@@ -55,18 +56,4 @@ Reply with strict JSON only, no markdown fences, no commentary: {"<index>": "cap
   }
 
   return photos.map((photo, i) => ({ ...photo, inferredCaption: captionByIndex.get(i) ?? null }));
-}
-
-function parseJsonResponse(raw: string): Record<string, unknown> | null {
-  const cleaned = raw
-    .trim()
-    .replace(/^```(?:json)?/i, "")
-    .replace(/```$/, "")
-    .trim();
-  try {
-    const parsed = JSON.parse(cleaned);
-    return typeof parsed === "object" && parsed !== null ? (parsed as Record<string, unknown>) : null;
-  } catch {
-    return null;
-  }
 }

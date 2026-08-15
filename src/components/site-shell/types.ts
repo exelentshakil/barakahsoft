@@ -22,6 +22,14 @@ export interface SitePayload {
   services: ResolvedSection[];
   areas: ResolvedSection[];
   faq: FunnelPageSection[];
+  // Phase E — each null unless real facts genuinely grounded it (never
+  // rendered just to hit a section count).
+  trustStrip: ResolvedSection | null;
+  expertise: ResolvedSection | null;
+  ctaBanner: ResolvedSection | null;
+  process: ResolvedSection | null;
+  audienceSegments: ResolvedSection | null;
+  certifications: ResolvedSection | null;
   reviews: { author_name: string; rating: number; text: string }[];
   nap: {
     phone: string | null;

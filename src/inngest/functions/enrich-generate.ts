@@ -4,6 +4,14 @@ import { generateHeadline, generateSubhead, type Facts, type GenerationContext }
 import { detectIndustry, loadPlaybook } from "@/lib/playbooks";
 import { deriveServiceCandidates } from "@/lib/derive-services";
 import { generateServiceSection, generateDifferentiatorSection, generateFaqSections } from "@/lib/generate-section";
+import {
+  generateTrustStripSection,
+  generateExpertiseSection,
+  generateCtaBannerSection,
+  generateProcessSection,
+  generateAudienceSegmentsSection,
+  generateCertificationsSection,
+} from "@/lib/generate-extra-sections";
 import { runPhotoWaterfall } from "@/lib/photo-waterfall";
 import { researchCompetitors } from "@/lib/research-competitors";
 import { loadSectionVariantCatalog, selectSectionVariants } from "@/lib/compose-sections";
@@ -107,12 +115,50 @@ export const enrichGenerate = inngest.createFunction(
       await runPhotoWaterfall(lead_id, facts, playbook, requiredSlots);
     });
 
+    // Phase E's six extra section kinds — after the photo waterfall so
+    // expertise can check whether a real differentiator photo landed
+    // (its OR-gate: a real photo, or ≥2 grounded trust signals). Each
+    // generator returns null when real facts don't genuinely support it —
+    // never rendered just to hit a section count.
+    const extraSections = await step.run("generate-extra-sections", async () => {
+      const { data: mediaAssets } = await admin.from("media_assets").select("id, slot_hint").eq("lead_id", lead_id);
+      const mediaBySlot = new Map((mediaAssets ?? []).map((m) => [m.slot_hint, m.id]));
+      const hasDifferentiatorPhoto = mediaBySlot.has("differentiator");
+
+      const [trustStrip, expertise, ctaBanner, process, audienceSegments, certifications] = await Promise.all([
+        Promise.resolve(generateTrustStripSection(facts)),
+        generateExpertiseSection(facts, genContext, hasDifferentiatorPhoto),
+        Promise.resolve(generateCtaBannerSection(facts, (facts.business_name as string) || playbook.industry_label)),
+        generateProcessSection(facts, genContext),
+        generateAudienceSegmentsSection(facts, genContext),
+        Promise.resolve(generateCertificationsSection(facts)),
+      ]);
+
+      return {
+        trustStrip,
+        expertise: expertise ? { ...expertise, media_asset_ids: mediaBySlot.has("differentiator") ? [mediaBySlot.get("differentiator")!] : [] } : null,
+        ctaBanner,
+        process,
+        audienceSegments,
+        certifications,
+      };
+    });
+
     await step.run("save-artifact", async () => {
       const { data: shell } = await admin.from("template_shells").select("id").eq("slug", "home-services-v1").single();
       if (!shell) throw new Error("enrich-generate: home-services-v1 template shell not found — did migrations run?");
 
       const { data: mediaAssets } = await admin.from("media_assets").select("id, slot_hint").eq("lead_id", lead_id);
       const mediaBySlot = new Map((mediaAssets ?? []).map((m) => [m.slot_hint, m.id]));
+
+      const extraSectionList = [
+        extraSections.trustStrip,
+        extraSections.expertise,
+        extraSections.ctaBanner,
+        extraSections.process,
+        extraSections.audienceSegments,
+        extraSections.certifications,
+      ].filter((s): s is NonNullable<typeof s> => s !== null);
 
       const funnelPages: FunnelPageSection[] = [
         { ...sections.heroSection, media_asset_ids: mediaBySlot.has("hero") ? [mediaBySlot.get("hero")!] : [] },
@@ -125,6 +171,15 @@ export const enrichGenerate = inngest.createFunction(
           media_asset_ids: mediaBySlot.has(`service:${s.slug}`) ? [mediaBySlot.get(`service:${s.slug}`)!] : [],
           cta: s.cta,
         })),
+        ...extraSectionList.map((s) => ({
+          slug: s.slug,
+          kind: s.kind,
+          h2: s.h2,
+          body_content: s.body_content,
+          media_asset_ids: s.media_asset_ids,
+          cta: s.cta,
+          variant_props: s.variant_props,
+        })),
         ...sections.faqSections.map((f) => ({ slug: f.slug, kind: f.kind, h2: f.h2, body_content: f.body_content, media_asset_ids: [], cta: f.cta })),
       ];
 
@@ -136,6 +191,7 @@ export const enrichGenerate = inngest.createFunction(
         ...sections.differentiator.groundingWarnings.map((w) => `[Why choose us] ${w}`),
         ...sections.serviceSections.flatMap((s) => s.groundingWarnings.map((w) => `[${s.h2}] ${w}`)),
         ...sections.faqSections.flatMap((f) => f.groundingWarnings.map((w) => `[${f.h2}] ${w}`)),
+        ...extraSectionList.flatMap((s) => s.groundingWarnings.map((w) => `[${s.h2 || s.kind}] ${w}`)),
       ];
 
       await admin.from("artifacts").upsert(

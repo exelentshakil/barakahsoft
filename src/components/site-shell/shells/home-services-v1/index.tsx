@@ -36,9 +36,15 @@ export function HomeServicesV1Shell({ payload }: { payload: SitePayload }) {
   const style = Object.keys(cssVars).length > 0 ? (cssVars as React.CSSProperties) : undefined;
 
   const Hero = resolveSectionVariant("hero", payload.sectionVariants.hero);
+  const TrustStrip = resolveSectionVariant("trust-strip", payload.sectionVariants["trust-strip"]);
   const Proof = resolveSectionVariant("proof", payload.sectionVariants.proof);
+  const Expertise = resolveSectionVariant("expertise", payload.sectionVariants.expertise);
   const ServicesGrid = resolveSectionVariant("services-grid", payload.sectionVariants["services-grid"]);
+  const CtaBanner = resolveSectionVariant("cta-banner", payload.sectionVariants["cta-banner"]);
+  const Process = resolveSectionVariant("process", payload.sectionVariants.process);
+  const AudienceSegments = resolveSectionVariant("audience-segments", payload.sectionVariants["audience-segments"]);
   const Reviews = resolveSectionVariant("reviews", payload.sectionVariants.reviews);
+  const Certifications = resolveSectionVariant("certifications", payload.sectionVariants.certifications);
   const ServiceArea = resolveSectionVariant("service-area", payload.sectionVariants["service-area"]);
   const Faq = resolveSectionVariant("faq", payload.sectionVariants.faq);
   const Guarantee = resolveSectionVariant("guarantee", payload.sectionVariants.guarantee);
@@ -49,7 +55,9 @@ export function HomeServicesV1Shell({ payload }: { payload: SitePayload }) {
       <MegaMenu payload={payload} />
 
       <Hero payload={payload} />
+      <TrustStrip payload={payload} />
       <Proof payload={payload} />
+      <Expertise payload={payload} />
 
       <ServicesGrid payload={payload} />
       {/* Individual service sections — real anchor targets for the menu/grid above */}
@@ -57,7 +65,12 @@ export function HomeServicesV1Shell({ payload }: { payload: SitePayload }) {
         <SectionRenderer key={service.slug} section={service} />
       ))}
 
+      <CtaBanner payload={payload} />
+      <Process payload={payload} />
+      <AudienceSegments payload={payload} />
+
       <Reviews payload={payload} />
+      <Certifications payload={payload} />
 
       <ServiceArea payload={payload} />
       {payload.areas.map((area) => (
