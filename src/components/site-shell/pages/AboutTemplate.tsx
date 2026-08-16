@@ -8,8 +8,10 @@ import { Reveal } from "@/components/site-shell/primitives/Reveal";
 // real proof stats, real photo) rather than generating anything new, so
 // this page is available as soon as the fast homepage pass has run, not
 // gated behind full-site expansion.
+type ExpertisePoint = { title: string; description: string };
+
 export function AboutTemplate({ payload }: { payload: SitePayload }) {
-  const bullets = (payload.expertise?.variant_props?.bullets as string[] | undefined) ?? [];
+  const points = (payload.expertise?.variant_props?.points as ExpertisePoint[] | undefined) ?? [];
 
   return (
     <>
@@ -25,12 +27,15 @@ export function AboutTemplate({ payload }: { payload: SitePayload }) {
           )}
           <Reveal>
             <h2 className="font-display text-2xl font-bold tracking-tight">{payload.expertise?.h2 || "Why choose us"}</h2>
-            {bullets.length > 0 ? (
-              <ul className="mt-6 space-y-4">
-                {bullets.map((b, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm">
+            {points.length > 0 ? (
+              <ul className="mt-6 space-y-5">
+                {points.map((p, i) => (
+                  <li key={i} className="flex items-start gap-3">
                     <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                    <span>{b}</span>
+                    <div>
+                      <p className="font-semibold">{p.title}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">{p.description}</p>
+                    </div>
                   </li>
                 ))}
               </ul>

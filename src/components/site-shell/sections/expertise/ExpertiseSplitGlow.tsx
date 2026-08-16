@@ -3,14 +3,16 @@ import type { SitePayload } from "@/components/site-shell/types";
 import { SectionEyebrow } from "@/components/site-shell/primitives/SectionEyebrow";
 import { Reveal } from "@/components/site-shell/primitives/Reveal";
 
+type ExpertisePoint = { title: string; description: string };
+
 // Premium sibling of ExpertiseSplit -- same real data contract
-// (payload.expertise.h2 + variant_props.bullets + real imageUrl), a
+// (payload.expertise.h2 + variant_props.points + real imageUrl), a
 // decorative glow blob behind the photo and a proof-forward eyebrow instead
 // of a plain two-column split.
 export function ExpertiseSplitGlow({ payload }: { payload: SitePayload }) {
   const section = payload.expertise;
-  const bullets = (section?.variant_props?.bullets as string[] | undefined) ?? [];
-  if (!section || bullets.length === 0) return null;
+  const points = (section?.variant_props?.points as ExpertisePoint[] | undefined) ?? [];
+  if (!section || points.length === 0) return null;
 
   return (
     <section id="expertise" className="relative overflow-hidden border-t border-border py-20">
@@ -25,11 +27,14 @@ export function ExpertiseSplitGlow({ payload }: { payload: SitePayload }) {
         <Reveal>
           <SectionEyebrow icon={Award}>Why we're different</SectionEyebrow>
           <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">{section.h2}</h2>
-          <ul className="mt-6 space-y-4">
-            {bullets.map((bullet, i) => (
-              <li key={i} className="flex items-start gap-3 text-sm">
+          <ul className="mt-6 space-y-5">
+            {points.map((point, i) => (
+              <li key={i} className="flex items-start gap-3">
                 <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                <span>{bullet}</span>
+                <div>
+                  <p className="font-semibold">{point.title}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{point.description}</p>
+                </div>
               </li>
             ))}
           </ul>

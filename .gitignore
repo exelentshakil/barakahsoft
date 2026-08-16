@@ -8,4 +8,4 @@ deploy.sh
 tsconfig.tsbuildinfo
 
 # Phase Q: private design-reference screenshot library (hand-building reference only, never shipped)
-design-reference/
+design-reference/.scratch/

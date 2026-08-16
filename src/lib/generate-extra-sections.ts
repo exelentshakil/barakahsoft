@@ -45,10 +45,12 @@ export function generateTrustStripSection(facts: Facts): SectionResult {
   };
 }
 
-// expertise — a bulleted "why choose us" narrative, richer than the single-
-// sentence differentiator. Gated on either a real differentiator photo
-// (Phase C4's slot) or at least 2 real trust signals — skip otherwise
-// rather than call the AI over nothing.
+// expertise — a "why choose us" narrative of real reasoning, not a flat
+// checklist. Each point pairs a short title with a full grounded sentence
+// (matching the reference bar: real specifics like "fourth-generation
+// contractor since 1987", not a 15-word fragment). Gated on either a real
+// differentiator photo (Phase C4's slot) or at least 2 real trust signals —
+// skip otherwise rather than call the AI over nothing.
 export async function generateExpertiseSection(
   facts: Facts,
   context: GenerationContext,
@@ -58,19 +60,27 @@ export async function generateExpertiseSection(
   if (!hasDifferentiatorPhoto && signals.count < 2) return null;
 
   const homepage = findRelevantPage(facts);
-  const digest = await researchDigest(findRelevantPages(facts), "why choose this business, expertise, differentiators");
-  const prompt = `Write 3-4 short bullet points (each under 15 words, no emoji) titled "Why choose us" for a ${context.industryLabel} business, grounded ONLY in these real facts — never invent a claim not present here:\n${buildRichContext(
+  const digest = await researchDigest(findRelevantPages(facts), "why choose this business, expertise, differentiators, history, credentials");
+  const prompt = `Write 3-4 "why choose us" points for a ${context.industryLabel} business, grounded ONLY in these real facts — never invent a claim not present here. Each point needs a short title (3-6 words, no emoji) AND a real supporting sentence (20-30 words) that cites specific, concrete details from the facts below (years in business, real credentials, how the owner/team works, real service scope) — not a generic industry platitude:\n${buildRichContext(
     facts,
     { relevantPage: homepage }
-  )}${digest ? `\n\nAdditional real research:\n${digest}` : ""}\n\nReply with strict JSON only, no markdown: {"bullets": ["...", "..."]}. If fewer than 2 real bullets can be grounded, reply {"bullets": []}.`;
+  )}${digest ? `\n\nAdditional real research:\n${digest}` : ""}\n\nReply with strict JSON only, no markdown: {"points": [{"title": "...", "description": "..."}]}. If fewer than 2 real points can be grounded with a genuine supporting sentence, reply {"points": []}.`;
 
-  const raw = await draftCritiqueRevise(prompt, digest, "3-4 bullets, each under 15 words, valid JSON: {\"bullets\": [...]}");
+  const raw = await draftCritiqueRevise(
+    prompt,
+    digest,
+    'valid JSON {"points": [{"title": "3-6 words", "description": "20-30 word grounded sentence"}]}, 3-4 items'
+  );
   const parsed = raw ? parseJsonResponse(raw) : null;
-  const bullets = Array.isArray(parsed?.bullets) ? (parsed!.bullets as unknown[]).filter((b): b is string => typeof b === "string") : [];
+  const rawPoints = Array.isArray(parsed?.points) ? (parsed!.points as unknown[]) : [];
+  const points = rawPoints.filter(
+    (p): p is { title: string; description: string } =>
+      typeof p === "object" && p !== null && typeof (p as { title?: unknown }).title === "string" && typeof (p as { description?: unknown }).description === "string"
+  );
 
-  if (bullets.length < 2 && !hasDifferentiatorPhoto) return null;
+  if (points.length < 2 && !hasDifferentiatorPhoto) return null;
 
-  const body = bullets.join("\n");
+  const body = points.map((p) => `${p.title}: ${p.description}`).join("\n");
   const { pass, reasons } = validateGrounding(body, facts);
   return {
     slug: "expertise",
@@ -79,7 +89,7 @@ export async function generateExpertiseSection(
     body_content: body,
     media_asset_ids: [],
     cta: null,
-    variant_props: { bullets },
+    variant_props: { points },
     groundingWarnings: pass ? [] : reasons,
   };
 }
