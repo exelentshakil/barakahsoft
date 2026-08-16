@@ -7,7 +7,6 @@ import { HowItWorks } from "@/components/landing/HowItWorks";
 import { ProofGallery } from "@/components/landing/ProofGallery";
 import { IndustryShowcase } from "@/components/landing/IndustryShowcase";
 import { Team } from "@/components/landing/Team";
-import { ValueBundle } from "@/components/landing/ValueBundle";
 import { PricingPilot } from "@/components/landing/PricingPilot";
 import { FAQAccordion } from "@/components/landing/FAQAccordion";
 import { FinalCta } from "@/components/landing/FinalCta";
@@ -41,7 +40,6 @@ export default function LandingPage() {
       <ProofGallery />
       <IndustryShowcase />
       <Team />
-      <ValueBundle />
       <PricingPilot />
       <FAQAccordion />
       <FinalCta />

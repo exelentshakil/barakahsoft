@@ -45,7 +45,7 @@ export interface IndustryShowcaseGroup {
 // BarakahSoft's own delivered client work (that's ProofGallery, sourced
 // from public/refs/clients/ instead) -- showing a third-party competitor
 // site as "our work" would misrepresent authorship.
-export async function listIndustryShowcase(limitPerTrade = 6): Promise<IndustryShowcaseGroup[]> {
+export async function listIndustryShowcase(limitPerTrade = 25): Promise<IndustryShowcaseGroup[]> {
   const admin = createAdminClient();
 
   const groups = await Promise.all(

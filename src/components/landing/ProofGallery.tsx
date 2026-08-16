@@ -1,17 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
-import { ScrollSlideRow } from "@/components/landing/primitives/ScrollSlideRow";
+import { Marquee } from "@/components/landing/primitives/Marquee";
 import { SectionEyebrow } from "@/components/site-shell/primitives/SectionEyebrow";
 import { Sparkles } from "lucide-react";
 
 const CLIENTS_DIR = path.join(process.cwd(), "public", "refs", "clients");
 const IMAGE_EXT = /\.(png|jpe?g|webp)$/i;
-// The gallery is a real Stripe-style scroll-slide, not a static grid --
-// showing all real deliveries at once would make the scroll track
-// enormous, so the featured slide caps at a curated slice; the caption
-// below states the real total so nothing is hidden, just not all crammed
-// into one pinned section.
-const FEATURED_CAP = 18;
 
 // Auto-renders whatever's dropped in public/refs/clients/ — no CMS, name
 // files clearly (plumber-belfast.png, karting-coleraine.png) and they show
@@ -22,6 +16,21 @@ function labelFromFilename(filename: string): string {
     .replace(IMAGE_EXT, "")
     .replace(/[-_]/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function GalleryCard({ file }: { file: string }) {
+  return (
+    <div className="w-[320px] overflow-hidden rounded-xl border border-border bg-card shadow-lift sm:w-[380px]">
+      <div className="flex items-center gap-1.5 border-b border-border bg-muted px-3 py-2">
+        <span className="h-2.5 w-2.5 rounded-full bg-danger/60" />
+        <span className="h-2.5 w-2.5 rounded-full bg-warning/60" />
+        <span className="h-2.5 w-2.5 rounded-full bg-success/60" />
+      </div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`/refs/clients/${file}`} alt={labelFromFilename(file)} className="aspect-[4/3] w-full object-cover object-top" />
+      <p className="px-3 py-2 text-sm font-medium text-muted-foreground">{labelFromFilename(file)}</p>
+    </div>
+  );
 }
 
 export function ProofGallery() {
@@ -50,37 +59,34 @@ export function ProofGallery() {
     );
   }
 
-  const featured = files.slice(0, FEATURED_CAP);
-  const remaining = files.length - featured.length;
+  // Two rows, opposite directions -- every real delivery shown (not just a
+  // curated slice), split evenly across the pair.
+  const mid = Math.ceil(files.length / 2);
+  const rowOne = files.slice(0, mid);
+  const rowTwo = files.slice(mid);
 
   return (
     <section id="proof" className="border-t border-border py-24">
       <div className="mx-auto max-w-3xl px-6 text-center">
         <SectionEyebrow icon={Sparkles}>Real client work</SectionEyebrow>
         <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">Real redesigns, not mockups</h2>
-        <p className="mt-3 text-muted-foreground">Keep scrolling — every one of these is a real, delivered client site.</p>
+        <p className="mt-3 text-muted-foreground">Every one of these {files.length} sites is a real, delivered client redesign.</p>
       </div>
 
-      <div className="mt-10">
-        <ScrollSlideRow itemClassName="w-[320px] sm:w-[400px]">
-          {featured.map((file) => (
-            <div key={file} className="overflow-hidden rounded-xl border border-border bg-card shadow-lift">
-              <div className="flex items-center gap-1.5 border-b border-border bg-muted px-3 py-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-danger/60" />
-                <span className="h-2.5 w-2.5 rounded-full bg-warning/60" />
-                <span className="h-2.5 w-2.5 rounded-full bg-success/60" />
-              </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/refs/clients/${file}`} alt={labelFromFilename(file)} className="aspect-[4/3] w-full object-cover object-top" />
-              <p className="px-3 py-2 text-sm font-medium text-muted-foreground">{labelFromFilename(file)}</p>
-            </div>
+      <div className="mt-10 space-y-6">
+        <Marquee gap="gap-6" durationSeconds={Math.max(40, rowOne.length * 6)}>
+          {rowOne.map((file) => (
+            <GalleryCard key={file} file={file} />
           ))}
-        </ScrollSlideRow>
+        </Marquee>
+        {rowTwo.length > 0 && (
+          <Marquee gap="gap-6" reverse durationSeconds={Math.max(40, rowTwo.length * 6)}>
+            {rowTwo.map((file) => (
+              <GalleryCard key={file} file={file} />
+            ))}
+          </Marquee>
+        )}
       </div>
-
-      {remaining > 0 && (
-        <p className="mt-6 text-center text-sm text-muted-foreground">+{remaining} more real client redesigns delivered</p>
-      )}
     </section>
   );
 }

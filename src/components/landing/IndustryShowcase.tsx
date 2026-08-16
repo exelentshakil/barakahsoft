@@ -1,14 +1,16 @@
 import { Telescope } from "lucide-react";
 import { listIndustryShowcase } from "@/lib/design-reference";
-import { StackFlipRow } from "@/components/landing/primitives/StackFlipRow";
+import { Marquee } from "@/components/landing/primitives/Marquee";
 import { SectionEyebrow } from "@/components/site-shell/primitives/SectionEyebrow";
 
-// Real, curated premium websites across the trades we serve -- sourced and
-// vetted by the team as the design bar every redesign is built to match.
-// Explicitly NOT presented as BarakahSoft's own delivered work (that's
-// ProofGallery, above, sourced from our own real client deliveries) --
-// this is the research/inspiration library, labeled as such so nothing
-// here misrepresents authorship.
+// Real, curated premium websites across every trade we serve -- sourced
+// and vetted by the team as the design bar every redesign is built to
+// match. Explicitly NOT presented as BarakahSoft's own delivered work
+// (that's ProofGallery, above, sourced from our own real client
+// deliveries) -- this is the research/inspiration library, labeled as such
+// so nothing here misrepresents authorship. One marquee row per industry,
+// alternating scroll direction row to row (a real "horizontal / reverse
+// horizontal" pattern, not just a repeated single direction).
 export async function IndustryShowcase() {
   const groups = await listIndustryShowcase();
   if (groups.length === 0) return null;
@@ -23,27 +25,20 @@ export async function IndustryShowcase() {
         </p>
       </div>
 
-      <div className="mt-10">
-        <StackFlipRow>
-          {groups.map((group) => (
-            <div key={group.slug} className="h-full overflow-hidden rounded-3xl border border-border bg-card shadow-glow">
-              <div className="relative h-[52vh] w-full overflow-hidden bg-muted">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={group.images[0].url} alt={group.images[0].alt} className="h-full w-full object-cover object-top" />
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-6">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-white/70">Real {group.label.toLowerCase()} website</p>
-                  <p className="mt-1 font-display text-2xl font-bold text-white">{group.label}</p>
+      <div className="mt-14 space-y-10">
+        {groups.map((group, i) => (
+          <div key={group.slug}>
+            <p className="mb-3 px-6 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.label}</p>
+            <Marquee gap="gap-5" reverse={i % 2 === 1} durationSeconds={Math.max(30, group.images.length * 5)}>
+              {group.images.map((img) => (
+                <div key={img.url} className="h-48 w-72 overflow-hidden rounded-xl border border-border bg-card shadow-card">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={img.url} alt={img.alt} className="h-full w-full object-cover object-top" />
                 </div>
-              </div>
-              <div className="grid grid-cols-3 gap-px bg-border">
-                {group.images.slice(1, 4).map((img) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img key={img.url} src={img.url} alt={img.alt} className="aspect-video w-full bg-card object-cover object-top" />
-                ))}
-              </div>
-            </div>
-          ))}
-        </StackFlipRow>
+              ))}
+            </Marquee>
+          </div>
+        ))}
       </div>
     </section>
   );
