@@ -6,6 +6,7 @@ import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
 import { LocationServiceTemplate } from "@/components/site-shell/pages/LocationServiceTemplate";
 import { getShellStyle } from "@/components/site-shell/shell-style";
 import { breadcrumbSchema, serviceSchema } from "@/lib/seo/breadcrumb-schema";
+import { isAdminSession } from "@/lib/is-admin-session";
 
 // A real service x real area combination page (slug format
 // "<service-slug>--<area-slug>", matching enrich-expand.ts's funnel_pages
@@ -29,7 +30,7 @@ export default async function LocationServicePage({ params }: { params: Promise<
   const { leadSlug, slug } = await params;
   const result = await getSiteData(leadSlug);
   if (!result) notFound();
-  if (!result.payload.innerPagesBuilt || !result.payload.fullSiteBuilt) redirect(`/s/${leadSlug}`);
+  if ((!result.payload.innerPagesBuilt || !result.payload.fullSiteBuilt) && !(await isAdminSession())) redirect(`/s/${leadSlug}`);
 
   const { payload } = result;
   const section = payload.locationServices.find((s) => s.slug === slug);

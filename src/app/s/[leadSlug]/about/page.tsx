@@ -6,6 +6,7 @@ import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
 import { AboutTemplate } from "@/components/site-shell/pages/AboutTemplate";
 import { getShellStyle } from "@/components/site-shell/shell-style";
 import { breadcrumbSchema } from "@/lib/seo/breadcrumb-schema";
+import { isAdminSession } from "@/lib/is-admin-session";
 
 // Same §6 gate as contact/services/areas -- built from content the fast
 // homepage pass already generates, so this doesn't need full-site expansion.
@@ -24,7 +25,7 @@ export default async function AboutPage({ params }: { params: Promise<{ leadSlug
   const { leadSlug } = await params;
   const result = await getSiteData(leadSlug);
   if (!result) notFound();
-  if (!result.payload.innerPagesBuilt) redirect(`/s/${leadSlug}#expertise`);
+  if (!result.payload.innerPagesBuilt && !(await isAdminSession())) redirect(`/s/${leadSlug}#expertise`);
 
   const { payload } = result;
   const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: "About", path: "/about" }]);

@@ -7,6 +7,7 @@ import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
 import { BookingForm } from "@/components/site-shell/BookingForm";
 import { getShellStyle } from "@/components/site-shell/shell-style";
 import { breadcrumbSchema } from "@/lib/seo/breadcrumb-schema";
+import { isAdminSession } from "@/lib/is-admin-session";
 
 // Same §6 gate as services/[slug] and areas/[slug] — a real route that
 // 404s/redirects pre-payment, unlocked by the same inner_pages_built flag.
@@ -24,7 +25,7 @@ export default async function ContactPage({ params }: { params: Promise<{ leadSl
   const { leadSlug } = await params;
   const result = await getSiteData(leadSlug);
   if (!result) notFound();
-  if (!result.payload.innerPagesBuilt) redirect(`/s/${leadSlug}#contact`);
+  if (!result.payload.innerPagesBuilt && !(await isAdminSession())) redirect(`/s/${leadSlug}#contact`);
 
   const { payload } = result;
   const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: "Contact", path: "/contact" }]);

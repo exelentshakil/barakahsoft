@@ -6,6 +6,7 @@ import { MegaMenu } from "@/components/site-shell/MegaMenu";
 import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
 import { getShellStyle } from "@/components/site-shell/shell-style";
 import { breadcrumbSchema } from "@/lib/seo/breadcrumb-schema";
+import { isAdminSession } from "@/lib/is-admin-session";
 
 // Same mechanism as services/[slug] — see that file's comment for why
 // payment only flips a boolean gate rather than regenerating content.
@@ -26,7 +27,7 @@ export default async function AreaPage({ params }: { params: Promise<{ leadSlug:
   const { leadSlug, slug } = await params;
   const result = await getSiteData(leadSlug);
   if (!result) notFound();
-  if (!result.payload.innerPagesBuilt) redirect(`/s/${leadSlug}#${slug}`);
+  if (!result.payload.innerPagesBuilt && !(await isAdminSession())) redirect(`/s/${leadSlug}#${slug}`);
 
   const { payload } = result;
   const area = payload.areas.find((a) => a.slug === slug);

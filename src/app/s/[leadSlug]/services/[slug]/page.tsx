@@ -6,6 +6,7 @@ import { MegaMenu } from "@/components/site-shell/MegaMenu";
 import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
 import { getShellStyle } from "@/components/site-shell/shell-style";
 import { breadcrumbSchema, serviceSchema } from "@/lib/seo/breadcrumb-schema";
+import { isAdminSession } from "@/lib/is-admin-session";
 
 // Generic route — one file handles every service slug via params.slug.
 // The only thing payment changes (plan §6): this route 404s pre-payment
@@ -31,7 +32,7 @@ export default async function ServicePage({ params }: { params: Promise<{ leadSl
   const { leadSlug, slug } = await params;
   const result = await getSiteData(leadSlug);
   if (!result) notFound();
-  if (!result.payload.innerPagesBuilt) redirect(`/s/${leadSlug}#${slug}`);
+  if (!result.payload.innerPagesBuilt && !(await isAdminSession())) redirect(`/s/${leadSlug}#${slug}`);
 
   const { payload } = result;
   const service = payload.services.find((s) => s.slug === slug);

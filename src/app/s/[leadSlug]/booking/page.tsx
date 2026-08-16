@@ -5,6 +5,7 @@ import { MegaMenu } from "@/components/site-shell/MegaMenu";
 import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
 import { BookingForm } from "@/components/site-shell/BookingForm";
 import { getShellStyle } from "@/components/site-shell/shell-style";
+import { isAdminSession } from "@/lib/is-admin-session";
 
 export async function generateMetadata({ params }: { params: Promise<{ leadSlug: string }> }): Promise<Metadata> {
   const { leadSlug } = await params;
@@ -24,7 +25,7 @@ export default async function BookingPage({ params }: { params: Promise<{ leadSl
   const { leadSlug } = await params;
   const result = await getSiteData(leadSlug);
   if (!result) notFound();
-  if (!result.payload.innerPagesBuilt) redirect(`/s/${leadSlug}#contact`);
+  if (!result.payload.innerPagesBuilt && !(await isAdminSession())) redirect(`/s/${leadSlug}#contact`);
 
   const { payload } = result;
 

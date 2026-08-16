@@ -5,6 +5,7 @@ import { MegaMenu } from "@/components/site-shell/MegaMenu";
 import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
 import { LegalPageTemplate } from "@/components/site-shell/pages/LegalPageTemplate";
 import { getShellStyle } from "@/components/site-shell/shell-style";
+import { isAdminSession } from "@/lib/is-admin-session";
 
 // Same §6 gate as every other inner page, for consistency -- though the
 // content itself is static boilerplate + real business identity, not
@@ -23,7 +24,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ leadSl
   const { leadSlug } = await params;
   const result = await getSiteData(leadSlug);
   if (!result) notFound();
-  if (!result.payload.innerPagesBuilt) redirect(`/s/${leadSlug}`);
+  if (!result.payload.innerPagesBuilt && !(await isAdminSession())) redirect(`/s/${leadSlug}`);
 
   const { payload } = result;
 

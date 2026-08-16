@@ -12,17 +12,20 @@ import type { FunnelPageSection, Lead, Artifact, ScrapeResults } from "@/types/d
 
 const MAX_LOCATION_PAGES = 12;
 
-// v3 (Phase L) — the "Build full site" expansion. Fires automatically off
-// the SAME lead/qa.approved event deliver-send.ts already listens to (a
-// fan-out sibling, exactly like rebuild-inner-pages.ts + go-live.ts both
-// listening to stripe/invoice.paid) — no separate admin button. The one
-// deliberate human gate the product owner wants ("everything automated
-// after our internal approval") is the QA approval an operator already
-// does for every lead; nothing here adds a second manual step, and nothing
-// expensive runs before that approval.
+// v4 (Phase W) — moved from lead/qa.approved to enrich/completed. Confirmed
+// real structural gap: firing this off approval meant full-site content
+// (remaining services, long-form copy, about/faq/legal, location pages)
+// didn't exist yet when an operator was actually reviewing the lead in
+// QA -- "review everything before approving" was genuinely impossible,
+// not a missing button. Now a fan-out sibling of render-build.ts on
+// enrich/completed instead (same fan-out pattern already used elsewhere,
+// e.g. rebuild-inner-pages.ts + go-live.ts both on stripe/invoice.paid),
+// so the whole site exists by the time QA opens. deliver-send.ts stays
+// tied to lead/qa.approved -- delivery to the client should still gate on
+// approval; only the expansion's timing moved.
 export const enrichExpand = inngest.createFunction(
   { id: "enrich-expand" },
-  { event: "lead/qa.approved" },
+  { event: "enrich/completed" },
   async ({ event, step }) => {
     const { lead_id } = event.data as { lead_id: string };
     const admin = createAdminClient();

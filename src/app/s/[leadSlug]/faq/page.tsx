@@ -6,6 +6,7 @@ import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
 import { FaqTemplate } from "@/components/site-shell/pages/FaqTemplate";
 import { getShellStyle } from "@/components/site-shell/shell-style";
 import { breadcrumbSchema } from "@/lib/seo/breadcrumb-schema";
+import { isAdminSession } from "@/lib/is-admin-session";
 
 // Same §6 gate as contact/services/areas -- the same real FAQ content
 // already generated for the homepage anchor section, as its own page.
@@ -23,7 +24,7 @@ export default async function FaqPage({ params }: { params: Promise<{ leadSlug: 
   const { leadSlug } = await params;
   const result = await getSiteData(leadSlug);
   if (!result) notFound();
-  if (!result.payload.innerPagesBuilt) redirect(`/s/${leadSlug}#faq`);
+  if (!result.payload.innerPagesBuilt && !(await isAdminSession())) redirect(`/s/${leadSlug}#faq`);
 
   const { payload } = result;
   const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: "FAQ", path: "/faq" }]);
