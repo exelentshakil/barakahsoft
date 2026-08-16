@@ -49,16 +49,24 @@ const INDUSTRY_KEYWORDS: Record<string, string[]> = {
   "agency-freelancer": ["agency", "freelance", "creative studio", "marketing agency", "design studio", "consultant", "consultancy"],
 };
 
-// v4 Phase R3 — a persona explicitly self-identified at intake is a
-// stronger signal than post-hoc keyword scraping for the two personas that
-// map cleanly onto a real distinct playbook. The other persona slugs stay
-// on keyword detection below — too generic a self-label ("local business
-// owner", "solo service provider", "other") to safely force one industry.
+// Post-launch pivot — the intake persona selector now only offers the 10
+// home-services trades (see personas.ts), so every real persona value maps
+// straight to home-services -- no ambiguity left to resolve. salon-beauty
+// and agency-freelancer stay reachable via keyword detection below for a
+// lead scraped without a persona set (e.g. an older row), even though
+// intake no longer offers those personas as options.
 const PERSONA_INDUSTRY_OVERRIDE: Record<string, string> = {
-  "salon-beauty": "salon-beauty",
-  "agency-freelancer": "agency-freelancer",
-  "contractor-tradesperson": "home-services",
-  "home-service-business-owner": "home-services",
+  contractors: "home-services",
+  electricians: "home-services",
+  homebuilders: "home-services",
+  hvac: "home-services",
+  movers: "home-services",
+  "pest-control": "home-services",
+  plumbers: "home-services",
+  remodelers: "home-services",
+  restoration: "home-services",
+  roofers: "home-services",
+  "other-trade": "home-services",
 };
 
 export function detectIndustry(facts: Facts, persona?: string | null): string {

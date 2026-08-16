@@ -52,7 +52,7 @@ export function UrlIntakeForm({
         />
       </div>
       <div>
-        <Label htmlFor="persona">Which best describes you?</Label>
+        <Label htmlFor="persona">Which trade best describes you?</Label>
         <select
           id="persona"
           required
@@ -61,7 +61,7 @@ export function UrlIntakeForm({
           className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           <option value="" disabled>
-            Select one
+            Select your trade
           </option>
           {PERSONAS.map((p) => (
             <option key={p.slug} value={p.slug}>
