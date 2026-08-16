@@ -69,7 +69,14 @@ export function renderShell(
     process,
     audienceSegments,
     certifications,
-    reviews: ((facts.reviews as { author_name: string; rating: number; text: string }[]) ?? []).slice(0, 6),
+    // Star-only Google reviews (real, common -- a reviewer left a rating with
+    // no written comment) render as a blank card with just a name floating
+    // at the bottom in every reviews variant, since the text paragraph has
+    // nothing to fill it. Filtered here once, upstream of every variant,
+    // rather than each component re-deriving the same guard.
+    reviews: ((facts.reviews as { author_name: string; rating: number; text: string }[]) ?? [])
+      .filter((r) => r.text && r.text.trim().length > 0)
+      .slice(0, 6),
     nap: {
       phone: (facts.nap as { phones?: string[] })?.phones?.[0] ?? null,
       email: (facts.nap as { emails?: string[] })?.emails?.[0] ?? null,

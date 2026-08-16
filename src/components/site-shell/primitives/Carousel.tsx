@@ -30,9 +30,9 @@ export function Carousel({ children, className }: { children: React.ReactNode[];
   return (
     <div className={cn("relative", className)}>
       <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex gap-6">
+        <div className="flex items-stretch gap-6">
           {children.map((child, i) => (
-            <div key={i} className="min-w-0 flex-[0_0_85%] sm:flex-[0_0_45%] lg:flex-[0_0_31%]">
+            <div key={i} className="flex min-w-0 flex-[0_0_85%] sm:flex-[0_0_45%] lg:flex-[0_0_31%]">
               {child}
             </div>
           ))}
