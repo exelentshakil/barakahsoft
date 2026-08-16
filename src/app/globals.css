@@ -145,3 +145,28 @@
     stroke-dashoffset: 0;
   }
 }
+
+/* Landing page trust-logo marquee (src/components/landing/primitives/Marquee.tsx). */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.animate-marquee {
+  animation-name: marquee;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* Landing page brand-gold accent (--brand-gold set inline on the page root
+   in src/app/page.tsx) -- used for CTA buttons that need to pop against a
+   dark primary-purple band instead of blending into it. */
+.bg-brand-gold {
+  background-color: hsl(var(--brand-gold, 43 96% 56%));
+}
+.text-brand-gold {
+  color: hsl(var(--brand-gold, 43 96% 56%));
+}
