@@ -1,5 +1,8 @@
 import type { Artifact, Lead, ScrapeResults, MediaAsset } from "@/types/database";
-import type { SitePayload } from "@/components/site-shell/types";
+import type { SitePayload, ResolvedSection } from "@/components/site-shell/types";
+import { extractServiceAreas } from "@/lib/scrape/extract-service-areas";
+import { slugifyText } from "@/lib/slug";
+import type { PageInventory } from "@/lib/scrape/extract-text";
 
 // render_shell atom — resolves an artifact + its lead/scrape context into
 // the flat SitePayload every shell component renders from. This is the
@@ -30,7 +33,27 @@ export function renderShell(
   }));
 
   const services = resolvedSections.filter((s) => s.kind === "service");
-  const areas = resolvedSections.filter((s) => s.kind === "area");
+  // Confirmed real gap: nothing has created a funnel_pages row with
+  // kind==="area" since Phase L's location-service combo pages replaced
+  // the old standalone-area generator -- `areas` was silently always
+  // empty (correctly showing nothing, per the never-invent discipline),
+  // even though extractServiceAreas() already finds real area names for
+  // most leads (confirmed: Daniel's Roofing has 12 real location-service
+  // combos, meaning real areas were extracted all along, just never
+  // surfaced on the homepage/footer). extractServiceAreas is a cheap,
+  // deterministic regex pass (no AI call), safe to run here directly
+  // rather than requiring a stored, AI-generated section per area.
+  const realAreaNames = extractServiceAreas((facts.pages as PageInventory[]) ?? []);
+  const areas: ResolvedSection[] = realAreaNames.map((name) => ({
+    slug: slugifyText(name),
+    kind: "area",
+    h2: name,
+    body_content: "",
+    media_asset_ids: [],
+    cta: null,
+    imageUrl: null,
+    imageUrls: [],
+  }));
   const locationServices = resolvedSections.filter((s) => s.kind === "location-service");
   const faq = resolvedSections.filter((s) => s.kind === "faq");
   const differentiatorSection = resolvedSections.find((s) => s.kind === "differentiator");

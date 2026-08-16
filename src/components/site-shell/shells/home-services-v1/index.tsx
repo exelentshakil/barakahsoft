@@ -61,10 +61,13 @@ export function HomeServicesV1Shell({ payload }: { payload: SitePayload }) {
       <Reviews payload={payload} />
       <Certifications payload={payload} />
 
+      {/* v4 -- payload.areas entries are now real extracted area *names*,
+          not AI-generated pages (see render-shell.ts), so there's no real
+          body_content to render per-area on the homepage anymore. Real
+          per-area content lives at /areas/[slug] (aggregates that area's
+          location-service pages) once fullSiteBuilt; ServiceArea below
+          already links there via sectionHref. */}
       <ServiceArea payload={payload} />
-      {payload.areas.map((area) => (
-        <SectionRenderer key={area.slug} section={area} />
-      ))}
 
       <Faq payload={payload} />
       <Guarantee payload={payload} />
