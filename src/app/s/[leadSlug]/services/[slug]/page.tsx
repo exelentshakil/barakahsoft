@@ -5,6 +5,7 @@ import { ServiceDetailTemplate } from "@/components/site-shell/pages/ServiceDeta
 import { MegaMenu } from "@/components/site-shell/MegaMenu";
 import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
 import { getShellStyle } from "@/components/site-shell/shell-style";
+import { breadcrumbSchema, serviceSchema } from "@/lib/seo/breadcrumb-schema";
 
 // Generic route — one file handles every service slug via params.slug.
 // The only thing payment changes (plan §6): this route 404s pre-payment
@@ -36,8 +37,18 @@ export default async function ServicePage({ params }: { params: Promise<{ leadSl
   const service = payload.services.find((s) => s.slug === slug);
   if (!service) notFound();
 
+  const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: service.h2, path: `/services/${slug}` }]);
+  const service_schema = serviceSchema({
+    serviceName: service.h2,
+    businessName: payload.businessName,
+    phone: payload.nap.phone,
+    address: payload.nap.address,
+  });
+
   return (
     <div style={getShellStyle(payload)}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service_schema) }} />
       <MegaMenu payload={payload} />
       <ServiceDetailTemplate payload={payload} service={service} />
       <PremiumFooter payload={payload} />

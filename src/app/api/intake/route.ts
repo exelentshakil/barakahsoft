@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendInstantLeadAlert } from "@/lib/notifications";
 import { fireMetaCapiEvent } from "@/lib/meta-pixel-server";
 import { inngest } from "@/inngest/client";
+import { isPersonaSlug } from "@/lib/personas";
 
 function slugify(url: string): string {
   try {
@@ -37,6 +38,10 @@ export async function POST(req: Request) {
         phone: body.phone,
         pain_points: Array.isArray(body.pain_points) ? body.pain_points : [],
         tcpa_consent: !!body.tcpa_consent,
+        // v4 Phase R2 — self-identified persona, silently dropped (not
+        // rejected) if it's not a real recognized slug, since it's an
+        // optional segmentation field, not a required one.
+        persona: typeof body.persona === "string" && isPersonaSlug(body.persona) ? body.persona : null,
         status: "new",
       })
       .select()

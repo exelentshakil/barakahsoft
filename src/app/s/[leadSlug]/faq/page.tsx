@@ -5,6 +5,7 @@ import { MegaMenu } from "@/components/site-shell/MegaMenu";
 import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
 import { FaqTemplate } from "@/components/site-shell/pages/FaqTemplate";
 import { getShellStyle } from "@/components/site-shell/shell-style";
+import { breadcrumbSchema } from "@/lib/seo/breadcrumb-schema";
 
 // Same §6 gate as contact/services/areas -- the same real FAQ content
 // already generated for the homepage anchor section, as its own page.
@@ -25,9 +26,11 @@ export default async function FaqPage({ params }: { params: Promise<{ leadSlug: 
   if (!result.payload.innerPagesBuilt) redirect(`/s/${leadSlug}#faq`);
 
   const { payload } = result;
+  const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: "FAQ", path: "/faq" }]);
 
   return (
     <div style={getShellStyle(payload)}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <MegaMenu payload={payload} />
       <FaqTemplate payload={payload} />
       <PremiumFooter payload={payload} />

@@ -43,13 +43,13 @@ export const enrichGenerate = inngest.createFunction(
       await admin.from("build_jobs").insert({ lead_id, stage: "enrich", status: "running", pages_total: 1 });
     });
 
-    const { scrapeResults, placeId } = await step.run("load-scrape-results", async () => {
+    const { scrapeResults, placeId, persona } = await step.run("load-scrape-results", async () => {
       const [{ data: scrape }, { data: lead }] = await Promise.all([
         admin.from("scrape_results").select("*").eq("lead_id", lead_id).single(),
-        admin.from("leads").select("place_id").eq("id", lead_id).single(),
+        admin.from("leads").select("place_id, persona").eq("id", lead_id).single(),
       ]);
       if (!scrape) throw new Error(`enrich-generate: no scrape_results for lead ${lead_id}`);
-      return { scrapeResults: scrape, placeId: lead?.place_id ?? undefined };
+      return { scrapeResults: scrape, placeId: lead?.place_id ?? undefined, persona: lead?.persona ?? null };
     });
 
     const facts = scrapeResults.facts as Facts;
@@ -57,7 +57,10 @@ export const enrichGenerate = inngest.createFunction(
     const location = placesRaw?.lat != null && placesRaw?.lng != null ? { lat: placesRaw.lat, lng: placesRaw.lng } : null;
 
     const industry = await step.run("detect-industry", async () => {
-      const detected = detectIndustry(facts);
+      // v4 Phase R3 — a self-identified persona at intake is a stronger
+      // prior than post-hoc keyword scraping for the personas that map to
+      // a real distinct playbook (salon-beauty, agency-freelancer).
+      const detected = detectIndustry(facts, persona);
       await admin.from("leads").update({ industry: detected }).eq("id", lead_id);
       return detected;
     });
@@ -90,6 +93,60 @@ export const enrichGenerate = inngest.createFunction(
       return selectSectionVariants(facts, playbook, competitorResearch, catalog);
     });
 
+    // v4 Phase N5/O2 — resolve hero-video eligibility BEFORE deciding the
+    // premium overrides below, instead of only generating a video when the
+    // AI's independent composition pick happened to land on it (which then
+    // got silently overridden anyway — the original bug report). A real
+    // video on the client's own site (extracted + hotlink-safety-checked
+    // during scrapeBusiness) always wins over spending a Veo call; Veo is
+    // the fallback, not the first choice.
+    let heroVideoAvailable = false;
+    let heroVideoFailureReason: string | null = null;
+
+    const siteVideo = (facts as { site_video?: { url: string; posterUrl: string | null } | null }).site_video;
+    if (siteVideo) {
+      await step.run("store-site-hero-video", async () => {
+        await admin.from("media_assets").insert({
+          lead_id,
+          storage_path: siteVideo.url,
+          public_url: siteVideo.url,
+          source: "site",
+          slot_hint: "hero-video",
+          storage_mode: "hotlink",
+        });
+      });
+      heroVideoAvailable = true;
+    } else {
+      // Phase H — bounded poll: ~3.3 min at 10s intervals (20 polls, up from
+      // 15), then gives up and lets HeroVideoBackground's own static-hero
+      // fallback handle it -- never blocks the rest of the pipeline on a
+      // slow/failed video job.
+      const { operationName, reason: startReason } = await step.run("start-hero-video", async () => {
+        const prompt = buildHeroVideoPrompt(playbook.industry_label, town, playbook.hero_video_cinematography);
+        return startHeroVideoGeneration(prompt);
+      });
+      heroVideoFailureReason = startReason;
+
+      if (operationName) {
+        const MAX_POLLS = 20;
+        for (let i = 0; i < MAX_POLLS; i++) {
+          await step.sleep(`wait-hero-video-${i}`, "10s");
+          const status = await step.run(`check-hero-video-${i}`, () => checkHeroVideoOperation(operationName));
+          if (status.done) {
+            if (status.videoUri) {
+              const stored = await step.run("store-hero-video", () => storeHeroVideo(lead_id, status.videoUri!));
+              heroVideoAvailable = !!stored.publicUrl;
+              heroVideoFailureReason = stored.reason;
+            } else {
+              heroVideoFailureReason = status.reason;
+            }
+            break;
+          }
+          if (i === MAX_POLLS - 1) heroVideoFailureReason = "timeout";
+        }
+      }
+    }
+
     // v3 — "the homepage should be a masterpiece" applies unconditionally
     // for every new lead, not just when the AI composition step happens to
     // pick it: these ten kinds now have one clearly best-in-class variant,
@@ -98,11 +155,12 @@ export const enrichGenerate = inngest.createFunction(
     // of v3). Never touches already-delivered leads — this only runs inside
     // enrich-generate.ts, which only ever executes once per brand-new lead;
     // the plain variants stay the untouched registry.ts fallback for legacy
-    // artifacts and any total composition failure. hero is skipped when the
-    // AI already picked video-background — an even stronger premium
-    // experience that shouldn't be downgraded.
+    // artifacts and any total composition failure. v4 Phase O2 — hero now
+    // uses video-background whenever a real video actually exists (site
+    // video or successful Veo generation, resolved above), not just when
+    // the AI's independent pick happened to land on it.
     const PREMIUM_VARIANT_OVERRIDES: Record<string, string> = {
-      hero: "split-image-premium",
+      hero: heroVideoAvailable ? "video-background" : "split-image-premium",
       proof: "stat-grid-premium",
       "services-grid": "card-grid-premium",
       reviews: "carousel-premium",
@@ -114,33 +172,7 @@ export const enrichGenerate = inngest.createFunction(
       certifications: "glow-premium",
     };
     for (const [kind, premiumSlug] of Object.entries(PREMIUM_VARIANT_OVERRIDES)) {
-      if (kind === "hero" && composition.selections.hero === "video-background") continue;
       composition.selections[kind] = premiumSlug;
-    }
-
-    // Phase H — only bother generating if the composed hero variant would
-    // actually use it (an AI pick from the same catalog compose-sections
-    // already draws from). Bounded poll: ~2.5 min at 10s intervals, then
-    // gives up and lets HeroVideoBackground's own static-hero fallback
-    // handle it -- never blocks the rest of the pipeline on a slow/failed
-    // video job.
-    if (composition.selections.hero === "video-background") {
-      const operationName = await step.run("start-hero-video", async () => {
-        const prompt = buildHeroVideoPrompt(playbook.industry_label, town, playbook.hero_video_cinematography);
-        return startHeroVideoGeneration(prompt);
-      });
-
-      if (operationName) {
-        const MAX_POLLS = 15;
-        for (let i = 0; i < MAX_POLLS; i++) {
-          await step.sleep(`wait-hero-video-${i}`, "10s");
-          const status = await step.run(`check-hero-video-${i}`, () => checkHeroVideoOperation(operationName));
-          if (status.done) {
-            if (status.videoUri) await step.run("store-hero-video", () => storeHeroVideo(lead_id, status.videoUri!));
-            break;
-          }
-        }
-      }
     }
 
     const sections = await step.run("generate-sections", async () => {
@@ -258,6 +290,9 @@ export const enrichGenerate = inngest.createFunction(
         ...sections.serviceSections.flatMap((s) => s.groundingWarnings.map((w) => `[${s.h2}] ${w}`)),
         ...sections.faqSections.flatMap((f) => f.groundingWarnings.map((w) => `[${f.h2}] ${w}`)),
         ...extraSectionList.flatMap((s) => s.groundingWarnings.map((w) => `[${s.h2 || s.kind}] ${w}`)),
+        // v4 Phase O1 — real reason a lead has no video hero, instead of an
+        // unexplained gap (was previously a silently swallowed console.error).
+        ...(!heroVideoAvailable && heroVideoFailureReason ? [`[Hero video] Generation did not complete: ${heroVideoFailureReason}`] : []),
       ];
 
       await admin.from("artifacts").upsert(

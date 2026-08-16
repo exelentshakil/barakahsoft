@@ -23,7 +23,23 @@ export function ProofGallery() {
     files = [];
   }
 
-  if (files.length === 0) return null;
+  // v4 Phase R1 — this used to silently return null with zero real
+  // deliveries in public/refs/clients/, leaving a dead gap on the landing
+  // page. A real placeholder is honest (we don't fabricate fake client
+  // work here — see Phase R's plan note on never presenting reference
+  // sites as our own portfolio) and keeps the page's flow intact until the
+  // first few real redesigns land.
+  if (files.length === 0) {
+    return (
+      <section id="proof" className="mx-auto max-w-6xl px-6 py-20">
+        <h2 className="text-center font-display text-3xl font-bold tracking-tight">Real redesigns, not mockups</h2>
+        <div className="mx-auto mt-10 max-w-md rounded-xl border border-dashed border-border bg-card/50 px-6 py-12 text-center">
+          <p className="text-sm font-medium text-muted-foreground">Premium redesigns landing soon.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Every example here will be a real, delivered client site — not a mockup.</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="proof" className="mx-auto max-w-6xl px-6 py-20">

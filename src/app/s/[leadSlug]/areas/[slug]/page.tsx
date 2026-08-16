@@ -5,6 +5,7 @@ import { SectionRenderer } from "@/components/site-shell/SectionRenderer";
 import { MegaMenu } from "@/components/site-shell/MegaMenu";
 import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
 import { getShellStyle } from "@/components/site-shell/shell-style";
+import { breadcrumbSchema } from "@/lib/seo/breadcrumb-schema";
 
 // Same mechanism as services/[slug] — see that file's comment for why
 // payment only flips a boolean gate rather than regenerating content.
@@ -31,8 +32,11 @@ export default async function AreaPage({ params }: { params: Promise<{ leadSlug:
   const area = payload.areas.find((a) => a.slug === slug);
   if (!area) notFound();
 
+  const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: area.h2, path: `/areas/${slug}` }]);
+
   return (
     <div style={getShellStyle(payload)}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <MegaMenu payload={payload} />
       <SectionRenderer section={area} standalone />
       <PremiumFooter payload={payload} />

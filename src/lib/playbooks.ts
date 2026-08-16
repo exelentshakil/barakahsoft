@@ -43,9 +43,27 @@ export function listPlaybookSlugs(): string[] {
 const INDUSTRY_KEYWORDS: Record<string, string[]> = {
   "home-services": ["plumb", "electric", "roof", "hvac", "boiler", "heating", "removal", "moving", "cleaning", "landscap", "pest"],
   "karting-recreation": ["kart", "karting", "track", "racing", "grand prix", "arrive and drive"],
+  // v4 Phase S2 — the two personas from the intake selector with no real
+  // coverage in the two industries above.
+  "salon-beauty": ["salon", "spa", "beauty", "hair", "nail", "esthetician", "barber", "lash", "microblading"],
+  "agency-freelancer": ["agency", "freelance", "creative studio", "marketing agency", "design studio", "consultant", "consultancy"],
 };
 
-export function detectIndustry(facts: Facts): string {
+// v4 Phase R3 — a persona explicitly self-identified at intake is a
+// stronger signal than post-hoc keyword scraping for the two personas that
+// map cleanly onto a real distinct playbook. The other persona slugs stay
+// on keyword detection below — too generic a self-label ("local business
+// owner", "solo service provider", "other") to safely force one industry.
+const PERSONA_INDUSTRY_OVERRIDE: Record<string, string> = {
+  "salon-beauty": "salon-beauty",
+  "agency-freelancer": "agency-freelancer",
+  "contractor-tradesperson": "home-services",
+  "home-service-business-owner": "home-services",
+};
+
+export function detectIndustry(facts: Facts, persona?: string | null): string {
+  if (persona && PERSONA_INDUSTRY_OVERRIDE[persona]) return PERSONA_INDUSTRY_OVERRIDE[persona];
+
   const haystack = JSON.stringify(facts).toLowerCase();
   let best: { slug: string; hits: number } | null = null;
   for (const [slug, keywords] of Object.entries(INDUSTRY_KEYWORDS)) {

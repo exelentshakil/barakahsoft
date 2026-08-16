@@ -5,6 +5,7 @@ import { MegaMenu } from "@/components/site-shell/MegaMenu";
 import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
 import { AboutTemplate } from "@/components/site-shell/pages/AboutTemplate";
 import { getShellStyle } from "@/components/site-shell/shell-style";
+import { breadcrumbSchema } from "@/lib/seo/breadcrumb-schema";
 
 // Same §6 gate as contact/services/areas -- built from content the fast
 // homepage pass already generates, so this doesn't need full-site expansion.
@@ -26,9 +27,11 @@ export default async function AboutPage({ params }: { params: Promise<{ leadSlug
   if (!result.payload.innerPagesBuilt) redirect(`/s/${leadSlug}#expertise`);
 
   const { payload } = result;
+  const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: "About", path: "/about" }]);
 
   return (
     <div style={getShellStyle(payload)}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <MegaMenu payload={payload} />
       <AboutTemplate payload={payload} />
       <PremiumFooter payload={payload} />

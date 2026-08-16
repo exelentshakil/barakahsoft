@@ -17,11 +17,17 @@ export default async function LeadSiteLayout({
 }) {
   const { leadSlug } = await params;
   const admin = createAdminClient();
-  const { data: lead } = await admin.from("leads").select("facebook_pixel_id").eq("slug", leadSlug).single();
+  const { data: lead } = await admin
+    .from("leads")
+    .select("facebook_pixel_id, google_site_verification")
+    .eq("slug", leadSlug)
+    .single();
   const pixelId = lead?.facebook_pixel_id;
+  const gscToken = lead?.google_site_verification;
 
   return (
     <>
+      {gscToken && <meta name="google-site-verification" content={gscToken} />}
       {pixelId && (
         <Script id="client-facebook-pixel" strategy="afterInteractive">
           {`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?

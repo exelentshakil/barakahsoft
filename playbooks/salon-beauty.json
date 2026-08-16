@@ -1,0 +1,49 @@
+{
+  "slug": "salon-beauty",
+  "industry_label": "Salon & Beauty",
+  "converting_recipes": [
+    "Lead with the finished-result transformation, not a generic storefront shot — the buyer's real question is 'will I look like that'",
+    "Put online booking (or a clear booking CTA) above the fold — appointment-driven businesses lose buyers to friction, not price",
+    "Show real stylist/technician portfolio work over any stock image when available",
+    "Surface real client reviews near the top — beauty purchases are trust-heavy and social-proof-driven"
+  ],
+  "local_seo_patterns": [
+    "One H2 per real scraped service, worded as a search query (e.g. 'Balayage Hair Coloring in Park Slope')",
+    "NAP in the footer as text, not just an image, with tel: and mailto: links",
+    "LocalBusiness JSON-LD subtype matched to the business (HairSalon, BeautySalon, NailSalon, DaySpa, etc.)"
+  ],
+  "facebook_ad_angles": [
+    "Before/after transformation photo + 'Free instant homepage redesign, see it in 48h'",
+    "Screen-recording of the AI build happening live — the build itself is the hook",
+    "Local trust angle: 'Serving [town] since [year]' when years_in_business is a real fact"
+  ],
+  "trust_signals": [
+    "Real Google rating + review count from Places (never a rounded-up or invented number)",
+    "Certifications/brand partnerships (e.g. Goldwell, Aveda) only if present in scraped facts",
+    "Years in business only if stated on their existing site or provided directly"
+  ],
+  "forbidden_slop": [
+    "Generic handshake or laptop stock photos unrelated to beauty/salon work",
+    "\"World-class\", \"cutting-edge\", \"state-of-the-art\" and similar generic-AI-cliché phrases",
+    "Invented review counts or testimonials not present in facts",
+    "Invented certifications or brand partnerships not present in facts"
+  ],
+  "photo_queries": {
+    "hero": "modern salon interior warm lighting",
+    "proof": "hair styling finished result close up",
+    "team": "salon stylist team professional portrait"
+  },
+  "hero_video_cinematography": "slow push-in on a finished style reveal, soft diffused window light, shallow depth of field, no readable signage",
+  "faq_seed_questions": [
+    "How much does it cost?",
+    "Do I need to book in advance?",
+    "What's your cancellation policy?",
+    "Do you offer consultations?",
+    "What brands/products do you use?",
+    "Do you take walk-ins?",
+    "How long does an appointment take?",
+    "Do you offer gift cards?",
+    "What are your hours?",
+    "How do I book?"
+  ]
+}

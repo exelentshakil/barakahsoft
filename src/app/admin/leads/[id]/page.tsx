@@ -12,6 +12,7 @@ import { DeleteLeadButton } from "@/components/admin/DeleteLeadButton";
 import { Badge } from "@/components/ui/badge";
 import type { Lead, Artifact, ScrapeResults, ClosePlanStep } from "@/types/database";
 import type { CompetitorCandidate } from "@/lib/google/places";
+import { personaLabel } from "@/lib/personas";
 
 // Six lead tabs (Overview, Redesign, Audit, Map grid, Competitors, How to
 // close) — everything an operator needs for one lead in one place, per the
@@ -45,11 +46,15 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
         </div>
         <div className="flex items-center gap-1">
           <Badge variant="outline">{lead.status}</Badge>
+          {/* v4 Phase R2 — operator context for closing-script personalization,
+              distinct from the AI-inferred industry badge shown elsewhere. */}
+          {personaLabel(lead.persona) && <Badge variant="outline">{personaLabel(lead.persona)}</Badge>}
           <EditLeadDialog
             leadId={lead.id}
             businessName={lead.business_name}
             sourceUrl={lead.source_url}
             facebookPixelId={lead.facebook_pixel_id}
+            googleSiteVerification={lead.google_site_verification}
           />
           <DeleteLeadButton leadId={lead.id} />
         </div>

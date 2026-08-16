@@ -1,9 +1,12 @@
 // search_unsplash atom — step 2 of the photo waterfall (plan §4/§7 of the
 // pasted spec): only called when a required slot has no usable photo from
-// the business's own site/GBP. Returns the source URL for photo-waterfall.ts
-// to download and copy into Supabase Storage — never hotlinked, and the
-// caller is responsible for writing attribution_name/attribution_url onto
-// the resulting media_assets row (Unsplash's license requires it).
+// the business's own site/GBP. Returns the source URL; v4 Phase N —
+// photo-waterfall.ts now hotlinks this directly when safe (Unsplash's API
+// terms actually prefer this over redistribution) rather than always
+// downloading and copying into Supabase Storage. The caller is responsible
+// for writing attribution_name/attribution_url onto the resulting
+// media_assets row either way (Unsplash's license requires it regardless
+// of storage mode).
 export type UnsplashPhoto = {
   sourceUrl: string;
   alt: string;

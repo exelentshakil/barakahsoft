@@ -1,0 +1,49 @@
+{
+  "slug": "agency-freelancer",
+  "industry_label": "Agency & Freelance Services",
+  "converting_recipes": [
+    "Lead with real client work/portfolio evidence, not a generic value proposition — the buyer's real question is 'have they done this before'",
+    "Put a clear, low-friction contact/inquiry CTA above the fold — no 'service area' framing, professional services aren't geo-bound",
+    "Show real project results/case studies over any stock image when available",
+    "Surface real client testimonials near the top — trust in the specific people/team matters more than for most local trades"
+  ],
+  "local_seo_patterns": [
+    "One H2 per real scraped service offering, worded as a search query (e.g. 'Facebook Ad Management for Small Business')",
+    "NAP in the footer as text, not just an image, with tel: and mailto: links",
+    "LocalBusiness or ProfessionalService JSON-LD subtype matched to the business"
+  ],
+  "facebook_ad_angles": [
+    "Real project result/case-study snippet + 'Free instant homepage redesign, see it in 48h'",
+    "Screen-recording of the AI build happening live — the build itself is the hook",
+    "Local trust angle: 'Serving [town] since [year]' when years_in_business is a real fact"
+  ],
+  "trust_signals": [
+    "Real Google rating + review count from Places (never a rounded-up or invented number)",
+    "Client logos/case studies only if present in scraped facts or provided by the operator",
+    "Years in business only if stated on their existing site or provided directly"
+  ],
+  "forbidden_slop": [
+    "Generic handshake or stock 'team meeting' photos unrelated to the real business",
+    "\"World-class\", \"cutting-edge\", \"state-of-the-art\", \"synergy\" and similar generic-AI-cliché phrases",
+    "Invented client names, logos, or testimonials not present in facts",
+    "Invented case-study results or metrics not present in facts"
+  ],
+  "photo_queries": {
+    "hero": "creative studio workspace natural light",
+    "proof": "team collaborating on project screen",
+    "team": "agency team portrait modern office"
+  },
+  "hero_video_cinematography": "static wide shot of a design/creative studio, natural window light, a work-in-progress visible on screen, no readable text or logos in focus",
+  "faq_seed_questions": [
+    "How much does it cost?",
+    "What's your process?",
+    "How long does a typical project take?",
+    "Do you work with businesses outside my area?",
+    "Can I see examples of past work?",
+    "Do you offer ongoing support after launch?",
+    "What industries do you specialize in?",
+    "How do we get started?",
+    "Do you require a contract?",
+    "How do I book a call?"
+  ]
+}

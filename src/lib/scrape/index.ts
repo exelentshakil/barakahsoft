@@ -1,5 +1,7 @@
 import { fetchSiteHtml } from "@/lib/scrape/fetch-site";
 import { extractPhotos } from "@/lib/scrape/extract-photos";
+import { extractSiteVideo } from "@/lib/scrape/extract-video";
+import { isHotlinkSafe } from "@/lib/scrape/check-hotlink-safety";
 import { extractPageInventory, extractContactInfoFromPage, deriveSiteName } from "@/lib/scrape/extract-text";
 import { extractExistingSchema } from "@/lib/scrape/extract-schema";
 import { extractLogoColor } from "@/lib/scrape/extract-logo-color";
@@ -22,6 +24,12 @@ export async function scrapeBusiness(leadId: string, sourceUrl: string, business
   const photoCandidates = pages.flatMap(extractPhotos);
   const rankedSitePhotos: RankedPhoto[] = await rankPhotoQuality(photoCandidates);
   const captionedSitePhotos = await captionUnlabeledPhotos(rankedSitePhotos);
+
+  // v4 Phase N5 — a real video on the client's own site is preferred over
+  // ever generating one with Veo; enrich-generate.ts checks this before
+  // deciding whether to spend the Veo call at all.
+  const rawSiteVideo = extractSiteVideo(pages);
+  const siteVideo = rawSiteVideo && (await isHotlinkSafe(rawSiteVideo.url, "video/")) ? rawSiteVideo : null;
 
   const pageInventory = pages.map(extractPageInventory);
   const contactInfo = homepage ? extractContactInfoFromPage(homepage) : { phones: [], emails: [], socialUrls: [] };
@@ -64,6 +72,7 @@ export async function scrapeBusiness(leadId: string, sourceUrl: string, business
     brand_color_hsl: logoColor.brandColorHsl,
     font,
     site_photos: captionedSitePhotos.slice(0, 30),
+    site_video: siteVideo,
     gbp_photo_urls: gbpPhotoUrls,
     pagespeed: { mobile: pagespeed.mobile, desktop: pagespeed.desktop },
   };

@@ -13,17 +13,20 @@ export function EditLeadDialog({
   businessName,
   sourceUrl,
   facebookPixelId,
+  googleSiteVerification,
 }: {
   leadId: string;
   businessName: string | null;
   sourceUrl: string;
   facebookPixelId?: string | null;
+  googleSiteVerification?: string | null;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(businessName ?? "");
   const [url, setUrl] = useState(sourceUrl);
   const [pixelId, setPixelId] = useState(facebookPixelId ?? "");
+  const [gscToken, setGscToken] = useState(googleSiteVerification ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,7 +38,7 @@ export function EditLeadDialog({
       const res = await fetch(`/api/leads/${leadId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ business_name: name, source_url: url, facebook_pixel_id: pixelId }),
+        body: JSON.stringify({ business_name: name, source_url: url, facebook_pixel_id: pixelId, google_site_verification: gscToken }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong");
@@ -80,6 +83,19 @@ export function EditLeadDialog({
             />
             <p className="mt-1 text-xs text-muted-foreground">
               For tracking on the client&apos;s own delivered site once they provide it — separate from our own ad tracking.
+            </p>
+          </div>
+          <div>
+            <Label htmlFor="edit-gsc-token">Google Search Console verification token (optional)</Label>
+            <Input
+              id="edit-gsc-token"
+              placeholder="e.g. abc123def456..."
+              value={gscToken}
+              onChange={(e) => setGscToken(e.target.value)}
+              className="mt-1"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Paste the token from GSC&apos;s HTML tag verification method, once the lead&apos;s custom domain is live.
             </p>
           </div>
           {error && <p className="text-sm text-danger">{error}</p>}

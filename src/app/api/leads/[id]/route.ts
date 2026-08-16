@@ -16,6 +16,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (typeof body?.business_name === "string") updates.business_name = body.business_name || null;
   if (typeof body?.source_url === "string" && body.source_url) updates.source_url = body.source_url;
   if (typeof body?.facebook_pixel_id === "string") updates.facebook_pixel_id = body.facebook_pixel_id.trim() || null;
+  if (typeof body?.google_site_verification === "string") updates.google_site_verification = body.google_site_verification.trim() || null;
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
   }

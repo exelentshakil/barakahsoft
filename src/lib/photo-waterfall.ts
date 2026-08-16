@@ -1,8 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { searchUnsplash } from "@/lib/unsplash";
 import { searchPexels } from "@/lib/pexels";
+import { isHotlinkSafe } from "@/lib/scrape/check-hotlink-safety";
 import type { Playbook } from "@/lib/playbooks";
-import type { MediaAssetSource } from "@/types/database";
+import type { MediaAssetSource, MediaStorageMode } from "@/types/database";
 import type { CaptionedPhoto } from "@/lib/scrape/caption-photos";
 
 const MIN_QUALITY_FLOOR = 40;
@@ -49,8 +50,8 @@ function pickBestSitePhoto(sitePhotos: CaptionedPhoto[], slot: RequiredSlot, use
 }
 
 // copy_to_storage atom — downloads a source URL and re-uploads into this
-// lead's Storage folder. Every image on a generated site must live here;
-// nothing is ever hotlinked (plan §7).
+// lead's Storage folder. Used whenever hotlinking a source isn't safe (see
+// resolveMediaUrl below), or unconditionally for GBP photos.
 async function copyToStorage(sourceUrl: string, leadId: string, source: MediaAssetSource, slotHint: string): Promise<string | null> {
   try {
     const res = await fetch(sourceUrl);
@@ -71,6 +72,28 @@ async function copyToStorage(sourceUrl: string, leadId: string, source: MediaAss
     console.error("[photo-waterfall] copy_to_storage failed for", sourceUrl, err);
     return null;
   }
+}
+
+// v4 Phase N — reverses the earlier "never hotlinked" decision (storage
+// cost): site-photo and stock-fallback (unsplash/pexels) sources hotlink
+// directly when isHotlinkSafe confirms it, skipping copyToStorage entirely.
+// GBP photos always go through copyToStorage — the Places Photo API already
+// requires a server-side authenticated fetch, so there's no separate
+// hotlink win, and Google's endpoint has its own referrer/key restrictions
+// that make direct client-side hotlinking unreliable.
+const HOTLINK_ELIGIBLE: MediaAssetSource[] = ["site", "unsplash", "pexels"];
+
+async function resolveMediaUrl(
+  sourceUrl: string,
+  leadId: string,
+  source: MediaAssetSource,
+  slotHint: string
+): Promise<{ publicUrl: string; storageMode: MediaStorageMode } | null> {
+  if (HOTLINK_ELIGIBLE.includes(source) && (await isHotlinkSafe(sourceUrl))) {
+    return { publicUrl: sourceUrl, storageMode: "hotlink" };
+  }
+  const copied = await copyToStorage(sourceUrl, leadId, source, slotHint);
+  return copied ? { publicUrl: copied, storageMode: "copied" } : null;
 }
 
 interface RequiredSlot {
@@ -132,17 +155,19 @@ export async function runPhotoWaterfall(
 
     if (!sourceUrl) continue;
 
-    const publicUrl = await copyToStorage(sourceUrl, leadId, source, slot.slotHint);
-    if (!publicUrl) continue;
+    const resolved = await resolveMediaUrl(sourceUrl, leadId, source, slot.slotHint);
+    if (!resolved) continue;
+    const { publicUrl, storageMode } = resolved;
 
     await admin.from("media_assets").insert({
       lead_id: leadId,
-      storage_path: publicUrl.split("/lead-media/")[1] ?? publicUrl,
+      storage_path: storageMode === "copied" ? publicUrl.split("/lead-media/")[1] ?? publicUrl : sourceUrl,
       public_url: publicUrl,
       source,
       slot_hint: slot.slotHint,
       attribution_name: attributionName,
       attribution_url: attributionUrl,
+      storage_mode: storageMode,
     });
   }
 }

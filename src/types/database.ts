@@ -40,6 +40,9 @@ export interface Lead {
   pain_points: string[];
   tcpa_consent: boolean;
   industry: string | null;
+  // v4 Phase R2 — self-identified at intake, distinct from the AI/keyword-
+  // inferred `industry` above. See src/lib/personas.ts for the slug set.
+  persona: string | null;
   status: LeadStatus;
   place_id: string | null;
   custom_domain: string | null;
@@ -48,6 +51,9 @@ export interface Lead {
   // from meta_pixel_click_id above, which is BarakahSoft's own lead-gen
   // funnel tracking.
   facebook_pixel_id: string | null;
+  // v4 Phase P2 — the token GSC issues once custom_domain (above) is
+  // verified there; rendered as a meta tag on the delivered site when set.
+  google_site_verification: string | null;
   delivered_at: string | null;
   paid_at: string | null;
   live_at: string | null;
@@ -65,6 +71,8 @@ export interface ScrapeResults {
   scraped_at: string;
 }
 
+export type MediaStorageMode = "hotlink" | "copied";
+
 export interface MediaAsset {
   id: string;
   lead_id: string;
@@ -77,6 +85,10 @@ export interface MediaAsset {
   quality_score: number | null;
   attribution_name: string | null;
   attribution_url: string | null;
+  // v4 Phase N — 'hotlink' means public_url is the real source URL (client
+  // site, Unsplash/Pexels CDN), never downloaded; 'copied' means it's a
+  // Supabase Storage URL from copyToStorage, the pre-v4 behavior.
+  storage_mode: MediaStorageMode;
   created_at: string;
 }
 

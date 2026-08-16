@@ -1,7 +1,8 @@
 // search_pexels atom — step 3 of the photo waterfall, only reached if
-// Unsplash returned nothing usable for a slot. Pexels doesn't require
-// per-photographer attribution the way Unsplash does, but we still never
-// hotlink — photo-waterfall.ts downloads and copies into Storage.
+// Unsplash returned nothing usable for a slot. v4 Phase N — photo-waterfall.ts
+// now hotlinks this directly when safe rather than always downloading and
+// copying into Storage; falls back to copying when the hotlink-safety
+// check fails.
 export type PexelsPhoto = {
   sourceUrl: string;
   alt: string;

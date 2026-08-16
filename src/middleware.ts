@@ -1,11 +1,49 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Single-operator admin app — no multi-tenant hostname routing needed yet.
-// Custom-domain routing for a lead's own live site is a GoLiveFlow concern,
-// added later keyed by leads.custom_domain using the same rewrite pattern
-// quotehaul used for tenants.custom_domain.
+// v4 Phase P1 — custom-domain routing for a lead's own live site, keyed by
+// leads.custom_domain, mirroring the rewrite pattern quotehaul used for
+// tenants.custom_domain. This is the real precondition for a client's site
+// to ever accrue organic Google/Search Console value: a shared
+// /s/[leadSlug] path under BarakahSoft's own domain structurally can't rank
+// as "the client's business."
+function appHostnames(): string[] {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const hosts = ["localhost:3000", "localhost"];
+  if (siteUrl) {
+    try {
+      hosts.push(new URL(siteUrl).hostname);
+    } catch {
+      // malformed env var — fall through with just the localhost defaults
+    }
+  }
+  return hosts;
+}
+
+async function rewriteForCustomDomain(request: NextRequest): Promise<NextResponse | null> {
+  const host = request.headers.get("host")?.split(":")[0] ?? "";
+  if (!host || appHostnames().includes(host)) return null;
+  if (request.nextUrl.pathname.startsWith("/s/")) return null; // already routed
+
+  // Skip the anon/cookie-bound client entirely — a visitor on a client's
+  // own custom domain has no admin session and no need for RLS-scoped
+  // reads; this is a trusted server-only lookup of a public routing fact.
+  const admin = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    auth: { persistSession: false },
+  });
+  const { data: lead } = await admin.from("leads").select("slug, status").eq("custom_domain", host).maybeSingle();
+  if (!lead || lead.status !== "live") return null;
+
+  const url = request.nextUrl.clone();
+  url.pathname = `/s/${lead.slug}${request.nextUrl.pathname}`;
+  return NextResponse.rewrite(url);
+}
+
 export async function middleware(request: NextRequest) {
+  const customDomainRewrite = await rewriteForCustomDomain(request);
+  if (customDomainRewrite) return customDomainRewrite;
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(

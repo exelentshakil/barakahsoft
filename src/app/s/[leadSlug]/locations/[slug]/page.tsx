@@ -5,6 +5,7 @@ import { MegaMenu } from "@/components/site-shell/MegaMenu";
 import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
 import { LocationServiceTemplate } from "@/components/site-shell/pages/LocationServiceTemplate";
 import { getShellStyle } from "@/components/site-shell/shell-style";
+import { breadcrumbSchema, serviceSchema } from "@/lib/seo/breadcrumb-schema";
 
 // A real service x real area combination page (slug format
 // "<service-slug>--<area-slug>", matching enrich-expand.ts's funnel_pages
@@ -34,8 +35,18 @@ export default async function LocationServicePage({ params }: { params: Promise<
   const section = payload.locationServices.find((s) => s.slug === slug);
   if (!section) notFound();
 
+  const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: section.h2, path: `/locations/${slug}` }]);
+  const service_schema = serviceSchema({
+    serviceName: section.h2,
+    businessName: payload.businessName,
+    phone: payload.nap.phone,
+    address: payload.nap.address,
+  });
+
   return (
     <div style={getShellStyle(payload)}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service_schema) }} />
       <MegaMenu payload={payload} />
       <LocationServiceTemplate payload={payload} section={section} />
       <PremiumFooter payload={payload} />

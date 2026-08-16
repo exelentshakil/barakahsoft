@@ -6,6 +6,7 @@ import { MegaMenu } from "@/components/site-shell/MegaMenu";
 import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
 import { BookingForm } from "@/components/site-shell/BookingForm";
 import { getShellStyle } from "@/components/site-shell/shell-style";
+import { breadcrumbSchema } from "@/lib/seo/breadcrumb-schema";
 
 // Same §6 gate as services/[slug] and areas/[slug] — a real route that
 // 404s/redirects pre-payment, unlocked by the same inner_pages_built flag.
@@ -26,9 +27,11 @@ export default async function ContactPage({ params }: { params: Promise<{ leadSl
   if (!result.payload.innerPagesBuilt) redirect(`/s/${leadSlug}#contact`);
 
   const { payload } = result;
+  const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: "Contact", path: "/contact" }]);
 
   return (
     <div style={getShellStyle(payload)}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <MegaMenu payload={payload} />
 
       <section className="py-16">

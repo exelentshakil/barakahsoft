@@ -5,9 +5,11 @@ import { CheckCircle2 } from "lucide-react";
 import { UrlIntakeForm } from "@/components/landing/UrlIntakeForm";
 import { LeadCaptureModal } from "@/components/landing/LeadCaptureModal";
 import { trackPixelEvent } from "@/lib/meta-pixel";
+import type { PersonaSlug } from "@/lib/personas";
 
 export function IntakeFlow({ ctaLabel }: { ctaLabel: string }) {
   const [url, setUrl] = useState("");
+  const [persona, setPersona] = useState<PersonaSlug | "">("");
   const [painPoints, setPainPoints] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -25,6 +27,7 @@ export function IntakeFlow({ ctaLabel }: { ctaLabel: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           source_url: url,
+          persona: persona || null,
           pain_points: painPoints ? painPoints.split(/\n+/).filter(Boolean) : [],
           name: details.name,
           email: details.email,
@@ -63,6 +66,8 @@ export function IntakeFlow({ ctaLabel }: { ctaLabel: string }) {
       <UrlIntakeForm
         url={url}
         onUrlChange={setUrl}
+        persona={persona}
+        onPersonaChange={setPersona}
         painPoints={painPoints}
         onPainPointsChange={setPainPoints}
         onSubmit={() => setModalOpen(true)}
