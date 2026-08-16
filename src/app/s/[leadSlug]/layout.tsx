@@ -1,5 +1,7 @@
 import Script from "next/script";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getSiteData } from "@/lib/get-site-data";
+import { QuoteModalProvider } from "@/components/site-shell/QuoteModalProvider";
 
 // Injects the CLIENT's own Facebook Pixel (leads.facebook_pixel_id) on
 // every delivered-site page under this segment — explicitly separate from
@@ -8,6 +10,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // unset, which is true for most leads until the client provides one.
 // A lightweight query (just the pixel ID column), not the full
 // getSiteData() each page already does independently.
+//
+// Also mounts QuoteModalProvider here (needs the full payload, so a second
+// getSiteData call) so every "Get a free quote" CTA across every page
+// under this segment shares one modal instance instead of each page
+// managing its own dialog state.
 export default async function LeadSiteLayout({
   children,
   params,
@@ -17,15 +24,14 @@ export default async function LeadSiteLayout({
 }) {
   const { leadSlug } = await params;
   const admin = createAdminClient();
-  const { data: lead } = await admin
-    .from("leads")
-    .select("facebook_pixel_id, google_site_verification")
-    .eq("slug", leadSlug)
-    .single();
+  const [{ data: lead }, siteData] = await Promise.all([
+    admin.from("leads").select("facebook_pixel_id, google_site_verification").eq("slug", leadSlug).single(),
+    getSiteData(leadSlug),
+  ]);
   const pixelId = lead?.facebook_pixel_id;
   const gscToken = lead?.google_site_verification;
 
-  return (
+  const body = (
     <>
       {gscToken && <meta name="google-site-verification" content={gscToken} />}
       {pixelId && (
@@ -42,4 +48,6 @@ fbq('track', 'PageView');`}
       {children}
     </>
   );
+
+  return siteData ? <QuoteModalProvider payload={siteData.payload}>{body}</QuoteModalProvider> : body;
 }

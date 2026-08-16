@@ -1,7 +1,10 @@
+"use client";
+
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeroStatForward } from "@/components/site-shell/sections/hero/HeroStatForward";
 import { Reveal } from "@/components/site-shell/primitives/Reveal";
+import { useQuoteModal } from "@/components/site-shell/QuoteModalProvider";
 import type { SitePayload } from "@/components/site-shell/types";
 
 // Only selected when a real video was actually generated for this lead --
@@ -17,6 +20,7 @@ import type { SitePayload } from "@/components/site-shell/types";
 // framing it as a deliberate reveal rather than ambient background motion.
 // Veo itself can't do reliable text overlays, so this is built here.
 export function HeroVideoBackground({ payload }: { payload: SitePayload }) {
+  const openQuoteModal = useQuoteModal();
   if (!payload.heroVideoUrl) return <HeroStatForward payload={payload} />;
 
   return (
@@ -53,8 +57,8 @@ export function HeroVideoBackground({ payload }: { payload: SitePayload }) {
         )}
         <Reveal delay={0.85}>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Button asChild size="lg">
-              <a href="#contact">Get a free quote</a>
+            <Button size="lg" onClick={openQuoteModal}>
+              Get a free quote
             </Button>
             {payload.nap.phone && (
               <Button asChild variant="outline" size="lg">

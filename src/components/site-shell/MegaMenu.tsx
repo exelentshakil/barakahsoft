@@ -5,6 +5,7 @@ import { Menu, X, Phone, Wrench, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { sectionHref, type SitePayload } from "@/components/site-shell/types";
+import { useQuoteModal } from "@/components/site-shell/QuoteModalProvider";
 
 // The complete, sellable IA (plan §5/§7): every scraped service and area
 // gets a real mega-menu row (icon + short description), not three generic
@@ -13,6 +14,7 @@ import { sectionHref, type SitePayload } from "@/components/site-shell/types";
 export function MegaMenu({ payload }: { payload: SitePayload }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [desktopOpen, setDesktopOpen] = useState<"services" | "areas" | null>(null);
+  const openQuoteModal = useQuoteModal();
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
@@ -87,8 +89,8 @@ export function MegaMenu({ payload }: { payload: SitePayload }) {
               <Phone className="h-4 w-4 text-primary" /> {payload.nap.phone}
             </a>
           )}
-          <Button asChild size="sm">
-            <a href="#contact">Get a free quote</a>
+          <Button size="sm" onClick={openQuoteModal}>
+            Get a free quote
           </Button>
         </div>
 

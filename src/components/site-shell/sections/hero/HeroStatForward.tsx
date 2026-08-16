@@ -1,11 +1,15 @@
+"use client";
+
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useQuoteModal } from "@/components/site-shell/QuoteModalProvider";
 import type { SitePayload } from "@/components/site-shell/types";
 
 // Leads with the real rating/review-count as a prominent stat row above the
 // headline, full-bleed photo behind everything instead of split alongside
 // it — for leads with strong real review proof, worth putting first.
 export function HeroStatForward({ payload }: { payload: SitePayload }) {
+  const openQuoteModal = useQuoteModal();
   return (
     <section className="relative overflow-hidden">
       {payload.heroImageUrl && (
@@ -26,8 +30,8 @@ export function HeroStatForward({ payload }: { payload: SitePayload }) {
         <h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">{payload.headline}</h1>
         {payload.subhead && <p className="mx-auto mt-5 max-w-lg text-lg text-muted-foreground">{payload.subhead}</p>}
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Button asChild size="lg">
-            <a href="#contact">Get a free quote</a>
+          <Button size="lg" onClick={openQuoteModal}>
+            Get a free quote
           </Button>
           {payload.nap.phone && (
             <Button asChild variant="outline" size="lg">

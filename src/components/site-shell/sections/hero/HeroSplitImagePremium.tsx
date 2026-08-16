@@ -1,13 +1,17 @@
+"use client";
+
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SitePayload } from "@/components/site-shell/types";
 import { Reveal } from "@/components/site-shell/primitives/Reveal";
+import { useQuoteModal } from "@/components/site-shell/QuoteModalProvider";
 
 // Premium sibling of HeroSplitImage -- same real data (headline/subhead/
 // nap.phone/heroImageUrl/proof.rating), a larger decorative glow, a real
 // rating badge above the headline when available, staggered entrance
 // motion, and a glow-shadow photo instead of a flat popover shadow.
 export function HeroSplitImagePremium({ payload }: { payload: SitePayload }) {
+  const openQuoteModal = useQuoteModal();
   return (
     <section className="relative overflow-hidden">
       <div className="decor-blob -right-40 -top-40 h-[32rem] w-[32rem]" />
@@ -23,8 +27,8 @@ export function HeroSplitImagePremium({ payload }: { payload: SitePayload }) {
           <h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">{payload.headline}</h1>
           {payload.subhead && <p className="mt-5 max-w-lg text-lg text-muted-foreground">{payload.subhead}</p>}
           <div className="mt-8 flex flex-wrap gap-3">
-            <Button asChild size="lg" className="shadow-lift">
-              <a href="#contact">Get a free quote</a>
+            <Button size="lg" className="shadow-lift" onClick={openQuoteModal}>
+              Get a free quote
             </Button>
             {payload.nap.phone && (
               <Button asChild variant="outline" size="lg">

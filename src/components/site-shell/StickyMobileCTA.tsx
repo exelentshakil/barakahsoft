@@ -1,5 +1,8 @@
+"use client";
+
 import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useQuoteModal } from "@/components/site-shell/QuoteModalProvider";
 import type { SitePayload } from "@/components/site-shell/types";
 
 // Sticky mobile CTA bar below 900px (plan §5 non-negotiable requirement).
@@ -8,6 +11,7 @@ import type { SitePayload } from "@/components/site-shell/types";
 // to the spec's intent (mobile-first, hidden on real desktop viewports)
 // without introducing a bespoke breakpoint just for this one component.
 export function StickyMobileCTA({ payload }: { payload: SitePayload }) {
+  const openQuoteModal = useQuoteModal();
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-2 border-t border-border bg-background/95 p-3 backdrop-blur lg:hidden">
       {payload.nap.phone && (
@@ -17,8 +21,8 @@ export function StickyMobileCTA({ payload }: { payload: SitePayload }) {
           </a>
         </Button>
       )}
-      <Button asChild size="lg" className="flex-1">
-        <a href="#contact">Get a free quote</a>
+      <Button size="lg" className="flex-1" onClick={openQuoteModal}>
+        Get a free quote
       </Button>
     </div>
   );
