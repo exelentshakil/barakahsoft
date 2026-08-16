@@ -12,6 +12,12 @@ export interface PageInventory {
   navLinks: { text: string; href: string }[];
   bodyText: string;
   formFields: string[];
+  // Confirmed real gap (danielsroofingnyc.com): a single-page Divi/
+  // WordPress site's real service list can be plain <li> text with no <a>
+  // wrapper at all -- invisible to navLinks. Collected here as a fallback
+  // source for derive-services.ts, only used when nav-derived candidates
+  // are too thin to be a real service list on their own.
+  listItemCandidates: string[];
 }
 
 export interface ExtractedContactInfo {
@@ -31,6 +37,37 @@ function extractContactInfo($: cheerio.CheerioAPI, bodyText: string): ExtractedC
     if (href && SOCIAL_HOST_PATTERNS.some((p) => p.test(href))) socialUrls.push(href);
   });
   return { phones, emails, socialUrls: Array.from(new Set(socialUrls)) };
+}
+
+// extract_list_item_candidates atom -- a real service list rendered as
+// plain <li> text (no <a> wrapper) inside a generic content module, not a
+// <nav>/<header>/menu-class container. Conservative: only lists with 3+
+// non-linked items count (a real service list is usually several items,
+// not one or two incidental bullets), each item capped to a short phrase
+// (real service names are short -- "NEW ROOF INSTALLATION", "Gutter
+// Cleaning", not a sentence).
+function extractListItemCandidates($: cheerio.CheerioAPI): string[] {
+  const candidates: string[] = [];
+  const seen = new Set<string>();
+
+  $("ul, ol").each((_, listEl) => {
+    const items = $(listEl).children("li").toArray();
+    const plainTextItems = items.filter((li) => $(li).find("a").length === 0);
+    if (plainTextItems.length < 3) return;
+
+    for (const li of plainTextItems) {
+      const text = $(li).text().replace(/\s+/g, " ").trim();
+      const wordCount = text.split(/\s+/).filter(Boolean).length;
+      if (!text || wordCount === 0 || wordCount > 8) continue;
+      if (!/[a-zA-Z]/.test(text)) continue;
+      const key = text.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      candidates.push(text);
+    }
+  });
+
+  return candidates;
 }
 
 export function extractPageInventory(page: FetchedPage): PageInventory {
@@ -67,8 +104,9 @@ export function extractPageInventory(page: FetchedPage): PageInventory {
   });
 
   const bodyText = $("body").text().replace(/\s+/g, " ").trim().slice(0, 20000);
+  const listItemCandidates = extractListItemCandidates($);
 
-  return { url: page.url, title, headings, navLinks, bodyText, formFields };
+  return { url: page.url, title, headings, navLinks, bodyText, formFields, listItemCandidates };
 }
 
 export function extractContactInfoFromPage(page: FetchedPage): ExtractedContactInfo {
