@@ -21,7 +21,19 @@ type EditMode = "manual" | "prompt";
 // grounding warning shows right here rather than a separate review queue,
 // since the operator is already looking at the live preview. Image swap
 // (upload -> /api/upload -> attach via media_asset_id) works from either mode.
-export function SectionContentEditor({ leadId, sections }: { leadId: string; sections: FunnelPageSection[] }) {
+export function SectionContentEditor({
+  leadId,
+  sections,
+  onSaved,
+}: {
+  leadId: string;
+  sections: FunnelPageSection[];
+  // v4 (Phase U2) -- router.refresh() alone only re-fetches Server
+  // Component data; it never reloads the preview <iframe>'s document, so a
+  // fully successful edit was invisible in the actual panel the operator
+  // is looking at. This callback lets the parent force that reload too.
+  onSaved?: () => void;
+}) {
   const router = useRouter();
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
   const [mode, setMode] = useState<EditMode>("manual");
@@ -64,6 +76,7 @@ export function SectionContentEditor({ leadId, sections }: { leadId: string; sec
         setEditingSlug(null);
       }
       router.refresh();
+      onSaved?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -91,6 +104,7 @@ export function SectionContentEditor({ leadId, sections }: { leadId: string; sec
       const patchData = await patchRes.json();
       if (!patchRes.ok) throw new Error(patchData.error || "Could not attach image");
       router.refresh();
+      onSaved?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Image upload failed");
     } finally {
