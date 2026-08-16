@@ -15,6 +15,7 @@ import {
 import { runPhotoWaterfall } from "@/lib/photo-waterfall";
 import { researchCompetitors } from "@/lib/research-competitors";
 import { loadSectionVariantCatalog, selectSectionVariants } from "@/lib/compose-sections";
+import { loadNicheScreenshots } from "@/lib/design-reference";
 import { buildHeroVideoPrompt, startHeroVideoGeneration, checkHeroVideoOperation, storeHeroVideo } from "@/lib/google/veo";
 import type { PageInventory } from "@/lib/scrape/extract-text";
 import type { FunnelPageSection } from "@/types/database";
@@ -83,14 +84,21 @@ export const enrichGenerate = inngest.createFunction(
 
     const genContext: GenerationContext = { industryLabel: playbook.industry_label, town, designBrief: competitorResearch.designBrief };
 
+    // v6 -- real curated screenshots of premium sites in this exact trade
+    // (leads.persona, e.g. "roofers"), when a folder has been sourced/
+    // uploaded for it. [] for an unsourced trade -- selectSectionVariants
+    // falls back to its existing text-only research signal in that case.
+    const nicheScreenshots = await step.run("load-niche-screenshots", () => loadNicheScreenshots(persona));
+
     // Which pre-built, hand-QA'd section variant renders in each fixed
-    // slot — a real per-lead pick grounded in this lead's own facts and the
-    // live competitor research above, not one static layout for everyone.
-    // Any invalid/missing pick safely falls back to the default variant at
-    // render time (src/components/site-shell/sections/registry.ts).
+    // slot — a real per-lead pick grounded in this lead's own facts, the
+    // live competitor research, and (when available) real vision input from
+    // this exact trade's curated reference screenshots — not one static
+    // layout for everyone. Any invalid/missing pick safely falls back to
+    // the default variant at render time (sections/registry.ts).
     const composition = await step.run("select-section-variants", async () => {
       const catalog = await loadSectionVariantCatalog(industry);
-      return selectSectionVariants(facts, playbook, competitorResearch, catalog);
+      return selectSectionVariants(facts, playbook, competitorResearch, catalog, nicheScreenshots);
     });
 
     // v4 Phase N5/O2 — resolve hero-video eligibility BEFORE deciding the
@@ -147,18 +155,17 @@ export const enrichGenerate = inngest.createFunction(
       }
     }
 
-    // v3 — "the homepage should be a masterpiece" applies unconditionally
-    // for every new lead, not just when the AI composition step happens to
-    // pick it: these ten kinds now have one clearly best-in-class variant,
-    // so use it directly instead of leaving it to chance (same "one single
-    // premium design, not several competing options" philosophy as the rest
-    // of v3). Never touches already-delivered leads — this only runs inside
-    // enrich-generate.ts, which only ever executes once per brand-new lead;
-    // the plain variants stay the untouched registry.ts fallback for legacy
-    // artifacts and any total composition failure. v4 Phase O2 — hero now
-    // uses video-background whenever a real video actually exists (site
-    // video or successful Veo generation, resolved above), not just when
-    // the AI's independent pick happened to land on it.
+    // v3 — "the homepage should be a masterpiece" for every new lead: these
+    // kinds should never fall back to a plain, un-premium look. v6 — this
+    // used to unconditionally overwrite the composition step's pick for 10
+    // of 14 kinds, which meant the (now vision-grounded) research above only
+    // ever actually reached rendering for the 4 kinds not listed here — a
+    // confirmed real bug, not by design. Now it's fallback-only: a real,
+    // valid pick from selectSectionVariants (informed by this trade's real
+    // reference screenshots when available) wins; this map only fills in
+    // when that pick is missing/invalid, same safety guarantee as before.
+    // hero stays a hard, unconditional override — real video availability is
+    // a fact, not an aesthetic judgment call the vision step should weigh in on.
     const PREMIUM_VARIANT_OVERRIDES: Record<string, string> = {
       hero: heroVideoAvailable ? "video-background" : "split-image-premium",
       proof: "stat-grid-premium",
@@ -171,8 +178,10 @@ export const enrichGenerate = inngest.createFunction(
       "audience-segments": "cards-premium",
       certifications: "glow-premium",
     };
+    composition.selections.hero = PREMIUM_VARIANT_OVERRIDES.hero;
     for (const [kind, premiumSlug] of Object.entries(PREMIUM_VARIANT_OVERRIDES)) {
-      composition.selections[kind] = premiumSlug;
+      if (kind === "hero") continue;
+      composition.selections[kind] = composition.selections[kind] ?? premiumSlug;
     }
 
     const sections = await step.run("generate-sections", async () => {

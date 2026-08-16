@@ -4,6 +4,7 @@ import type { CompetitorResearch } from "@/lib/research-competitors";
 import type { PageInventory } from "@/lib/scrape/extract-text";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseJsonResponse } from "@/lib/parse-json-response";
+import type { GeminiImagePart } from "@/lib/gemini-client";
 
 export interface SectionVariantCatalogRow {
   section_kind: string;
@@ -37,7 +38,8 @@ export async function selectSectionVariants(
   facts: Facts,
   playbook: Playbook,
   competitorResearch: CompetitorResearch,
-  catalog: SectionVariantCatalogRow[]
+  catalog: SectionVariantCatalogRow[],
+  nicheScreenshots: GeminiImagePart[] = []
 ): Promise<SectionComposition> {
   const byKind = new Map<string, SectionVariantCatalogRow[]>();
   for (const row of catalog) {
@@ -56,9 +58,17 @@ export async function selectSectionVariants(
   const { structuralSummary, designBrief } = competitorResearch;
   const town = facts.town as string | undefined;
 
+  // v6 -- when real curated screenshots exist for this exact trade, they are
+  // the primary visual signal (attached below as real image input, not just
+  // described in text); the structural stats stay as a secondary, always-
+  // available fallback signal for trades without a sourced screenshot set yet.
+  const visionIntro = nicheScreenshots.length > 0
+    ? `The ${nicheScreenshots.length} images attached to this request are real, hand-picked, high-quality websites from real businesses in this exact trade — use what they actually show (real photo density, color discipline, hero treatment, card style, spacing rhythm) as your PRIMARY signal for these picks, more than the structural percentages below.\n\n`
+    : "";
+
   const prompt = `You are picking a homepage layout variant for each section of a real local business, based on real research — never invent anything, only choose between the real options given.
 
-Business: ${playbook.industry_label}${town ? ` in ${town}` : ""}
+${visionIntro}Business: ${playbook.industry_label}${town ? ` in ${town}` : ""}
 This business's real available content: ${describeFactsRichness(facts)}
 
 Real competitor research (${structuralSummary.sampleSize} real ${playbook.industry_label} sites in this niche/location, scraped live just now):
@@ -69,13 +79,13 @@ Real competitor research (${structuralSummary.sampleSize} real ${playbook.indust
 - average ${structuralSummary.avgNavLinks} nav links
 ${designBrief ? `Design brief: ${designBrief}` : ""}
 
-For EACH section kind below, pick exactly one option slug that best fits this specific business's real content and what real competitors in this niche actually do. Reply with strict JSON only, no markdown fences, no commentary — one key per section kind plus a "rationale" key (one short sentence explaining your overall picks):
+For EACH section kind below, pick exactly one option slug that best fits this specific business's real content and what real competitors/reference sites in this niche actually do. Reply with strict JSON only, no markdown fences, no commentary — one key per section kind plus a "rationale" key (one short sentence explaining your overall picks, citing a specific real visual pattern from the attached images when you used them):
 {"hero": "chosen-slug", "rationale": "..."}
 
 Section kinds and their real options:
 ${JSON.stringify(menu, null, 2)}`;
 
-  const raw = await callGemini(prompt);
+  const raw = await callGemini(prompt, undefined, nicheScreenshots.length > 0 ? nicheScreenshots : undefined);
   if (!raw) return { selections: {}, rationale: "Composition call failed — using defaults." };
 
   const parsed = parseJsonResponse(raw);

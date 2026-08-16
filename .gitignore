@@ -7,5 +7,12 @@ node_modules
 deploy.sh
 tsconfig.tsbuildinfo
 
-# Phase Q: private design-reference screenshot library (hand-building reference only, never shipped)
+# Phase Q/v6: curated design-reference screenshots -- resized copies already
+# live in Supabase Storage (design-reference bucket), which is what the app
+# actually reads at generation time; the raw local PNGs (up to 11MB each,
+# 666MB total across all 10 trades) are redundant with that and never read
+# by any code path, so they don't belong in the repo. notes.md write-ups
+# stay tracked -- small, useful, no redundancy.
+design-reference/**/*.png
+design-reference/**/*.jpg
 design-reference/.scratch/
