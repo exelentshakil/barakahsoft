@@ -46,6 +46,10 @@ export interface Lead {
   status: LeadStatus;
   place_id: string | null;
   custom_domain: string | null;
+  // 'byod' = client already owned it, operator just entered it; 'purchased'
+  // = bought through BarakahSoft's own Vercel registrar account. Operator
+  // bookkeeping only.
+  domain_source: "byod" | "purchased" | null;
   meta_pixel_click_id: string | null;
   // The client's own Facebook Pixel ID for their delivered site — separate
   // from meta_pixel_click_id above, which is BarakahSoft's own lead-gen

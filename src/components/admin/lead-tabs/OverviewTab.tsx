@@ -1,5 +1,6 @@
 import { Phone, Mail, Globe, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { DomainManager } from "@/components/admin/DomainManager";
 import type { Lead } from "@/types/database";
 
 function Row({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | null }) {
@@ -50,6 +51,10 @@ export function OverviewTab({ lead }: { lead: Lead }) {
           )}
         </CardContent>
       </Card>
+
+      <div className="sm:col-span-2">
+        <DomainManager lead={lead} />
+      </div>
     </div>
   );
 }
