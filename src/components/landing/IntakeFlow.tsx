@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { PERSONAS, type PersonaSlug } from "@/lib/personas";
 import { trackPixelEvent } from "@/lib/meta-pixel";
 
-const BRAND_BUTTON = "w-full bg-[#ffd12d] text-[#111] hover:bg-[#f5c400]";
+const BRAND_BUTTON = "w-full rounded-lg bg-[#ffd12d] text-[#111] hover:bg-[#f5c400]";
 
 export function IntakeFlow({ ctaLabel }: { ctaLabel: string }) {
   const [url, setUrl] = useState("");
@@ -54,7 +54,7 @@ export function IntakeFlow({ ctaLabel }: { ctaLabel: string }) {
 
   return (
     <>
-      <Button type="button" size="lg" className="rounded-full px-7 shadow-lift" onClick={() => setModalOpen(true)}>{ctaLabel}<ArrowRight className="h-4 w-4" /></Button>
+      <Button type="button" size="lg" className="rounded-lg bg-[#ffd12d] px-7 text-[#111] shadow-lift hover:bg-[#f5c400]" onClick={() => setModalOpen(true)}>{ctaLabel}<ArrowRight className="h-4 w-4" /></Button>
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="overflow-hidden border-primary/20 p-0 shadow-glow">
           <div className="h-1 bg-gradient-primary" />
