@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" });
 
-const LOGO_URL = "/icon.svg";
+const LOGO_URL = "/icon.png";
 const SITE_URL = "https://home.barakahsoft.com";
 const TITLE = "BarakahSoft — free AI-redesigned homepage for your business";
 const DESCRIPTION = "Paste your URL. In 48 hours you get a studio-quality homepage redesign built from your own photos and real business info — free to look at, no card required.";
