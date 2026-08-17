@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { PERSONAS, type PersonaSlug } from "@/lib/personas";
 import { trackPixelEvent } from "@/lib/meta-pixel";
 
-const BRAND_BUTTON = "w-full bg-[hsl(271_70%_45%)] text-white hover:bg-[hsl(271_70%_38%)]";
+const BRAND_BUTTON = "w-full bg-[#ffd12d] text-[#111] hover:bg-[#f5c400]";
 
 export function IntakeFlow({ ctaLabel }: { ctaLabel: string }) {
   const [url, setUrl] = useState("");
