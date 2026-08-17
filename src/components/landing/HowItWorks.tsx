@@ -13,7 +13,7 @@ export function HowItWorks() {
       <div className="mx-auto max-w-5xl px-6">
         <div className="text-center">
           <SectionEyebrow icon={ListChecks}>How it works</SectionEyebrow>
-          <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">Three steps. 48 hours.</h2>
+           <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">From your current site to booked opportunities.</h2>
         </div>
         <RevealGroup className="relative mt-14 grid gap-10 sm:grid-cols-3">
           <div className="absolute left-0 right-0 top-6 hidden h-px bg-gradient-to-r from-transparent via-border to-transparent sm:block" />

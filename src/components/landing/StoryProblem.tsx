@@ -20,8 +20,8 @@ export function StoryProblem() {
       <div className="mx-auto max-w-5xl px-6">
         <div className="text-center">
           <SectionEyebrow>The problem</SectionEyebrow>
-          <h2 className="mx-auto max-w-2xl font-display text-3xl font-bold tracking-tight sm:text-4xl">
-            Every hour your site looks broken, a customer calls someone else
+            <h2 className="mx-auto max-w-2xl font-display text-3xl font-bold tracking-tight sm:text-4xl">
+            A website alone does not create a predictable pipeline
           </h2>
         </div>
 
@@ -42,8 +42,8 @@ export function StoryProblem() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={SHAK_PHOTO} alt="Shakil Ahmed, Founder" className="h-16 w-16 shrink-0 rounded-full border-2 border-white/40 object-cover" />
             <div>
-              <p className="text-lg font-medium leading-snug">
-                "There are a lot of business owners who lose sales every hour their site is down, and no one picks up the phone."
+               <p className="text-lg font-medium leading-snug">
+                "The goal is not more website traffic. The goal is more qualified conversations with people who need the work you sell."
               </p>
               <p className="mt-2 text-sm text-primary-foreground/80">Shakil Ahmed, Founder</p>
             </div>

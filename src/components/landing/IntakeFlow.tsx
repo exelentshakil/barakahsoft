@@ -55,7 +55,7 @@ export function IntakeFlow({ ctaLabel }: { ctaLabel: string }) {
         <CheckCircle2 className="h-8 w-8 text-success" />
         <p className="font-medium">You're all set.</p>
         <p className="text-sm text-muted-foreground">
-          We're building your free redesign now — expect a text or email within 48 hours, and possibly a call sooner.
+           We&apos;re reviewing your business now. Expect a text or email with the next step, usually within 48 hours.
         </p>
       </div>
     );

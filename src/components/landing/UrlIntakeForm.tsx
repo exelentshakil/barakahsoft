@@ -39,20 +39,20 @@ export function UrlIntakeForm({
       className="mx-auto mt-8 max-w-lg space-y-3 text-left"
     >
       <div>
-        <Label htmlFor="site-url">Your website</Label>
+        <Label htmlFor="site-url">Where should we start?</Label>
         <Input
           id="site-url"
           required
           type="url"
           inputMode="url"
-          placeholder="https://yourbusiness.com"
+          placeholder="Paste your current website URL"
           value={url}
           onChange={(e) => onUrlChange(e.target.value)}
           className="mt-1"
         />
       </div>
       <div>
-        <Label htmlFor="persona">Which trade best describes you?</Label>
+        <Label htmlFor="persona">What kind of home-service business are you?</Label>
         <select
           id="persona"
           required
@@ -71,10 +71,10 @@ export function UrlIntakeForm({
         </select>
       </div>
       <div>
-        <Label htmlFor="pain-points">What's not working about it? (optional)</Label>
+        <Label htmlFor="pain-points">What would you like more of? (optional)</Label>
         <Textarea
           id="pain-points"
-          placeholder="Looks outdated, doesn't show up on Google, phone never rings..."
+          placeholder="More emergency calls, panel upgrades, roof replacements..."
           value={painPoints}
           onChange={(e) => onPainPointsChange(e.target.value)}
           className="mt-1"

@@ -45,7 +45,7 @@ export function Hero({ children }: { children?: React.ReactNode }) {
       <HeroMotif />
       <div className="mx-auto max-w-4xl px-6 pb-16 pt-20 text-center sm:pt-28">
         <Badge variant="secondary" className="mb-5">
-          Free homepage redesign, no card required
+          30-day managed lead engine for US home-service businesses
         </Badge>
         <h1 className="mx-auto max-w-3xl font-display text-4xl font-bold tracking-tight sm:text-6xl">
           {landing.headline}

@@ -13,7 +13,7 @@ export function FinalCta() {
       <div className="pointer-events-none absolute -bottom-24 left-0 h-72 w-72 rounded-full bg-black/10 blur-3xl" />
       <Reveal className="relative mx-auto flex max-w-2xl flex-col items-center gap-4 px-6 text-center">
         <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-          Stop losing calls to a site that doesn't represent you
+           Stop paying for marketing that never reaches the phone
         </h2>
         <p className="max-w-lg text-primary-foreground/90">{landing.trustLine}</p>
         <Button asChild size="lg" variant="secondary" className="mt-2 shadow-lift">
