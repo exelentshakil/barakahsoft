@@ -3,6 +3,7 @@ import { IntakeFlow } from "@/components/landing/IntakeFlow";
 import { Footer } from "@/components/landing/Footer";
 import { FAQAccordion } from "@/components/landing/FAQAccordion";
 import { Nav } from "@/components/landing/Nav";
+import { IndustryShowcase } from "@/components/landing/IndustryShowcase";
 import landing from "../../../content/landing.json";
 
 const NAVY = "#07284D";
@@ -66,6 +67,7 @@ export function LeadEngineLanding() {
       <section id="team" className="scroll-mt-24 border-t border-[#d9e8f4] bg-[#f8fbfe] py-20"><div className="mx-auto max-w-6xl px-6"><div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-end"><div><Kicker>Who you are working with</Kicker><h2 className="font-sans text-4xl font-semibold tracking-[-0.04em] text-[#07284d] sm:text-5xl">A small hands-on team behind the work.</h2></div><p className="max-w-xl text-lg leading-8 text-[#60778d]">Automation helps us move quickly. We still research the market, shape the offer, edit the creative, watch the campaign, and explain what changes next.</p></div><div className="mt-10 grid gap-4 sm:grid-cols-2"><div className="rounded-2xl border border-[#c8ddec] bg-white p-6 shadow-[0_8px_24px_rgba(7,40,77,0.05)]"><p className="font-bold text-[#07284d]">Shakil Ahmed</p><p className="mt-1 text-sm text-[#0c68c8]">Founder, BarakahSoft LLC</p><p className="mt-5 text-sm leading-6 text-[#60778d]">Offer strategy, research, campaign direction, and the quality of what reaches your customers.</p></div><div className="rounded-2xl border border-[#c8ddec] bg-white p-6 shadow-[0_8px_24px_rgba(7,40,77,0.05)]"><p className="font-bold text-[#07284d]">Client support</p><p className="mt-1 text-sm text-[#0c68c8]">Clear communication throughout the sprint</p><p className="mt-5 text-sm leading-6 text-[#60778d]">You know what is being worked on, what is being tested, and what the next decision is.</p></div></div></div></section>
       <div id="pricing" className="scroll-mt-24" />
       <div id="how-it-works" className="scroll-mt-24" />
+      <IndustryShowcase />
       <FAQAccordion />
       <section className="border-t border-[#d9e8f4] bg-[#eef7ff] py-24 text-center"><div className="mx-auto max-w-3xl px-6"><Kicker>Ready to see what we can do?</Kicker><h2 className="font-sans text-4xl font-semibold tracking-[-0.04em] text-[#07284d] sm:text-6xl">Let&apos;s find out if your business is a fit.</h2><p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-[#60778d]">Start with your website and trade. We&apos;ll review the opportunity and show you the next step.</p><div className="mt-8 flex justify-center"><IntakeFlow ctaLabel="See if my business qualifies" /></div></div></section>
       <Footer />

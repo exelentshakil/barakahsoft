@@ -16,12 +16,12 @@ export async function IndustryShowcase() {
   if (groups.length === 0) return null;
 
   return (
-    <section className="border-t border-border bg-muted/20 py-24">
+    <section id="design-standard" className="scroll-mt-24 border-t border-border bg-muted/20 py-24">
       <div className="mx-auto max-w-3xl px-6 text-center">
-        <SectionEyebrow icon={Telescope}>Research, not guesswork</SectionEyebrow>
-        <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">The design bar we build to</h2>
+        <SectionEyebrow icon={Telescope}>Design standard</SectionEyebrow>
+        <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">See the quality bar before we build yours.</h2>
         <p className="mt-3 text-muted-foreground">
-          Before we touch your site, we study the best real websites in your exact trade — not stock templates.
+          These are curated real websites we study for structure, visual hierarchy, proof, and conversion ideas. They are research references, not BarakahSoft client work.
         </p>
       </div>
 
