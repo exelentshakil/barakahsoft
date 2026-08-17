@@ -11,23 +11,9 @@ import {
 import { MegaMenu } from "@/components/site-shell/MegaMenu";
 import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
 import { StickyMobileCTA } from "@/components/site-shell/StickyMobileCTA";
-import { useQuoteModal } from "@/components/site-shell/QuoteModalProvider";
+import { PremiumLeadButton, PremiumPhoneButton } from "@/components/site-shell/PremiumLeadActions";
 import type { SitePayload, ResolvedSection } from "@/components/site-shell/types";
 import { getShellStyle } from "@/components/site-shell/shell-style";
-
-function LeadButton({ payload, children }: { payload: SitePayload; children: React.ReactNode }) {
-  const openQuoteModal = useQuoteModal();
-  return (
-    <button
-      type="button"
-      onClick={openQuoteModal}
-      className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-lift transition hover:-translate-y-0.5 hover:shadow-glow"
-    >
-      {children}
-      <ArrowRight className="h-4 w-4" />
-    </button>
-  );
-}
 
 function ServiceCard({ service, index, payload }: { service: ResolvedSection; index: number; payload: SitePayload }) {
   return (
@@ -89,11 +75,9 @@ export function PremiumLeadHomepage({ payload }: { payload: SitePayload }) {
               </h1>
               {payload.subhead && <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground">{payload.subhead}</p>}
               <div className="mt-8 flex flex-wrap items-center gap-3">
-                <LeadButton payload={payload}>Request a free quote</LeadButton>
+                <PremiumLeadButton>Request a free quote</PremiumLeadButton>
                 {phone && (
-                  <a href={`tel:${phone}`} className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-3 text-sm font-bold transition hover:border-primary hover:text-primary">
-                    <Phone className="h-4 w-4" /> {phone}
-                  </a>
+                  <PremiumPhoneButton phone={phone} />
                 )}
               </div>
               <div className="mt-9 flex flex-wrap gap-x-6 gap-y-3 border-t border-border pt-5 text-xs font-semibold text-muted-foreground">
@@ -136,13 +120,13 @@ export function PremiumLeadHomepage({ payload }: { payload: SitePayload }) {
           </div>
         </section>}
 
-        {payload.differentiator && <section className="border-b border-border bg-slate-950 py-20 text-white lg:py-28"><div className="mx-auto grid max-w-7xl gap-12 px-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Why choose {payload.businessName}</p><h2 className="mt-4 font-display text-4xl font-bold tracking-tight sm:text-5xl">A better experience from the first call.</h2><p className="mt-5 max-w-lg leading-7 text-slate-300">{payload.differentiator}</p><div className="mt-8"><LeadButton payload={payload}>Start with a free quote</LeadButton></div></div><div className="grid gap-3 sm:grid-cols-2">{["Clear communication", "Real local service", "Careful workmanship", "A direct path to booking"].map((item) => <div key={item} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5"><Check className="h-5 w-5 text-primary" /><p className="mt-8 font-bold">{item}</p></div>)}</div></div></section>}
+        {payload.differentiator && <section className="border-b border-border bg-slate-950 py-20 text-white lg:py-28"><div className="mx-auto grid max-w-7xl gap-12 px-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Why choose {payload.businessName}</p><h2 className="mt-4 font-display text-4xl font-bold tracking-tight sm:text-5xl">A better experience from the first call.</h2><p className="mt-5 max-w-lg leading-7 text-slate-300">{payload.differentiator}</p><div className="mt-8"><PremiumLeadButton>Start with a free quote</PremiumLeadButton></div></div><div className="grid gap-3 sm:grid-cols-2">{["Clear communication", "Real local service", "Careful workmanship", "A direct path to booking"].map((item) => <div key={item} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5"><Check className="h-5 w-5 text-primary" /><p className="mt-8 font-bold">{item}</p></div>)}</div></div></section>}
 
         {featuredReviews.length > 0 && <section id="reviews" className="border-b border-border py-20 lg:py-28"><div className="mx-auto max-w-7xl px-6"><div className="max-w-xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Real customer feedback</p><h2 className="mt-3 font-display text-4xl font-bold tracking-tight sm:text-5xl">Proof from people who already called.</h2></div><div className="mt-12 grid gap-5 md:grid-cols-3">{featuredReviews.map((review) => <figure key={`${review.author_name}-${review.text}`} className="flex min-h-56 flex-col rounded-2xl border border-border bg-muted/40 p-6"><div className="flex gap-1">{Array.from({ length: Math.min(review.rating, 5) }).map((_, i) => <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />)}</div><blockquote className="mt-5 flex-1 text-sm leading-6 text-foreground">&ldquo;{review.text}&rdquo;</blockquote><figcaption className="mt-5 border-t border-border pt-4 text-xs font-bold text-muted-foreground">{review.author_name}</figcaption></figure>)}</div></div></section>}
 
         {featuredAreas.length > 0 && <section id="service-area" className="border-b border-border bg-muted/40 py-16"><div className="mx-auto max-w-5xl px-6 text-center"><MapPin className="mx-auto h-6 w-6 text-primary" /><h2 className="mt-3 font-display text-3xl font-bold tracking-tight">Serving the areas that matter.</h2><p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">Explore the real service areas found in this business&apos;s website and local information.</p><div className="mt-8 flex flex-wrap justify-center gap-2">{featuredAreas.map((area) => <a key={area.slug} href={`#${area.slug}`} className="rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold transition hover:border-primary hover:text-primary">{area.h2}</a>)}</div></div></section>}
 
-        <section id="contact" className="bg-slate-950 px-6 py-20 text-center text-white lg:py-28"><div className="mx-auto max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Ready when you are</p><h2 className="mt-4 font-display text-4xl font-bold tracking-tight sm:text-6xl">Let&apos;s make the next step simple.</h2><p className="mx-auto mt-5 max-w-xl text-lg leading-7 text-slate-300">Tell {payload.businessName} what you need and get a direct response without a long form or a confusing handoff.</p><div className="mt-8 flex flex-wrap justify-center gap-3"><LeadButton payload={payload}>Request a free quote</LeadButton>{phone && <a href={`tel:${phone}`} className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-6 py-3 text-sm font-bold text-white transition hover:border-white"><Phone className="h-4 w-4" /> Call {phone}</a>}</div></div></section>
+        <section id="contact" className="bg-slate-950 px-6 py-20 text-center text-white lg:py-28"><div className="mx-auto max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Ready when you are</p><h2 className="mt-4 font-display text-4xl font-bold tracking-tight sm:text-6xl">Let&apos;s make the next step simple.</h2><p className="mx-auto mt-5 max-w-xl text-lg leading-7 text-slate-300">Tell {payload.businessName} what you need and get a direct response without a long form or a confusing handoff.</p><div className="mt-8 flex flex-wrap justify-center gap-3"><PremiumLeadButton>Request a free quote</PremiumLeadButton>{phone && <a href={`tel:${phone}`} className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-6 py-3 text-sm font-bold text-white transition hover:border-white"><Phone className="h-4 w-4" /> Call {phone}</a>}</div></div></section>
       </main>
 
       <PremiumFooter payload={payload} />
