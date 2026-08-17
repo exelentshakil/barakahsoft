@@ -54,10 +54,12 @@ export const enrichExpand = inngest.createFunction(
       // against what's already in funnel_pages so this only generates the
       // delta, idempotently, with no separate "deferred slugs" column.
       const newServices = await step.run("generate-remaining-services", async () => {
-        const allCandidates = deriveServiceCandidates(pages);
+        const allCandidates = deriveServiceCandidates(pages, undefined, town);
         const existingSlugs = new Set(artifact.funnel_pages.filter((s) => s.kind === "service").map((s) => s.slug));
         const remaining = allCandidates.filter((c) => !existingSlugs.has(c.slug));
-        const sections = await Promise.all(remaining.map((c) => generateServiceSection(facts, c.name, c.slug, [])));
+        const sections = (
+          await Promise.all(remaining.map((c) => generateServiceSection(facts, c.name, c.slug, [])))
+        ).filter((s): s is NonNullable<typeof s> => s !== null);
 
         if (sections.length > 0) {
           const requiredSlots = sections.map((s) => ({ slotHint: `service:${s.slug}`, playbookQueryKey: "team" }));

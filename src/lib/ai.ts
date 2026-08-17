@@ -74,19 +74,36 @@ export async function generateSubhead(facts: Facts, context: GenerationContext):
   return reviewLine(facts) ?? "Local, reliable, and ready to help.";
 }
 
-export async function generateServiceLine(facts: Facts, service: string, slug?: string): Promise<string> {
+// v6.3 -- real bug found against a live lead (cityroofrepairnyc.com): a
+// heavily SEO-paged site's nav includes real pages for individual roofing
+// materials/systems ("APP 160 ROOFING", "PVC ROOFING MEMBRANE") mentioned
+// nowhere else on the site beyond that one nav label -- the model was
+// correctly refusing to invent anything, but instead of signaling that it
+// wrote an honest sentence describing its own lack of information ("No
+// research facts were provided...") as if it were real page content,
+// which then got published verbatim. Explicit NONE sentinel (same pattern
+// generateProcessSection/generateAudienceSegmentsSection already use)
+// turns "nothing real to say" into a real null the caller can act on --
+// generateServiceSection skips the section entirely rather than
+// publishing a page whose only content is a disclaimer about itself.
+export async function generateServiceLine(facts: Facts, service: string, slug?: string): Promise<string | null> {
   const servicePage = findRelevantPage(facts, slug ?? service);
   const relevantPages = findRelevantPages(facts, slug ?? service);
   const digest = await researchDigest(relevantPages, service);
   const prompt = `Write one short service-card description (1-2 sentences, under 30 words, no emoji) for the "${service}" service, based only on these real facts about the business — prefer real detail from their own site's content below about this specific service over generic category language:\n${buildRichContext(
     facts,
     { relevantPage: servicePage }
-  )}${digest ? `\n\nAdditional real research on "${service}":\n${digest}` : ""}\n\nDo not invent pricing, guarantees, or claims not present in the facts. Reply with the description text only.`;
+  )}${digest ? `\n\nAdditional real research on "${service}":\n${digest}` : ""}\n\nDo not invent pricing, guarantees, or claims not present in the facts. If the real facts above genuinely contain nothing specific about "${service}" beyond its name, reply with the exact string NONE and nothing else — never write a sentence describing what information is missing. Otherwise reply with the description text only.`;
 
-  const generated = await draftCritiqueRevise(prompt, digest, "1-2 sentences, under 30 words, no emoji");
-  if (generated) return generated.replace(/^"|"$/g, "");
-  const town = facts.town as string | undefined;
-  return town ? `Professional ${service.toLowerCase()} serving ${town}.` : `Professional ${service.toLowerCase()} from a local team you can trust.`;
+  const generated = await draftCritiqueRevise(prompt, digest, "1-2 sentences, under 30 words, no emoji", "NONE");
+  if (generated && generated.trim() !== "NONE") return generated.replace(/^"|"$/g, "");
+  if (generated === null) {
+    // Total call failure (not "nothing to ground"), keep the pipeline
+    // moving with a harmless generic line rather than dropping a real service.
+    const town = facts.town as string | undefined;
+    return town ? `Professional ${service.toLowerCase()} serving ${town}.` : `Professional ${service.toLowerCase()} from a local team you can trust.`;
+  }
+  return null;
 }
 
 // v3 (Phase L) — genuinely deeper standalone-page SEO copy, generated only
@@ -157,17 +174,35 @@ export async function generateAuditNarrative(facts: Facts): Promise<string> {
     : "We weren't able to pull a speed score for your current site.";
 }
 
+// v6.3 -- real bug found against a live lead: when the facts genuinely
+// didn't answer a question, the model was writing a sentence describing
+// its own lack of information ("I am unable to confirm... because no
+// research details were provided") instead of the clean "call to confirm"
+// fallback the prompt already asks for — a disclaimer-about-itself is not
+// the same as the honest, visitor-facing answer the instruction meant. The
+// prompt now spells out the exact fallback line to use verbatim, and
+// looksLikeMetaDisclaimer() is a runtime safety net that substitutes the
+// real deterministic fallback if the model still writes about its own
+// limitations instead of answering the visitor.
+const META_DISCLAIMER_PATTERN = /\b(no research|not (?:provided|available)|unable to confirm|cannot confirm|i (?:don't|do not) have)\b/i;
+
+function looksLikeMetaDisclaimer(text: string): boolean {
+  return META_DISCLAIMER_PATTERN.test(text);
+}
+
 export async function generateFaqAnswer(question: string, facts: Facts): Promise<string> {
   const faqPage = findRelevantPage(facts, "faq") ?? findRelevantPage(facts);
   const digest = await researchDigest(findRelevantPages(facts, "faq"), question);
-  const prompt = `Answer this FAQ question in 1-3 sentences, grounded ONLY in these real facts about the business (including their own site's real content below) — never invent a price, policy, or claim not present here. If the facts don't answer it, give a generic honest answer that tells the visitor to call to confirm.\n\nQuestion: ${question}\n\nFacts:\n${buildRichContext(
+  const phone = firstPhone(facts);
+  const fallbackLine = phone
+    ? `Great question — call ${phone} and we'll confirm the details for your specific situation.`
+    : `Great question — call us and we'll confirm the details for your specific situation.`;
+  const prompt = `Answer this FAQ question in 1-3 sentences, grounded ONLY in these real facts about the business (including their own site's real content below) — never invent a price, policy, or claim not present here.\n\nQuestion: ${question}\n\nFacts:\n${buildRichContext(
     facts,
     { relevantPage: faqPage }
-  )}${digest ? `\n\nAdditional real research:\n${digest}` : ""}\n\nReply with the answer text only.`;
+  )}${digest ? `\n\nAdditional real research:\n${digest}` : ""}\n\nIf the facts above genuinely don't answer this question, reply with EXACTLY this line and nothing else — never write your own sentence explaining what information is missing: "${fallbackLine}"\n\nOtherwise, reply with the answer text only.`;
 
   const generated = await draftCritiqueRevise(prompt, digest, "1-3 sentences");
-  if (generated) return generated;
-
-  const phone = firstPhone(facts);
-  return phone ? `Great question — call ${phone} and we'll confirm the details for your specific situation.` : `Great question — call us and we'll confirm the details for your specific situation.`;
+  if (generated && !looksLikeMetaDisclaimer(generated)) return generated;
+  return fallbackLine;
 }

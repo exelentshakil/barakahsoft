@@ -14,13 +14,21 @@ import type { FunnelPageSection } from "@/types/database";
 // -> one validated funnel_pages[] entry (plan §5). qa_notes carries any
 // grounding warnings through to the human QA gate rather than blocking
 // generation outright — a human makes the final call, per PRD §7 stage 5.
+//
+// v6.3 -- returns null (not a section with disclaimer text as its body)
+// when generateServiceLine genuinely has nothing real to ground -- a real
+// nav link doesn't automatically deserve a published page if the site
+// itself never says anything more about it than its own name (e.g. a
+// materials/systems nav entry like "PVC ROOFING MEMBRANE" with zero
+// supporting body copy anywhere on the site).
 export async function generateServiceSection(
   facts: Facts,
   service: string,
   slug: string,
   mediaAssetIds: string[]
-): Promise<FunnelPageSection & { groundingWarnings: string[] }> {
+): Promise<(FunnelPageSection & { groundingWarnings: string[] }) | null> {
   const body = await generateServiceLine(facts, service, slug);
+  if (!body) return null;
   const { pass, reasons } = validateGrounding(body, facts);
   return {
     slug,

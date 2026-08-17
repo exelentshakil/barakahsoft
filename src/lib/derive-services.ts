@@ -1,5 +1,6 @@
 import { slugifyText } from "@/lib/slug";
 import type { PageInventory } from "@/lib/scrape/extract-text";
+import { extractServiceAreas } from "@/lib/scrape/extract-service-areas";
 
 // Derives service candidates from the business's own real nav labels
 // (grounding rule: never invent a service that isn't in facts). This is a
@@ -81,12 +82,38 @@ export const MAX_SERVICES = 15;
 // through pre-fix, producing exactly 1 wrong "service".
 const MIN_NAV_SERVICES = 3;
 
+// Real bug found against another live lead (cityroofrepairnyc.com, a
+// heavily SEO-paged WordPress site): its nav has one real page per
+// city/borough it serves ("BRONX ROOFING", "BROOKLYN ROOFING", "QUEENS
+// ROOFING"...) mixed in alongside its real services. Those are area pages,
+// not services -- publishing them as "services" produces a confusing mix
+// and steals real signal from extractServiceAreas (payload.areas), which
+// is exactly where a location page belongs. A nav candidate whose cleaned
+// text contains one of the same site's own real extracted area names (or
+// its own real town from facts) as a whole word gets excluded here and
+// left for the areas pipeline instead. Known remaining gap: this only
+// catches the primary town plus whatever extractServiceAreas' stricter
+// "real comma-enumeration" signal finds -- a site whose only area mentions
+// are these nav labels themselves (no "we serve X, Y, Z" sentence
+// anywhere, as with this exact lead) won't have every regional page
+// caught, since there's no real "areas we serve" text to extract from.
+function containsAreaName(text: string, areaNames: string[]): boolean {
+  const lower = text.toLowerCase();
+  return areaNames.some((area) => new RegExp(`\\b${area.toLowerCase()}\\b`).test(lower));
+}
+
 // v3 -- enrich-generate.ts's fast homepage pass caps this to a handful of
 // top services (FAST_PASS_SERVICE_CAP); enrich-expand.ts calls this again
 // uncapped once a lead is qualified, so the same real nav-derived ordering
 // just gets more of the list rather than a second, different derivation.
-export function deriveServiceCandidates(pages: PageInventory[], cap: number = MAX_SERVICES): { name: string; slug: string }[] {
+export function deriveServiceCandidates(
+  pages: PageInventory[],
+  cap: number = MAX_SERVICES,
+  town?: string | null
+): { name: string; slug: string }[] {
   const seen = new Map<string, string>();
+  const areaNames = extractServiceAreas(pages);
+  if (town) areaNames.push(town);
 
   for (const page of pages) {
     for (const link of page.navLinks) {
@@ -95,6 +122,7 @@ export function deriveServiceCandidates(pages: PageInventory[], cap: number = MA
       if (!/[a-zA-Z]/.test(clean)) continue;
       if (isJunkNavLink(link)) continue;
       if (STOPLIST.includes(clean.toLowerCase())) continue;
+      if (areaNames.length > 0 && containsAreaName(clean, areaNames)) continue;
       const slug = slugifyText(clean);
       if (!slug || seen.has(slug)) continue;
       seen.set(slug, clean);
@@ -111,6 +139,7 @@ export function deriveServiceCandidates(pages: PageInventory[], cap: number = MA
       for (const candidate of page.listItemCandidates) {
         const clean = candidate.trim();
         if (STOPLIST.includes(clean.toLowerCase())) continue;
+        if (areaNames.length > 0 && containsAreaName(clean, areaNames)) continue;
         const slug = slugifyText(clean);
         if (!slug || seen.has(slug)) continue;
         seen.set(slug, clean);

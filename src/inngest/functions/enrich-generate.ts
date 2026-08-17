@@ -204,10 +204,10 @@ export const enrichGenerate = inngest.createFunction(
       // the one real cost lever — everything else on the homepage (hero,
       // FAQ, trust sections, video) stays full quality since that IS the
       // "max wow factor" sales artifact, not the wasteful part.
-      const serviceCandidates = deriveServiceCandidates((facts.pages as PageInventory[]) ?? [], FAST_PASS_SERVICE_CAP);
-      const serviceSections = await Promise.all(
-        serviceCandidates.map((c) => generateServiceSection(facts, c.name, c.slug, []))
-      );
+      const serviceCandidates = deriveServiceCandidates((facts.pages as PageInventory[]) ?? [], FAST_PASS_SERVICE_CAP, town);
+      const serviceSections = (
+        await Promise.all(serviceCandidates.map((c) => generateServiceSection(facts, c.name, c.slug, [])))
+      ).filter((s): s is NonNullable<typeof s> => s !== null);
 
       const faqSections = await generateFaqSections(facts, playbook.faq_seed_questions);
 
