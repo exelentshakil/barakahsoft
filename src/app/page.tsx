@@ -4,6 +4,7 @@ import { IntakeFlow } from "@/components/landing/IntakeFlow";
 import { StoryProblem } from "@/components/landing/StoryProblem";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { LeadEngineStory } from "@/components/landing/LeadEngineStory";
+import { ReportingPreview } from "@/components/landing/ReportingPreview";
 import { IndustryShowcase } from "@/components/landing/IndustryShowcase";
 import { Team } from "@/components/landing/Team";
 import { PricingPilot } from "@/components/landing/PricingPilot";
@@ -36,6 +37,7 @@ export default function LandingPage() {
       <StoryProblem />
       <HowItWorks />
       <LeadEngineStory />
+      <ReportingPreview />
       <IndustryShowcase />
       <Team />
       <PricingPilot />
