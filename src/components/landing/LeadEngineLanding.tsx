@@ -19,6 +19,7 @@ import { FAQAccordion } from "@/components/landing/FAQAccordion";
 import { Nav } from "@/components/landing/Nav";
 import { IndustryShowcase } from "@/components/landing/IndustryShowcase";
 import { LandingTeamShowcase } from "@/components/landing/LandingTeamShowcase";
+import { IndustryCoverage } from "@/components/landing/IndustryCoverage";
 import landing from "../../../content/landing.json";
 
 const NAVY = "#07284D";
@@ -500,6 +501,7 @@ export function LeadEngineLanding() {
 
       <LandingTeamShowcase />
       <IndustryShowcase />
+      <IndustryCoverage />
       <FAQAccordion />
       <section className="border-t border-[#d9e8f4] bg-[#eef7ff] py-24 text-center">
         <div className="mx-auto max-w-3xl px-6">
