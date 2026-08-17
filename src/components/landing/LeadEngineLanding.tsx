@@ -109,6 +109,13 @@ export function LeadEngineLanding() {
           className="absolute -right-32 -top-40 h-[34rem] w-[34rem] rounded-full bg-[#e5f4ff] blur-3xl"
           aria-hidden="true"
         />
+        <div
+          className="pointer-events-none absolute inset-0 opacity-60 [background-image:linear-gradient(to_right,rgba(7,40,77,0.045)_1px,transparent_1px),linear-gradient(to_bottom,rgba(7,40,77,0.045)_1px,transparent_1px)] [background-size:52px_52px] [mask-image:linear-gradient(to_bottom,black,transparent_78%)]"
+          aria-hidden="true"
+        />
+        <div className="pointer-events-none absolute left-[9%] top-32 hidden h-3 w-3 rounded-full bg-[#ffd12d] shadow-[0_0_0_8px_rgba(255,209,45,0.14)] lg:block" aria-hidden="true" />
+        <div className="pointer-events-none absolute right-[12%] top-52 hidden h-2 w-2 rounded-full bg-[#0c68c8] shadow-[0_0_0_7px_rgba(12,104,200,0.12)] lg:block" aria-hidden="true" />
+        <div className="pointer-events-none absolute bottom-28 left-[16%] hidden h-2 w-2 rounded-full bg-[#702486] shadow-[0_0_0_7px_rgba(112,36,134,0.1)] lg:block" aria-hidden="true" />
         <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-20 lg:pb-24 lg:pt-28">
           <div className="mx-auto max-w-4xl text-center">
             <p className="mx-auto mb-6 w-fit rounded-full bg-[#e8f4ff] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[#075da8]">
