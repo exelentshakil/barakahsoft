@@ -29,7 +29,7 @@ export function PricingPilot() {
             <p className="font-display text-5xl font-bold">
               $500<span className="text-2xl font-normal text-background/60">/week</span>
             </p>
-             <p className="mt-2 text-sm text-background/70">$500/week management. Your Meta ad budget stays in your own account.</p>
+             <p className="mt-2 text-sm text-background/70">$500/week management. Setup is included for founding clients.</p>
           </div>
 
           <ul className="mt-8 space-y-3">
@@ -44,7 +44,7 @@ export function PricingPilot() {
           <Button asChild size="lg" className="mt-8 w-full bg-brand-gold text-foreground hover:bg-brand-gold/90">
             <a href="#top">See my free redesign</a>
           </Button>
-           <p className="mt-3 text-center text-xs text-background/60">Recommended starting ad budget: $25/day. No long-term obligation.</p>
+           <p className="mt-3 text-center text-xs text-background/60">Your Meta ad budget is separate and paid directly to Meta. No long-term obligation.</p>
         </div>
       </Reveal>
     </section>

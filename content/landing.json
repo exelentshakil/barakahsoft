@@ -30,6 +30,10 @@
       "answer": "No. Your ad spend goes directly to Meta from your own account. We recommend at least $25 per day for the 30-day sprint. Lower budgets can be used for testing, but no responsible provider can guarantee 30 leads on $10 per day in every market."
     },
     {
+      "question": "Can you use your agency ad account for me?",
+      "answer": "Our recommended setup is your own Meta Business account so you own the pixel, audience, billing, and lead data. We can create or configure it and manage campaigns inside it. A separate managed-account arrangement is only considered when access, billing, compliance, and ownership are clear in writing."
+    },
+    {
       "question": "Do I need a Facebook Business account?",
       "answer": "Yes. You own the ad account, pixel, audiences, page, and lead data. We work inside your account so the system is transparent and remains yours."
     },

@@ -1,7 +1,6 @@
 import { Nav } from "@/components/landing/Nav";
 import { Hero } from "@/components/landing/Hero";
 import { IntakeFlow } from "@/components/landing/IntakeFlow";
-import { TrustLogos } from "@/components/landing/TrustLogos";
 import { StoryProblem } from "@/components/landing/StoryProblem";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { IndustryShowcase } from "@/components/landing/IndustryShowcase";
@@ -33,7 +32,6 @@ export default function LandingPage() {
       <Hero>
         <IntakeFlow ctaLabel={landing.primaryCta} />
       </Hero>
-      <TrustLogos />
       <StoryProblem />
       <HowItWorks />
       <IndustryShowcase />

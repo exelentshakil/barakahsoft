@@ -26,7 +26,7 @@ export function Nav() {
           ))}
         </nav>
         <Button asChild size="sm">
-          <a href="#top">Get my free redesign</a>
+          <a href="#top">See if I qualify</a>
         </Button>
       </div>
     </header>

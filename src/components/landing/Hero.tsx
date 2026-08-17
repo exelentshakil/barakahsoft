@@ -37,22 +37,28 @@ function HeroMotif() {
 
 export function Hero({ children }: { children?: React.ReactNode }) {
   return (
-    <section className="relative overflow-hidden">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 -top-40 -z-10 h-[40rem] bg-[radial-gradient(60%_50%_at_50%_0%,hsl(var(--primary)/0.18),transparent_70%)]"
-      />
-      <HeroMotif />
-      <div className="mx-auto max-w-4xl px-6 pb-16 pt-20 text-center sm:pt-28">
-        <Badge variant="secondary" className="mb-5">
-          30-day managed lead engine for US home-service businesses
-        </Badge>
-        <h1 className="mx-auto max-w-3xl font-display text-4xl font-bold tracking-tight sm:text-6xl">
-          {landing.headline}
-        </h1>
-        <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">{landing.subhead}</p>
-        {children}
-        <p className="mt-4 text-xs text-muted-foreground">{landing.trustLine}</p>
+    <section className="relative overflow-hidden bg-slate-950 text-white">
+      <video autoPlay muted loop playsInline aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-30">
+        <source src="https://liepxeeugfrxmidcmbxo.supabase.co/storage/v1/object/public/landing/barakahsoft-hero.mp4" type="video/mp4" />
+      </video>
+      <div aria-hidden className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(var(--primary)/0.38),transparent_42%),linear-gradient(115deg,#080512_0%,#171027_60%,#090713_100%)] opacity-90" />
+      <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-6 pb-20 pt-20 sm:pt-28 lg:grid-cols-[1.05fr_0.95fr] lg:pb-28">
+        <div>
+          <Badge variant="secondary" className="mb-5 border border-white/15 bg-white/10 text-white">
+            30-day managed lead engine for US home-service businesses
+          </Badge>
+          <h1 className="max-w-3xl font-display text-4xl font-bold leading-[1.02] tracking-tight sm:text-6xl">
+            {landing.headline}
+          </h1>
+          <p className="mt-6 max-w-xl text-lg leading-8 text-slate-300">{landing.subhead}</p>
+          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">No website project. No long contract. One measurable acquisition sprint.</p>
+        </div>
+        <div className="rounded-3xl border border-white/15 bg-white p-6 text-slate-950 shadow-2xl sm:p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Start with a qualification review</p>
+          <h2 className="mt-3 font-display text-2xl font-bold tracking-tight">Show us the business you want to grow.</h2>
+          {children}
+          <p className="mt-4 text-xs text-slate-500">{landing.trustLine}</p>
+        </div>
       </div>
     </section>
   );

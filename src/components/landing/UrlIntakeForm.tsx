@@ -3,7 +3,6 @@
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { PERSONAS, type PersonaSlug } from "@/lib/personas";
 
@@ -69,16 +68,6 @@ export function UrlIntakeForm({
             </option>
           ))}
         </select>
-      </div>
-      <div>
-        <Label htmlFor="pain-points">What would you like more of? (optional)</Label>
-        <Textarea
-          id="pain-points"
-          placeholder="More emergency calls, panel upgrades, roof replacements..."
-          value={painPoints}
-          onChange={(e) => onPainPointsChange(e.target.value)}
-          className="mt-1"
-        />
       </div>
       <Button type="submit" size="lg" className="w-full">
         {ctaLabel} <ArrowRight className="h-4 w-4" />
