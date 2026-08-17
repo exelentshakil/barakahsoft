@@ -29,10 +29,11 @@ export function PricingPilot() {
             <p className="font-display text-5xl font-bold">
               $500<span className="text-2xl font-normal text-background/60">/week</span>
             </p>
-             <p className="mt-2 text-sm text-background/70">$500/week management. Setup is included for founding clients.</p>
+             <p className="mt-2 text-sm text-background/70">One week to judge the work. No long-term obligation.</p>
           </div>
 
-          <ul className="mt-8 space-y-3">
+           <div className="mt-8 grid gap-3 border-y border-background/15 py-5 sm:grid-cols-3 sm:text-center"><div><p className="text-xs uppercase tracking-wider text-background/50">You pay us</p><p className="mt-1 font-bold">$500 / week</p></div><div><p className="text-xs uppercase tracking-wider text-background/50">You pay Meta</p><p className="mt-1 font-bold">Your ad budget</p></div><div><p className="text-xs uppercase tracking-wider text-background/50">You receive</p><p className="mt-1 font-bold">The lead engine</p></div></div>
+           <ul className="mt-8 space-y-3">
             {INCLUDED.map((line) => (
               <li key={line} className="flex items-start gap-2.5 text-sm text-background/85">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" />
@@ -42,7 +43,7 @@ export function PricingPilot() {
           </ul>
 
           <Button asChild size="lg" className="mt-8 w-full bg-brand-gold text-foreground hover:bg-brand-gold/90">
-            <a href="#top">See my free redesign</a>
+             <a href="#top">Start with a qualification review</a>
           </Button>
            <p className="mt-3 text-center text-xs text-background/60">Your Meta ad budget is separate and paid directly to Meta. No long-term obligation.</p>
         </div>

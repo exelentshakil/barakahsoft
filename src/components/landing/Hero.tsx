@@ -36,11 +36,11 @@ export function Hero({ children }: { children?: React.ReactNode }) {
           </div>
         </div>
         <div className="relative mx-auto mt-12 max-w-5xl overflow-hidden rounded-[2rem] border border-border bg-muted text-left shadow-lift">
-          <div className="absolute left-5 top-5 z-10 rounded-full border border-white/30 bg-slate-950/80 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-white">The BarakahSoft lead engine</div>
+          <div className="absolute left-5 top-5 z-10 rounded-full border border-white/30 bg-slate-950/80 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-white">The trades we support</div>
             <video autoPlay muted loop playsInline controls preload="metadata" className="aspect-video w-full object-cover">
               <source src="https://liepxeeugfrxmidcmbxo.supabase.co/storage/v1/object/public/landing/barakahsoft-hero.mp4" type="video/mp4" />
             </video>
-          <div className="flex flex-col gap-5 border-t border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between sm:px-8"><div><p className="text-sm font-bold text-foreground">Built for electricians, plumbers, HVAC, roofers, movers, and restoration teams.</p><p className="mt-1 text-xs text-muted-foreground">One system for the offer, page, ads, creative, tracking, and follow-up.</p></div><span className="shrink-0 text-xs font-bold uppercase tracking-[0.14em] text-primary">See the system in action</span></div>
+          <div className="flex flex-col gap-5 border-t border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between sm:px-8"><div><p className="text-sm font-bold text-foreground">Electricians • Plumbers • HVAC • Roofers • Movers • Restoration</p><p className="mt-1 text-xs text-muted-foreground">The reel shows our trade focus. The work behind every campaign is researched and managed by our team.</p></div><span className="shrink-0 text-xs font-bold uppercase tracking-[0.14em] text-primary">Research. Create. Launch.</span></div>
         </div>
       </div>
     </section>
