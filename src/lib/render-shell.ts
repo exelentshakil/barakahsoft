@@ -69,6 +69,17 @@ export function renderShell(
   const proofMedia = mediaAssets.find((m) => m.slot_hint === "proof")?.public_url ?? null;
   const heroVideoMedia = mediaAssets.find((m) => m.slot_hint === "hero-video")?.public_url ?? null;
 
+  const META_COPY = /no research|research was provided|unable to confirm|cannot confirm|not available/i;
+  const businessName = (facts.business_name as string) || new URL(lead.source_url).hostname;
+  const headline = heroSection?.h2 && !META_COPY.test(heroSection.h2)
+    ? heroSection.h2
+    : `${businessName} provides trusted local service`;
+  const subhead = heroSection?.body_content && !META_COPY.test(heroSection.body_content)
+    ? heroSection.body_content
+    : differentiatorSection?.body_content && !META_COPY.test(differentiatorSection.body_content)
+      ? differentiatorSection.body_content
+      : "Clear communication, real local service, and a straightforward next step.";
+
   const rawSectionVariants = artifact.section_variant_selections ?? {};
   const bespokeDesignPlan = rawSectionVariants.__designPlan && typeof rawSectionVariants.__designPlan === "object"
     ? rawSectionVariants.__designPlan as Record<string, unknown>
@@ -78,9 +89,9 @@ export function renderShell(
   ) as Record<string, string>;
 
   return {
-    businessName: lead.business_name || (facts.business_name as string) || new URL(lead.source_url).hostname,
-    headline: heroSection?.h2 || (facts.business_name as string) || "Welcome",
-    subhead: heroSection?.body_content || "",
+    businessName,
+    headline,
+    subhead,
     heroImageUrl: heroMedia,
     heroVideoUrl: heroVideoMedia,
     proof: {
