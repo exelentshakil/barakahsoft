@@ -147,6 +147,12 @@ export interface Artifact {
   // moment the lead is QA-approved, not by a payment event.
   full_site_status: "pending" | "building" | "complete" | "failed";
   full_site_built_at: string | null;
+  // v8 -- real generated HTML for the homepage (Gemini, informed by real
+  // reference screenshots), sanitized before storage. Null for legacy
+  // leads or a trade with no reference library yet -- those fall back to
+  // the existing catalog-based shell.
+  bespoke_homepage_html: string | null;
+  bespoke_rationale: string | null;
 }
 
 export type BuildJobStage =

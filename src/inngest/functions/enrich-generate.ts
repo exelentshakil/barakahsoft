@@ -16,6 +16,7 @@ import { runPhotoWaterfall } from "@/lib/photo-waterfall";
 import { researchCompetitors } from "@/lib/research-competitors";
 import { loadSectionVariantCatalog, selectSectionVariants } from "@/lib/compose-sections";
 import { loadNicheScreenshots } from "@/lib/design-reference";
+import { generateBespokeHomepage } from "@/lib/generate-bespoke-page";
 import { buildHeroVideoPrompt, startHeroVideoGeneration, checkHeroVideoOperation, storeHeroVideo } from "@/lib/google/veo";
 import type { PageInventory } from "@/lib/scrape/extract-text";
 import type { FunnelPageSection } from "@/types/database";
@@ -84,27 +85,37 @@ export const enrichGenerate = inngest.createFunction(
 
     const genContext: GenerationContext = { industryLabel: playbook.industry_label, town, designBrief: competitorResearch.designBrief };
 
-    // Which pre-built, hand-QA'd section variant renders in each fixed
-    // slot — a real per-lead pick grounded in this lead's own facts, the
-    // live competitor research, and (when available) real vision input from
-    // this exact trade's curated reference screenshots — not one static
-    // layout for everyone. Any invalid/missing pick safely falls back to
-    // the default variant at render time (sections/registry.ts).
-    //
     // v6 -- real curated screenshots for this exact trade (leads.persona,
-    // e.g. "roofers") load as a PLAIN call inside this step, not their own
-    // step.run(...). Inngest durably serializes every step's return value,
-    // and a niche's full screenshot set (up to 20 base64-encoded images) is
-    // multiple MB -- comfortably over Inngest's per-step output size limit
-    // ("step output size is greater than the limit", confirmed in
-    // production). They're read-only, side-effect-free, and deterministic,
-    // so re-fetching on any replay is fine -- only this step's own small
-    // {selections, rationale} return value needs durability.
+    // e.g. "roofers"), loaded as a PLAIN call (not its own step.run) --
+    // Inngest durably serializes every step's return value, and a niche's
+    // full screenshot set (up to 20 base64-encoded images) is multiple MB,
+    // comfortably over Inngest's per-step output size limit ("step output
+    // size is greater than the limit", confirmed in production). They're
+    // read-only and deterministic, so re-fetching on any replay is fine.
+    // Loaded once here, reused by both the bespoke generator below and the
+    // legacy catalog-composition fallback.
+    const nicheScreenshots = await loadNicheScreenshots(persona);
+
+    // v8 -- the real per-lead homepage: Gemini generates the actual HTML,
+    // informed by real reference screenshots for this exact trade, instead
+    // of picking an enum slug from a fixed component catalog (see
+    // generate-bespoke-page.ts for the full rationale). Null when the trade
+    // has no reference library yet or generation genuinely fails -- the
+    // legacy catalog-based composition below is the deterministic fallback
+    // for that case, not a parallel design goal.
+    const bespoke = await step.run("generate-bespoke-homepage", () =>
+      generateBespokeHomepage(facts, playbook, genContext, nicheScreenshots)
+    );
+
+    // Which pre-built, hand-QA'd section variant renders in each fixed
+    // slot when the bespoke homepage above didn't generate — a real
+    // per-lead pick grounded in this lead's own facts, the live competitor
+    // research, and (when available) real vision input from this exact
+    // trade's curated reference screenshots. Any invalid/missing pick
+    // safely falls back to the default variant at render time
+    // (sections/registry.ts).
     const composition = await step.run("select-section-variants", async () => {
-      const [catalog, nicheScreenshots] = await Promise.all([
-        loadSectionVariantCatalog(industry),
-        loadNicheScreenshots(persona),
-      ]);
+      const catalog = await loadSectionVariantCatalog(industry);
       return selectSectionVariants(facts, playbook, competitorResearch, catalog, nicheScreenshots);
     });
 
@@ -320,6 +331,8 @@ export const enrichGenerate = inngest.createFunction(
           qa_notes: groundingWarnings.length > 0 ? groundingWarnings.join("\n") : null,
           section_variant_selections: composition.selections,
           composition_rationale: composition.rationale || null,
+          bespoke_homepage_html: bespoke?.html ?? null,
+          bespoke_rationale: bespoke?.rationale ?? null,
         },
         { onConflict: "lead_id" }
       );

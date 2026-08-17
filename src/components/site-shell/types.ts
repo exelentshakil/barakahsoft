@@ -53,6 +53,11 @@ export interface SitePayload {
   fullSiteBuilt: boolean;
   leadSlug: string;
   sectionVariants: Record<string, string>;
+  // v8 -- real generated HTML for the homepage (Gemini, vision-informed by
+  // real reference screenshots, sanitized before storage). Null falls back
+  // to the catalog-based shell.
+  bespokeHomepageHtml: string | null;
+  bespokeRationale: string | null;
 }
 
 export function sectionHref(payload: Pick<SitePayload, "innerPagesBuilt" | "leadSlug">, kind: "services" | "areas", slug: string): string {

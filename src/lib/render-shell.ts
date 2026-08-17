@@ -114,5 +114,7 @@ export function renderShell(
     fullSiteBuilt: artifact.full_site_status === "complete",
     leadSlug: lead.slug,
     sectionVariants: artifact.section_variant_selections ?? {},
+    bespokeHomepageHtml: artifact.bespoke_homepage_html,
+    bespokeRationale: artifact.bespoke_rationale,
   };
 }

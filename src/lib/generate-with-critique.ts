@@ -1,4 +1,4 @@
-import { callGemini } from "@/lib/gemini-client";
+import { callGemini, type GeminiImagePart } from "@/lib/gemini-client";
 import { GENERIC_SLOP_PHRASES } from "@/lib/grounding";
 import type { PageInventory } from "@/lib/scrape/extract-text";
 
@@ -55,13 +55,20 @@ Reply with the revised text only, nothing else.`;
 // it wants to) — this function only owns the critique/revise cycle so it
 // works identically for prose (headline, service copy) and structured
 // JSON-or-sentinel output (process steps, audience segments).
+//
+// v8 -- optional `images` (real reference screenshots) attached to the
+// DRAFT call only, not critique/revise -- the critique pass is judging
+// structure/grounding/quality of the text already produced, which doesn't
+// need a second look at the images, and skipping it there keeps the
+// cheaper text-only calls cheap.
 export async function draftCritiqueRevise(
   draftPrompt: string,
   digest: string,
   constraintSummary: string,
-  sentinel?: string
+  sentinel?: string,
+  images?: GeminiImagePart[]
 ): Promise<string | null> {
-  const draft = await callGemini(draftPrompt);
+  const draft = await callGemini(draftPrompt, undefined, images);
   if (!draft) return null;
   if (sentinel && draft.trim() === sentinel) return draft;
 
