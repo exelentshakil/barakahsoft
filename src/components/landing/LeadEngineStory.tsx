@@ -1,13 +1,13 @@
-import { Eye, LockKeyhole, ShieldCheck, Target, Workflow } from "lucide-react";
+import { Eye, BriefcaseBusiness, Clapperboard, LockKeyhole, Megaphone, Route, ShieldCheck, Target, Workflow } from "lucide-react";
 import { Reveal } from "@/components/site-shell/primitives/Reveal";
 import { SectionEyebrow } from "@/components/site-shell/primitives/SectionEyebrow";
 
 const SYSTEM = [
-  ["01", "The offer", "We turn your highest-value service into a clear reason for the right homeowner to respond."],
-  ["02", "The landing page", "A focused page built for one action: submit a real request with enough detail to follow up."],
-  ["03", "The creative", "Short-form ad concepts and copy that make the problem, service, and next step obvious in the feed."],
-  ["04", "The follow-up", "Lead routing, response expectations, and tracking so opportunities do not disappear after the form."],
-];
+  ["01", "The offer", "We turn your highest-value service into a clear reason for the right homeowner to respond.", BriefcaseBusiness],
+  ["02", "The landing page", "A focused page built for one action: submit a real request with enough detail to follow up.", Route],
+  ["03", "The creative", "Short-form ad concepts and copy that make the problem, service, and next step obvious in the feed.", Clapperboard],
+  ["04", "The follow-up", "Lead routing, response expectations, and tracking so opportunities do not disappear after the form.", Megaphone],
+] as const;
 
 const TRUST = [
   [LockKeyhole, "Ownership", "You own the Meta account, pixel, billing, audience, and lead data.", "Nothing is trapped inside our agency."],
@@ -24,7 +24,7 @@ export function LeadEngineStory() {
             <div><SectionEyebrow icon={Workflow} align="left">What you are actually buying</SectionEyebrow><h2 className="mt-4 font-sans text-4xl font-semibold tracking-[-0.04em] sm:text-5xl">Not a website. A working path from attention to conversation.</h2></div>
             <p className="max-w-xl text-lg leading-8 text-muted-foreground">Your customer does not care what platform we use. They care whether the phone rings with people who need the work you do. That is the system we build, launch, and improve with you.</p>
           </div>
-          <div className="mt-12 grid gap-4 sm:grid-cols-2">{SYSTEM.map(([number, title, body]) => <div key={number} className="rounded-2xl border border-border bg-card p-7 shadow-card sm:p-9"><p className="text-sm font-bold text-primary">{number}</p><h3 className="mt-10 text-xl font-semibold">{title}</h3><p className="mt-3 text-sm leading-6 text-muted-foreground">{body}</p></div>)}</div>
+          <div className="mt-12 grid gap-4 sm:grid-cols-2">{SYSTEM.map(([number, title, body, Icon]) => <div key={number} className="group rounded-2xl border border-border bg-card p-7 shadow-card transition hover:-translate-y-1 hover:shadow-lift sm:p-9"><div className="flex items-center justify-between"><div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/15"><Icon className="h-6 w-6" strokeWidth={1.7} /></div><p className="text-sm font-bold text-primary">{number}</p></div><h3 className="mt-10 text-xl font-semibold">{title}</h3><p className="mt-3 text-sm leading-6 text-muted-foreground">{body}</p><div className="mt-7 h-1 w-10 rounded-full bg-primary/20 transition-all group-hover:w-16 group-hover:bg-primary" /></div>)}</div>
         </div>
       </section>
 

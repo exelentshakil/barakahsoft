@@ -1,5 +1,12 @@
 import landing from "../../../content/landing.json";
 import { Badge } from "@/components/ui/badge";
+import { BriefcaseBusiness, Megaphone, TrendingUp } from "lucide-react";
+
+const HERO_STEPS: { number: string; title: string; body: string; icon: typeof BriefcaseBusiness }[] = [
+  { number: "01", title: "Build", body: "Offer, page, tracking", icon: BriefcaseBusiness },
+  { number: "02", title: "Launch", body: "Meta ads and creative", icon: Megaphone },
+  { number: "03", title: "Improve", body: "Leads and follow-up", icon: TrendingUp },
+];
 
 export function Hero({ children }: { children?: React.ReactNode }) {
   return (
@@ -22,13 +29,9 @@ export function Hero({ children }: { children?: React.ReactNode }) {
           <div className="mt-4 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-semibold text-muted-foreground"><span>$500/week management</span><span>Ad spend stays in your account</span><span>Stop after one week if it&apos;s not a fit</span></div>
           <p className="mx-auto mt-6 max-w-lg text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">No website project. No long contract. One measurable acquisition sprint.</p>
           <div className="mx-auto mt-10 grid max-w-3xl gap-3 text-left sm:grid-cols-3">
-            {[
-              ["01", "Build", "Offer, page, tracking"],
-              ["02", "Launch", "Meta ads and creative"],
-              ["03", "Improve", "Leads and follow-up"],
-            ].map(([number, title, body]) => (
+            {HERO_STEPS.map(({ number, title, body, icon: Icon }) => (
               <div key={number} className="rounded-2xl border border-border bg-card/80 p-4 shadow-card backdrop-blur">
-                <p className="text-xs font-bold text-primary">{number}</p>
+                <div className="flex items-center justify-between"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-4 w-4" /></div><p className="text-xs font-bold text-primary">{number}</p></div>
                 <p className="mt-5 text-sm font-bold">{title}</p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">{body}</p>
               </div>
