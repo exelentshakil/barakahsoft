@@ -381,12 +381,12 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      <section className="border-b border-[#d9e8f4] bg-[#07284d] py-16 text-white lg:py-20">
+      <section className="border-b border-[#d9e8f4] bg-[#07284d] py-12 text-white lg:py-16">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="grid gap-12 lg:grid-cols-2">
+          <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
             <div>
               <Kicker>Simple responsibilities</Kicker>
-              <h2 className="font-sans text-4xl font-semibold leading-tight tracking-[-0.04em] text-white sm:text-5xl">
+              <h2 className="max-w-lg font-sans text-4xl font-semibold leading-tight tracking-[-0.04em] text-white sm:text-5xl">
                 You run the business. We run the marketing work.
               </h2>
             </div>
@@ -411,7 +411,7 @@ export function LeadEngineLanding() {
               ].map(([title, body]) => (
                 <div
                   key={title}
-                  className="rounded-xl border border-white/15 bg-white/5 p-6"
+                  className="rounded-xl border border-white/15 bg-white/5 p-5"
                 >
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#ffd12d]">
                     {title}
@@ -423,7 +423,7 @@ export function LeadEngineLanding() {
               ))}
             </div>
           </div>
-          <div className="mt-10 flex flex-col gap-4 border-t border-white/15 pt-8 sm:flex-row sm:items-center sm:justify-between"><p className="text-sm text-slate-200">Want to know if your market and service are a fit?</p><a href="#top" className="inline-flex w-fit items-center gap-2 rounded-lg bg-[#ffd12d] px-5 py-3 text-sm font-bold text-[#111] transition hover:bg-[#f5c400]">Start with a qualification review <ArrowRight className="h-4 w-4" /></a></div>
+          <div className="mt-7 flex flex-col gap-4 border-t border-white/15 pt-6 sm:flex-row sm:items-center sm:justify-between"><p className="text-sm text-slate-200">Want to know if your market and service are a fit?</p><a href="#top" className="inline-flex w-fit items-center gap-2 rounded-lg bg-[#ffd12d] px-5 py-3 text-sm font-bold text-[#111] transition hover:bg-[#f5c400]">Start with a qualification review <ArrowRight className="h-4 w-4" /></a></div>
         </div>
       </section>
 
