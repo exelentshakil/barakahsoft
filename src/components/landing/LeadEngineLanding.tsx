@@ -402,7 +402,7 @@ export function LeadEngineLanding() {
                 ],
                 [
                   "You pay",
-                  "$500/week to manage the work, plus your advertising budget paid directly to Meta.",
+                  "$500/week management · no per-lead charge",
                 ],
                 [
                   "You decide",
@@ -423,6 +423,7 @@ export function LeadEngineLanding() {
               ))}
             </div>
           </div>
+          <div className="mt-10 flex flex-col gap-4 border-t border-white/15 pt-8 sm:flex-row sm:items-center sm:justify-between"><p className="text-sm text-slate-200">Want to know if your market and service are a fit?</p><a href="#top" className="inline-flex w-fit items-center gap-2 rounded-lg bg-[#ffd12d] px-5 py-3 text-sm font-bold text-[#111] transition hover:bg-[#f5c400]">Start with a qualification review <ArrowRight className="h-4 w-4" /></a></div>
         </div>
       </section>
 

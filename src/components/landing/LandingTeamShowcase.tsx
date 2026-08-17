@@ -2,7 +2,7 @@ import { ArrowRight, Mail, Phone } from "lucide-react";
 
 const PEOPLE = [
   { name: "Shakil Ahmed", role: "Founder · Strategy and campaign direction", image: "https://barakahsoft.com/wp-content/uploads/2026/07/Shak-Headshot-Medium.jpeg", body: "I own the offer, research the market, direct the campaign, and make sure the work is built around the jobs you actually want." },
-  { name: "Jim Sabellico", role: "Client relations · Communication and support", image: "https://barakahsoft.com/wp-content/uploads/2026/07/Jim-Headshot-Medium.jpeg", body: "I keep communication clear, make sure you know what is happening next, and help turn campaign activity into a useful weekly conversation." },
+  { name: "Jim Sabellico", role: "Client relations · Communication & support", image: "https://barakahsoft.com/wp-content/uploads/2026/07/Jim-Headshot-Medium.jpeg", body: "I keep communication clear, make sure you know what is happening next, and help turn campaign activity into a useful weekly conversation." },
 ];
 
 export function LandingTeamShowcase() {
