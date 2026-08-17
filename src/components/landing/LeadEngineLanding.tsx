@@ -132,8 +132,7 @@ export function LeadEngineLanding() {
               </a>
             </div>
             <p className="mx-auto mt-4 max-w-xl text-xs text-[#7890a5]">
-              No setup fee for founding clients. No per-lead fee. Your
-              advertising budget stays in your own Meta account.
+              No setup fee · No per-lead fees · Your Meta budget stays yours.
             </p>
           </div>
 
@@ -182,7 +181,7 @@ export function LeadEngineLanding() {
               The target
             </p>
             <p className="mt-2 font-semibold">
-              30 qualified opportunities in 30 days
+              30 qualified leads / 30 days
             </p>
           </div>
           <div className="border-white/20 sm:border-r sm:pr-6">
@@ -190,7 +189,7 @@ export function LeadEngineLanding() {
               The model
             </p>
             <p className="mt-2 font-semibold">
-              $500/week management, no per-lead charge
+              $500/week · no per-lead fee
             </p>
           </div>
           <div>
@@ -198,7 +197,7 @@ export function LeadEngineLanding() {
               The ownership
             </p>
             <p className="mt-2 font-semibold">
-              Your Meta account, budget, data, and leads
+              Your account · your data · your leads
             </p>
           </div>
         </div>
