@@ -1,4 +1,4 @@
-import { ArrowRight, Building2, Droplets, Hammer, Home, ShieldCheck, Truck, Wrench, Zap } from "lucide-react";
+import { Building2, Droplets, Hammer, Home, ShieldCheck, Truck, Wrench, Zap } from "lucide-react";
 
 const VERTICALS = [
   [Zap, "Electricians", "Panels, repairs, EV charging"],
@@ -24,7 +24,7 @@ export function IndustryCoverage() {
     <section id="industries" className="border-b border-[#d9e8f4] bg-white py-24 lg:py-32">
       <div className="mx-auto max-w-6xl px-6">
         <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
-          <div><p className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Industry coverage</p><h2 className="font-sans text-4xl font-semibold leading-tight tracking-[-0.04em] text-[#07284d] sm:text-5xl">One lead engine. Built around the work you sell.</h2></div>
+          <div><p className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Industry coverage</p><h2 className="font-sans text-4xl font-semibold leading-tight tracking-[-0.04em] text-[#07284d] sm:text-5xl">One lead engine. Built around the services you provide.</h2></div>
           <p className="max-w-xl text-lg leading-8 text-[#60778d]">We focus on US home-service businesses where a qualified conversation can turn into a valuable job. Your market, offer, and capacity still determine whether the program is a fit.</p>
         </div>
 
@@ -36,7 +36,7 @@ export function IndustryCoverage() {
             <div className="absolute left-5 top-5 rounded-lg bg-[#07284d] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white">US home-service focus</div>
             <div className="absolute bottom-5 right-5 rounded-xl border border-white/70 bg-white/90 px-4 py-3 shadow-card"><p className="text-xs font-bold text-[#07284d]">Market signal</p><p className="mt-1 text-xs text-[#60778d]">Offer + location + demand</p></div>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">{VERTICALS.map(([Icon, title, body]) => <div key={title} className="group rounded-2xl border border-[#c8ddec] bg-[#f8fbfe] p-5 transition hover:-translate-y-1 hover:border-[#8fc6ff] hover:bg-white hover:shadow-card"><div className="flex items-start justify-between"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff7c7] text-[#07284d]"><Icon className="h-5 w-5" /></div><ArrowRight className="h-4 w-4 text-[#8fc6ff] transition group-hover:translate-x-1 group-hover:text-[#0c68c8]" /></div><p className="mt-6 font-bold text-[#07284d]">{title}</p><p className="mt-1 text-xs leading-5 text-[#657c90]">{body}</p></div>)}</div>
+          <div className="grid gap-3 sm:grid-cols-2">{VERTICALS.map(([Icon, title, body]) => <div key={title} className="group rounded-2xl border border-[#c8ddec] bg-[#f8fbfe] p-5 transition hover:-translate-y-1 hover:border-[#8fc6ff] hover:bg-white hover:shadow-card"><div className="flex items-start justify-between"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff7c7] text-[#07284d]"><Icon className="h-5 w-5" /></div><span className="text-xs font-bold uppercase tracking-wider text-[#8fc6ff]">Focus</span></div><p className="mt-6 font-bold text-[#07284d]">{title}</p><p className="mt-1 text-xs leading-5 text-[#657c90]">{body}</p></div>)}</div>
         </div>
         <p className="mt-8 text-center text-xs text-[#7890a5]">Coverage visual is illustrative. Campaign availability, lead volume, and target economics depend on the business, location, offer, and approved advertising budget.</p>
       </div>
