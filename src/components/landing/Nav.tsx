@@ -18,16 +18,19 @@ export function Nav() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={LOGO_URL} alt="BarakahSoft" className="h-7 w-auto" />
         </a>
-        <nav className="hidden items-center gap-8 text-sm font-medium text-muted-foreground md:flex">
+         <nav className="hidden items-center gap-8 text-sm font-medium text-muted-foreground md:flex">
           {LINKS.map((link) => (
             <a key={link.href} href={link.href} className="transition-colors hover:text-foreground">
               {link.label}
             </a>
           ))}
         </nav>
-        <Button asChild size="sm">
-          <a href="#top">See if I qualify</a>
-        </Button>
+         <div className="hidden items-center gap-4 lg:flex">
+           <a href="tel:+13075336678" className="text-sm font-semibold text-foreground transition hover:text-primary">+1 (307) 533-6678</a>
+           <a href="mailto:hello@barakahsoft.com" className="text-sm text-muted-foreground transition hover:text-primary">hello@barakahsoft.com</a>
+           <Button asChild size="sm"><a href="#top">See if I qualify</a></Button>
+         </div>
+         <Button asChild size="sm" className="lg:hidden"><a href="#top">See if I qualify</a></Button>
       </div>
     </header>
   );

@@ -17,17 +17,17 @@ export function Hero({ children }: { children?: React.ReactNode }) {
           <p className="mt-6 max-w-lg text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">No website project. No long contract. One measurable acquisition sprint.</p>
         </div>
         <div className="space-y-5">
-          <div className="overflow-hidden rounded-3xl border border-border bg-muted shadow-lift">
-            <video autoPlay muted loop playsInline controls preload="metadata" className="aspect-video w-full object-cover">
-              <source src="https://liepxeeugfrxmidcmbxo.supabase.co/storage/v1/object/public/landing/barakahsoft-hero.mp4" type="video/mp4" />
-            </video>
-            <div className="flex items-center justify-between px-4 py-3 text-xs text-muted-foreground"><span className="font-semibold text-foreground">How the lead engine works</span><span>BarakahSoft LLC</span></div>
-          </div>
           <div className="rounded-3xl border border-border bg-card p-6 shadow-card sm:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Start with a qualification review</p>
             <h2 className="mt-3 font-sans text-2xl font-semibold tracking-tight">Show us the business you want to grow.</h2>
             {children}
             <p className="mt-4 text-xs text-muted-foreground">{landing.trustLine}</p>
+          </div>
+          <div className="overflow-hidden rounded-3xl border border-border bg-muted shadow-card">
+            <video autoPlay muted loop playsInline controls preload="metadata" className="aspect-video w-full object-cover">
+              <source src="https://liepxeeugfrxmidcmbxo.supabase.co/storage/v1/object/public/landing/barakahsoft-hero.mp4" type="video/mp4" />
+            </video>
+            <div className="flex items-center justify-between px-4 py-3 text-xs text-muted-foreground"><span className="font-semibold text-foreground">How the lead engine works</span><span>BarakahSoft LLC</span></div>
           </div>
         </div>
       </div>
