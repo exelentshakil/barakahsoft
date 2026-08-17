@@ -84,20 +84,27 @@ export const enrichGenerate = inngest.createFunction(
 
     const genContext: GenerationContext = { industryLabel: playbook.industry_label, town, designBrief: competitorResearch.designBrief };
 
-    // v6 -- real curated screenshots of premium sites in this exact trade
-    // (leads.persona, e.g. "roofers"), when a folder has been sourced/
-    // uploaded for it. [] for an unsourced trade -- selectSectionVariants
-    // falls back to its existing text-only research signal in that case.
-    const nicheScreenshots = await step.run("load-niche-screenshots", () => loadNicheScreenshots(persona));
-
     // Which pre-built, hand-QA'd section variant renders in each fixed
     // slot — a real per-lead pick grounded in this lead's own facts, the
     // live competitor research, and (when available) real vision input from
     // this exact trade's curated reference screenshots — not one static
     // layout for everyone. Any invalid/missing pick safely falls back to
     // the default variant at render time (sections/registry.ts).
+    //
+    // v6 -- real curated screenshots for this exact trade (leads.persona,
+    // e.g. "roofers") load as a PLAIN call inside this step, not their own
+    // step.run(...). Inngest durably serializes every step's return value,
+    // and a niche's full screenshot set (up to 20 base64-encoded images) is
+    // multiple MB -- comfortably over Inngest's per-step output size limit
+    // ("step output size is greater than the limit", confirmed in
+    // production). They're read-only, side-effect-free, and deterministic,
+    // so re-fetching on any replay is fine -- only this step's own small
+    // {selections, rationale} return value needs durability.
     const composition = await step.run("select-section-variants", async () => {
-      const catalog = await loadSectionVariantCatalog(industry);
+      const [catalog, nicheScreenshots] = await Promise.all([
+        loadSectionVariantCatalog(industry),
+        loadNicheScreenshots(persona),
+      ]);
       return selectSectionVariants(facts, playbook, competitorResearch, catalog, nicheScreenshots);
     });
 
