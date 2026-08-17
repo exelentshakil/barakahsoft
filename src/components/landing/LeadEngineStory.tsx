@@ -1,4 +1,4 @@
-import { Check, ShieldCheck, Target, Workflow } from "lucide-react";
+import { Eye, LockKeyhole, ShieldCheck, Target, Workflow } from "lucide-react";
 import { Reveal } from "@/components/site-shell/primitives/Reveal";
 import { SectionEyebrow } from "@/components/site-shell/primitives/SectionEyebrow";
 
@@ -8,6 +8,12 @@ const SYSTEM = [
   ["03", "The creative", "Short-form ad concepts and copy that make the problem, service, and next step obvious in the feed."],
   ["04", "The follow-up", "Lead routing, response expectations, and tracking so opportunities do not disappear after the form."],
 ];
+
+const TRUST = [
+  [LockKeyhole, "Ownership", "You own the Meta account, pixel, billing, audience, and lead data.", "Nothing is trapped inside our agency."],
+  [Eye, "Visibility", "You can see the landing page, creative, campaign, tracking, and lead flow.", "No black-box reporting."],
+  [ShieldCheck, "Low risk", "Start for one week and decide whether the working relationship is right.", "No long-term obligation."],
+] as const;
 
 export function LeadEngineStory() {
   return (
@@ -29,7 +35,7 @@ export function LeadEngineStory() {
         </div>
       </section>
 
-      <section className="border-b border-border bg-muted/40 py-20"><div className="mx-auto grid max-w-5xl gap-6 px-6 md:grid-cols-3">{[["You own the account", "Your Meta account, pixel, billing, and lead data stay yours."], ["You see the work", "Creative, landing page, tracking, and lead flow are visible."], ["You can stop", "No long-term contract. Keep the conversation honest." ]].map(([title, body]) => <div key={title} className="rounded-2xl border border-border bg-card p-6 shadow-card"><Check className="h-5 w-5 text-primary" /><h3 className="mt-8 font-semibold">{title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{body}</p></div>)}</div></section>
+      <section className="border-b border-border bg-muted/40 py-16 lg:py-20"><div className="mx-auto max-w-5xl px-6"><div className="mb-8 max-w-xl"><p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">The relationship</p><h2 className="mt-3 font-sans text-3xl font-semibold tracking-[-0.03em]">Clear ownership. Visible work. A fair way to start.</h2></div><div className="grid gap-4 md:grid-cols-3">{TRUST.map(([Icon, title, body, note]) => <div key={title} className="group rounded-2xl border border-border bg-card p-6 shadow-card transition hover:-translate-y-1 hover:shadow-lift"><div className="flex items-start justify-between"><div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/15"><Icon className="h-6 w-6" strokeWidth={1.7} /></div><span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</span></div><h3 className="mt-8 text-lg font-semibold">{body}</h3><p className="mt-3 text-sm font-medium text-primary">{note}</p></div>)}</div></div></section>
     </>
   );
 }
