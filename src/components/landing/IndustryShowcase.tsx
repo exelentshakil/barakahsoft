@@ -2,6 +2,7 @@ import { Telescope } from "lucide-react";
 import { listIndustryShowcase } from "@/lib/design-reference";
 import { Marquee } from "@/components/landing/primitives/Marquee";
 import { SectionEyebrow } from "@/components/site-shell/primitives/SectionEyebrow";
+import { DesignReferenceCard } from "@/components/landing/DesignReferenceCard";
 
 // Real, curated premium websites across every trade we serve -- sourced
 // and vetted by the team as the design bar every redesign is built to
@@ -31,10 +32,7 @@ export async function IndustryShowcase() {
             <p className="mb-3 px-6 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.label}</p>
             <Marquee gap="gap-5" reverse={i % 2 === 1} durationSeconds={Math.max(30, group.images.length * 5)}>
               {group.images.map((img) => (
-                <div key={img.url} className="h-48 w-72 overflow-hidden rounded-xl border border-border bg-card shadow-card">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img.url} alt={img.alt} className="h-full w-full object-cover object-top" />
-                </div>
+                <DesignReferenceCard key={img.url} url={img.url} alt={img.alt} />
               ))}
             </Marquee>
           </div>
