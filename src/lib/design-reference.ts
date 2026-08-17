@@ -2,26 +2,42 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { GeminiImagePart } from "@/lib/gemini-client";
 import { PERSONAS } from "@/lib/personas";
 
-// v6 -- loads a real trade's curated design-reference screenshots (resized
-// + uploaded once by scripts/upload-design-reference.ts) for use as real
-// vision input into selectSectionVariants. Reads from Supabase Storage, not
-// local disk -- design-reference/** is never traced/bundled into the
-// deployed serverless function, and every other real binary asset in this
-// codebase already goes through Storage at runtime.
+// v6 -- loads a real random sample of a trade's curated design-reference
+// screenshots (resized + uploaded once by scripts/upload-design-reference.ts)
+// for use as real vision input into selectSectionVariants. Reads from
+// Supabase Storage, not local disk -- design-reference/** is never traced/
+// bundled into the deployed serverless function, and every other real
+// binary asset in this codebase already goes through Storage at runtime.
+//
+// v6.2 -- was downloading and base64-encoding EVERY screenshot for the
+// trade (up to 20+ images, several MB) on every single generation. Two
+// real problems with that: (1) it's what blew through Inngest's per-step
+// output size limit in production, and (2) every lead in the same trade
+// saw the exact same fixed image set in the same order, which correlated
+// with near-identical composition picks across leads regardless of each
+// lead's own real facts -- not the per-lead variety this is meant to
+// produce. Every screenshot in the library already passed the same human
+// curation bar (see each trade's notes.md), so a small RANDOM sample is
+// just as strong a quality signal, is far cheaper/faster (only lists
+// filenames, then downloads just the sampled few), and gives each
+// generation genuinely different real reference input instead of the same
+// fixed deck every time.
 //
 // A persona whose trade folder hasn't been sourced/uploaded yet (most
 // trades today -- only roofers is populated) returns [] rather than
 // throwing, so callers must treat an empty result as "fall back to
 // text-only composition," never as an error.
-export async function loadNicheScreenshots(persona: string | null | undefined, limit = 20): Promise<GeminiImagePart[]> {
+export async function loadNicheScreenshots(persona: string | null | undefined, sampleSize = 3): Promise<GeminiImagePart[]> {
   if (!persona) return [];
   const admin = createAdminClient();
 
-  const { data: files, error } = await admin.storage.from("design-reference").list(persona, { limit });
+  const { data: files, error } = await admin.storage.from("design-reference").list(persona, { limit: 30 });
   if (error || !files || files.length === 0) return [];
 
+  const sampled = [...files].sort(() => Math.random() - 0.5).slice(0, sampleSize);
+
   const results = await Promise.all(
-    files.map(async (file) => {
+    sampled.map(async (file) => {
       const { data, error: downloadError } = await admin.storage.from("design-reference").download(`${persona}/${file.name}`);
       if (downloadError || !data) return null;
       const buffer = Buffer.from(await data.arrayBuffer());
