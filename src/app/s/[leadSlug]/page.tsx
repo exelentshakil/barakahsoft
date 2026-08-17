@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSiteData } from "@/lib/get-site-data";
-import { HomeServicesV1Shell } from "@/components/site-shell/shells/home-services-v1";
-import { BespokeHomepage } from "@/components/site-shell/BespokeHomepage";
+import { PremiumLeadHomepage } from "@/components/site-shell/PremiumLeadHomepage";
 
 // THE homepage — one crawlable document. Every service/area gets a #slug
 // mega-menu anchor here pre-payment; title/meta/canonical/FAQPage/
@@ -63,10 +62,9 @@ export default async function LeadSitePage({ params }: { params: Promise<{ leadS
     <>
       {/* next/font/google can't do per-request fonts — this is a real
           Google Fonts CDN link, App Router hoists it into <head>. */}
-      {payload.fontStylesheetUrl && <link rel="stylesheet" href={payload.fontStylesheetUrl} />}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
       {faqSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
-      {payload.bespokeHomepageHtml ? <BespokeHomepage payload={payload} /> : <HomeServicesV1Shell payload={payload} />}
+      <PremiumLeadHomepage payload={payload} />
     </>
   );
 }

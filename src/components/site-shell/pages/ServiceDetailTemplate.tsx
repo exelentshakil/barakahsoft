@@ -19,11 +19,11 @@ export function ServiceDetailTemplate({ payload, service }: { payload: SitePaylo
     <>
       <PageHeroBand eyebrow="Service" eyebrowIcon={Wrench} title={service.h2} />
 
-      <section className="border-b border-border py-16">
-        <div className="mx-auto grid max-w-5xl gap-12 px-6 lg:grid-cols-[1fr_320px]">
+      <section className="border-b border-border py-16 lg:py-24">
+        <div className="mx-auto grid max-w-6xl gap-12 px-6 lg:grid-cols-[1fr_360px]">
           <Reveal className="space-y-5">
             {paragraphs.map((p, i) => (
-              <p key={i} className="leading-relaxed text-muted-foreground">
+              <p key={i} className="max-w-2xl text-lg leading-8 text-muted-foreground">
                 {p}
               </p>
             ))}
@@ -32,13 +32,13 @@ export function ServiceDetailTemplate({ payload, service }: { payload: SitePaylo
             {service.imageUrl && (
               <Reveal variant="scale-in">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={service.imageUrl} alt={service.h2} className="w-full rounded-2xl object-cover shadow-glow" />
+                <img src={service.imageUrl} alt={service.h2} className="aspect-[4/3] w-full rounded-2xl object-cover shadow-lift" />
               </Reveal>
             )}
             {payload.nap.phone && (
-              <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
+              <div className="rounded-2xl border border-border bg-slate-950 p-6 text-white shadow-lift">
                 <p className="font-semibold">Ready to get started?</p>
-                <p className="mt-1 text-sm text-muted-foreground">Call now for a free quote.</p>
+                <p className="mt-1 text-sm text-slate-300">Call now for a free quote and a clear next step.</p>
                 <Button asChild className="mt-4 w-full">
                   <a href={`tel:${payload.nap.phone}`}>
                     <Phone className="h-4 w-4" /> {payload.nap.phone}

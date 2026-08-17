@@ -9,13 +9,12 @@ import { Reveal } from "@/components/site-shell/primitives/Reveal";
 // bespoke hero per template.
 export function PageHeroBand({ eyebrow, eyebrowIcon, title, subhead }: { eyebrow: string; eyebrowIcon?: LucideIcon; title: string; subhead?: string }) {
   return (
-    <section className="relative overflow-hidden border-b border-border">
-      <div className="decor-blob -right-32 -top-32 h-96 w-96" />
-      <div className="decor-blob -bottom-32 -left-32 h-72 w-72" />
-      <Reveal className="relative mx-auto max-w-4xl px-6 py-20 text-center">
+    <section className="relative overflow-hidden border-b border-border bg-card">
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-primary" aria-hidden="true" />
+      <Reveal className="relative mx-auto max-w-5xl px-6 py-16 sm:py-20">
         <SectionEyebrow icon={eyebrowIcon}>{eyebrow}</SectionEyebrow>
-        <h1 className="font-display text-3xl font-bold tracking-tight sm:text-5xl">{title}</h1>
-        {subhead && <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">{subhead}</p>}
+        <h1 className="max-w-4xl font-display text-4xl font-bold leading-tight tracking-tight sm:text-6xl">{title}</h1>
+        {subhead && <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">{subhead}</p>}
       </Reveal>
     </section>
   );

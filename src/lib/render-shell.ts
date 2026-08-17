@@ -101,15 +101,18 @@ export function renderShell(
       .filter((r) => r.text && r.text.trim().length > 0)
       .slice(0, 6),
     nap: {
-      phone: (facts.nap as { phones?: string[] })?.phones?.[0] ?? null,
+      phone: ((facts.nap as { phones?: string[] })?.phones ?? []).find((phone) => /\d{7,}/.test(phone.replace(/\D/g, ""))) ?? null,
       email: (facts.nap as { emails?: string[] })?.emails?.[0] ?? null,
       address: (facts.nap as { address?: string })?.address ?? null,
     },
     socialUrls: (facts.social_urls as string[]) ?? [],
     brandColorHsl: (facts.brand_color_hsl as string) ?? null,
     logoUrl: (facts.logo_url as string) ?? null,
-    fontFamily: (facts.font as { googleFontFamily?: string } | undefined)?.googleFontFamily ?? null,
-    fontStylesheetUrl: (facts.font as { googleFontStylesheetUrl?: string } | undefined)?.googleFontStylesheetUrl ?? null,
+    // Keep the delivered system visually consistent. Client fonts are useful
+    // as research signals, but arbitrary scraped font imports made pages feel
+    // inconsistent and occasionally broke the intended hierarchy.
+    fontFamily: null,
+    fontStylesheetUrl: null,
     innerPagesBuilt: artifact.inner_pages_built,
     fullSiteBuilt: artifact.full_site_status === "complete",
     leadSlug: lead.slug,

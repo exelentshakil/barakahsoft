@@ -16,7 +16,6 @@ import { runPhotoWaterfall } from "@/lib/photo-waterfall";
 import { researchCompetitors } from "@/lib/research-competitors";
 import { loadSectionVariantCatalog, selectSectionVariants } from "@/lib/compose-sections";
 import { loadNicheScreenshots } from "@/lib/design-reference";
-import { generateBespokeHomepage } from "@/lib/generate-bespoke-page";
 import { buildHeroVideoPrompt, startHeroVideoGeneration, checkHeroVideoOperation, storeHeroVideo } from "@/lib/google/veo";
 import type { PageInventory } from "@/lib/scrape/extract-text";
 import type { FunnelPageSection } from "@/types/database";
@@ -95,17 +94,6 @@ export const enrichGenerate = inngest.createFunction(
     // Loaded once here, reused by both the bespoke generator below and the
     // legacy catalog-composition fallback.
     const nicheScreenshots = await loadNicheScreenshots(persona);
-
-    // v8 -- the real per-lead homepage: Gemini generates the actual HTML,
-    // informed by real reference screenshots for this exact trade, instead
-    // of picking an enum slug from a fixed component catalog (see
-    // generate-bespoke-page.ts for the full rationale). Null when the trade
-    // has no reference library yet or generation genuinely fails -- the
-    // legacy catalog-based composition below is the deterministic fallback
-    // for that case, not a parallel design goal.
-    const bespoke = await step.run("generate-bespoke-homepage", () =>
-      generateBespokeHomepage(facts, playbook, genContext, nicheScreenshots)
-    );
 
     // Which pre-built, hand-QA'd section variant renders in each fixed
     // slot when the bespoke homepage above didn't generate — a real
@@ -331,8 +319,11 @@ export const enrichGenerate = inngest.createFunction(
           qa_notes: groundingWarnings.length > 0 ? groundingWarnings.join("\n") : null,
           section_variant_selections: composition.selections,
           composition_rationale: composition.rationale || null,
-          bespoke_homepage_html: bespoke?.html ?? null,
-          bespoke_rationale: bespoke?.rationale ?? null,
+          // AI supplies grounded copy and composition choices. The homepage
+          // itself is rendered by reviewed React sections, never raw model
+          // HTML. Existing bespoke columns remain for migration history only.
+          bespoke_homepage_html: null,
+          bespoke_rationale: null,
         },
         { onConflict: "lead_id" }
       );

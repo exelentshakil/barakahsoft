@@ -1,7 +1,19 @@
-import { ShieldCheck, ExternalLink, Phone, Mail, MapPin } from "lucide-react";
+import { ShieldCheck, Phone, Mail, MapPin } from "lucide-react";
 import { sectionHref, type SitePayload } from "@/components/site-shell/types";
 import { IconBadge } from "@/components/site-shell/primitives/IconBadge";
 import { Reveal } from "@/components/site-shell/primitives/Reveal";
+
+function SocialMark({ url }: { url: string }) {
+  const kind = /facebook/i.test(url) ? "facebook" : /instagram/i.test(url) ? "instagram" : /linkedin/i.test(url) ? "linkedin" : /youtube/i.test(url) ? "youtube" : null;
+  if (!kind) return null;
+  const paths = {
+    facebook: "M14 8h3V5h-3c-2.2 0-4 1.8-4 4v2H7v3h3v5h3v-5h3l1-3h-4V9c0-.6.4-1 1-1Z",
+    instagram: "M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4Zm5 5a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm5-1h.01",
+    linkedin: "M6 9v9M6 6v.01M10 18v-5a4 4 0 0 1 8 0v5M10 9v9",
+    youtube: "m10 15 5-3-5-3v6Zm11-3c0 4-1 5-1 5s-1 1-5 1H9c-4 0-5-1-5-1s-1-1-1-5 1-5 1-5 1-1 5-1h6c4 0 5 1 5 1s1 1 1 5Z",
+  } as const;
+  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d={paths[kind]} /></svg>;
+}
 
 // Bank/fintech footer density (plan §5/§7), not three links and a
 // copyright: 5 columns, a credentials row, a real disclaimer paragraph,
@@ -25,11 +37,14 @@ export function PremiumFooter({ payload }: { payload: SitePayload }) {
               <p className="mt-3 max-w-xs text-sm text-muted-foreground">{payload.differentiator}</p>
               {(payload.socialUrls.length > 0) && (
                 <div className="mt-4 flex gap-3">
-                  {payload.socialUrls.slice(0, 4).map((url) => (
-                    <a key={url} href={url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary">
-                      <ExternalLink className="h-4 w-4" />
+                  {payload.socialUrls.slice(0, 4).map((url) => {
+                    if (!/facebook|instagram|linkedin|youtube/i.test(url)) return null;
+                    return (
+                    <a key={url} href={url} target="_blank" rel="noreferrer" aria-label="Social profile" className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground transition hover:border-primary hover:text-primary">
+                      <SocialMark url={url} />
                     </a>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -50,7 +65,7 @@ export function PremiumFooter({ payload }: { payload: SitePayload }) {
             <div>
               <p className="text-sm font-semibold">Areas</p>
               <ul className="mt-3 space-y-2">
-                {payload.areas.map((a) => (
+                {payload.areas.slice(0, 12).map((a) => (
                   <li key={a.slug}>
                     <a href={sectionHref(payload, "areas", a.slug)} className="text-sm text-muted-foreground hover:text-foreground">
                       {a.h2}
