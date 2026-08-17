@@ -4,7 +4,6 @@ import { IntakeFlow } from "@/components/landing/IntakeFlow";
 import { TrustLogos } from "@/components/landing/TrustLogos";
 import { StoryProblem } from "@/components/landing/StoryProblem";
 import { HowItWorks } from "@/components/landing/HowItWorks";
-import { ProofGallery } from "@/components/landing/ProofGallery";
 import { IndustryShowcase } from "@/components/landing/IndustryShowcase";
 import { Team } from "@/components/landing/Team";
 import { PricingPilot } from "@/components/landing/PricingPilot";
@@ -37,7 +36,6 @@ export default function LandingPage() {
       <TrustLogos />
       <StoryProblem />
       <HowItWorks />
-      <ProofGallery />
       <IndustryShowcase />
       <Team />
       <PricingPilot />

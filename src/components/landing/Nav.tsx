@@ -4,7 +4,6 @@ const LOGO_URL = "https://barakahsoft.com/wp-content/uploads/2026/01/Logo1.png";
 
 const LINKS = [
   { href: "#how-it-works", label: "How it works" },
-  { href: "#proof", label: "Real redesigns" },
   { href: "#team", label: "Team" },
   { href: "#faq", label: "FAQ" },
 ];
