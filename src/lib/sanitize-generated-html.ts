@@ -9,7 +9,7 @@ import sanitizeHtml from "sanitize-html";
 // "the AI can write arbitrary HTML" survivable -- it can never inject a
 // script or an event handler, only markup and classes.
 const ALLOWED_TAGS = [
-  "div", "section", "header", "footer", "nav", "main", "article", "aside",
+  "div", "section", "main", "article", "aside",
   "h1", "h2", "h3", "h4", "h5", "h6", "p", "span", "a", "img", "svg", "path",
   "ul", "ol", "li", "button", "strong", "em", "br", "hr", "figure", "figcaption",
   "blockquote", "cite", "time",
@@ -40,6 +40,14 @@ export function sanitizeGeneratedHtml(rawHtml: string): string {
     // loosening the real scheme allowlist.
     allowedSchemesByTag: { a: [...ALLOWED_SCHEMES] },
     disallowedTagsMode: "discard",
+    // v8 -- real bug found on first live test: the AI included its own
+    // <header>/nav despite an explicit prompt instruction not to (the real
+    // MegaMenu already renders one), producing a visible double-header.
+    // header/footer/nav aren't in allowedTags above, but sanitize-html's
+    // default "discard" mode only unwraps a disallowed tag -- it keeps the
+    // children rendered in place, which would still duplicate the nav
+    // links/logo text. nonTextTags removes the tag AND its full content.
+    nonTextTags: ["script", "style", "textarea", "option", "header", "footer", "nav"],
     exclusiveFilter: (frame) => frame.attribs && Object.keys(frame.attribs).some((a) => a.toLowerCase().startsWith("on")),
   });
 }

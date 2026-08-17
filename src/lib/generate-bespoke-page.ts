@@ -58,7 +58,9 @@ ${email ? `Real email: ${email}` : ""}
 Real photo URLs available to use (use ONLY these exact URLs for any <img src>, never invent or guess a URL, and never use a URL not in this list):
 ${photos.length > 0 ? photos.map((u) => `- ${u}`).join("\n") : "(none available -- do not include any <img> tags)"}
 
-Build a real HTML5 body-fragment (no <html>, <head>, or <body> tags -- just the real page content, starting with a header/nav and ending with a footer) covering, in whatever order and visual treatment you judge best for this specific business: a real hero with a genuine headline/subhead grounded in the facts above, real phone/CTA; a trust-signal strip if the facts support one (real rating, real review count, real license/insurance mention); a real services section listing the business's actual real services; real social proof if real reviews exist; a real FAQ if genuinely useful facts support real answers; a final call-to-action band; and a real footer with the real phone/email/address.
+Build a real HTML5 body-fragment (no <html>, <head>, or <body> tags -- just the real page content) covering, in whatever order and visual treatment you judge best for this specific business: a real hero with a genuine headline/subhead grounded in the facts above, real phone/CTA; a trust-signal strip if the facts support one (real rating, real review count, real license/insurance mention); a real services section listing the business's actual real services; real social proof if real reviews exist; a real FAQ if genuinely useful facts support real answers; and a final call-to-action band.
+
+Do NOT include a <header>, a top navigation bar, a logo, or a <footer> -- those are real, separate, already-built components rendered before and after whatever you return. Your output starts directly with the hero section and ends with the final CTA band, nothing before or after.
 
 Styling rules -- Tailwind utility classes only, no inline style attributes:
 - Standard Tailwind layout/spacing/typography utilities (flex, grid, gap-*, p-*, rounded-*, text-*, font-*, etc.) are all available.
