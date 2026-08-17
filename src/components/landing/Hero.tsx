@@ -40,7 +40,7 @@ export function Hero({ children }: { children?: React.ReactNode }) {
             <video autoPlay muted loop playsInline controls preload="metadata" className="aspect-video w-full object-cover">
               <source src="https://liepxeeugfrxmidcmbxo.supabase.co/storage/v1/object/public/landing/barakahsoft-hero.mp4" type="video/mp4" />
             </video>
-          <div className="flex flex-col gap-5 border-t border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between sm:px-8"><div><p className="text-sm font-bold text-foreground">Electricians • Plumbers • HVAC • Roofers • Movers • Restoration</p><p className="mt-1 text-xs text-muted-foreground">The reel shows our trade focus. The work behind every campaign is researched and managed by our team.</p></div><span className="shrink-0 text-xs font-bold uppercase tracking-[0.14em] text-primary">Research. Create. Launch.</span></div>
+          <div className="flex flex-col gap-5 border-t border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between sm:px-8"><div><p className="text-sm font-bold text-foreground">Our trade focus: electricians, plumbers, HVAC, roofers, movers, and restoration.</p><p className="mt-1 text-xs text-muted-foreground">This short reel introduces the industries we serve. The strategy, creative, and campaign work is handled by our team.</p></div><span className="shrink-0 text-xs font-bold uppercase tracking-[0.14em] text-primary">Research. Create. Launch.</span></div>
         </div>
       </div>
     </section>

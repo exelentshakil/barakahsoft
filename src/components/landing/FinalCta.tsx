@@ -8,15 +8,15 @@ import landing from "../../../content/landing.json";
 // second, harder-to-miss entry point for anyone who scrolled the whole story.
 export function FinalCta() {
   return (
-    <section className="relative overflow-hidden border-t border-border bg-gradient-primary py-20 text-primary-foreground">
-      <div className="pointer-events-none absolute -top-24 right-0 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 left-0 h-72 w-72 rounded-full bg-black/10 blur-3xl" />
+    <section className="relative overflow-hidden border-t border-border bg-[#f1edff] py-20 text-foreground">
+      <div className="pointer-events-none absolute -top-24 right-0 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 left-0 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
       <Reveal className="relative mx-auto flex max-w-2xl flex-col items-center gap-4 px-6 text-center">
         <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
            Stop paying for marketing that never reaches the phone
         </h2>
-        <p className="max-w-lg text-primary-foreground/90">{landing.trustLine}</p>
-        <Button asChild size="lg" variant="secondary" className="mt-2 shadow-lift">
+         <p className="max-w-lg text-muted-foreground">{landing.trustLine}</p>
+         <Button asChild size="lg" className="mt-2 shadow-lift">
           <a href="#top">
             {landing.primaryCta} <ArrowRight className="h-4 w-4" />
           </a>
