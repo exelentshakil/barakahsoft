@@ -53,6 +53,7 @@ export interface SitePayload {
   fullSiteBuilt: boolean;
   leadSlug: string;
   sectionVariants: Record<string, string>;
+  bespokeDesignPlan: Record<string, unknown> | null;
   // v8 -- real generated HTML for the homepage (Gemini, vision-informed by
   // real reference screenshots, sanitized before storage). Null falls back
   // to the catalog-based shell.

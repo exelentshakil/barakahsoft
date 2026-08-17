@@ -137,7 +137,7 @@ export interface Artifact {
   // Which section-variant renders in each fixed slot (kind -> variant_slug),
   // picked per lead by enrich-generate's composition step. Defaults to '{}'
   // in the DB (migration 00000000000016) so old rows still parse cleanly.
-  section_variant_selections: Record<string, string>;
+  section_variant_selections: Record<string, unknown>;
   composition_rationale: string | null;
   // v3 (Phase L) -- whether the full multi-page site (remaining services,
   // location-service pages, about/faq/legal) has been built for this lead.

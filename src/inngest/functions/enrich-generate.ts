@@ -16,6 +16,7 @@ import { runPhotoWaterfall } from "@/lib/photo-waterfall";
 import { researchCompetitors } from "@/lib/research-competitors";
 import { loadSectionVariantCatalog, selectSectionVariants } from "@/lib/compose-sections";
 import { loadNicheScreenshots } from "@/lib/design-reference";
+import { generateBespokeDesignPlan } from "@/lib/generate-bespoke-design-plan";
 import { buildHeroVideoPrompt, startHeroVideoGeneration, checkHeroVideoOperation, storeHeroVideo } from "@/lib/google/veo";
 import type { PageInventory } from "@/lib/scrape/extract-text";
 import type { FunnelPageSection } from "@/types/database";
@@ -94,6 +95,10 @@ export const enrichGenerate = inngest.createFunction(
     // Loaded once here, reused by both the bespoke generator below and the
     // legacy catalog-composition fallback.
     const nicheScreenshots = await loadNicheScreenshots(persona);
+
+    const bespokeDesignPlan = await step.run("generate-bespoke-design-plan", () =>
+      generateBespokeDesignPlan(facts, playbook, genContext, nicheScreenshots)
+    );
 
     // Which pre-built, hand-QA'd section variant renders in each fixed
     // slot when the bespoke homepage above didn't generate — a real
@@ -317,7 +322,7 @@ export const enrichGenerate = inngest.createFunction(
           extracted_assets: { guarantee: "Straightforward pricing, no surprises — confirmed before any work begins." },
           funnel_pages: funnelPages,
           qa_notes: groundingWarnings.length > 0 ? groundingWarnings.join("\n") : null,
-          section_variant_selections: composition.selections,
+          section_variant_selections: { ...composition.selections, __designPlan: bespokeDesignPlan },
           composition_rationale: composition.rationale || null,
           // AI supplies grounded copy and composition choices. The homepage
           // itself is rendered by reviewed React sections, never raw model

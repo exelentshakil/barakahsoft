@@ -48,6 +48,9 @@ function ServiceCard({ service, index, payload }: { service: ResolvedSection; in
 
 export function PremiumLeadHomepage({ payload }: { payload: SitePayload }) {
   const style = getShellStyle(payload);
+  const plan = payload.bespokeDesignPlan ?? {};
+  const surfaceClass = plan.surface === "dark-contrast" ? "bg-slate-950 text-white" : plan.surface === "warm-neutral" ? "bg-[#f7f3ed]" : "bg-card";
+  const serviceGridClass = plan.serviceLayout === "editorial-list" ? "md:grid-cols-2" : plan.serviceLayout === "bento-grid" ? "md:grid-cols-2 lg:grid-cols-3" : "md:grid-cols-2 lg:grid-cols-3";
   const phone = payload.nap.phone;
   const featuredReviews = payload.reviews.slice(0, 3);
   const featuredServices = payload.services.slice(0, 6);
@@ -63,7 +66,7 @@ export function PremiumLeadHomepage({ payload }: { payload: SitePayload }) {
       </div>
 
       <main>
-        <section className="relative overflow-hidden border-b border-border bg-card">
+        <section className={`relative overflow-hidden border-b border-border ${surfaceClass}`}>
           <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-14 lg:grid-cols-[1.02fr_0.98fr] lg:py-24">
             <div className="relative z-10">
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
@@ -116,7 +119,7 @@ export function PremiumLeadHomepage({ payload }: { payload: SitePayload }) {
         {featuredServices.length > 0 && <section id="services" className="border-b border-border py-20 lg:py-28">
           <div className="mx-auto max-w-7xl px-6">
             <div className="mb-12 flex flex-col justify-between gap-5 md:flex-row md:items-end"><div className="max-w-2xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">What we do</p><h2 className="mt-3 font-display text-4xl font-bold tracking-tight sm:text-5xl">Work that solves the real problem.</h2></div><p className="max-w-sm text-sm leading-6 text-muted-foreground">A focused set of services built around the needs already found in this business&apos;s real information.</p></div>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{featuredServices.map((service, index) => <ServiceCard key={service.slug} service={service} index={index} payload={payload} />)}</div>
+            <div className={`grid gap-6 ${serviceGridClass}`}>{featuredServices.map((service, index) => <ServiceCard key={service.slug} service={service} index={index} payload={payload} />)}</div>
           </div>
         </section>}
 
