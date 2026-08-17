@@ -44,7 +44,7 @@ export function LeadEngineLanding() {
           <div className="mx-auto max-w-4xl text-center">
             <p className="mx-auto mb-6 w-fit rounded-full bg-[#e8f4ff] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[#075da8]">Managed lead generation for US home-service businesses</p>
             <h1 className="font-sans text-5xl font-semibold leading-[1.02] tracking-[-0.055em] text-[#07284d] sm:text-7xl">Get 30 qualified lead opportunities in 30 days.</h1>
-            <p className="mx-auto mt-7 max-w-2xl text-lg leading-8 text-[#5c7186]">We build and manage the page, ads, creative, tracking, and follow-up system. You run your business. We create more opportunities for the work you already sell.</p>
+            <p className="mx-auto mt-7 max-w-2xl text-lg leading-8 text-[#5c7186]">We build and manage the page, ads, creative, tracking, and follow-up system. You run your business. We create more opportunities for the work your team already provides.</p>
             <div className="mt-9 flex flex-wrap justify-center gap-3"><IntakeFlow ctaLabel={landing.primaryCta} /><a href="tel:+13075336678" className="inline-flex items-center gap-2 rounded-lg border border-[#8fc6ff] bg-white px-6 py-3 text-sm font-bold text-[#07284d] transition hover:bg-[#f0f7ff]"><Phone className="h-4 w-4" /> Talk to BarakahSoft</a></div>
             <p className="mx-auto mt-4 max-w-xl text-xs text-[#7890a5]">No setup fee for founding clients. No per-lead fee. Your advertising budget stays in your own Meta account.</p>
           </div>
