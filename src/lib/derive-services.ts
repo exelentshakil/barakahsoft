@@ -31,6 +31,14 @@ const STOPLIST = [
   "testimonials",
   "login",
   "sign in",
+  // Real bug found against a live lead (bestnycelectricianmanhattan.com):
+  // a self-referential "Services" nav link slugifies to "services", the
+  // exact id the ServicesGrid section itself already uses -- producing a
+  // duplicate DOM id and a redundant, content-free "service" whose only
+  // real value is linking back to the page's own services list.
+  "services",
+  "our services",
+  "what we offer",
 ];
 
 // Real bug found against a live lead (cityroofrepairnyc.com): its nav has

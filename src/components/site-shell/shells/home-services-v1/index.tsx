@@ -50,8 +50,8 @@ export function HomeServicesV1Shell({ payload }: { payload: SitePayload }) {
 
       <ServicesGrid payload={payload} />
       {/* Individual service sections — real anchor targets for the menu/grid above */}
-      {payload.services.map((service) => (
-        <SectionRenderer key={service.slug} section={service} />
+      {payload.services.map((service, i) => (
+        <SectionRenderer key={service.slug} section={service} imageUrl={service.imageUrl} index={i} />
       ))}
 
       <CtaBanner payload={payload} />
