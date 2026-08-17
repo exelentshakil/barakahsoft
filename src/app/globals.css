@@ -115,6 +115,13 @@
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background-color: hsl(var(--muted-foreground) / 0.4);
   }
+
+  /* Shared Product Hunt-style surface for the BarakahSoft marketing page. */
+  .landing-grid-surface {
+    background-color: #ffffff;
+    background-image: linear-gradient(to right, rgb(7 40 77 / 0.035) 1px, transparent 1px), linear-gradient(to bottom, rgb(7 40 77 / 0.035) 1px, transparent 1px), radial-gradient(circle at 90% 10%, rgb(214 239 255 / 0.7), transparent 30%);
+    background-size: 52px 52px, 52px 52px, auto;
+  }
 }
 
 /* Hero motif motion (src/components/landing/Hero.tsx) — a drawn-in SVG

@@ -211,7 +211,7 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      <section className="border-b border-[#d9e8f4] py-24 lg:py-32">
+      <section className="landing-grid-surface border-b border-[#d9e8f4] py-20 lg:py-28">
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-12 lg:grid-cols-[0.75fr_1.25fr] lg:items-end">
             <div>
@@ -297,7 +297,7 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      <section className="border-b border-[#d9e8f4] py-24 lg:py-32">
+      <section className="landing-grid-surface border-b border-[#d9e8f4] py-20 lg:py-28">
         <div className="mx-auto grid max-w-6xl gap-12 px-6 lg:grid-cols-[1fr_1fr] lg:items-center">
           <div>
             <Kicker>What you see</Kicker>
