@@ -15,7 +15,6 @@ const LINKS = [
 export function Nav() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
-      <div className="bg-[#07284d] px-6 py-2 text-center text-[11px] font-semibold tracking-wide text-white"><span className="text-[#ffd12d]">30-day lead engine pilot</span><span className="mx-2 text-white/40">·</span>No per-lead fees<span className="mx-2 text-white/40">·</span>No long-term obligation</div>
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
         <a href="/" className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
