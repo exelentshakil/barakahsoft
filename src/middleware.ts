@@ -41,6 +41,12 @@ async function rewriteForCustomDomain(request: NextRequest): Promise<NextRespons
 }
 
 export async function middleware(request: NextRequest) {
+  // The visual admin prototype is fixture-only and intentionally public. It
+  // must not be caught by the protected `/admin` prefix check below.
+  if (request.nextUrl.pathname.startsWith("/admin-prototype")) {
+    return NextResponse.next();
+  }
+
   const customDomainRewrite = await rewriteForCustomDomain(request);
   if (customDomainRewrite) return customDomainRewrite;
 
