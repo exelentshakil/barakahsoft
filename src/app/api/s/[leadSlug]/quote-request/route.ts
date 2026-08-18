@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { getSiteData } from "@/lib/get-site-data";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 function getResend() {
   const key = process.env.RESEND_API_KEY;
@@ -60,6 +61,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ leadSlu
         <p><strong>Contact:</strong> ${contact}</p>
         ${message ? `<p><strong>Message:</strong> ${message}</p>` : ""}
       `,
+    });
+    await createAdminClient().from("lead_inquiries").insert({
+      lead_id: result.lead.id,
+      channel: "form",
+      status: "new",
+      name,
+      contact,
+      source: "website_form",
+      metadata: { message },
     });
     return NextResponse.json({ ok: true });
   } catch (err) {

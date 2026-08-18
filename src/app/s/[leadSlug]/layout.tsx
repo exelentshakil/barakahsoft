@@ -2,6 +2,7 @@ import Script from "next/script";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSiteData } from "@/lib/get-site-data";
 import { QuoteModalProvider } from "@/components/site-shell/QuoteModalProvider";
+import { TrackPhoneClicks } from "@/components/site-shell/TrackPhoneClicks";
 
 // Injects the CLIENT's own Facebook Pixel (leads.facebook_pixel_id) on
 // every delivered-site page under this segment — explicitly separate from
@@ -45,6 +46,7 @@ fbq('init', '${pixelId}');
 fbq('track', 'PageView');`}
         </Script>
       )}
+      <TrackPhoneClicks leadSlug={leadSlug} />
       {children}
     </>
   );
