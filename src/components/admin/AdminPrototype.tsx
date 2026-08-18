@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Activity, ArrowRight, BarChart3, Check, CircleAlert, Globe2, LayoutDashboard, Mail, Menu, MoreHorizontal, Search, Send, Settings2, Sparkles, Users, WandSparkles } from "lucide-react";
+import { Activity, ArrowRight, BarChart3, Check, CircleAlert, Globe2, LayoutDashboard, Mail, Menu, MoreHorizontal, Search, Send, Settings2, Users, WandSparkles } from "lucide-react";
 
 const TABS = ["Overview", "Build workspace", "Website", "Campaign", "Communication", "Delivery"] as const;
 type Tab = (typeof TABS)[number];
@@ -41,7 +41,7 @@ export function AdminPrototype() {
   return (
     <div className="min-h-screen bg-[#f5f9fc] text-[#1e212b]">
       <aside className="fixed inset-y-0 left-0 hidden w-64 bg-[#07284d] text-white lg:block">
-        <div className="flex h-16 items-center gap-3 border-b border-white/10 px-6"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#ffd12d] text-[#07284d]"><Sparkles className="h-5 w-5" /></div><div><p className="font-bold">BarakahSoft</p><p className="text-xs text-white/55">Lead Engine</p></div></div>
+        <div className="flex h-16 items-center gap-3 border-b border-white/10 px-6"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#ffd12d] p-1"><img src="/icon.svg" alt="" className="h-full w-full" /></div><div><p className="font-bold">BarakahSoft</p><p className="text-xs text-white/55">Lead Engine</p></div></div>
         <nav className="space-y-1 px-4 py-6">{[[LayoutDashboard, "Command center", "/admin-prototype"], [Users, "Leads", "/admin-prototype/leads"], [BarChart3, "Reports", "/admin-prototype/reports"], [Send, "Communications", "/admin-prototype/communications"], [Globe2, "Domains", "/admin-prototype/domains"], [Settings2, "Settings", "/admin-prototype/settings"]].map(([Icon, label, href], index) => <Link key={label as string} href={href as string} className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold ${index === 0 ? "bg-white/10 text-[#ffd12d]" : "text-white/65 hover:bg-white/5 hover:text-white"}`}><Icon className="h-4 w-4" />{label as string}</Link>)}</nav>
         <div className="absolute bottom-0 left-0 right-0 border-t border-white/10 p-4"><div className="flex items-center gap-3 rounded-xl bg-white/5 p-3"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ffd12d] text-xs font-bold text-[#07284d]">SA</div><div><p className="text-sm font-semibold">Shakil Ahmed</p><p className="text-xs text-white/50">Owner workspace</p></div></div></div>
       </aside>
