@@ -20,6 +20,7 @@ import { Nav } from "@/components/landing/Nav";
 import { IndustryShowcase } from "@/components/landing/IndustryShowcase";
 import { LandingTeamShowcase } from "@/components/landing/LandingTeamShowcase";
 import { IndustryCoverage } from "@/components/landing/IndustryCoverage";
+import { CrispChat } from "@/components/CrispChat";
 import landing from "../../../content/landing.json";
 
 const NAVY = "#07284D";
@@ -519,6 +520,7 @@ export function LeadEngineLanding() {
         </div>
       </section>
       <Footer />
+      <CrispChat />
     </main>
   );
 }

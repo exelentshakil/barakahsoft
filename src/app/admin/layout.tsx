@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { CrispChat } from "@/components/CrispChat";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -26,9 +27,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Separator orientation="vertical" className="h-4" />
           <p className="text-sm font-medium">BarakahSoft Admin</p>
         </header>
-        <div className="flex-1 p-6">
-          <div className="mx-auto max-w-[1600px]">{children}</div>
-        </div>
+         <div className="flex-1 p-6">
+           <div className="mx-auto max-w-[1600px]">{children}</div>
+         </div>
+         <CrispChat />
       </SidebarInset>
     </SidebarProvider>
   );
