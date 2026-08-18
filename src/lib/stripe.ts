@@ -17,3 +17,5 @@ export const BUILD_PRICE_ID = process.env.STRIPE_BUILD_PRICE_ID || "";
 export const HOSTING_PRICE_ID = process.env.STRIPE_HOSTING_PRICE_ID || "";
 // $99/mo hosting + support (recommended bundle).
 export const HOSTING_SUPPORT_PRICE_ID = process.env.STRIPE_HOSTING_SUPPORT_PRICE_ID || "";
+// $500/week managed lead-engine service.
+export const LEAD_ENGINE_PRICE_ID = process.env.STRIPE_LEAD_ENGINE_PRICE_ID || "";

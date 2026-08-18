@@ -26,10 +26,11 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
   const { data: lead } = await supabase.from("leads").select("*").eq("id", id).single<Lead>();
   if (!lead) notFound();
 
-  const [{ data: artifact }, { data: scrapeResults }, { data: closePlanSteps }] = await Promise.all([
+  const [{ data: artifact }, { data: scrapeResults }, { data: closePlanSteps }, { data: subscription }] = await Promise.all([
     supabase.from("artifacts").select("*").eq("lead_id", id).single<Artifact>(),
     supabase.from("scrape_results").select("*").eq("lead_id", id).single<ScrapeResults>(),
     supabase.from("close_plan_steps").select("*").eq("lead_id", id).returns<ClosePlanStep[]>(),
+    supabase.from("subscriptions").select("status, stripe_subscription_id, created_at").eq("lead_id", id).maybeSingle(),
   ]);
 
   const facts = (scrapeResults?.facts ?? {}) as Record<string, unknown>;
@@ -74,6 +75,13 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           { id: "close", label: "How to close", content: <HowToCloseTab steps={closePlanSteps ?? []} /> },
         ]}
       />
+      <div className="rounded-lg border border-border bg-card px-4 py-3 text-sm">
+        <span className="font-medium">Lead Engine billing:</span>{" "}
+        <span className={subscription?.status === "active" ? "font-semibold text-success" : "text-muted-foreground"}>
+          {subscription?.status === "active" ? "Active — $500/week" : subscription?.status || "Not active"}
+        </span>
+        {subscription?.created_at && <span className="ml-2 text-muted-foreground">since {new Date(subscription.created_at).toLocaleDateString()}</span>}
+      </div>
     </div>
   );
 }

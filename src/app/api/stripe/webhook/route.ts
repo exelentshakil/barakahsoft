@@ -34,19 +34,15 @@ export async function POST(req: Request) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
       const leadId = session.metadata?.lead_id;
-      const tier = session.metadata?.tier as "hosting" | "hosting_support" | undefined;
+      const tier = session.metadata?.tier as "hosting" | "hosting_support" | "lead_engine" | undefined;
       if (leadId && tier) {
         await admin.from("leads").update({ paid_at: new Date().toISOString() }).eq("id", leadId);
-        await admin.from("hosting_subscriptions").upsert(
-          {
-            lead_id: leadId,
-            stripe_subscription_id: session.subscription as string,
-            tier,
-            status: "active",
-          },
-          { onConflict: "lead_id" }
-        );
-        await inngest.send({ name: "stripe/invoice.paid", data: { lead_id: leadId } });
+        if (tier === "lead_engine") {
+          await admin.from("subscriptions").upsert({ lead_id: leadId, stripe_subscription_id: session.subscription as string, kind: "lead_engine", status: "active" }, { onConflict: "lead_id" });
+        } else {
+          await admin.from("hosting_subscriptions").upsert({ lead_id: leadId, stripe_subscription_id: session.subscription as string, tier, status: "active" }, { onConflict: "lead_id" });
+          await inngest.send({ name: "stripe/invoice.paid", data: { lead_id: leadId } });
+        }
       }
       break;
     }
@@ -55,13 +51,9 @@ export async function POST(req: Request) {
       const subscription = event.data.object as Stripe.Subscription;
       const leadId = subscription.metadata?.lead_id;
       if (leadId) {
-        await admin
-          .from("hosting_subscriptions")
-          .update({
-            status: subscription.status,
-            current_period_end: new Date(subscription.items.data[0]?.current_period_end * 1000).toISOString(),
-          })
-          .eq("lead_id", leadId);
+        const kind = subscription.metadata?.tier === "lead_engine" ? "lead_engine" : null;
+        if (kind) await admin.from("subscriptions").update({ status: subscription.status }).eq("lead_id", leadId).eq("stripe_subscription_id", subscription.id);
+        else await admin.from("hosting_subscriptions").update({ status: subscription.status, current_period_end: new Date(subscription.items.data[0]?.current_period_end * 1000).toISOString() }).eq("lead_id", leadId);
       }
       break;
     }
@@ -70,7 +62,8 @@ export async function POST(req: Request) {
       const subscription = event.data.object as Stripe.Subscription;
       const leadId = subscription.metadata?.lead_id;
       if (leadId) {
-        await admin.from("hosting_subscriptions").update({ status: "canceled" }).eq("lead_id", leadId);
+        if (subscription.metadata?.tier === "lead_engine") await admin.from("subscriptions").update({ status: "canceled" }).eq("lead_id", leadId).eq("stripe_subscription_id", subscription.id);
+        else await admin.from("hosting_subscriptions").update({ status: "canceled" }).eq("lead_id", leadId);
       }
       break;
     }

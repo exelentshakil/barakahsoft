@@ -106,7 +106,7 @@ export interface TemplateShell {
 
 export interface FunnelPageSection {
   slug: string;
-  kind: string;
+  kind: "ads_retainer" | "lead_engine" | string;
   h2: string;
   body_content: string;
   media_asset_ids: string[];
