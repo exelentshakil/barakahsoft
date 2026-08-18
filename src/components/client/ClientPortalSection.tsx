@@ -3,7 +3,7 @@ import { ArrowLeft, BarChart3, CheckCircle2, ExternalLink, FileSignature, Globe2
 
 const SECTIONS = {
   leads: { title: "Your opportunities", intro: "Every form inquiry and tracked call in one simple list.", rows: [["Roof replacement", "Form inquiry", "New"], ["Storm damage inspection", "Tracked call", "Contacted"], ["Commercial roof repair", "Form inquiry", "Qualified"], ["Gutter installation", "Form inquiry", "New"]] },
-  reports: { title: "Your weekly report", intro: "A plain-language view of spend, inquiries, calls, and opportunities.", rows: [["Ad spend", "$412", "Paid directly to Meta"], ["Form inquiries", "14", "Validated submissions"], ["Tracked calls", "4", "Phone opportunities"], ["Qualified opportunities", "18 / 30", "Current campaign KPI"]] },
+  reports: { title: "Your weekly report", intro: "A plain-language view of spend, inquiries, calls, and opportunities.", rows: [["Ad spend", "$412", "Paid directly to Meta"], ["Form inquiries", "14", "Validated submissions"], ["Phone inquiries", "4", "Tracked separately"], ["Qualified opportunities", "14 / 30", "Current campaign KPI"]] },
   website: { title: "Your website", intro: "Review the page and campaign assets built for your business.", rows: [["Preview", "Live", "Open website"], ["Services", "6 pages", "Review sitemap"], ["Service areas", "12 locations", "Review coverage"], ["SEO", "Connected", "View details"]] },
   account: { title: "Account and agreement", intro: "Your ownership, billing, agreement, and support details.", rows: [["Management", "$500/week", "No per-lead fees"], ["Ad budget", "Your account", "Paid directly to Meta"], ["Agreement", "Active", "View terms"], ["Support", "Crisp chat", "Message team"]] },
 } as const;
