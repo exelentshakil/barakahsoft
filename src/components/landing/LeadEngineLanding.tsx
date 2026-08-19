@@ -13,7 +13,7 @@ import {
   Users,
   Workflow,
 } from "lucide-react";
-import { IntakeFlow } from "@/components/landing/IntakeFlow";
+import { RedesignIntakeFlow } from "@/components/landing/RedesignIntakeFlow";
 import { Footer } from "@/components/landing/Footer";
 import { FAQAccordion } from "@/components/landing/FAQAccordion";
 import { Nav } from "@/components/landing/Nav";
@@ -30,26 +30,26 @@ const SYSTEM = [
   {
     icon: Target,
     number: "01",
-    title: "Find the opportunity",
-    body: "We research your market, service area, competitors, and the jobs you want more of.",
+    title: "Audit the current website",
+    body: "We identify evidenced mobile, conversion, content, and visibility problems.",
   },
   {
     icon: FileText,
     number: "02",
-    title: "Build the conversion path",
-    body: "We create a clear offer, landing page, tracking, and contact path around your real business.",
+    title: "Benchmark the quality bar",
+    body: "We study the strongest category examples before choosing the redesign direction.",
   },
   {
     icon: Megaphone,
     number: "03",
-    title: "Launch the creative",
-    body: "We produce the ad copy and short-form creative direction needed to stop the scroll.",
+    title: "Design the homepage concept",
+    body: "We use your real logo, colours, services, facts, and best usable images.",
   },
   {
     icon: Workflow,
     number: "04",
-    title: "Improve the next cycle",
-    body: "We review lead quality, campaign signals, and follow-up so the next week is smarter.",
+    title: "Deliver the preview and audit",
+    body: "You see what was wrong, what changed, and whether the direction is worth continuing.",
   },
 ];
 
@@ -121,18 +121,18 @@ export function LeadEngineLanding() {
         <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-20 lg:pb-24 lg:pt-28">
           <div className="mx-auto max-w-4xl text-center">
             <p className="mx-auto mb-6 w-fit rounded-full bg-[#e8f4ff] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[#075da8]">
-              Managed lead generation for US home-service businesses
+              Free homepage redesign · no card required
             </p>
             <h1 className="font-sans text-5xl font-semibold leading-[1.02] tracking-[-0.055em] text-[#07284d] sm:text-7xl">
-              Get 30 qualified lead opportunities in 30 days.
+              See your homepage redesigned before you pay anything.
             </h1>
             <p className="mx-auto mt-7 max-w-2xl text-lg leading-8 text-[#5c7186]">
-              We build and manage the page, ads, creative, tracking, and
-              follow-up system. You run your business. We create more
-              opportunities for the work your team already provides.
+              We review the current website, find the problems costing trust
+              and enquiries, then build a premium direction using the real
+              business, branding, services, and images.
             </p>
             <div className="mt-9 flex flex-wrap justify-center gap-3">
-              <IntakeFlow ctaLabel={landing.primaryCta} />
+              <RedesignIntakeFlow />
               <a
                 href="tel:+13075336678"
                 className="inline-flex items-center gap-2 rounded-lg border border-[#8fc6ff] bg-white px-6 py-3 text-sm font-bold text-[#07284d] transition hover:bg-[#f0f7ff]"
@@ -141,7 +141,7 @@ export function LeadEngineLanding() {
               </a>
             </div>
             <p className="mx-auto mt-4 max-w-xl text-xs text-[#7890a5]">
-              No setup fee · No per-lead fees · Your Meta budget stays yours.
+              No card · No obligation · Human-reviewed before delivery.
             </p>
           </div>
 
@@ -187,26 +187,26 @@ export function LeadEngineLanding() {
         <div className="mx-auto grid max-w-6xl gap-5 px-6 sm:grid-cols-3">
           <div className="border-white/20 sm:border-r sm:pr-6">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#ffd12d]">
-              The target
+              Free first step
             </p>
             <p className="mt-2 font-semibold">
-              30 qualified leads / 30 days
+              Premium homepage concept
             </p>
           </div>
           <div className="border-white/20 sm:border-r sm:pr-6">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#ffd12d]">
-              The model
+              What you receive
             </p>
             <p className="mt-2 font-semibold">
-              $500/week · no per-lead fee
+              Redesign + evidenced audit
             </p>
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#ffd12d]">
-              The ownership
+              Your decision
             </p>
             <p className="mt-2 font-semibold">
-              Your account · your data · your leads
+              Continue only if you value it
             </p>
           </div>
         </div>
@@ -216,31 +216,30 @@ export function LeadEngineLanding() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-12 lg:grid-cols-[0.75fr_1.25fr] lg:items-end">
             <div>
-              <Kicker>The problem with most marketing</Kicker>
+              <Kicker>The problem with most website projects</Kicker>
               <h2 className="font-sans text-4xl font-semibold leading-tight tracking-[-0.04em] text-[#07284d] sm:text-5xl">
-                You should not have to become a marketing expert to get more
-                work.
+                You should not have to pay before you can judge the design.
               </h2>
             </div>
             <p className="max-w-xl text-lg leading-8 text-[#60778d]">
-              Most owners are forced to coordinate a website person, an ad
-              person, a designer, and a lead provider. We bring the core work
-              into one hands-on weekly program.
+              AI made websites cheaper to produce, but it did not make good
+              judgment automatic. We show the direction first, then let the
+              work earn the conversation.
             </p>
           </div>
           <div className="mt-14 grid gap-5 md:grid-cols-3">
             {[
               [
-                "The old website",
-                "Looks fine to you, but gives a new visitor no clear reason to call.",
+                "The visual gap",
+                "The site works, but looks weaker than the businesses customers already trust.",
               ],
               [
-                "The scattered marketing",
-                "Ads, pages, and follow-up are disconnected, so nobody knows what is working.",
+                "The mobile gap",
+                "The message, services, and contact path become harder to use on a phone.",
               ],
               [
-                "The missed opportunity",
-                "A real inquiry arrives, but slow response and weak routing lose the job.",
+                "The visibility gap",
+                "Weak structure, thin service coverage, and unclear answers limit search visibility.",
               ],
             ].map(([title, body], index) => (
               <div
@@ -301,20 +300,19 @@ export function LeadEngineLanding() {
       <section className="landing-grid-surface border-b border-[#d9e8f4] py-20 lg:py-28">
         <div className="mx-auto grid max-w-6xl gap-12 px-6 lg:grid-cols-[1fr_1fr] lg:items-center">
           <div>
-            <Kicker>What you see</Kicker>
+            <Kicker>What you receive</Kicker>
             <h2 className="font-sans text-4xl font-semibold leading-tight tracking-[-0.04em] text-[#07284d] sm:text-5xl">
-              Clear reporting without marketing jargon.
+              Evidence first. Design second. No blind purchase.
             </h2>
             <p className="mt-5 text-lg leading-8 text-[#60778d]">
-              You see what is running, what inquiries came in, what they asked
-              for, and what we are changing next. The example below is a visual
-              preview, not a claim about existing results.
+              The delivery explains the website problems found today, why they
+              matter, and how the homepage concept addresses them.
             </p>
             <div className="mt-8 space-y-4">
               {[
-                "Your ad account and lead data stay yours.",
-                "No per-lead charge.",
-                "Weekly review of quality and next actions.",
+                "Evidence from the current website.",
+                "A human-reviewed homepage concept.",
+                "A clear path to the complete website.",
               ].map((line) => (
                 <p
                   key={line}
@@ -330,19 +328,19 @@ export function LeadEngineLanding() {
             <div className="flex items-center justify-between border-b border-[#e2edf5] pb-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#0c68c8]">
-                  Illustrative program view
+                  Illustrative delivery view
                 </p>
                 <p className="mt-1 font-bold text-[#07284d]">
-                  Your weekly review
+                  Your redesign report
                 </p>
               </div>
               <BarChart3 className="h-5 w-5 text-[#0c68c8]" />
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               {[
-                ["Lead target", "30", Target],
-                ["Ad budget", "$25/day", CircleDollarSign],
-                ["Review", "Weekly", Eye],
+                ["Audit", "Evidence", Target],
+                ["Homepage", "Mockup", CircleDollarSign],
+                ["Review", "Human", Eye],
               ].map(([label, value, Icon]) => (
                 <div
                   key={label as string}
@@ -382,8 +380,8 @@ export function LeadEngineLanding() {
             </div>
             <p className="mt-4 text-xs leading-5 text-[#71869a]">
               Illustrative preview of a BarakahSoft lead-engine program. Actual
-              reporting reflects your campaign, channels, ad budget, lead
-              sources, and connected data.
+                  the final report reflects the business, current website,
+                  selected design direction, and confirmed scope.
             </p>
           </div>
         </div>
@@ -393,28 +391,28 @@ export function LeadEngineLanding() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
             <div>
-              <Kicker>Simple responsibilities</Kicker>
+              <Kicker>A clear exchange</Kicker>
               <h2 className="max-w-lg font-sans text-4xl font-semibold leading-tight tracking-[-0.04em] text-white sm:text-5xl">
-                You run the business. We run the marketing work.
+                You share the business. We show what better could look like.
               </h2>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               {[
                 [
                   "You provide",
-                  "The jobs you want, your service area, access to your Meta account, and quick responses to new inquiries.",
+                  "Your current website, selected pain points, and the contact details needed to deliver the concept.",
                 ],
                 [
                   "We provide",
-                  "The offer, page, creative, campaign, tracking, lead routing, research, and weekly improvement.",
+                  "A homepage concept, website audit, category benchmark, and a clear explanation of what changed.",
                 ],
                 [
-                  "You pay",
-                  "$500/week management · no per-lead charge",
+                  "The concept",
+                  "Free. No card, no deposit, and no requirement to buy the complete website.",
                 ],
                 [
                   "You decide",
-                  "Try the relationship for one week. Continue only if the work is useful to your business.",
+                  "Launch the complete website for $797, ask a question, or keep the free concept and walk away.",
                 ],
               ].map(([title, body]) => (
                 <div
@@ -431,7 +429,7 @@ export function LeadEngineLanding() {
               ))}
             </div>
           </div>
-          <div className="mt-7 flex flex-col gap-4 border-t border-white/15 pt-6 sm:flex-row sm:items-center sm:justify-between"><p className="text-sm text-slate-200">Want to know if your market and service are a fit?</p><a href="#top" className="inline-flex w-fit items-center gap-2 rounded-lg bg-[#ffd12d] px-5 py-3 text-sm font-bold text-[#111] transition hover:bg-[#f5c400]">Start with a qualification review <ArrowRight className="h-4 w-4" /></a></div>
+          <div className="mt-7 flex flex-col gap-4 border-t border-white/15 pt-6 sm:flex-row sm:items-center sm:justify-between"><p className="text-sm text-slate-200">Ready to see a better direction before you spend anything?</p><a href="#top" className="inline-flex w-fit items-center gap-2 rounded-lg bg-[#ffd12d] px-5 py-3 text-sm font-bold text-[#111] transition hover:bg-[#f5c400]">Get my free redesign <ArrowRight className="h-4 w-4" /></a></div>
         </div>
       </section>
 
@@ -439,61 +437,60 @@ export function LeadEngineLanding() {
         <div className="mx-auto max-w-4xl px-6 text-center">
           <Kicker>One clear offer</Kicker>
           <h2 className="font-sans text-4xl font-semibold tracking-[-0.04em] text-[#07284d] sm:text-5xl">
-            Start with one week. Judge the work.
+            Launch the complete website for $797.
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-[#60778d]">
-            No setup fee for founding clients. No per-lead fees. No long-term
-            obligation. We agree the qualified-opportunity target and conditions
-            before the 30-day campaign begins.
+            Every genuine service receives a real page. The build includes a
+            services overview, about, contact, 2–3 reviewed articles, structured
+            data, and one trade-appropriate quote tool.
           </p>
           <div className="mx-auto mt-12 max-w-2xl rounded-2xl border border-[#8fc6ff] bg-[#f0f7ff] p-8 text-left shadow-[0_18px_45px_rgba(7,40,77,0.08)]">
             <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[#c8ddec] pb-6">
               <div>
                 <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#0c68c8]">
-                  30-Day Lead Engine Pilot
+                  Complete Lead-Ready Website
                 </p>
                 <p className="mt-2 text-sm text-[#60778d]">
-                  Management, creative, page, tracking, routing, and weekly
-                  improvement.
+                  Built from the approved homepage direction.
                 </p>
               </div>
               <p className="font-sans text-5xl font-semibold text-[#07284d]">
-                $500
+                $797
                 <span className="text-lg font-normal text-[#60778d]">
-                  /week
+                  flat
                 </span>
               </p>
             </div>
             <div className="grid gap-4 py-6 sm:grid-cols-3">
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-[#7890a5]">
-                  You pay us
+                  Included
                 </p>
-                <p className="mt-2 font-bold text-[#07284d]">$500/week</p>
+                <p className="mt-2 font-bold text-[#07284d]">All real services</p>
               </div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-[#7890a5]">
-                  You pay Meta
+                  Included
                 </p>
-                <p className="mt-2 font-bold text-[#07284d]">Your ad budget</p>
+                <p className="mt-2 font-bold text-[#07284d]">2–3 real articles</p>
               </div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-[#7890a5]">
-                  No charge
+                  Excluded
                 </p>
-                <p className="mt-2 font-bold text-[#07284d]">Per lead</p>
+                <p className="mt-2 font-bold text-[#07284d]">Location combinations</p>
               </div>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-4">
               <p className="text-xs leading-5 text-[#60778d]">
-                30 qualified opportunities is the campaign KPI. The written
-                agreement defines what qualifies.
+                Your admin quote can be adjusted for unusual scope, but the
+                public offer stays simple.
               </p>
               <a
                 href="#top"
                 className="inline-flex items-center gap-2 rounded-lg bg-[#ffd12d] px-5 py-3 text-sm font-bold text-[#111] transition hover:bg-[#f5c400]"
               >
-                See if I qualify <ArrowRight className="h-4 w-4" />
+                Get my free redesign <ArrowRight className="h-4 w-4" />
               </a>
             </div>
           </div>
@@ -511,11 +508,11 @@ export function LeadEngineLanding() {
             Let&apos;s find out if your business is a fit.
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-[#60778d]">
-            Start with your website and trade. We&apos;ll review the opportunity
-            and show you the next step.
+            Start with your website. We&apos;ll review the request before accepting
+            the free concept.
           </p>
           <div className="mt-8 flex justify-center">
-            <IntakeFlow ctaLabel="See if my business qualifies" />
+            <RedesignIntakeFlow />
           </div>
         </div>
       </section>

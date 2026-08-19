@@ -4,62 +4,42 @@
   "primaryCta": "Get my free redesign",
   "trustLine": "No card. No obligation. Human-reviewed before delivery.",
   "steps": [
-    { "title": "Tell us where you work", "body": "Share your website, trade, service area, and the jobs you want more of." },
-    { "title": "We build the lead engine", "body": "We create the offer, landing page, ad creative, campaign, tracking, and follow-up flow." },
-    { "title": "You receive real inquiries", "body": "Every lead is routed to you with the contact details and job information needed to follow up." }
+    { "title": "Share your website", "body": "Tell us what is not working and where the current site lets the business down." },
+    { "title": "We audit and redesign", "body": "We review the evidence, benchmark the category, and prepare a premium homepage direction." },
+    { "title": "You review the concept", "body": "See the work before deciding whether to launch the complete website." }
   ],
   "faq": [
     {
-      "question": "What exactly are you selling?",
-      "answer": "A managed 30-day lead-generation sprint, not a website project. We build and run the landing page, Meta campaign, ad creative, tracking, lead routing, and follow-up system. The website is the conversion asset inside the system."
+      "question": "Why is the homepage redesign free?",
+      "answer": "We want you to judge the quality before deciding whether to hire us. The free homepage concept opens the conversation; the complete website is optional."
     },
     {
-      "question": "How much does it cost?",
-      "answer": "Management is $500 per week with no long-term obligation. Your Meta ad spend is separate and paid directly from your own ad account. We recommend starting at $25 per day so there is enough budget to test and optimize responsibly."
+      "question": "What exactly do I receive?",
+      "answer": "A human-reviewed homepage mockup, desktop and mobile direction, an evidence-based website audit, a category benchmark, and a clear explanation of what should change."
     },
     {
-      "question": "What does the 30-lead guarantee mean?",
-      "answer": "If your business qualifies, follows the campaign requirements, keeps the agreed ad budget active, and responds to leads promptly, we target 30 qualified inquiries during the first 30 days. If we miss the agreed target, the remedy is defined in your written service agreement and may include a management-fee credit or refund."
+      "question": "Is this a template?",
+      "answer": "No. We use your real business information, brand, services, images, and category references. The concept receives a human design review before delivery."
     },
     {
-      "question": "What counts as a qualified lead?",
-      "answer": "A real person in your agreed service area who submits valid contact information and requests one of the services you selected. Clicks, impressions, fake submissions, spam, and out-of-area inquiries do not count."
+      "question": "How long does it take?",
+      "answer": "Our target is 48 hours after the request is accepted. Complicated sites or missing content may need more time; we will tell you rather than send weak work."
     },
     {
-      "question": "Is ad spend included in the $500 per week?",
-      "answer": "No. Your ad spend goes directly to Meta from your own account. We recommend at least $25 per day for the 30-day sprint. Lower budgets can be used for testing, but no responsible provider can guarantee 30 leads on $10 per day in every market."
+      "question": "What happens if I like the concept?",
+      "answer": "The complete lead-ready website is available for a flat $797 unless unusual scope is agreed separately. Every genuine service receives a real page; location-combination pages are excluded."
     },
     {
-      "question": "Can you use your agency ad account for me?",
-      "answer": "Our recommended setup is your own Meta Business account so you own the pixel, audience, billing, and lead data. We can create or configure it and manage campaigns inside it. A separate managed-account arrangement is only considered when access, billing, compliance, and ownership are clear in writing."
+      "question": "What is included in the $797 website?",
+      "answer": "Home, services overview, about, contact, a real page for every genuine service, 2–3 reviewed articles, GEO/schema foundation, mobile-first implementation, and one trade-appropriate quote tool."
     },
     {
-      "question": "Do I need a Facebook Business account?",
-      "answer": "Yes. You own the ad account, pixel, audiences, page, and lead data. We work inside your account so the system is transparent and remains yours."
+      "question": "Will the website rank on Google or AI search?",
+      "answer": "The build includes a sound technical, structured-data, content, and internal-linking foundation. No honest provider can guarantee rankings; ongoing authority and content work compound over time."
     },
     {
-      "question": "What happens after I submit my website?",
-      "answer": "We review your trade, service area, current offer, photos, reviews, and existing site. Then we send a free personalized redesign and explain the lead-generation opportunity. There is no obligation to buy."
-    },
-    {
-      "question": "Will you make the ads and videos too?",
-      "answer": "Yes. The sprint includes campaign creative direction, ad copy, short-form video concepts, and launch-ready creative. Any client-specific claims, footage, offers, and approvals are confirmed before publishing."
-    },
-    {
-      "question": "Do I have to replace my current website?",
-      "answer": "No. The new landing experience can run alongside your current website. We only replace or connect the main site when the conversion and SEO plan calls for it."
-    },
-    {
-      "question": "Is there a long-term contract?",
-      "answer": "No long-term obligation. The initial sprint is paid weekly. You can stop future management, subject to the written agreement and any work already scheduled."
-    },
-    {
-      "question": "Which businesses are a fit?",
-      "answer": "US home-service businesses with a defined service area, a reachable phone number, real job capacity, and a service people actively request. Typical fits include electricians, plumbers, HVAC, roofers, remodelers, movers, pest control, contractors, and restoration companies."
-    },
-    {
-      "question": "What is BarakahSoft LLC?",
-      "answer": "BarakahSoft LLC is a Wyoming-registered US company providing managed landing pages, paid acquisition systems, creative production, and lead-routing support for home-service businesses."
+      "question": "Do I have to continue?",
+      "answer": "No. You may review the free concept and audit without buying the complete website."
     }
   ]
 }

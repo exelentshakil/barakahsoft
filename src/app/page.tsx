@@ -1,10 +1,10 @@
-import { FreeRedesignLanding } from "@/components/landing/FreeRedesignLanding";
+import { LeadEngineLanding } from "@/components/landing/LeadEngineLanding";
 import { CookieConsent } from "@/components/landing/CookieConsent";
 
 export default function LandingPage() {
   return (
     <>
-      <FreeRedesignLanding />
+      <LeadEngineLanding />
       <CookieConsent />
     </>
   );
