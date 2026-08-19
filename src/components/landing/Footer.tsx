@@ -9,11 +9,11 @@ export function Footer() {
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={LOGO_URL} alt="BarakahSoft" className="h-7 w-auto" />
-            <p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">BarakahSoft creates human-reviewed homepage redesigns and complete lead-ready websites built from the business&apos;s real content and branding.</p>
+            <p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">BarakahSoft creates human-reviewed homepage redesigns for businesses that want to look as good online as they do in real life.</p>
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">The offer</p>
-            <div className="mt-4 space-y-2 text-sm text-muted-foreground"><p>Free homepage concept</p><p>Complete website: $797 flat</p><p>No obligation to continue</p></div>
+            <div className="mt-4 space-y-2 text-sm text-muted-foreground"><p>Free homepage redesign</p><p>Built around your real business</p><p>No obligation to continue</p></div>
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Talk to us</p>

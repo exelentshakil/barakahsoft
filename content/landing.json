@@ -1,17 +1,17 @@
 {
   "headline": "Get your homepage redesigned for free",
-  "subhead": "See the new direction before you pay anything. Built from your real business, branding, services, and images.",
+  "subhead": "See exactly how your homepage could look. A custom concept, delivered in 48 hours. Free, no strings attached.",
   "primaryCta": "Get my free redesign",
-  "trustLine": "No card. No obligation. Human-reviewed before delivery.",
+  "trustLine": "Free · No credit card · Yours to keep.",
   "steps": [
     { "title": "Share your website", "body": "Tell us what is not working and where the current site lets the business down." },
     { "title": "We audit and redesign", "body": "We review the evidence, benchmark the category, and prepare a premium homepage direction." },
-    { "title": "You review the concept", "body": "See the work before deciding whether to launch the complete website." }
+    { "title": "You review the concept", "body": "See the work and decide whether you want to talk about what comes next." }
   ],
   "faq": [
     {
       "question": "Why is the homepage redesign free?",
-      "answer": "We want you to judge the quality before deciding whether to hire us. The free homepage concept opens the conversation; the complete website is optional."
+      "answer": "We want you to judge the quality before deciding whether to hire us. The concept should be useful whether or not we work together."
     },
     {
       "question": "What exactly do I receive?",
@@ -27,11 +27,15 @@
     },
     {
       "question": "What happens if I like the concept?",
-      "answer": "The complete lead-ready website is available for a flat $797 unless unusual scope is agreed separately. Every genuine service receives a real page; location-combination pages are excluded."
+      "answer": "We can talk through the next step if the direction feels right. There is no pressure to continue, and the free concept is useful even if you decide not to work with us."
     },
     {
-      "question": "What is included in the $797 website?",
-      "answer": "Home, services overview, about, contact, a real page for every genuine service, 2–3 reviewed articles, GEO/schema foundation, mobile-first implementation, and one trade-appropriate quote tool."
+      "question": "What is included in the redesign?",
+      "answer": "A human-reviewed homepage direction, desktop and mobile thinking, an evidence-based audit, category references, and a clear explanation of what should improve."
+    },
+    {
+      "question": "What happens with the rest of the website content?",
+      "answer": "If you continue with the website, we can carry over useful existing blog posts or create 8–10 original launch posts. That gives the site useful depth from day one and a stronger foundation for search, without promising rankings."
     },
     {
       "question": "Will the website rank on Google or AI search?",
@@ -39,7 +43,7 @@
     },
     {
       "question": "Do I have to continue?",
-      "answer": "No. You may review the free concept and audit without buying the complete website."
+      "answer": "No. You may review the free concept and audit with no obligation to continue."
     }
   ]
 }

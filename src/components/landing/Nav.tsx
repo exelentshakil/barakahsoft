@@ -5,7 +5,6 @@ const LOGO_URL = "https://barakahsoft.com/wp-content/uploads/2026/01/Logo1.png";
 const LINKS = [
   { href: "#how-it-works", label: "How it works" },
   { href: "#team", label: "Team" },
-  { href: "#pricing", label: "Pricing" },
   // { href: "#design-standard", label: "Design standard" },
   { href: "#industries", label: "Industries" },
   { href: "#faq", label: "FAQ" },
@@ -33,7 +32,7 @@ export function Nav() {
            <a href="mailto:hello@barakahsoft.com" className="text-sm text-muted-foreground transition hover:text-primary">hello@barakahsoft.com</a>
            <Button asChild size="sm" className="rounded-lg bg-[#ffd12d] text-[#111] hover:bg-[#f5c400]"><a href="/#top">Get my free redesign</a></Button>
          </div>
-          <Button asChild size="sm" className="rounded-lg bg-[#ffd12d] text-[#111] hover:bg-[#f5c400] lg:hidden"><a href="/#top">Free redesign</a></Button>
+           <Button asChild size="sm" className="rounded-lg bg-[#ffd12d] text-[#111] hover:bg-[#f5c400] lg:hidden"><a href="/#top">Get my free redesign</a></Button>
       </div>
     </header>
   );
