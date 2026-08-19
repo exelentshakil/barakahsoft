@@ -9,7 +9,7 @@ export default async function AdminLeadsPage() {
   const supabase = createAdminClient();
   const { data: leads } = await supabase
     .from("leads")
-    .select("id, business_name, source_url, status, created_at")
+    .select("id, business_name, contact_name, source_url, source, help_needed, status, created_at")
     .order("created_at", { ascending: false });
 
   return (

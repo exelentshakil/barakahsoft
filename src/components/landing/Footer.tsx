@@ -9,11 +9,11 @@ export function Footer() {
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={LOGO_URL} alt="BarakahSoft" className="h-7 w-auto" />
-            <p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">BarakahSoft builds and manages conversion systems for US home-service businesses: landing pages, Meta ads, creative, lead routing, and follow-up.</p>
+            <p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">BarakahSoft creates human-reviewed homepage redesigns and complete lead-ready websites built from the business&apos;s real content and branding.</p>
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">The sprint</p>
-            <div className="mt-4 space-y-2 text-sm text-muted-foreground"><p>$500/week management</p><p>Ad spend stays in your Meta account</p><p>No long-term obligation</p></div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">The offer</p>
+            <div className="mt-4 space-y-2 text-sm text-muted-foreground"><p>Free homepage concept</p><p>Complete website: $797 flat</p><p>No obligation to continue</p></div>
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Talk to us</p>

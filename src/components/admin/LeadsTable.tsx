@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 
-type LeadRow = { id: string; business_name: string | null; source_url: string; status: string; created_at: string };
+type LeadRow = { id: string; business_name: string | null; contact_name: string | null; source_url: string; source: string; help_needed: string[]; status: string; created_at: string };
 
 export function LeadsTable({ leads }: { leads: LeadRow[] }) {
   const router = useRouter();
@@ -73,8 +73,9 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
               <Checkbox checked={selected.has(lead.id)} onChange={() => toggle(lead.id)} className="shrink-0" />
               <Link href={`/admin/leads/${lead.id}`} className="flex flex-1 items-center justify-between px-2 py-3">
                 <div>
-                  <p className="font-medium">{lead.business_name || lead.source_url}</p>
-                  <p className="text-sm text-muted-foreground">{lead.source_url}</p>
+                    <div className="flex items-center gap-2"><p className="font-medium">{lead.business_name || lead.contact_name || lead.source_url}</p><Badge variant="secondary">{lead.source}</Badge></div>
+                    <p className="text-sm text-muted-foreground">{lead.source_url}</p>
+                    {lead.help_needed.length > 0 && <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{lead.help_needed.join(" · ")}</p>}
                 </div>
                 <Badge variant="outline">{lead.status}</Badge>
               </Link>

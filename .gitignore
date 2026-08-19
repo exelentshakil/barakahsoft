@@ -6,6 +6,7 @@ node_modules
 .env*
 deploy.sh
 tsconfig.tsbuildinfo
+supabase/.temp/
 
 # Phase Q/v6: curated design-reference screenshots -- resized copies already
 # live in Supabase Storage (design-reference bucket), which is what the app

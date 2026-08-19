@@ -42,11 +42,12 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-semibold">{lead.business_name || lead.source_url}</h1>
+          <h1 className="font-display text-2xl font-semibold">{lead.business_name || lead.contact_name || lead.source_url}</h1>
           <p className="text-sm text-muted-foreground">{lead.source_url}</p>
         </div>
         <div className="flex items-center gap-1">
           <Badge variant="outline">{lead.status}</Badge>
+          <Badge variant="secondary">{lead.source}</Badge>
           {/* v4 Phase R2 — operator context for closing-script personalization,
               distinct from the AI-inferred industry badge shown elsewhere. */}
           {personaLabel(lead.persona) && <Badge variant="outline">{personaLabel(lead.persona)}</Badge>}

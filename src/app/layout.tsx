@@ -7,8 +7,8 @@ const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-displ
 
 const LOGO_URL = "/icon.png";
 const SITE_URL = "https://home.barakahsoft.com";
-const TITLE = "30-Day Lead Engine for Home Services | BarakahSoft";
-const DESCRIPTION = "BarakahSoft builds and manages landing pages, Meta ads, creative, tracking, and follow-up for US home-service businesses. $500/week with no per-lead fees.";
+const TITLE = "Free Homepage Redesign | BarakahSoft";
+const DESCRIPTION = "Get a free, human-reviewed homepage redesign built from your real business, branding, services, and images. No card and no obligation.";
 
 // Product-Hunt-ready metadata: real OG/Twitter card image + description
 // (previously just a bare title/description, no icons block at all) so a

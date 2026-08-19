@@ -3,6 +3,12 @@
 
 export type LeadStatus =
   | "new"
+  | "processing"
+  | "ready"
+  | "contacted"
+  | "qualified"
+  | "won"
+  | "lost"
   | "scraping"
   | "enriching"
   | "rendering"
@@ -33,11 +39,15 @@ export interface Lead {
   id: string;
   owner_account_id: string | null;
   source_url: string;
+  source: "home" | "redesign";
+  contact_name: string | null;
   business_name: string | null;
   slug: string;
   email: string | null;
   phone: string | null;
   pain_points: string[];
+  help_needed: string[];
+  anything_else: string | null;
   tcpa_consent: boolean;
   industry: string | null;
   // v4 Phase R2 — self-identified at intake, distinct from the AI/keyword-
