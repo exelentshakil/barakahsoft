@@ -55,6 +55,25 @@ The secure project view must show an order-like timeline:
 
 The client can send a message, approve the report, request a page change, and approve the website from the same link. Messages and decisions are attached to the active website version.
 
+## 2C. Immediate Confirmation And Live Progress
+
+Immediately after a valid landing-page submission, the system sends the lead a confirmation email containing a private project link. The email must clearly say that the website was received, what will happen next, and where the lead can follow progress.
+
+The confirmation link opens the client report without requiring a password or account creation. It must never expose another lead's project. The link may expire and be reissued.
+
+The live client report is the master proof-of-work surface. It displays plain-English progress for:
+
+- What information and brand material were received.
+- SEO and technical audit findings.
+- Local map visibility and competitor evidence.
+- Issue-versus-fix recommendations.
+- Sitemap and approved page coverage.
+- Homepage, service-page, and article generation progress.
+- Human QA and remaining decisions.
+- Client questions, requested changes, approval, payment, and website handoff.
+
+The report should use visual progress indicators, charts, comparisons, and before/after evidence where they clarify the decision. Visual polish must support understanding, not hide missing work or imply a ranking, lead, or revenue guarantee.
+
 ## 2. Public Offers
 
 ### Complete website
