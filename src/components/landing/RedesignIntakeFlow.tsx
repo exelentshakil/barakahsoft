@@ -67,7 +67,7 @@ export function RedesignIntakeFlow() {
         <Input required type="url" placeholder="https://yourbusiness.com" value={url} onChange={(event) => setUrl(event.target.value)} className="h-12 flex-1 border-0 bg-transparent text-[#1e212b] shadow-none focus-visible:ring-0" />
         <Button type="submit" className="h-12 rounded-lg bg-[#ef1550] px-6 font-bold text-white hover:bg-[#d90f45]">Get my free redesign <ArrowRight className="h-4 w-4" /></Button>
       </form>
-      <p className="mt-3 text-center text-xs text-white/65">Free · No credit card · Yours to keep</p>
+      <p className="mt-3 text-center text-xs text-[#7890a5]">Free · No credit card · Yours to keep</p>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="overflow-hidden border-0 p-0 shadow-2xl sm:max-w-lg">
