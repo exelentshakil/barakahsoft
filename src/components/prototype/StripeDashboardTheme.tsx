@@ -1,0 +1,27 @@
+"use client";
+
+export function StripeDashboardTheme() {
+  return <style jsx global>{`
+    [data-prototype-dashboard] {
+      --prototype-purple: #533afd;
+      --prototype-ink: #0d1738;
+      --prototype-pink: #ffe0ef;
+      font-family: "Sohne", "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    [data-prototype-dashboard] [class*="bg-[#ffd12d]"] { background-color: var(--prototype-purple) !important; }
+    [data-prototype-dashboard] [class*="hover:bg-[#f5c400]"]:hover { background-color: #432bd9 !important; }
+    [data-prototype-dashboard] [class*="text-[#111]"] { color: #fff !important; }
+    [data-prototype-dashboard] [class*="text-[#07284d]"] { color: var(--prototype-ink) !important; }
+    [data-prototype-dashboard] [class*="text-[#0c68c8]"] { color: var(--prototype-purple) !important; }
+    [data-prototype-dashboard] [class*="bg-[#07284d]"] { background-color: var(--prototype-ink) !important; }
+    [data-prototype-dashboard] [class*="bg-[#eef7ff]"],
+    [data-prototype-dashboard] [class*="bg-[#f8fbfe]"],
+    [data-prototype-dashboard] [class*="bg-[#f5f9fc]"] { background-color: #fafaff !important; }
+    [data-prototype-dashboard] [class*="border-[#d9e8f4]"],
+    [data-prototype-dashboard] [class*="border-[#c8ddec]"] { border-color: #e5e2ff !important; }
+    [data-prototype-dashboard] .rounded-3xl,
+    [data-prototype-dashboard] .rounded-2xl,
+    [data-prototype-dashboard] .rounded-xl,
+    [data-prototype-dashboard] .rounded-lg { border-radius: 4px !important; }
+  `}</style>;
+}
