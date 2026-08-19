@@ -62,12 +62,12 @@ export function RedesignIntakeFlow() {
   if (success) return <div className="mx-auto mt-7 flex max-w-xl items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-left"><CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-emerald-600" /><div><p className="font-bold text-[#07284d]">Your request is in.</p><p className="mt-1 text-sm text-[#60778d]">We&apos;ll review the website before we contact you about the free homepage concept.</p></div></div>;
 
   return (
-    <>
-      <form onSubmit={begin} className="mx-auto mt-8 flex max-w-2xl flex-col gap-3 rounded-xl border border-white/20 bg-white p-2 shadow-2xl sm:flex-row">
+    <div className="w-full">
+      <form onSubmit={begin} className="mx-auto mt-8 flex w-full max-w-2xl flex-col gap-3 rounded-xl border border-white/20 bg-white p-2 shadow-2xl sm:flex-row">
         <Input required type="url" placeholder="https://yourbusiness.com" value={url} onChange={(event) => setUrl(event.target.value)} className="h-12 flex-1 border-0 bg-transparent text-[#1e212b] shadow-none focus-visible:ring-0" />
         <Button type="submit" className="h-12 rounded-lg bg-[#ffd12d] px-6 font-bold text-[#07284d] hover:bg-[#f5c400]">Get my free redesign <ArrowRight className="h-4 w-4" /></Button>
       </form>
-      <p className="mt-3 text-center text-xs text-[#7890a5]">Free · No credit card · Yours to keep</p>
+      <p className="mt-3 w-full text-center text-xs text-[#7890a5]">Free · No credit card · Yours to keep</p>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="overflow-hidden border-0 p-0 shadow-2xl sm:max-w-lg">
@@ -91,6 +91,6 @@ export function RedesignIntakeFlow() {
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }
