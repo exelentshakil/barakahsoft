@@ -8,6 +8,53 @@ BarakahSoft acquires service-business leads with a free, human-reviewed homepage
 
 The free deliverable is useful on its own and requires no card, deposit, or purchase commitment. It includes a homepage direction, mobile and desktop treatment, evidence-based audit, category benchmark, and explanation of what changed.
 
+## 2A. Sales-First Experience
+
+The product exists to convert paid attention into collected revenue. Every accepted lead must have one visible next action and one owner.
+
+```text
+Lead -> useful delivery -> conversation -> approval -> payment -> production -> launch
+```
+
+The free redesign opens the conversation. It is not the end product and it must not become an unbounded free website project.
+
+The system must make it easy to:
+
+- See where every lead came from and what has happened to it.
+- Deliver the audit, issue-versus-fix report, and homepage concept quickly.
+- Contact the lead by email or secure project link without making the client create a technical account.
+- See whether the client opened the work, replied, approved, requested a change, paid, or was lost.
+- Move a qualified client to checkout without exposing internal implementation details.
+- Stop unpaid production work until the agreed payment is recorded.
+
+The client-facing interface must use plain English. Do not show terms such as Next.js, repository, deployment target, build artifact, tenant, schema migration, or regeneration unless an operator explicitly opens a technical detail view.
+
+Preferred client language:
+
+- “Website handoff” instead of “Next.js export.”
+- “Your website files” instead of “build output.”
+- “Request a change” instead of “regeneration.”
+- “New version for review” instead of “generated artifact.”
+- “Approve this version” instead of “publish approval.”
+
+## 2B. Client Access And Conversation
+
+After delivery, the client receives a private, expiring magic link. The client does not need a password or account setup, but the link must still authorize access to that client’s project only.
+
+The secure project view must show an order-like timeline:
+
+- Website received.
+- Research and audit complete.
+- Homepage concept ready.
+- Full website in progress.
+- Review needed.
+- Change requested or approved.
+- Payment received.
+- Website files ready.
+- Launch complete.
+
+The client can send a message, approve the report, request a page change, and approve the website from the same link. Messages and decisions are attached to the active website version.
+
 ## 2. Public Offers
 
 ### Complete website
@@ -92,9 +139,11 @@ Each export must include:
 
 No client secret or private source file may be copied into a public repository or browser bundle.
 
-## 7. Regeneration
+## 7. Changes And New Versions
 
-Regeneration is versioned and non-destructive. Operators can request changes at site, section, page, or article level.
+The client-facing action is called **Request a change**. Internally, the system may call this regeneration, but that word must not be required for the client to understand the action.
+
+Change requests are versioned and non-destructive. Operators can request changes at site, section, page, or article level.
 
 Every run records:
 
@@ -105,7 +154,7 @@ Every run records:
 - Validation results.
 - Operator approval or rejection.
 
-A regeneration must not silently overwrite the last approved version. Operators can compare changes, reject a run, and restore or export a previously approved version.
+A new version must not silently overwrite the last approved version. Operators and clients can compare changes, reject a version, and restore a previously approved version.
 
 ## 8. Human Control
 
@@ -148,6 +197,6 @@ A client website is not complete until:
 2. Qualification, source ingestion, and versioned generation brief.
 3. Free homepage redesign generation and human review.
 4. Paid full-site generation, including all service pages and 8-10 reviewed or migrated articles.
-5. Page-level regeneration, QA, comparison, and approval.
-6. Individual Next.js project export and deployment.
+5. Client change requests, new versions, QA, comparison, and approval.
+6. Website files handoff and deployment.
 7. Optional Meta ads onboarding and management.
