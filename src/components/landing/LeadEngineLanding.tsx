@@ -101,9 +101,6 @@ export function LeadEngineLanding() {
             <div className="mt-9">
               <RedesignIntakeFlow />
             </div>
-            <p className="mx-auto mt-4 max-w-xl text-xs text-[#7890a5]">
-              Free · No credit card · Yours to keep.
-            </p>
           </div>
 
           <div className="mx-auto mt-14 max-w-5xl overflow-hidden rounded-2xl border border-[#c8ddec] bg-[#f6fbff] shadow-[0_20px_60px_rgba(7,40,77,0.12)]">
