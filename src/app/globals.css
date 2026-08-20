@@ -2,6 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Prototype navigation must be correct on first paint, before client hydration. */
+[data-prototype-dashboard] aside {
+  background: #ffffff !important;
+  color: #0d1738 !important;
+  border-right: 1px solid #e5e2ff !important;
+}
+[data-prototype-dashboard] aside nav button,
+[data-prototype-dashboard] aside nav a {
+  color: #42506a !important;
+  background: transparent !important;
+}
+[data-prototype-dashboard] aside nav button:hover,
+[data-prototype-dashboard] aside nav a:hover {
+  color: #533afd !important;
+  background: #f9f9ff !important;
+}
+[data-prototype-dashboard] aside nav button[class*="bg-white/10"],
+[data-prototype-dashboard] aside nav button[class*="text-[#ffd12d]"] {
+  color: #533afd !important;
+  background: #e3dfff !important;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
