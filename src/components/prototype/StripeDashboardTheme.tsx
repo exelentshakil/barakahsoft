@@ -18,8 +18,12 @@ export function StripeDashboardTheme() {
     [data-prototype-dashboard] [class*="text-[#0c68c8]"] { color: #533afd !important; }
     [data-prototype-dashboard] [class*="bg-[#07284d]"] { background-color: var(--prototype-ink) !important; }
     [data-prototype-dashboard] aside { background-color: #fff !important; color: var(--prototype-ink) !important; border-right: 1px solid #e5e2ff; }
-    [data-prototype-dashboard] aside [class*="text-white"] { color: var(--prototype-ink) !important; }
-    [data-prototype-dashboard] aside [class*="bg-white/10"] { background-color: #fff8d9 !important; }
+    [data-prototype-dashboard] aside nav button,
+    [data-prototype-dashboard] aside nav a { color: #42506a !important; background-color: transparent !important; }
+    [data-prototype-dashboard] aside nav button:hover,
+    [data-prototype-dashboard] aside nav a:hover { background-color: #f9f9ff !important; color: #533afd !important; }
+    [data-prototype-dashboard] aside nav button[class*="bg-white/10"],
+    [data-prototype-dashboard] aside nav button[class*="text-[#ffd12d]"] { background-color: #e3dfff !important; color: #533afd !important; }
     [data-prototype-dashboard] [class*="bg-[#eef7ff]"],
     [data-prototype-dashboard] [class*="bg-[#f8fbfe]"],
     [data-prototype-dashboard] [class*="bg-[#f5f9fc]"] { background-color: #fafaff !important; }
@@ -29,12 +33,6 @@ export function StripeDashboardTheme() {
     [data-prototype-dashboard] .rounded-2xl { border-radius: 10px !important; }
     [data-prototype-dashboard] .rounded-xl { border-radius: 7px !important; }
     [data-prototype-dashboard] .rounded-lg { border-radius: 4px !important; }
-    [data-prototype-dashboard] aside nav button,
-    [data-prototype-dashboard] aside nav a { color: #42506a !important; }
-    [data-prototype-dashboard] aside nav button:hover,
-    [data-prototype-dashboard] aside nav a:hover { background-color: #fafaff !important; color: #0c68c8 !important; }
-    [data-prototype-dashboard] aside nav button[class*="bg-white/10"] { background-color: #fff8d9 !important; color: #0c68c8 !important; }
-    [data-prototype-dashboard] aside nav button[class*="text-[#ffd12d]"] { background-color: #fff8d9 !important; color: #533afd !important; }
     [data-prototype-dashboard] .premium-report-hero { background: linear-gradient(135deg, #f0f3ff 0%, #f9f9ff 62%, #ffe0ef 150%) !important; color: #0d1738 !important; border: 1px solid #e5e2ff; box-shadow: none !important; }
     [data-prototype-dashboard] .premium-report-hero [class*="text-white"] { color: #42506a !important; }
     [data-prototype-dashboard] .premium-report-hero [class*="text-white/70"],

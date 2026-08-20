@@ -351,6 +351,16 @@ The report URL must be lead-specific, expiring, and inaccessible to other leads.
 
 ## 9. Acceptance Criteria
 
+### Friction budget
+
+Every visible element must do one of three jobs:
+
+- Prove a problem.
+- Show the work or its progress.
+- Move the lead toward a question, approval, payment, or handoff.
+
+Anything else belongs in an internal detail view or is removed. The system should use AI and connected APIs to do the research, comparison, checking, and fixing behind the scenes. The client should see the useful result, not the machinery.
+
 The design is rejected if:
 
 - The client must read multiple paragraphs to understand the value.
