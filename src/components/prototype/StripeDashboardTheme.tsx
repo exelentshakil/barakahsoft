@@ -24,6 +24,7 @@ export function StripeDashboardTheme() {
     [data-prototype-dashboard] aside nav a:hover { background-color: #f9f9ff !important; color: #533afd !important; }
     [data-prototype-dashboard] aside nav button[class*="bg-white/10"],
     [data-prototype-dashboard] aside nav button[class*="text-[#ffd12d]"] { background-color: #e3dfff !important; color: #533afd !important; }
+    [data-prototype-dashboard] .h-1.flex-1.hidden { display: block !important; background-color: #d6e3ff !important; }
     [data-prototype-dashboard] [class*="bg-[#eef7ff]"],
     [data-prototype-dashboard] [class*="bg-[#f8fbfe]"],
     [data-prototype-dashboard] [class*="bg-[#f5f9fc]"] { background-color: #fafaff !important; }
