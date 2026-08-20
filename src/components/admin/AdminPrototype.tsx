@@ -31,7 +31,7 @@ import { PremiumAdminHome } from "@/components/prototype/PremiumAdminHome";
 
 const LOGO_URL = "https://barakahsoft.com/wp-content/uploads/2026/01/Logo1.png";
 
-type View = "Overview" | "Lead workspace" | "Reports" | "Communications" | "Delivery";
+type View = "Overview" | "Lead workspace" | "Reports" | "Communications" | "Delivery" | "Settings";
 
 const STAGES = [
   ["1", "Lead received", "Complete"],
@@ -70,7 +70,7 @@ const Panel = ({ children, className = "" }: { children: React.ReactNode; classN
 const Badge = ({ children, tone = "blue" }: { children: React.ReactNode; tone?: "blue" | "green" | "yellow" | "purple" | "red" }) => <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold ${tone === "green" ? "bg-[#eaf8f0] text-[#167044]" : tone === "yellow" ? "bg-[#fff8d9] text-[#8c6800]" : tone === "purple" ? "bg-[#f1edff] text-[#702486]" : tone === "red" ? "bg-[#fff0f0] text-[#b42318]" : "bg-[#eaf5ff] text-[#075da8]"}`}>{children}</span>;
 
 function Sidebar({ view, setView }: { view: View; setView: (view: View) => void }) {
-  const links: [typeof LayoutDashboard, string, View][] = [[LayoutDashboard, "Command center", "Overview"], [Users, "Lead workspace", "Lead workspace"], [FileCheck2, "Reports", "Reports"], [Send, "Communications", "Communications"], [PackageCheck, "Delivery", "Delivery"], [Settings2, "Settings", "Overview"]];
+  const links: [typeof LayoutDashboard, string, View][] = [[LayoutDashboard, "Command center", "Overview"], [Users, "Lead workspace", "Lead workspace"], [FileCheck2, "Reports", "Reports"], [Send, "Communications", "Communications"], [PackageCheck, "Delivery", "Delivery"], [Settings2, "Settings", "Settings"]];
   return <aside className="fixed inset-y-0 left-0 hidden w-64 bg-[#07284d] text-white lg:block"><div className="flex h-16 items-center border-b border-white/10 px-6"><img src={LOGO_URL} alt="BarakahSoft" className="h-7 w-auto" /></div><nav className="space-y-1 px-4 py-6">{links.map(([Icon, label, target]) => <button key={label} onClick={() => setView(target)} className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold ${view === target ? "bg-white/10 text-[#ffd12d]" : "text-white/65 hover:bg-white/5 hover:text-white"}`}><Icon className="h-4 w-4" />{label}</button>)}<Link href="/client-portal-prototype" className="mt-6 flex w-full items-center gap-3 rounded-lg border border-white/15 px-3 py-2.5 text-sm font-semibold text-white/75 hover:bg-white/5"><Globe2 className="h-4 w-4" />Open client portal</Link></nav><div className="absolute bottom-0 left-0 right-0 border-t border-white/10 p-4"><div className="flex items-center gap-3 rounded-xl bg-white/5 p-3"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ffd12d] text-xs font-bold text-[#07284d]">SA</div><div><p className="text-sm font-semibold">Shakil Ahmed</p><p className="text-xs text-white/50">Owner workspace</p></div></div></div></aside>;
 }
 
