@@ -8,7 +8,7 @@ import {
   ChevronRight,
   CircleDollarSign,
   Clock3,
-  FileCheck2,
+  FileText,
   Globe2,
   Mail,
   MessageCircle,

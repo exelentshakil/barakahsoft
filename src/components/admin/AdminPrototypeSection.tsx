@@ -6,7 +6,6 @@ import {
   ArrowRight,
   BarChart3,
   CheckCircle2,
-  FileCheck2,
   FileText,
   Globe2,
   Mail,
