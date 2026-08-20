@@ -3,6 +3,7 @@ import {
   ArrowRight,
   BarChart3,
   Check,
+  CheckCircle2,
   CircleDollarSign,
   ExternalLink,
   Eye,
@@ -10,6 +11,7 @@ import {
   Megaphone,
   Rocket,
   ShieldCheck,
+  Sparkles,
   Target,
   Users,
   Workflow,
@@ -169,31 +171,48 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      <section className="border-b border-[#d9e8f4] bg-[#07284d] py-7 text-white">
-        <div className="mx-auto grid max-w-6xl gap-5 px-6 sm:grid-cols-3">
-          <div className="border-white/20 sm:border-r sm:pr-6">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#ffd12d]">
-              Free first step
-            </p>
-            <p className="mt-2 font-semibold">
-              Premium homepage concept
-            </p>
+      <section className="border-b border-[#d9e8f4] bg-[#07284d] py-8 text-white">
+        <div className="mx-auto grid max-w-6xl gap-6 px-6 sm:grid-cols-3">
+          <div className="flex items-start gap-4 sm:border-r sm:border-white/15 sm:pr-6">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-[#ffd12d]">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#ffd12d]">Step 01</span>
+                <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-white/80">Free</span>
+              </div>
+              <p className="mt-1 font-bold text-base text-white">Premium Homepage Concept</p>
+              <p className="mt-0.5 text-xs text-white/70">Custom design built from your real branding and images.</p>
+            </div>
           </div>
-          <div className="border-white/20 sm:border-r sm:pr-6">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#ffd12d]">
-              What you receive
-            </p>
-            <p className="mt-2 font-semibold">
-              Redesign + evidenced audit
-            </p>
+
+          <div className="flex items-start gap-4 sm:border-r sm:border-white/15 sm:pr-6">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-[#ffd12d]">
+              <FileText className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#ffd12d]">Step 02</span>
+                <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-white/80">Included</span>
+              </div>
+              <p className="mt-1 font-bold text-base text-white">Redesign + Evidence Audit</p>
+              <p className="mt-0.5 text-xs text-white/70">7×7 search grid, competitor benchmark, and speed analysis.</p>
+            </div>
           </div>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#ffd12d]">
-              Your decision
-            </p>
-            <p className="mt-2 font-semibold">
-              Continue only if you value it
-            </p>
+
+          <div className="flex items-start gap-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-[#ffd12d]">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#ffd12d]">Step 03</span>
+                <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-white/80">Zero Risk</span>
+              </div>
+              <p className="mt-1 font-bold text-base text-white">Your Decision, No Obligation</p>
+              <p className="mt-0.5 text-xs text-white/70">Yours to keep. Continue only if you see the commercial value.</p>
+            </div>
           </div>
         </div>
       </section>

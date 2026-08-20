@@ -441,34 +441,90 @@ export function ClientPortalPrototype() {
           </div>
         </section>
 
-        {/* 5. SEO INFRASTRUCTURE & TECHNICAL AUDIT GAUGE */}
+        {/* 5. VISUAL PERFORMANCE GAUGE SCORECARD (NO CLUNKY RAW TEXT) */}
         <section className="rounded-2xl border border-[#e5e7f2] bg-white p-8 sm:p-10 shadow-sm space-y-6">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-[#533afd]" />
-            <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
-              SEO & Technical Infrastructure Audit
+          <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <Gauge className="h-5 w-5 text-[#533afd]" />
+                <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
+                  SEO & Technical Speed Health Monitor
+                </span>
+              </div>
+              <h2 className="mt-1 text-2xl font-bold tracking-tight text-[#0d1738]">
+                Diagnostic Scorecard: 29/100 Baseline → 95/100 Rebuilt Platform
+              </h2>
+            </div>
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-3 py-1 text-xs font-bold text-[#0b8f5b] shrink-0">
+              <CheckCircle2 className="h-3.5 w-3.5" /> 70× Speed Lift
             </span>
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-[#0d1738]">
-            Full Diagnostic Scorecard: 29/100 Baseline → 95/100 Rebuilt Platform
-          </h2>
 
           <div className="grid gap-6 sm:grid-cols-4 pt-2">
             {[
-              { label: "Mobile Speed Score", before: "29/100", after: "98/100", lift: "70× Faster" },
-              { label: "Largest Contentful Paint", before: "8.4s (Slow)", after: "0.12s (Instant)", lift: "Top Tier" },
-              { label: "Layout Shift (CLS)", before: "0.42 (Jumping)", after: "0.00 (Zero Shift)", lift: "Pixel Stable" },
-              { label: "Local Schema Types", before: "0 Schemas", after: "4 Types Active", lift: "AI-Ready" },
+              {
+                icon: Smartphone,
+                label: "Mobile Speed Score",
+                beforeVal: 29,
+                afterVal: 98,
+                lift: "70× Faster",
+                desc: "0.12s first contentful paint on 4G cellular",
+              },
+              {
+                icon: Clock,
+                label: "Load Time (LCP)",
+                beforeVal: 15,
+                afterVal: 96,
+                lift: "0.12s vs 8.4s",
+                desc: "Instant render stops emergency customers bouncing",
+              },
+              {
+                icon: Layers,
+                label: "Visual Stability (CLS)",
+                beforeVal: 20,
+                afterVal: 100,
+                lift: "0.00 Shift",
+                desc: "Zero layout jumping when tapping phone buttons",
+              },
+              {
+                icon: Bot,
+                label: "Local Schema Types",
+                beforeVal: 0,
+                afterVal: 100,
+                lift: "4 Schemas",
+                desc: "LocalBusiness & Electrician entity markup active",
+              },
             ].map((m) => (
-              <div key={m.label} className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5">
-                <span className="text-xs font-semibold text-[#777588]">{m.label}</span>
-                <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-xs font-mono text-[#ba1a1a] line-through">{m.before}</span>
-                  <span className="text-2xl font-bold text-[#0b8f5b]">{m.after}</span>
+              <div key={m.label} className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm text-[#533afd]">
+                    <m.icon className="h-4 w-4" />
+                  </div>
+                  <span className="inline-flex items-center rounded-full bg-[#eaf8f0] px-2 py-0.5 text-[10px] font-bold text-[#0b8f5b]">
+                    {m.lift}
+                  </span>
                 </div>
-                <span className="mt-1 inline-block rounded bg-[#eaf8f0] px-2 py-0.5 text-[11px] font-bold text-[#0b8f5b]">
-                  {m.lift}
-                </span>
+                <div>
+                  <span className="text-xs font-bold text-[#0d1738]">{m.label}</span>
+                  <div className="mt-2 space-y-1.5">
+                    {/* Visual Comparison Bars */}
+                    <div className="flex items-center gap-2 text-[10px]">
+                      <span className="w-10 text-[#ba1a1a] font-bold">Old</span>
+                      <div className="h-1.5 flex-1 rounded-full bg-[#e5e7f2] overflow-hidden">
+                        <div className="h-full bg-[#ba1a1a] rounded-full" style={{ width: `${m.beforeVal}%` }} />
+                      </div>
+                      <span className="w-8 text-right font-mono text-[#ba1a1a]">{m.beforeVal}%</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px]">
+                      <span className="w-10 text-[#0b8f5b] font-bold">Rebuilt</span>
+                      <div className="h-1.5 flex-1 rounded-full bg-[#e5e7f2] overflow-hidden">
+                        <div className="h-full bg-[#0b8f5b] rounded-full" style={{ width: `${m.afterVal}%` }} />
+                      </div>
+                      <span className="w-8 text-right font-mono text-[#0b8f5b] font-bold">{m.afterVal}%</span>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[11px] text-[#777588] leading-tight pt-1">{m.desc}</p>
               </div>
             ))}
           </div>
