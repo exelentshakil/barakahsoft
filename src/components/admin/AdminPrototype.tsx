@@ -26,7 +26,6 @@ import {
   Users,
   WandSparkles,
 } from "lucide-react";
-import { StripeDashboardTheme } from "@/components/prototype/StripeDashboardTheme";
 import { PremiumAdminHome } from "@/components/prototype/PremiumAdminHome";
 import { MinimalAdminHome } from "@/components/prototype/MinimalAdminHome";
 
@@ -72,10 +71,67 @@ const Badge = ({ children, tone = "blue" }: { children: React.ReactNode; tone?: 
 
 function Sidebar({ view, setView }: { view: View; setView: (view: View) => void }) {
   const links: [typeof LayoutDashboard, string, View][] = [[LayoutDashboard, "Command center", "Overview"], [Users, "Lead workspace", "Lead workspace"], [FileCheck2, "Reports", "Reports"], [Send, "Communications", "Communications"], [PackageCheck, "Delivery", "Delivery"], [Settings2, "Settings", "Settings"]];
-  return <aside className="fixed inset-y-0 left-0 hidden w-72 bg-[#07284d] text-white lg:block"><div className="flex h-16 items-center border-b border-white/10 px-6"><img src={LOGO_URL} alt="BarakahSoft" className="h-7 w-auto" /></div><nav className="space-y-1 px-4 py-6">{links.map(([Icon, label, target]) => <button key={label} onClick={() => setView(target)} className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold ${view === target ? "bg-white/10 text-[#ffd12d]" : "text-white/65 hover:bg-white/5 hover:text-white"}`}><Icon className="h-4 w-4" />{label}</button>)}<Link href="/client-portal-prototype" className="mt-6 flex w-full items-center gap-3 rounded-lg border border-white/15 px-3 py-2.5 text-sm font-semibold text-white/75 hover:bg-white/5"><Globe2 className="h-4 w-4" />Open client portal</Link></nav><div className="absolute bottom-0 left-0 right-0 border-t border-white/10 p-4"><div className="flex items-center gap-3 rounded-xl bg-white/5 p-3"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ffd12d] text-xs font-bold text-[#07284d]">SA</div><div><p className="text-sm font-semibold">Shakil Ahmed</p><p className="text-xs text-white/50">Owner workspace</p></div></div></div></aside>;
+  return (
+    <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-[#e5e7f2] bg-white text-[#0d1738] lg:block">
+      <div className="flex h-16 items-center border-b border-[#e5e7f2] px-6">
+        <img src={LOGO_URL} alt="BarakahSoft" className="h-7 w-auto" />
+      </div>
+      <nav className="space-y-1 px-4 py-6">
+        {links.map(([Icon, label, target]) => (
+          <button
+            key={label}
+            onClick={() => setView(target)}
+            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition ${view === target ? "bg-[#e3dfff] text-[#533afd]" : "text-[#42506a] hover:bg-[#f0f3ff] hover:text-[#533afd]"}`}
+          >
+            <Icon className="h-4 w-4" />
+            {label}
+          </button>
+        ))}
+        <Link
+          href="/client-portal-prototype"
+          className="mt-6 flex w-full items-center gap-3 rounded-lg border border-[#e5e7f2] px-3 py-2.5 text-sm font-semibold text-[#42506a] hover:bg-[#f0f3ff] hover:text-[#533afd]"
+        >
+          <Globe2 className="h-4 w-4" />
+          Open client portal
+        </Link>
+      </nav>
+      <div className="absolute bottom-0 left-0 right-0 border-t border-[#e5e7f2] p-4">
+        <div className="flex items-center gap-3 rounded-xl bg-[#f0f3ff] p-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#533afd] text-xs font-bold text-white">
+            SA
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-[#0d1738]">Shakil Ahmed</p>
+            <p className="text-xs text-[#777588]">Owner workspace</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
 }
 
-function Header({ view }: { view: View }) { return <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-[#d9e8f4] bg-white/90 px-5 backdrop-blur lg:px-8"><div className="flex items-center gap-3"><Menu className="h-5 w-5 lg:hidden" /><div><p className="text-sm font-bold text-[#07284d]">{view}</p><p className="text-xs text-[#7890a5]">York Electrical · dummy production record</p></div></div><div className="flex items-center gap-3"><div className="hidden items-center gap-2 rounded-lg border border-[#d9e8f4] px-3 py-2 text-xs text-[#7890a5] sm:flex"><Search className="h-4 w-4" />Search workspace</div><div className="h-8 w-8 rounded-full bg-[#f1edff] text-center text-xs font-bold leading-8 text-[#702486]">SA</div></div></header>; }
+function Header({ view }: { view: View }) {
+  return (
+    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-[#e5e7f2] bg-white px-5 lg:px-8">
+      <div className="flex items-center gap-3">
+        <Menu className="h-5 w-5 lg:hidden text-[#0d1738]" />
+        <div>
+          <p className="text-sm font-bold text-[#0d1738]">{view}</p>
+          <p className="text-xs text-[#777588]">York Electrical · dummy production record</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="hidden items-center gap-2 rounded-lg border border-[#e5e7f2] bg-[#f9f9ff] px-3 py-2 text-xs text-[#777588] sm:flex">
+          <Search className="h-4 w-4" />
+          Search workspace
+        </div>
+        <div className="h-8 w-8 rounded-full bg-[#e3dfff] text-center text-xs font-bold leading-8 text-[#533afd]">
+          SA
+        </div>
+      </div>
+    </header>
+  );
+}
 
 function Overview({ setView }: { setView: (view: View) => void }) {
   return <><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Operations overview</p><h1 className="mt-2 font-sans text-4xl font-semibold tracking-[-0.04em] text-[#07284d]">From first email to finished website.</h1><p className="mt-2 text-sm text-[#60778d]">Every stage is visible, reviewable, and owned by a person.</p></div><button onClick={() => setView("Lead workspace")} className="inline-flex items-center gap-2 rounded-lg bg-[#ffd12d] px-4 py-2.5 text-sm font-bold text-[#111]"><WandSparkles className="h-4 w-4" />Open York workspace</button></div><div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[["Active lead", "York Electrical", "Facebook ad · accepted", "blue"], ["Build status", "QA pending", "38 of 42 routes drafted", "yellow"], ["Client review", "Not sent", "Report ready to share", "purple"], ["Revenue path", "$797 + recurring", "Website then optional management", "green"]].map(([label, value, detail, tone]) => <Panel key={label} className="p-5"><Badge tone={tone as "blue" | "green" | "yellow" | "purple"}>{label}</Badge><p className="mt-6 text-2xl font-bold text-[#07284d]">{value}</p><p className="mt-1 text-xs text-[#7890a5]">{detail}</p></Panel>)}</div><Panel className="mt-8 overflow-hidden"><div className="border-b border-[#d9e8f4] p-5"><p className="text-lg font-bold text-[#07284d]">One client, one complete journey</p><p className="mt-1 text-xs text-[#7890a5]">The same record connects source evidence, generation, review, delivery, and launch.</p></div><div className="grid gap-3 p-5 md:grid-cols-6">{STAGES.map(([number, title, status], index) => <div key={title} className="relative rounded-xl border border-[#d9e8f4] bg-[#f8fbfe] p-4"><div className="flex items-center justify-between"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#07284d] text-xs font-bold text-white">{number}</span>{index < 4 ? <CheckCircle2 className="h-4 w-4 text-[#167044]" /> : <span className="h-2 w-2 rounded-full bg-[#b8c9d7]" />}</div><p className="mt-5 text-sm font-bold text-[#07284d]">{title}</p><p className={`mt-2 text-xs font-semibold ${status === "Complete" ? "text-[#167044]" : status === "Needs review" ? "text-[#8c6800]" : "text-[#7890a5]"}`}>{status}</p></div>)}</div></Panel><div className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]"><Panel><div className="flex items-center justify-between border-b border-[#d9e8f4] p-5"><div><p className="text-lg font-bold text-[#07284d]">Needs attention</p><p className="mt-1 text-xs text-[#7890a5]">The next human decisions in this build.</p></div><Badge tone="yellow">3 actions</Badge></div><div className="divide-y divide-[#e8f0f6]">{[["Review issue-versus-fix report", "4 evidence-backed issues ready", "Open report"], ["Approve 2 sitemap drafts", "EV charger page + second article", "Review sitemap"], ["Send client preview email", "Draft includes preview and report", "Open email"]].map(([title, detail, action]) => <div key={title} className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-semibold text-[#07284d]">{title}</p><p className="mt-1 text-xs text-[#7890a5]">{detail}</p></div><button onClick={() => setView("Lead workspace")} className="inline-flex w-fit items-center gap-1 text-xs font-bold text-[#0c68c8]">{action}<ArrowRight className="h-3 w-3" /></button></div>)}</div></Panel><Panel><div className="border-b border-[#d9e8f4] p-5"><p className="text-lg font-bold text-[#07284d]">Recent activity</p></div><div className="divide-y divide-[#e8f0f6]">{[["Firecrawl branding imported", "8 min ago"], ["42 sitemap URLs classified", "18 min ago"], ["Homepage and service drafts generated", "32 min ago"], ["Lead accepted from Facebook", "1 hr ago"]].map(([event, time]) => <div key={event} className="flex gap-3 p-5"><div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef7ff] text-[#0c68c8]"><ActivityIcon /></div><div><p className="text-sm font-semibold text-[#07284d]">{event}</p><p className="mt-1 text-xs text-[#7890a5]">{time}</p></div></div>)}</div></Panel></div></>;
@@ -117,5 +173,28 @@ function Delivery() { return <div className="mt-6 grid gap-6 lg:grid-cols-3">{[[
 
 export function AdminPrototype() {
   const [view, setView] = useState<View>("Overview");
-  return <div data-prototype-dashboard className="min-h-screen bg-[#f5f9fc] text-[#1e212b]"><StripeDashboardTheme /><Sidebar view={view} setView={setView} /><main className="lg:pl-72"><Header view={view} /><div className="mx-auto max-w-[1280px] p-5 lg:p-10">{view === "Overview" ? <MinimalAdminHome setView={setView} /> : view === "Lead workspace" ? <Workspace /> : view === "Reports" ? <IssueReport /> : view === "Communications" ? <Delivery /> : <Delivery />}<p className="mt-10 text-center text-xs text-[#9ab0c1]">Dummy data prototype · designed to validate the complete PRD workflow before production implementation.</p></div></main></div>;
+  return (
+    <div className="min-h-screen bg-[#f9f9ff] text-[#0d1738]">
+      <Sidebar view={view} setView={setView} />
+      <main className="lg:pl-72">
+        <Header view={view} />
+        <div className="mx-auto max-w-[1280px] p-5 lg:p-10">
+          {view === "Overview" ? (
+            <MinimalAdminHome setView={setView} />
+          ) : view === "Lead workspace" ? (
+            <Workspace />
+          ) : view === "Reports" ? (
+            <IssueReport />
+          ) : view === "Communications" ? (
+            <Delivery />
+          ) : (
+            <Delivery />
+          )}
+          <p className="mt-10 text-center text-xs text-[#777588]">
+            Dummy data prototype · designed to validate the complete PRD workflow before production implementation.
+          </p>
+        </div>
+      </main>
+    </div>
+  );
 }
