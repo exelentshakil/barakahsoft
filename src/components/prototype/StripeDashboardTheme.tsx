@@ -33,5 +33,6 @@ export function StripeDashboardTheme() {
     [data-prototype-dashboard] aside nav button:hover,
     [data-prototype-dashboard] aside nav a:hover { background-color: #fafaff !important; color: #0c68c8 !important; }
     [data-prototype-dashboard] aside nav button[class*="bg-white/10"] { background-color: #fff8d9 !important; color: #0c68c8 !important; }
+    [data-prototype-dashboard] aside nav button[class*="text-[#ffd12d]"] { background-color: #fff8d9 !important; color: #533afd !important; }
   `}</style>;
 }
