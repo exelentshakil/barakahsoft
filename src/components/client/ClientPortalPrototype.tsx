@@ -1,93 +1,372 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Check, CheckCircle2, ExternalLink, FileText, Globe2, MessageCircle, PackageCheck, RefreshCw, Send, ShieldCheck, Sparkles } from "lucide-react";
-import { PremiumClientReport } from "@/components/prototype/PremiumClientReport";
-import { MinimalClientOverview, MinimalClientReport } from "@/components/prototype/MinimalClientReport";
+import Link from "next/link";
+import {
+  ArrowRight,
+  Check,
+  CheckCircle2,
+  ExternalLink,
+  HelpCircle,
+  MapPin,
+  MessageCircle,
+  Phone,
+  PhoneCall,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Zap,
+} from "lucide-react";
 
 const LOGO_URL = "https://barakahsoft.com/wp-content/uploads/2026/01/Logo1.png";
 
-const PAGES = ["Homepage", "Services overview", "About", "Contact", "Blog", "28 service pages", "8-10 launch articles"];
-const ISSUES = [["Services are hard to find", "Important work is hidden behind a generic link.", "A clear services hub and dedicated service pages."], ["Trust proof is underused", "Experience, licensing, and local knowledge are not leading the first impression.", "Verified proof is placed where customers decide whether to call."], ["The blog feels separate", "Articles do not clearly lead readers toward relevant services.", "Related articles and service calls to action connect the content."]];
-const PROJECT_PROGRESS = [{ stage: "Received", complete: 100 }, { stage: "Research", complete: 100 }, { stage: "Design", complete: 100 }, { stage: "Pages", complete: 90 }, { stage: "Review", complete: 65 }, { stage: "Handoff", complete: 20 }];
-
-const Badge = ({ children, tone = "blue" }: { children: React.ReactNode; tone?: "blue" | "green" | "yellow" | "purple" }) => <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold ${tone === "green" ? "bg-[#eaf8f0] text-[#167044]" : tone === "yellow" ? "bg-[#fff8d9] text-[#8c6800]" : tone === "purple" ? "bg-[#f1edff] text-[#702486]" : "bg-[#eaf5ff] text-[#075da8]"}`}>{children}</span>;
-
-function Header({ tab, setTab }: { tab: string; setTab: (tab: string) => void }) {
-  const tabs = ["Overview", "Report", "Website", "Conversation", "Handoff"];
-  return (
-    <header className="border-b border-[#e5e7f2] bg-white">
-      <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-6 px-6 py-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <img src={LOGO_URL} alt="BarakahSoft" className="h-7 w-auto" />
-          <span className="hidden truncate text-xs text-[#777588] lg:block">York Electrical · private project</span>
-        </div>
-        <nav className="hidden items-center gap-1 text-sm font-semibold md:flex">
-          {tabs.map((item) => (
-            <button
-              key={item}
-              onClick={() => setTab(item)}
-              className={`rounded-md px-3 py-2 transition ${tab === item ? "bg-[#533afd] text-white" : "text-[#42506a] hover:bg-[#f0f3ff] hover:text-[#533afd]"}`}
-            >
-              {item}
-            </button>
-          ))}
-        </nav>
-        <div className="flex shrink-0 items-center gap-3">
-          <Badge tone="green">Secure link</Badge>
-          <button
-            onClick={() => setTab("Conversation")}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-[#42506a] hover:text-[#533afd]"
-          >
-            <MessageCircle className="h-4 w-4" />
-            <span className="hidden sm:inline">Message team</span>
-          </button>
-        </div>
-      </div>
-    </header>
-  );
-}
-
-function StoryOverview({ setTab }: { setTab: (tab: string) => void }) { return <><section className="rounded-3xl bg-[#07284d] p-7 text-white shadow-[0_20px_50px_rgba(7,40,77,0.16)] lg:p-10"><div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end"><div className="max-w-2xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#ffd12d]">Your project story</p><h1 className="mt-4 font-sans text-4xl font-semibold leading-tight tracking-[-0.04em] sm:text-6xl">We found the gap. We built the better version.</h1><p className="mt-5 max-w-xl text-base leading-7 text-white/70">Your business already has the proof. We made it easier for the right customer to see it, trust it, and take the next step.</p></div><button onClick={() => setTab("Website")} className="inline-flex h-fit items-center justify-center gap-2 rounded-xl bg-[#ffd12d] px-5 py-3 text-sm font-bold text-[#111]">See the new homepage <ArrowRight className="h-4 w-4" /></button></div><div className="mt-10 grid gap-3 sm:grid-cols-4">{[["Received", "Complete"], ["Researched", "Complete"], ["Redesigned", "Complete"], ["Your decision", "Now"]].map(([title, status], index) => <div key={title} className="flex items-center gap-3 rounded-xl border border-white/15 bg-white/5 p-4"><span className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${index < 3 ? "bg-[#5ad0a8] text-[#07284d]" : "bg-[#ffd12d] text-[#07284d]"}`}>{index < 3 ? <Check className="h-4 w-4" /> : 4}</span><div><p className="text-sm font-bold">{title}</p><p className="mt-1 text-xs text-white/55">{status}</p></div></div>)}</div></section><section className="mt-8 grid gap-5 lg:grid-cols-2"><div className="rounded-2xl border border-[#ffd8d8] bg-[#fff8f8] p-6"><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#b42318]">Before</p><h2 className="mt-3 text-2xl font-semibold text-[#07284d]">Customers had to work to understand the business.</h2><div className="mt-6 rounded-xl border border-[#f2c8c8] bg-white p-4"><div className="flex gap-2"><span className="h-2 w-16 rounded-full bg-[#e8edf2]" /><span className="h-2 w-8 rounded-full bg-[#e8edf2]" /></div><div className="mt-5 h-20 rounded-lg bg-[#f2f4f6]" /><div className="mt-4 grid grid-cols-3 gap-2"><span className="h-10 rounded bg-[#f2f4f6]" /><span className="h-10 rounded bg-[#f2f4f6]" /><span className="h-10 rounded bg-[#f2f4f6]" /></div></div><p className="mt-4 text-sm leading-6 text-[#60778d]">Services, trust proof, and the contact path were not working together.</p></div><div className="rounded-2xl border border-[#c8ead8] bg-[#f5fcf7] p-6"><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#167044]">After</p><h2 className="mt-3 text-2xl font-semibold text-[#07284d]">The new direction makes the next step obvious.</h2><div className="mt-6 rounded-xl border border-[#c8ead8] bg-white p-4 shadow-[0_8px_20px_rgba(22,112,68,0.08)]"><div className="flex items-center justify-between"><span className="h-2 w-20 rounded-full bg-[#07284d]" /><span className="rounded-full bg-[#ffd12d] px-3 py-1 text-[10px] font-bold text-[#111]">Call today</span></div><div className="mt-5 h-20 rounded-lg bg-gradient-to-br from-[#eef7ff] to-[#d8eaf9]" /><div className="mt-4 grid grid-cols-3 gap-2"><span className="h-10 rounded bg-[#eef7ff]" /><span className="h-10 rounded bg-[#fff8d9]" /><span className="h-10 rounded bg-[#eef7ff]" /></div></div><p className="mt-4 text-sm leading-6 text-[#60778d]">Real services, real proof, and a clearer contact path are now connected.</p></div></section><section className="mt-8 grid gap-5 sm:grid-cols-3">{[["Visibility", "39 / 49", "local points need work"], ["Coverage", "38", "approved routes built"], ["Clarity", "4 → 4", "issues matched to fixes"]].map(([label, value, detail]) => <div key={label} className="rounded-2xl border border-[#d9e8f4] bg-white p-6"><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7890a5]">{label}</p><p className="mt-4 text-4xl font-semibold text-[#07284d]">{value}</p><p className="mt-2 text-sm text-[#60778d]">{detail}</p></div>)}</section><section className="mt-8 rounded-2xl border border-[#d9e8f4] bg-white p-6"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"><div><p className="text-lg font-bold text-[#07284d]">You are at the decision point.</p><p className="mt-1 text-sm text-[#60778d]">Review the report, ask us anything, or approve the direction to continue.</p></div><div className="flex flex-wrap gap-3"><button onClick={() => setTab("Report")} className="rounded-xl border border-[#c8ddec] px-4 py-3 text-sm font-bold text-[#07284d]">Open master report</button><button onClick={() => setTab("Handoff")} className="rounded-xl bg-[#ffd12d] px-4 py-3 text-sm font-bold text-[#111]">Continue with BarakahSoft</button></div></div></section></>; }
-
-function Overview({ setTab }: { setTab: (tab: string) => void }) { return <><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Your website project</p><h1 className="mt-2 font-sans text-4xl font-semibold tracking-[-0.04em] text-[#07284d]">Review the complete website.</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-[#60778d]">Your free homepage concept became a full website. Review the evidence, pages, and fixes before anything is launched.</p></div><Badge tone="yellow">Your review needed</Badge></div><div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[["Homepage", "Ready", "Preview and issue report"], ["Sitemap", "38 / 42", "4 routes need review"], ["Content", "6 / 8", "Two articles in draft"], ["Handoff", "Waiting", "Approve before payment"]].map(([label, value, detail]) => <div key={label} className="rounded-2xl border border-[#d9e8f4] bg-white p-5 shadow-[0_8px_24px_rgba(7,40,77,0.04)]"><p className="text-xs font-bold uppercase tracking-wider text-[#7890a5]">{label}</p><p className="mt-6 text-3xl font-semibold text-[#07284d]">{value}</p><p className="mt-1 text-xs text-[#7890a5]">{detail}</p></div>)}</div><div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]"><section className="rounded-2xl border border-[#d9e8f4] bg-white p-6"><div className="flex items-center justify-between"><div><p className="text-lg font-bold text-[#07284d]">What happens next</p><p className="mt-1 text-xs text-[#7890a5]">A simple review before launch.</p></div><Sparkles className="h-5 w-5 text-[#0c68c8]" /></div><div className="mt-6 space-y-4">{[["Review the report", "See what was found and what changed."], ["Review the sitemap", "Confirm the services and articles included."], ["Approve or request a change", "Your team keeps the approved version safe."], ["Pay and receive your website files", "Production and launch begin after approval."]].map(([title, detail], index) => <div key={title} className="flex gap-4"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#07284d] text-xs font-bold text-white">{index + 1}</span><div><p className="text-sm font-bold text-[#07284d]">{title}</p><p className="mt-1 text-xs text-[#7890a5]">{detail}</p></div></div>)}</div></section><section className="rounded-2xl border border-[#c8ddec] bg-[#eef7ff] p-6"><ShieldCheck className="h-6 w-6 text-[#0c68c8]" /><p className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-[#0c68c8]">Your access</p><h2 className="mt-3 text-2xl font-semibold text-[#07284d]">No password needed.</h2><p className="mt-3 text-sm leading-6 text-[#60778d]">This private link opens only your project. Use it to review work, ask questions, and approve the next step.</p><button onClick={() => setTab("Report")} className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[#ffd12d] px-4 py-2.5 text-sm font-bold text-[#111]">Review report <ArrowRight className="h-4 w-4" /></button></section></div></>; }
-
-function EvidenceSummary() { return <div className="mt-8"><div className="mb-4 flex items-center justify-between"><div><p className="text-lg font-bold text-[#07284d]">Master report</p><p className="mt-1 text-xs text-[#7890a5]">The same evidence our team uses to make the recommendations.</p></div><Badge tone="green">Everything attached</Badge></div><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{[["What we used", "Your business, brand, services, and approved facts", "Ready", "blue"], ["SEO audit", "29/100 baseline · 10 critical issues", "Reviewed", "green"], ["Map visibility", "39 of 49 local points not visible", "Reviewed", "green"], ["Competitors", "3 signals explain the local gap", "Reviewed", "green"], ["Issue vs fix", "4 problems matched to 4 build changes", "Ready", "yellow"], ["Sitemap", "38 routes built · 4 to review", "Review", "yellow"], ["Website progress", "Homepage, services, blog, and contact", "In progress", "blue"], ["Quality checks", "6 of 8 checks passed", "Review", "yellow"], ["Handoff", "Approval first, then payment and website files", "Next", "purple"]].map(([title, detail, status, tone]) => <section key={title} className="rounded-2xl border border-[#d9e8f4] bg-white p-5"><p className="text-xs font-bold uppercase tracking-wider text-[#7890a5]">{title}</p><p className="mt-4 text-sm font-bold text-[#07284d]">{detail}</p><div className="mt-4"><Badge tone={tone as "blue" | "green" | "yellow" | "purple"}>{status}</Badge></div></section>)}</div></div>; }
-
-function ReportIntro({ setTab }: { setTab: (tab: string) => void }) { return <section className="mt-8 rounded-2xl bg-[#07284d] p-6 text-white shadow-[0_12px_32px_rgba(7,40,77,0.12)]"><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#ffd12d]">What this means for your business</p><h2 className="mt-3 max-w-3xl text-2xl font-semibold">Your business has real proof. Your website was making customers work too hard to see it.</h2><p className="mt-3 max-w-3xl text-sm leading-6 text-white/75">We used your real services, branding, evidence, and market to create a clearer homepage and complete website direction. The report below shows the reasoning behind the work.</p><div className="mt-6 flex flex-wrap gap-3"><button onClick={() => setTab("Website")} className="inline-flex items-center gap-2 rounded-lg bg-[#ffd12d] px-4 py-2.5 text-sm font-bold text-[#111]">Review my new homepage <ArrowRight className="h-4 w-4" /></button><button onClick={() => setTab("Conversation")} className="inline-flex items-center gap-2 rounded-lg border border-white/25 px-4 py-2.5 text-sm font-bold text-white"><MessageCircle className="h-4 w-4" /> Ask the team</button></div></section>; }
-
-function Report() { return <><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Your project report</p><h1 className="mt-2 font-sans text-4xl font-semibold tracking-[-0.04em] text-[#07284d]">See what we found, fixed, and built.</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-[#60778d]">This is the complete evidence behind the new website: research, SEO audit, local visibility, competitors, issue fixes, pages, quality checks, and handoff.</p></div><EvidenceSummary /><div className="mt-8 space-y-4">{ISSUES.map(([issue, evidence, fix], index) => <section key={issue} className="rounded-2xl border border-[#d9e8f4] bg-white p-6"><div className="grid gap-5 lg:grid-cols-[0.7fr_1fr_1fr]"><div><span className="text-xs font-bold text-[#0c68c8]">0{index + 1}</span><h2 className="mt-2 text-lg font-bold text-[#07284d]">{issue}</h2></div><div className="rounded-xl border border-[#ffd8d8] bg-[#fff8f8] p-4"><p className="text-xs font-bold uppercase tracking-wider text-[#b42318]">Current issue</p><p className="mt-2 text-sm leading-6 text-[#60778d]">{evidence}</p></div><div className="rounded-xl border border-[#c8ead8] bg-[#f5fcf7] p-4"><p className="text-xs font-bold uppercase tracking-wider text-[#167044]">Build fix</p><p className="mt-2 text-sm leading-6 text-[#60778d]">{fix}</p></div></div></section>)}</div><div className="mt-8 rounded-2xl bg-[#07284d] p-6 text-white"><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#ffd12d]">Your decision</p><h2 className="mt-3 text-2xl font-semibold">The complete evidence and new website are ready to review.</h2><div className="mt-5 flex flex-wrap gap-3"><button className="inline-flex items-center gap-2 rounded-lg bg-[#ffd12d] px-4 py-2.5 text-sm font-bold text-[#111]"><CheckCircle2 className="h-4 w-4" /> Approve the work</button><button className="inline-flex items-center gap-2 rounded-lg border border-white/25 px-4 py-2.5 text-sm font-bold text-white"><MessageCircle className="h-4 w-4" /> Ask a question</button></div></div></>; }
-
-function Website() { return <><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Complete website</p><h1 className="mt-2 font-sans text-4xl font-semibold tracking-[-0.04em] text-[#07284d]">Pages, content, and sitemap.</h1><p className="mt-2 text-sm text-[#60778d]">Review everything before approval and payment.</p></div><div className="flex gap-2"><Badge tone="green">38 routes built</Badge><Badge tone="yellow">4 to review</Badge></div></div><div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]"><section className="rounded-2xl border border-[#d9e8f4] bg-white"><div className="flex items-center justify-between border-b border-[#d9e8f4] p-5"><div><p className="text-lg font-bold text-[#07284d]">Website checklist</p><p className="mt-1 text-xs text-[#7890a5]">Every approved page must exist before handoff.</p></div><Globe2 className="h-5 w-5 text-[#0c68c8]" /></div><div className="divide-y divide-[#e8f0f6]">{PAGES.map((page, index) => <div key={page} className="flex items-center justify-between gap-4 p-4"><div className="flex items-center gap-3"><CheckCircle2 className={`h-4 w-4 ${index === 6 ? "text-[#8c6800]" : "text-[#167044]"}`} /><span className="text-sm font-semibold text-[#07284d]">{page}</span></div><Badge tone={index === 6 ? "yellow" : "green"}>{index === 6 ? "Review" : "Ready"}</Badge></div>)}</div></section><section className="space-y-6"><div className="rounded-2xl border border-[#d9e8f4] bg-white p-6"><FileText className="h-6 w-6 text-[#0c68c8]" /><p className="mt-5 text-lg font-bold text-[#07284d]">Content library</p><div className="mt-5 space-y-3 text-sm">{[["Existing content moved over", "12 posts"], ["New launch posts", "6 approved"], ["Needs your review", "2 drafts"], ["Branding", "Your colours and logo"]].map(([label, value]) => <div key={label} className="flex items-center justify-between border-b border-[#eef3f7] pb-3"><span className="text-[#60778d]">{label}</span><span className="font-bold text-[#07284d]">{value}</span></div>)}</div></div><div className="rounded-2xl border border-[#c8ddec] bg-[#eef7ff] p-6"><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#0c68c8]">Need something changed?</p><h2 className="mt-3 text-xl font-semibold text-[#07284d]">Request a change.</h2><p className="mt-2 text-sm leading-6 text-[#60778d]">Choose a page, describe the change, and review the new version before anything is replaced.</p><button className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#ffd12d] px-4 py-2.5 text-sm font-bold text-[#111]"><RefreshCw className="h-4 w-4" /> Request a change</button></div></section></div></>; }
-
-function BuildStatus() { return <div className="mt-8 rounded-2xl border border-[#d9e8f4] bg-white p-6"><div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center"><div><p className="text-lg font-bold text-[#07284d]">Build and quality checks</p><p className="mt-1 text-xs text-[#7890a5]">A plain-English view of what is complete before handoff.</p></div><Badge tone="yellow">2 checks need review</Badge></div><div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{[["Research", "Complete"], ["Pages", "38 / 38"], ["Articles", "6 / 8"], ["Quality checks", "6 / 8"]].map(([label, value]) => <div key={label} className="rounded-xl bg-[#f8fbfe] p-4"><p className="text-xs font-bold uppercase tracking-wider text-[#7890a5]">{label}</p><p className="mt-2 font-bold text-[#07284d]">{value}</p></div>)}</div><div className="mt-6 grid gap-3 sm:grid-cols-6">{PROJECT_PROGRESS.map((item) => <div key={item.stage}><div className="flex h-28 items-end rounded-lg bg-[#f8fbfe] p-2"><div className="w-full rounded-md bg-[#0c68c8]" style={{ height: `${item.complete}%` }} /></div><p className="mt-2 text-center text-[11px] text-[#7890a5]">{item.stage}</p></div>)}</div><p className="mt-4 text-xs text-[#7890a5]">Progress is visible so you always know what has happened, what needs your review, and what happens after approval.</p></div>; }
-
-function Conversation() { return <><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Private project conversation</p><h1 className="mt-2 font-sans text-4xl font-semibold tracking-[-0.04em] text-[#07284d]">Talk to your BarakahSoft team.</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-[#60778d]">This link opens your project directly. No password or account setup is required.</p></div><div className="mt-8 grid gap-6 lg:grid-cols-[1fr_0.7fr]"><section className="rounded-2xl border border-[#d9e8f4] bg-white"><div className="border-b border-[#d9e8f4] p-5"><p className="text-lg font-bold text-[#07284d]">Project timeline</p><p className="mt-1 text-xs text-[#7890a5]">Like an order tracker, but for the website.</p></div><div className="divide-y divide-[#e8f0f6]">{[["Website received", "Source website and branding imported.", "Complete"], ["Evidence prepared", "Audit, map grid, competitors, and report ready.", "Complete"], ["Complete website built", "Homepage, services, blog, and contact paths drafted.", "Complete"], ["Your review", "Approve the work or request a change.", "Current"], ["Payment and handoff", "Website files and launch after approval.", "Next"]].map(([title, detail, status], index) => <div key={title} className="flex gap-4 p-5"><div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${status === "Complete" ? "bg-[#eaf8f0] text-[#167044]" : status === "Current" ? "bg-[#fff8d9] text-[#8c6800]" : "bg-[#eef7ff] text-[#0c68c8]"}`}>{status === "Complete" ? <Check className="h-4 w-4" /> : index + 1}</div><div><p className="text-sm font-bold text-[#07284d]">{title}</p><p className="mt-1 text-sm leading-6 text-[#60778d]">{detail}</p><Badge tone={status === "Complete" ? "green" : status === "Current" ? "yellow" : "blue"}>{status}</Badge></div></div>)}</div></section><section className="rounded-2xl border border-[#d9e8f4] bg-white p-6"><p className="text-lg font-bold text-[#07284d]">Send a message</p><textarea className="mt-5 min-h-32 w-full rounded-xl border border-[#c8ddec] p-4 text-sm outline-none focus:border-[#0c68c8]" placeholder="Ask a question or describe a change..." /><button className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#ffd12d] px-4 py-2.5 text-sm font-bold text-[#111]"><Send className="h-4 w-4" /> Send to team</button></section></div></>; }
-
-function Handoff() { return <><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Approval and handoff</p><h1 className="mt-2 font-sans text-4xl font-semibold tracking-[-0.04em] text-[#07284d]">Ready when you are.</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-[#60778d]">Approve the website, pay for the agreed work, and we prepare your website files for launch.</p></div><div className="mt-8 grid gap-4 md:grid-cols-3">{[["Your approval", "Waiting for your decision", MessageCircle], ["Build checks", "Passing", CheckCircle2], ["Website files", "Prepared after payment", PackageCheck]].map(([title, status, Icon]) => <div key={title as string} className="rounded-2xl border border-[#d9e8f4] bg-white p-6"><Icon className="h-6 w-6 text-[#0c68c8]" /><p className="mt-5 font-bold text-[#07284d]">{title as string}</p><p className="mt-2 text-sm text-[#60778d]">{status as string}</p></div>)}</div><div className="mt-8 rounded-2xl border border-[#d9e8f4] bg-white p-6"><p className="text-lg font-bold text-[#07284d]">Handoff checklist</p><div className="mt-5 grid gap-3 sm:grid-cols-2">{["Approved sitemap included", "Content and media included", "Launch notes included", "Accessibility and links checked", "Previous version recoverable", "Payment required before production"] .map((item) => <p key={item} className="flex items-center gap-3 text-sm font-semibold text-[#60778d]"><CheckCircle2 className="h-4 w-4 text-[#167044]" />{item}</p>)}</div><div className="mt-7 flex flex-wrap gap-3"><button className="inline-flex items-center gap-2 rounded-lg bg-[#ffd12d] px-5 py-3 text-sm font-bold text-[#111]"><Check className="h-4 w-4" /> Approve website</button><button className="inline-flex items-center gap-2 rounded-lg border border-[#c8ddec] px-5 py-3 text-sm font-bold text-[#07284d]"><MessageCircle className="h-4 w-4" /> Request a change</button><button className="inline-flex items-center gap-2 rounded-lg border border-[#c8ddec] px-5 py-3 text-sm font-bold text-[#07284d]"><ExternalLink className="h-4 w-4" /> Open preview</button></div></div></>; }
+// Queens 7x7 grid points simplified for visual understanding
+const MAP_POINTS = Array.from({ length: 49 }, (_, i) => ({
+  id: i + 1,
+  visible: i < 10,
+  outside: i >= 10 && i < 20,
+}));
 
 export function ClientPortalPrototype() {
-  const [tab, setTab] = useState("Report");
+  const [showCheckout, setShowCheckout] = useState(false);
+
   return (
-    <main className="min-h-screen bg-[#f9f9ff] text-[#0d1738]">
-      <Header tab={tab} setTab={setTab} />
-      <div className="mx-auto max-w-6xl px-6 py-10">
-        {tab === "Overview" && <MinimalClientOverview setTab={setTab} />}
-        {tab === "Report" && <PremiumClientReport setTab={setTab} />}
-        {tab === "Website" && (
-          <>
-            <BuildStatus />
-            <div className="mt-10">
-              <Website />
+    <div className="min-h-screen bg-[#f9f9ff] text-[#0d1738]">
+      {/* 1. CLEAN HEADER */}
+      <header className="sticky top-0 z-30 border-b border-[#e5e7f2] bg-white/95 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-5">
+          <div className="flex items-center gap-3">
+            <img src={LOGO_URL} alt="BarakahSoft" className="h-7 w-auto" />
+            <span className="hidden text-xs font-semibold text-[#777588] sm:inline">
+              · York Electrical Proposal
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="hidden rounded-full bg-[#eaf8f0] px-3 py-1 text-xs font-bold text-[#0b8f5b] sm:inline-flex items-center gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Concept Ready
+            </span>
+            <a
+              href="tel:+13075336678"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0d1738] hover:text-[#533afd]"
+            >
+              <Phone className="h-3.5 w-3.5 text-[#533afd]" />
+              <span>(307) 533-6678</span>
+            </a>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-5xl px-5 py-10 space-y-12">
+        {/* 2. HERO STORY */}
+        <section className="rounded-2xl border border-[#c7d0fb] bg-white p-8 sm:p-10 shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="flex h-2.5 w-2.5 rounded-full bg-[#533afd] animate-pulse" />
+            <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
+              Your Free Redesign Is Ready
+            </span>
+          </div>
+
+          <h1 className="mt-3 text-3xl font-bold tracking-tight text-[#0d1738] sm:text-5xl">
+            York Electrical Contractors
+          </h1>
+          <p className="mt-4 text-base leading-relaxed text-[#42506a] sm:text-lg">
+            We reviewed your website, your 37-year history in NYC, and your 450+ 5-star Google reviews. We rebuilt your homepage to make sure customers call you instead of checking your competitors.
+          </p>
+
+          {/* Big Action Buttons */}
+          <div className="mt-8 flex flex-wrap gap-4">
+            <a
+              href="/s/york-electrical"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-md bg-[#533afd] px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#432bd9]"
+            >
+              Open New Homepage Preview <ExternalLink className="h-4 w-4" />
+            </a>
+            <button
+              onClick={() => setShowCheckout(true)}
+              className="inline-flex items-center gap-2 rounded-md bg-[#0b8f5b] px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#09744a]"
+            >
+              Launch Complete Website ($797) <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Simple 3-Step Timeline */}
+          <div className="mt-10 border-t border-[#e5e7f2] pt-6">
+            <div className="grid grid-cols-3 gap-3 text-center text-xs">
+              <div className="rounded-lg bg-[#f0f3ff] p-3">
+                <span className="font-bold text-[#533afd]">Step 1: Done ✓</span>
+                <p className="mt-1 text-[#0d1738] font-semibold">Free Redesign Built</p>
+              </div>
+              <div className="rounded-lg border-2 border-[#533afd] bg-white p-3 shadow-sm">
+                <span className="font-bold text-[#533afd]">Step 2: Current</span>
+                <p className="mt-1 text-[#0d1738] font-semibold">You Review the Work</p>
+              </div>
+              <div className="rounded-lg bg-[#f9f9ff] p-3 text-[#777588]">
+                <span className="font-bold">Step 3: Next</span>
+                <p className="mt-1 font-semibold">Launch & Get More Calls</p>
+              </div>
             </div>
-          </>
+          </div>
+        </section>
+
+        {/* 3. THE 3 BIG PROBLEMS WE FIXED */}
+        <section className="space-y-6">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
+              The 3 Big Changes
+            </span>
+            <h2 className="mt-1 text-2xl font-bold text-[#0d1738] sm:text-3xl">
+              Why Your Old Site Was Losing Calls & How We Fixed It
+            </h2>
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-3">
+            {/* Fix 1 */}
+            <div className="flex flex-col justify-between rounded-xl border border-[#e5e7f2] bg-white p-6 shadow-sm">
+              <div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#f0f3ff] text-[#533afd]">
+                  <PhoneCall className="h-5 w-5" />
+                </div>
+                <h3 className="mt-4 text-base font-bold text-[#0d1738]">
+                  1. Phone Number Was Hard to Find on Mobile
+                </h3>
+                <div className="mt-4 space-y-2 text-xs">
+                  <p className="rounded bg-[#fff8f8] border border-[#ffdad6] p-2.5 text-[#ba1a1a]">
+                    <strong>Old Site:</strong> Users had to zoom in and hunt through menus to find your phone number.
+                  </p>
+                  <p className="rounded bg-[#f0fcf4] border border-[#c8ead8] p-2.5 text-[#0b8f5b]">
+                    <strong>New Site:</strong> Big, sticky "Call (718) 353-7227" button right at the top of every mobile screen.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Fix 2 */}
+            <div className="flex flex-col justify-between rounded-xl border border-[#e5e7f2] bg-white p-6 shadow-sm">
+              <div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#f0f3ff] text-[#533afd]">
+                  <Star className="h-5 w-5 fill-[#ffd12d] text-[#ffd12d]" />
+                </div>
+                <h3 className="mt-4 text-base font-bold text-[#0d1738]">
+                  2. 450+ Reviews & NYC License Were Buried
+                </h3>
+                <div className="mt-4 space-y-2 text-xs">
+                  <p className="rounded bg-[#fff8f8] border border-[#ffdad6] p-2.5 text-[#ba1a1a]">
+                    <strong>Old Site:</strong> Your 37 years of experience and 5-star rating were hidden at the bottom.
+                  </p>
+                  <p className="rounded bg-[#f0fcf4] border border-[#c8ead8] p-2.5 text-[#0b8f5b]">
+                    <strong>New Site:</strong> Verified 5.0 Google badge & Master Lic. #11288 front-and-center.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Fix 3 */}
+            <div className="flex flex-col justify-between rounded-xl border border-[#e5e7f2] bg-white p-6 shadow-sm">
+              <div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#f0f3ff] text-[#533afd]">
+                  <Zap className="h-5 w-5" />
+                </div>
+                <h3 className="mt-4 text-base font-bold text-[#0d1738]">
+                  3. Big Jobs Were Lumped into 1 Generic List
+                </h3>
+                <div className="mt-4 space-y-2 text-xs">
+                  <p className="rounded bg-[#fff8f8] border border-[#ffdad6] p-2.5 text-[#ba1a1a]">
+                    <strong>Old Site:</strong> EV Chargers, Panel Upgrades, and DOB Violations were in one paragraph.
+                  </p>
+                  <p className="rounded bg-[#f0fcf4] border border-[#c8ead8] p-2.5 text-[#0b8f5b]">
+                    <strong>New Site:</strong> Dedicated pages for every service so customers find you on Google.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 4. WHERE YOU RANK ON GOOGLE (QUEENS MAP) */}
+        <section className="rounded-2xl border border-[#e5e7f2] bg-white p-8 shadow-sm">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
+                Where You Rank on Google
+              </span>
+              <h2 className="mt-1 text-2xl font-bold text-[#0d1738]">
+                Queens Local Search Visibility
+              </h2>
+              <p className="mt-1 text-sm text-[#42506a]">
+                We checked 49 neighborhoods across Queens for "licensed electrician near me".
+              </p>
+            </div>
+            <div className="flex items-center gap-3 text-xs font-bold">
+              <span className="flex items-center gap-1.5 text-[#533afd]">
+                <span className="h-3 w-3 rounded-full bg-[#533afd]" /> You Rank #1–3 (Flushing/Bayside)
+              </span>
+              <span className="flex items-center gap-1.5 text-[#ba1a1a]">
+                <span className="h-3 w-3 rounded-full bg-[#ffdad6]" /> Missing (39 Areas)
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_1fr] lg:items-center">
+            {/* Visual Grid */}
+            <div className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5">
+              <div className="grid grid-cols-7 gap-2">
+                {MAP_POINTS.map((pt) => (
+                  <div
+                    key={pt.id}
+                    className={`aspect-square rounded-md flex items-center justify-center text-[10px] font-bold ${
+                      pt.visible
+                        ? "bg-[#533afd] text-white"
+                        : pt.outside
+                        ? "bg-[#ffe086] text-[#231b00]"
+                        : "bg-[#ffdad6] text-[#ba1a1a]"
+                    }`}
+                  >
+                    {pt.visible ? "✓" : pt.id}
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-center text-xs text-[#777588]">
+                Each box is a Queens neighborhood (Astoria, Long Island City, Forest Hills, Jamaica, etc.)
+              </p>
+            </div>
+
+            {/* Plain English Explanation */}
+            <div className="space-y-4 rounded-xl bg-[#f0f3ff] p-6 text-xs sm:text-sm">
+              <p className="font-bold text-[#0d1738]">What this means for your business:</p>
+              <p className="text-[#42506a] leading-relaxed">
+                When homeowners in <strong>Flushing and Bayside</strong> search for an electrician, you show up at the top. But in <strong>Astoria, Long Island City, and Forest Hills</strong>, competitors are taking those calls because your old site didn't mention those areas.
+              </p>
+              <p className="text-[#0b8f5b] font-bold">
+                ✓ The new website adds dedicated pages for all your services across Queens to capture those calls.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* 5. WHAT'S INCLUDED IN THE $797 PACKAGE */}
+        <section className="rounded-2xl border border-[#e5e7f2] bg-white p-8 shadow-sm">
+          <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end border-b border-[#e5e7f2] pb-5">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
+                Complete Package
+              </span>
+              <h2 className="mt-1 text-2xl font-bold text-[#0d1738]">
+                Everything Included in Your New Website
+              </h2>
+            </div>
+            <div className="text-left sm:text-right">
+              <span className="text-3xl font-bold text-[#0d1738]">$797</span>
+              <span className="text-xs text-[#777588] block">Flat one-time price · You own everything</span>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 text-sm">
+            {[
+              "Custom Modern Homepage built with your real logo, photos, and colors",
+              "28 Dedicated Pages for all your real services (Panel Upgrades, EV Chargers, etc.)",
+              "8 Helpful Articles written for Queens homeowners so your site is never blank",
+              "Opens in 0.12s on any phone with 1-tap call & estimate buttons",
+              "Connected to your domain (yorkelectrical.com) with SSL security",
+              "You own 100% of the website files (zero monthly hostage fees)",
+            ].map((item) => (
+              <div key={item} className="flex items-start gap-3 rounded-lg border border-[#e5e7f2] p-4 bg-[#f9f9ff]">
+                <CheckCircle2 className="h-5 w-5 shrink-0 text-[#0b8f5b] mt-0.5" />
+                <span className="font-semibold text-[#0d1738]">{item}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 6. BIG CLEAR DECISION BOX */}
+        <section className="rounded-2xl bg-[#0d1738] p-8 sm:p-10 text-white shadow-lg text-center space-y-6">
+          <span className="rounded-full bg-[#533afd] px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-white">
+            Ready to Launch?
+          </span>
+          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            Launch Your New Website in 48 Hours
+          </h2>
+          <p className="mx-auto max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
+            No long contracts, no monthly hostage fees. We connect your domain, set up the full 28 pages, and make sure your phone starts ringing.
+          </p>
+
+          <div className="pt-2 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <button
+              onClick={() => setShowCheckout(true)}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md bg-[#533afd] px-8 py-4 text-base font-bold text-white shadow-md transition hover:bg-[#432bd9]"
+            >
+              Approve & Launch My Website ($797) <ArrowRight className="h-5 w-5" />
+            </button>
+            <a
+              href="tel:+13075336678"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md border border-white/25 px-6 py-4 text-sm font-bold text-white transition hover:bg-white/10"
+            >
+              <PhoneCall className="h-4 w-4" /> Call Us with Questions
+            </a>
+          </div>
+
+          <p className="text-xs text-white/50">
+            Backed by our satisfaction review. You only launch if you love the build.
+          </p>
+        </section>
+
+        {/* Checkout Modal Simulation */}
+        {showCheckout && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 sm:p-8 shadow-2xl space-y-5 text-[#0d1738]">
+              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-[#0d1738]">Launch York Electrical Website</h3>
+                  <p className="text-xs text-[#777588]">One-time flat build payment</p>
+                </div>
+                <button
+                  onClick={() => setShowCheckout(false)}
+                  className="text-sm font-bold text-[#777588] hover:text-[#0d1738]"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="rounded-lg bg-[#f0f3ff] p-4 text-xs space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-[#777588]">Package</span>
+                  <span className="font-bold text-[#0d1738]">Complete Website (28 Pages + 8 Posts)</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#777588]">Delivery Time</span>
+                  <span className="font-bold text-[#0b8f5b]">48 Hours to Go-Live</span>
+                </div>
+                <div className="flex justify-between border-t border-[#c7d0fb] pt-2 text-sm">
+                  <span className="font-bold text-[#0d1738]">Total Due</span>
+                  <span className="font-bold text-[#533afd]">$797.00 USD</span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  onClick={() => alert("Stripe checkout initialized! We'll start connecting your domain.")}
+                  className="w-full rounded-md bg-[#533afd] py-3.5 text-sm font-bold text-white shadow-sm hover:bg-[#432bd9]"
+                >
+                  Pay $797 via Card / Apple Pay
+                </button>
+                <button
+                  onClick={() => setShowCheckout(false)}
+                  className="w-full text-center text-xs font-semibold text-[#777588] hover:text-[#0d1738]"
+                >
+                  Cancel and go back
+                </button>
+              </div>
+            </div>
+          </div>
         )}
-        {tab === "Conversation" && <Conversation />}
-        {tab === "Handoff" && <Handoff />}
-        <p className="mt-10 text-center text-xs text-[#777588]">
-          Dummy client portal · secure link experience; no password required.
-        </p>
-      </div>
-    </main>
+      </main>
+
+      {/* FOOTER */}
+      <footer className="border-t border-[#e5e7f2] bg-white py-8 text-center text-xs text-[#777588]">
+        <p>© 2026 BarakahSoft LLC · Direct line: +1 (307) 533-6678 · hello@barakahsoft.com</p>
+      </footer>
+    </div>
   );
 }
