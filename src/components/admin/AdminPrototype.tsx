@@ -170,8 +170,8 @@ export function AdminPrototype() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <div className="flex items-center gap-4">
             <img src={LOGO_URL} alt="BarakahSoft" className="h-7 w-auto" />
-            <span className="rounded-full bg-[#f0f3ff] px-3 py-0.5 text-xs font-semibold text-[#533afd]">
-              Lead Fulfillment Command Center
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#f0f3ff] px-3 py-1 text-xs font-bold text-[#533afd] shrink-0">
+              <Zap className="h-3 w-3" /> Lead Fulfillment Engine
             </span>
           </div>
 
@@ -301,8 +301,8 @@ export function AdminPrototype() {
                   </span>
                   <h3 className="font-bold text-base text-[#0d1738]">Inbound Lead & Verified Facts</h3>
                 </div>
-                <span className="rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b]">
-                  Verified via Firecrawl
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b] shrink-0">
+                  <ShieldCheck className="h-3 w-3" /> Verified via Firecrawl
                 </span>
               </div>
 
@@ -408,8 +408,8 @@ export function AdminPrototype() {
                   </span>
                   <h3 className="font-bold text-base text-[#0d1738]">Competitor Radar & Google AI Search Q&A Intel</h3>
                 </div>
-                <span className="rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b]">
-                  4 Competitors Benchmarked
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b] shrink-0">
+                  <BarChart3 className="h-3 w-3" /> 4 Competitors Benchmarked
                 </span>
               </div>
 

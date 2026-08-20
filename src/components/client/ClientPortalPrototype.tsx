@@ -235,14 +235,14 @@ export function ClientPortalPrototype() {
           <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
-                Website Diagnostic X-Ray
+                Complete Architectural Audit
               </span>
               <h2 className="mt-1 text-2xl font-bold tracking-tight text-[#0d1738] sm:text-3xl">
                 6 Critical Friction Points Found on Your Old Site & How We Solved Them
               </h2>
             </div>
-            <span className="rounded-full bg-[#f0f3ff] px-3 py-1 text-xs font-semibold text-[#533afd]">
-              Direct Problem-to-Solution Mapping
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#f0f3ff] px-3 py-1 text-xs font-bold text-[#533afd] shrink-0">
+              <Zap className="h-3.5 w-3.5" /> Direct Solution Mapping
             </span>
           </div>
 
@@ -401,8 +401,8 @@ export function ClientPortalPrototype() {
                 How Your 8 Launch Articles Answer What Queens Customers Ask Google & ChatGPT
               </h2>
             </div>
-            <span className="rounded-full bg-[#eaf8f0] px-3 py-1 text-xs font-bold text-[#0b8f5b]">
-              FAQ Schema Fortified
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-3 py-1 text-xs font-bold text-[#0b8f5b] shrink-0">
+              <ShieldCheck className="h-3.5 w-3.5" /> FAQ Schema Fortified
             </span>
           </div>
 
@@ -578,12 +578,12 @@ export function ClientPortalPrototype() {
         <section className="rounded-2xl border-2 border-[#533afd] bg-white p-8 sm:p-10 shadow-sm space-y-8">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start border-b border-[#e5e7f2] pb-6">
             <div>
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-[#f0f3ff] px-3 py-0.5 text-xs font-bold text-[#533afd]">
-                  Transparent Proposal & Launch Pricing
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#f0f3ff] px-3 py-1 text-xs font-bold text-[#533afd] shrink-0">
+                  <Tag className="h-3 w-3" /> Proposal & Launch Pricing
                 </span>
-                <span className="rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b]">
-                  Save $800 Today
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-3 py-1 text-xs font-bold text-[#0b8f5b] shrink-0">
+                  <Sparkles className="h-3 w-3" /> Save $800 Today
                 </span>
               </div>
               <h2 className="mt-2 text-3xl font-bold text-[#0d1738]">
