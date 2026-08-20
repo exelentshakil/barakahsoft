@@ -315,47 +315,58 @@ export function ClientPortalPrototype() {
         {/* Checkout Modal Simulation */}
         {showCheckout && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-2xl bg-white p-6 sm:p-8 shadow-2xl space-y-5 text-[#0d1738]">
+            <div className="w-full max-w-lg rounded-2xl bg-white p-6 sm:p-8 shadow-2xl space-y-6 text-[#0d1738] border border-[#e5e7f2]">
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
                 <div>
-                  <h3 className="text-lg font-bold text-[#0d1738]">Launch York Electrical Website</h3>
-                  <p className="text-xs text-[#777588]">One-time flat build payment</p>
+                  <h3 className="text-xl font-bold text-[#0d1738]">Launch York Electrical Website</h3>
+                  <p className="text-xs text-[#777588]">One-time flat build payment · Zero recurring lock-in</p>
                 </div>
                 <button
                   onClick={() => setShowCheckout(false)}
-                  className="text-sm font-bold text-[#777588] hover:text-[#0d1738]"
+                  className="rounded-md p-1.5 text-sm font-bold text-[#777588] hover:bg-[#f0f3ff] hover:text-[#0d1738]"
                 >
                   ✕
                 </button>
               </div>
 
-              <div className="rounded-lg bg-[#f0f3ff] p-4 text-xs space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-[#777588]">Package</span>
-                  <span className="font-bold text-[#0d1738]">Complete Website (28 Pages + 8 Posts)</span>
+              <div className="rounded-xl bg-[#f0f3ff] p-5 text-xs space-y-3 border border-[#c7d0fb]">
+                <div className="flex justify-between items-center">
+                  <span className="text-[#777588] font-semibold">Scope of Work</span>
+                  <span className="font-bold text-[#0d1738]">28 Service Pages + 8 Launch Articles</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-[#777588]">Delivery Time</span>
-                  <span className="font-bold text-[#0b8f5b]">48 Hours to Go-Live</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#777588] font-semibold">Domain Setup</span>
+                  <span className="font-bold text-[#0d1738]">yorkelectrical.com (SSL & DNS Included)</span>
                 </div>
-                <div className="flex justify-between border-t border-[#c7d0fb] pt-2 text-sm">
-                  <span className="font-bold text-[#0d1738]">Total Due</span>
-                  <span className="font-bold text-[#533afd]">$797.00 USD</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#777588] font-semibold">Delivery Time</span>
+                  <span className="font-bold text-[#0b8f5b]">48 Hours to Official Go-Live</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#777588] font-semibold">Ownership</span>
+                  <span className="font-bold text-[#0d1738]">100% You Own All Files</span>
+                </div>
+                <div className="flex justify-between items-center border-t border-[#c7d0fb] pt-3 text-sm">
+                  <span className="font-bold text-[#0d1738]">Total Due Today</span>
+                  <span className="text-xl font-bold text-[#533afd]">$797.00 USD</span>
                 </div>
               </div>
 
               <div className="space-y-3">
                 <button
-                  onClick={() => alert("Stripe checkout initialized! We'll start connecting your domain.")}
-                  className="w-full rounded-md bg-[#533afd] py-3.5 text-sm font-bold text-white shadow-sm hover:bg-[#432bd9]"
+                  onClick={() => alert("Directing to secure Stripe Checkout for York Electrical ($797.00 USD)...")}
+                  className="w-full rounded-md bg-[#533afd] py-4 text-sm font-bold text-white shadow-md transition hover:bg-[#432bd9]"
                 >
                   Pay $797 via Card / Apple Pay
                 </button>
+                <p className="text-center text-[11px] text-[#777588]">
+                  🔒 256-bit encrypted checkout via Stripe · Verified BarakahSoft LLC
+                </p>
                 <button
                   onClick={() => setShowCheckout(false)}
-                  className="w-full text-center text-xs font-semibold text-[#777588] hover:text-[#0d1738]"
+                  className="w-full text-center text-xs font-semibold text-[#777588] hover:text-[#0d1738] pt-1"
                 >
-                  Cancel and go back
+                  Cancel and review website preview
                 </button>
               </div>
             </div>
