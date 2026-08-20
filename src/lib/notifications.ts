@@ -51,6 +51,57 @@ export async function sendInstantLeadAlert(lead: Lead) {
   }
 }
 
+export async function sendInstantLeadConfirmationEmail(lead: Lead) {
+  const resend = getResend();
+  if (!lead.email) return;
+  const portalSubdomain = process.env.NEXT_PUBLIC_PORTAL_URL || "https://portal.barakahsoft.com";
+  const trackingUrl = `${portalSubdomain}/s/${lead.slug}?auth=magic_${lead.id.slice(0, 8)}`;
+  const businessName = lead.business_name || lead.source_url;
+
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #0d1738; background-color: #ffffff; border: 1px solid #e5e7f2; border-radius: 12px;">
+      <div style="margin-bottom: 24px; border-bottom: 1px solid #e5e7f2; padding-bottom: 16px;">
+        <span style="font-size: 18px; font-weight: bold; color: #533afd;">BarakahSoft</span>
+        <span style="font-size: 12px; color: #777588; margin-left: 8px;">· Live Redesign Portal</span>
+      </div>
+      <h2 style="font-size: 22px; font-weight: 700; color: #0d1738; margin-top: 0;">We received your website request</h2>
+      <p style="font-size: 14px; line-height: 24px; color: #42506a;">
+        Hi ${lead.contact_name || "there"}, our team received your submission for <strong>${businessName}</strong>.
+      </p>
+      <p style="font-size: 14px; line-height: 24px; color: #42506a;">
+        We are currently auditing your website, running your local search grid, and rebuilding your mobile homepage concept. You can track our progress in real-time on your private portal below:
+      </p>
+      <div style="margin: 28px 0;">
+        <a href="${trackingUrl}" style="background-color: #533afd; color: #ffffff; font-size: 14px; font-weight: 700; text-decoration: none; padding: 14px 28px; border-radius: 6px; display: inline-block;">
+          Track Your Live Redesign & Audit →
+        </a>
+      </div>
+      <div style="background-color: #f9f9ff; border: 1px solid #e5e7f2; border-radius: 8px; padding: 16px; font-size: 12px; color: #42506a; margin-top: 24px;">
+        <p style="margin: 0 0 6px 0; font-weight: 600; color: #0d1738;">What happens next:</p>
+        <p style="margin: 0;">1. We audit mobile speed & local search visibility</p>
+        <p style="margin: 4px 0 0 0;">2. We build your new high-converting homepage</p>
+        <p style="margin: 4px 0 0 0;">3. You review the concept in 48 hours with zero obligation</p>
+      </div>
+      <p style="font-size: 12px; color: #777588; margin-top: 28px; border-top: 1px solid #e5e7f2; padding-top: 16px;">
+        BarakahSoft LLC · Direct Line: +1 (307) 533-6678 · hello@barakahsoft.com
+      </p>
+    </div>
+  `;
+
+  if (resend) {
+    await resend.emails
+      .send({
+        from: fromEmail(),
+        to: lead.email,
+        subject: `We received your website — follow your redesign live (${businessName})`,
+        html,
+      })
+      .catch((err) => console.error("[notifications] confirmation email failed", err));
+  } else {
+    console.log("[notifications] (stub) would send confirmation email to", lead.email, trackingUrl);
+  }
+}
+
 export async function sendPreviewReadyEmail(lead: Lead, magicLink: string) {
   const resend = getResend();
   if (!resend || !lead.email) {

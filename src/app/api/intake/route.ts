@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendInstantLeadAlert } from "@/lib/notifications";
+import { sendInstantLeadAlert, sendInstantLeadConfirmationEmail } from "@/lib/notifications";
 import { fireMetaCapiEvent } from "@/lib/meta-pixel-server";
 import { isPersonaSlug } from "@/lib/personas";
 import { isLeadProblem } from "@/lib/lead-problems";
@@ -59,6 +59,7 @@ export async function POST(req: Request) {
     // should never mask that the lead itself was saved successfully.
     const results = await Promise.allSettled([
       sendInstantLeadAlert(lead),
+      sendInstantLeadConfirmationEmail(lead),
       fireMetaCapiEvent({
         eventName: "Lead",
         eventId: body.event_id ?? crypto.randomUUID(),
