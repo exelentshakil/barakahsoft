@@ -1,18 +1,154 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, FileCheck2, Globe2, Mail, PackageCheck, Settings2, Upload } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  BarChart3,
+  CheckCircle2,
+  FileCheck2,
+  FileText,
+  Globe2,
+  Mail,
+  MessageCircle,
+  PackageCheck,
+  Plus,
+  Settings2,
+  Upload,
+} from "lucide-react";
 import { AdminPrototypeChrome } from "@/components/admin/AdminPrototypeChrome";
 
-const DATA = {
-  leads: { title: "Lead inbox", eyebrow: "Lead intake", intro: "Every Facebook lead, source file, contact, and next action.", rows: [["York Electrical", "Facebook ad", "Accepted · brief ready"], ["John Roofing", "Facebook ad", "Preview delivered"], ["Summit HVAC", "Referral", "Client replied"], ["Brightline Plumbing", "Website", "Needs qualification"]] },
-  reports: { title: "Reports and issue fixes", eyebrow: "Evidence", intro: "Build the report that turns a free concept into a clear business conversation.", rows: [["York Electrical", "4 current issues", "4 fixes mapped"], ["Source evidence", "Firecrawl + screenshots", "Verified"], ["Client report", "Homepage + audit", "Ready to send"], ["Rankings", "No guarantees", "Policy-safe"]] },
-  communications: { title: "Communication center", eyebrow: "Conversation", intro: "Email the preview, track follow-ups, and keep human decisions visible.", rows: [["Preview email", "York Electrical", "Draft ready"], ["Delivery email", "York Electrical", "Not sent"], ["Day 1 follow-up", "York Electrical", "Scheduled"], ["Client reply", "John Roofing", "Needs response"]] },
-  domains: { title: "Delivery and handoff", eyebrow: "Handoff", intro: "Move an approved version from preview to website files, domain, and launch.", rows: [["Sitemap parity", "York Electrical", "2 routes need review"], ["Website files", "York-Electrical-v1", "Prepared"], ["Domain", "yorkelectrical.com", "Not connected"], ["Release gate", "Human approval", "Waiting"]] },
-  settings: { title: "Workspace settings", eyebrow: "Controls", intro: "Configure providers, defaults, permissions, and safety rules.", rows: [["Firecrawl", "Branding + Markdown + sitemap", "Connected"], ["Model providers", "GPT + Gemini fallback", "Configured"], ["Human QA", "Required before delivery", "Enabled"], ["Project isolation", "Separate website files", "Enabled"]] },
+const SECTION_CONTENT = {
+  leads: {
+    title: "Leads CRM",
+    eyebrow: "Pipeline",
+    intro: "Prioritized inbound leads from Facebook Ads and website forms.",
+    items: [
+      { name: "York Electrical", location: "Queens, NY", trade: "Electricians", status: "Report Ready", est: "$797" },
+      { name: "Summit HVAC & Heat Pumps", location: "Nassau County, NY", trade: "HVAC", status: "Conversation", est: "$797 + $497/mo" },
+      { name: "Brightline 24/7 Plumbing", location: "Brooklyn, NY", trade: "Plumbing", status: "Closing", est: "$797" },
+      { name: "John Roofing & Siding", location: "Suffolk County, NY", trade: "Roofing", status: "Researching", est: "$797" },
+      { name: "Evergreen Water Restoration", location: "Staten Island, NY", trade: "Restoration", status: "New", est: "$797" },
+    ],
+  },
+  reports: {
+    title: "Reports & Audit Engine",
+    eyebrow: "Evidence Engine",
+    intro: "Automated 7×7 search grids, PageSpeed performance, and competitor radar audits.",
+    items: [
+      { name: "York Electrical Master Audit", location: "Queens Grid 10/49", trade: "Generated Aug 19", status: "Ready to Send", est: "Score 95/100" },
+      { name: "Summit HVAC Benchmark", location: "Long Island Grid 14/49", trade: "Generated Aug 18", status: "Sent", est: "Score 88/100" },
+      { name: "Brightline Plumbing Scan", location: "Brooklyn Grid 8/49", trade: "Generated Aug 17", status: "Delivered", est: "Score 92/100" },
+    ],
+  },
+  communications: {
+    title: "Communications Hub",
+    eyebrow: "Client Engagement",
+    intro: "Track private magic-link opens, email sequences, and Crisp chat threads.",
+    items: [
+      { name: "York Electrical Delivery Email", location: "Draft ready with magic link", trade: "Resend", status: "Ready", est: "Email #1" },
+      { name: "Summit HVAC Proposal Thread", location: "Customer replied on Crisp", trade: "Chat", status: "Needs Reply", est: "Active" },
+      { name: "Brightline Follow-up Sequence", location: "Day-2 reminder scheduled", trade: "Automated", status: "Scheduled", est: "Email #2" },
+    ],
+  },
+  domains: {
+    title: "Domains & Build Exports",
+    eyebrow: "Handoff",
+    intro: "Connect customer-owned domains and download isolated Next.js project zips.",
+    items: [
+      { name: "yorkelectrical.com", location: "DNS CNAME verification", trade: "Production", status: "Pending DNS", est: "Vercel / AWS" },
+      { name: "summit-hvac-v1.zip", location: "Clean standalone source", trade: "Export", status: "Built", est: "Next.js 15" },
+      { name: "brightlineplumbing.com", location: "SSL & DNS active", trade: "Live", status: "Active", est: "Connected" },
+    ],
+  },
+  settings: {
+    title: "Platform Integrations & Config",
+    eyebrow: "Infrastructure",
+    intro: "Manage Firecrawl scrapers, Stripe payment keys, Resend domains, and Supabase auth.",
+    items: [
+      { name: "Firecrawl Web Extraction", location: "Branding + Markdown + Sitemap", trade: "API", status: "Connected", est: "Healthy" },
+      { name: "Stripe Billing & Subscriptions", location: "$797 Website + $497/mo Retainers", trade: "Webhooks", status: "Live", est: "Connected" },
+      { name: "Resend Transactional Mailer", location: "noreply@barakahsoft.com", trade: "Email", status: "Verified", est: "Healthy" },
+      { name: "Crisp Real-time Chat", location: "Widget ID: 28d857ed", trade: "Support", status: "Active", est: "Connected" },
+    ],
+  },
 } as const;
 
-export function AdminPrototypeSection({ section }: { section: keyof typeof DATA }) {
-  const data = DATA[section];
-  return <AdminPrototypeChrome><main className="px-5 py-8 text-[#1e212b] lg:px-10"><div className="mx-auto max-w-6xl"><Link href="/admin-prototype" className="inline-flex items-center gap-2 text-sm font-semibold text-[#60778d]"><ArrowLeft className="h-4 w-4" /> Back to command center</Link><div className="mt-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">{data.eyebrow}</p><h1 className="mt-2 font-sans text-4xl font-semibold tracking-[-0.04em] text-[#07284d]">{data.title}</h1><p className="mt-2 text-sm text-[#60778d]">{data.intro}</p></div><span className="inline-flex items-center gap-2 rounded-full bg-[#fff8d9] px-3 py-1.5 text-xs font-bold text-[#8c6800]"><CheckCircle2 className="h-3.5 w-3.5" /> Dummy workflow</span></div><div className="mt-8 grid gap-4 sm:grid-cols-3">{[[FileCheck2, "Grounded", "Source facts remain attached"], [Settings2, "Human controlled", "Approval gates stay visible"], [PackageCheck, "Versioned", "Previous work is recoverable"]].map(([Icon, title, body]) => <div key={title as string} className="rounded-2xl border border-[#d9e8f4] bg-white p-5 shadow-[0_8px_24px_rgba(7,40,77,0.04)]"><Icon className="h-5 w-5 text-[#0c68c8]" /><p className="mt-5 text-sm font-bold text-[#07284d]">{title as string}</p><p className="mt-1 text-xs leading-5 text-[#7890a5]">{body as string}</p></div>)}</div><section className="mt-8 overflow-hidden rounded-2xl border border-[#d9e8f4] bg-white shadow-[0_8px_24px_rgba(7,40,77,0.04)]"><div className="border-b border-[#d9e8f4] p-5"><p className="text-lg font-bold text-[#07284d]">{data.title}</p><p className="mt-1 text-xs text-[#7890a5]">Dummy data only · actions represent planned production behavior.</p></div><div className="divide-y divide-[#e8f0f6]">{data.rows.map(([name, detail, status]) => <div key={name} className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-3"><div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#eef7ff] text-[#0c68c8]">{section === "communications" ? <Mail className="h-4 w-4" /> : section === "domains" ? <Globe2 className="h-4 w-4" /> : section === "settings" ? <Settings2 className="h-4 w-4" /> : <FileCheck2 className="h-4 w-4" />}</div><div><p className="text-sm font-semibold text-[#07284d]">{name}</p><p className="mt-1 text-xs text-[#7890a5]">{detail}</p></div></div><div className="flex items-center gap-3"><span className="rounded-full bg-[#eaf5ff] px-2.5 py-1 text-xs font-bold text-[#075da8]">{status}</span><button className="inline-flex items-center gap-1 text-xs font-bold text-[#0c68c8]">Open <Upload className="h-3 w-3" /></button></div></div>)}</div></section><div className="mt-8 rounded-2xl bg-[#07284d] p-6 text-white"><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#ffd12d]">Prototype boundary</p><p className="mt-3 max-w-2xl text-sm leading-6 text-white/70">This route demonstrates the screen and state needed in the product. It does not send email, call Firecrawl, charge a card, or publish a domain.</p></div></div></main></AdminPrototypeChrome>;
+export function AdminPrototypeSection({ section }: { section: keyof typeof SECTION_CONTENT }) {
+  const data = SECTION_CONTENT[section];
+
+  return (
+    <AdminPrototypeChrome>
+      <main className="px-6 py-10 text-[#0d1738] lg:px-12">
+        <div className="mx-auto max-w-5xl space-y-8">
+          <Link
+            href="/admin-prototype"
+            className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#533afd] hover:underline"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to Command Center
+          </Link>
+
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
+                {data.eyebrow}
+              </span>
+              <h1 className="mt-1 text-3xl font-bold tracking-tight text-[#0d1738]">
+                {data.title}
+              </h1>
+              <p className="mt-1 text-sm text-[#777588]">{data.intro}</p>
+            </div>
+            <Link
+              href="/admin-prototype"
+              className="inline-flex items-center gap-2 rounded-md bg-[#533afd] px-4 py-2 text-xs font-semibold text-white hover:bg-[#432bd9]"
+            >
+              <Plus className="h-3.5 w-3.5" /> New Item
+            </Link>
+          </div>
+
+          {/* List Matrix */}
+          <div className="overflow-hidden rounded-2xl border border-[#e5e7f2] bg-white shadow-sm">
+            <div className="border-b border-[#e5e7f2] p-5">
+              <h3 className="font-bold text-[#0d1738]">{data.title} Records</h3>
+              <p className="text-xs text-[#777588]">Enterprise precision live state.</p>
+            </div>
+
+            <div className="divide-y divide-[#e5e7f2]">
+              {data.items.map((item) => (
+                <div
+                  key={item.name}
+                  className="flex flex-col justify-between gap-4 p-5 transition hover:bg-[#f9f9ff] sm:flex-row sm:items-center"
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-[#0d1738]">{item.name}</p>
+                      <span className="rounded-full bg-[#f0f3ff] px-2 py-0.5 text-[10px] font-bold text-[#533afd]">
+                        {item.trade}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-xs text-[#777588]">{item.location}</p>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className="text-left sm:text-right">
+                      <span className="rounded bg-[#f9f9ff] border border-[#e5e7f2] px-2 py-0.5 text-[10px] font-bold text-[#0d1738]">
+                        {item.status}
+                      </span>
+                      <p className="mt-1 text-xs font-semibold text-[#533afd]">{item.est}</p>
+                    </div>
+                    <Link
+                      href="/admin-prototype"
+                      className="rounded-md border border-[#e5e7f2] px-3 py-1.5 text-xs font-semibold text-[#0d1738] hover:bg-[#f0f3ff]"
+                    >
+                      Inspect
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </main>
+    </AdminPrototypeChrome>
+  );
 }

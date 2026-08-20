@@ -73,7 +73,7 @@ export function ClientPortalPrototype() {
       <Header tab={tab} setTab={setTab} />
       <div className="mx-auto max-w-6xl px-6 py-10">
         {tab === "Overview" && <MinimalClientOverview setTab={setTab} />}
-        {tab === "Report" && <MinimalClientReport setTab={setTab} />}
+        {tab === "Report" && <PremiumClientReport setTab={setTab} />}
         {tab === "Website" && (
           <>
             <BuildStatus />

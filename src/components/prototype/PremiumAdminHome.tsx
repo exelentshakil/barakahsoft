@@ -1,14 +1,317 @@
 "use client";
 
-import { ArrowRight, Check, CircleDollarSign, Clock3, Mail, MessageCircle, Sparkles, Target } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  BarChart3,
+  CheckCircle2,
+  ChevronRight,
+  CircleDollarSign,
+  Clock3,
+  FileCheck2,
+  Globe2,
+  Mail,
+  MessageCircle,
+  PhoneCall,
+  Plus,
+  Send,
+  Sparkles,
+  Target,
+  Users,
+  Zap,
+} from "lucide-react";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
-const STAGES = [["New", 12, "#e8e4ff"], ["Research", 4, "#d9e9ff"], ["Report ready", 3, "#fff0c7"], ["Conversation", 4, "#ffe0ef"], ["Paid", 4, "#d9f5e8"]];
+const PIPELINE_DATA = [
+  { stage: "New Leads", count: 12, value: "$9,564" },
+  { stage: "Research / Brief", count: 4, value: "$3,188" },
+  { stage: "Report Ready", count: 3, value: "$2,391", active: true },
+  { stage: "Conversation", count: 4, value: "$3,188" },
+  { stage: "Paid / Production", count: 4, value: "$3,188" },
+];
 
-export function PremiumAdminHome({ setView }: { setView: (view: "Overview" | "Lead workspace" | "Reports" | "Communications" | "Delivery") => void }) {
-  return <div className="space-y-8">
-    <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8c6800]">Owner workspace</p><h1 className="mt-2 text-4xl font-semibold tracking-[-0.05em] text-[#07284d]">Today.</h1><p className="mt-2 text-sm text-[#7890a5]">The next action that moves a lead closer to money.</p></div><button onClick={() => setView("Lead workspace")} className="inline-flex items-center gap-2 rounded-md bg-[#ffd12d] px-4 py-2.5 text-sm font-bold text-[#111]"><Target className="h-4 w-4" />Open active lead</button></div>
-    <section className="grid gap-5 lg:grid-cols-[1.35fr_0.65fr]"><div className="rounded-2xl bg-[#07284d] p-7 text-white"><div className="flex items-center gap-3"><span className="rounded-full bg-[#ffd12d] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-[#111]">Do this now</span><span className="text-xs text-white/50">York Electrical · Facebook ad</span></div><h2 className="mt-5 text-3xl font-semibold tracking-[-0.04em]">Send the master report.</h2><p className="mt-3 max-w-xl text-sm leading-6 text-white/65">The map grid, SEO audit, competitors, issue fixes, and new homepage are ready. This is the conversation opener.</p><div className="mt-7 flex flex-wrap gap-3"><button onClick={() => setView("Reports")} className="inline-flex items-center gap-2 rounded-md bg-[#ffd12d] px-4 py-2.5 text-sm font-bold text-[#111]"><Mail className="h-4 w-4" />Open report</button><button onClick={() => setView("Communications")} className="inline-flex items-center gap-2 rounded-md border border-white/25 px-4 py-2.5 text-sm font-bold text-white"><MessageCircle className="h-4 w-4" />Open conversation</button></div></div><div className="rounded-2xl border border-[#e5e2ff] bg-white p-6"><CircleDollarSign className="h-6 w-6 text-[#8c6800]" /><p className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-[#7890a5]">Cash position</p><p className="mt-2 text-4xl font-semibold text-[#07284d]">$3,188</p><p className="mt-2 text-sm text-[#7890a5]">4 paid website projects</p><div className="mt-6 h-2 rounded-full bg-[#f1f0f8]"><div className="h-2 w-2/3 rounded-full bg-[#ffd12d]" /></div><p className="mt-3 text-xs text-[#7890a5]">Goal: collect before production begins.</p></div></section>
-    <section className="rounded-2xl border border-[#e5e2ff] bg-white p-6"><div className="flex items-center justify-between"><div><p className="text-lg font-bold text-[#07284d]">Lead journey</p><p className="mt-1 text-xs text-[#7890a5]">Every stage has one job.</p></div><span className="text-xs font-semibold text-[#7890a5]">27 active leads</span></div><div className="mt-7 grid gap-2 md:grid-cols-5">{STAGES.map(([label, value, color], index) => <div key={label as string} className="relative"><div className="flex h-28 flex-col justify-between rounded-lg p-4" style={{ backgroundColor: color as string }}><span className="text-xs font-bold uppercase tracking-wider text-[#42506a]">{label as string}</span><strong className="text-4xl font-semibold text-[#07284d]">{value as number}</strong></div>{index < STAGES.length - 1 && <ArrowRight className="absolute -right-3 top-12 z-10 hidden h-5 w-5 text-[#a7a4b6] md:block" />}</div>)}</div></section>
-    <section className="grid gap-5 lg:grid-cols-[1fr_1fr]"><div className="rounded-2xl border border-[#e5e2ff] bg-white p-6"><div className="flex items-center justify-between"><div><p className="text-lg font-bold text-[#07284d]">Money path</p><p className="mt-1 text-xs text-[#7890a5]">What the business can become.</p></div><Sparkles className="h-5 w-5 text-[#8c6800]" /></div><div className="mt-6 space-y-4">{[["Free report", "Earn trust", "Sent"], ["Website", "$797", "4 ready"], ["Management", "Recurring", "2 interested"], ["Launch", "Client-owned", "Next"]].map(([label, value, state]) => <div key={label} className="flex items-center gap-4"><div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#fff8d9] text-sm font-bold text-[#8c6800]">✓</div><div className="flex-1"><p className="text-sm font-bold text-[#07284d]">{label}</p><p className="text-xs text-[#7890a5]">{state}</p></div><strong className="text-sm text-[#07284d]">{value}</strong></div>)}</div></div><div className="rounded-2xl border border-[#e5e2ff] bg-white p-6"><div className="flex items-center justify-between"><div><p className="text-lg font-bold text-[#07284d]">Next actions</p><p className="mt-1 text-xs text-[#7890a5]">Open one and keep moving.</p></div><Clock3 className="h-5 w-5 text-[#8c6800]" /></div><div className="mt-5 space-y-3">{[["York Electrical", "Send report", "Today"], ["John Roofing", "Reply to question", "Today"], ["Brightline Plumbing", "Confirm payment", "Tomorrow"]].map(([name, action, due]) => <button key={name} onClick={() => setView("Lead workspace")} className="flex w-full items-center justify-between rounded-lg border border-[#eef0f5] p-4 text-left hover:border-[#ffd12d]"><div><p className="text-sm font-bold text-[#07284d]">{name}</p><p className="mt-1 text-xs text-[#7890a5]">{action}</p></div><span className="text-xs font-bold text-[#8c6800]">{due}</span></button>)}</div></div></section>
-  </div>;
+const REVENUE_TREND = [
+  { day: "Aug 14", collected: 797, projected: 1594 },
+  { day: "Aug 15", collected: 1594, projected: 2391 },
+  { day: "Aug 16", collected: 2391, projected: 3188 },
+  { day: "Aug 17", collected: 2391, projected: 3985 },
+  { day: "Aug 18", collected: 3188, projected: 4782 },
+  { day: "Aug 19", collected: 3188, projected: 5579 },
+  { day: "Aug 20", collected: 3985, projected: 6376 },
+];
+
+const PRIORITY_LEADS = [
+  {
+    id: "LD-2024-893",
+    name: "York Electrical",
+    trade: "Licensed Electricians",
+    location: "Queens, NY",
+    status: "Report Ready",
+    temperature: "Warm Lead",
+    estValue: "$797 + $497/mo",
+    nextAction: "Send Master Report & Concept",
+    due: "Immediate",
+    priority: true,
+  },
+  {
+    id: "LD-2024-890",
+    name: "Summit HVAC & Cooling",
+    trade: "HVAC & Heat Pumps",
+    location: "Nassau County, NY",
+    status: "In Conversation",
+    temperature: "Hot Lead",
+    estValue: "$797",
+    nextAction: "Reply to proposal question on Crisp",
+    due: "Today, 2:00 PM",
+  },
+  {
+    id: "LD-2024-887",
+    name: "Brightline Emergency Plumbing",
+    trade: "24/7 Plumbers",
+    location: "Brooklyn, NY",
+    status: "Payment Pending",
+    temperature: "Closing",
+    estValue: "$797 + $497/mo",
+    nextAction: "Verify Stripe checkout completion",
+    due: "Today, 5:00 PM",
+  },
+  {
+    id: "LD-2024-884",
+    name: "John Roofing & Siding",
+    trade: "Roofing Contractors",
+    location: "Suffolk County, NY",
+    status: "Researching",
+    temperature: "New",
+    estValue: "$797",
+    nextAction: "Generate Brief & 7×7 Map Grid",
+    due: "Tomorrow, 10:00 AM",
+  },
+];
+
+export function PremiumAdminHome({
+  setView,
+}: {
+  setView: (view: "Overview" | "Lead workspace" | "Reports" | "Communications" | "Delivery" | "Settings") => void;
+}) {
+  return (
+    <div className="space-y-8">
+      {/* 1. TOP TITLE & FAST ACTION */}
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#533afd]">
+            Executive Command Center
+          </p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-[-0.03em] text-[#0d1738] sm:text-4xl">
+            Today
+          </h1>
+          <p className="mt-1 text-sm text-[#777588]">
+            One prioritized decision pipeline moving inbound leads to collected revenue.
+          </p>
+        </div>
+        <button
+          onClick={() => setView("Lead workspace")}
+          className="inline-flex items-center gap-2 rounded-md bg-[#533afd] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#432bd9]"
+        >
+          <Plus className="h-4 w-4" /> Open York Workspace
+        </button>
+      </div>
+
+      {/* 2. PRIMARY ACTION SPOTLIGHT & REVENUE PULSE */}
+      <section className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
+        {/* Urgent Decision Hero */}
+        <div className="rounded-2xl border border-[#c7d0fb] bg-white p-7 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="flex h-2.5 w-2.5 rounded-full bg-[#533afd] animate-ping" />
+              <span className="rounded-full bg-[#e3dfff] px-3 py-1 text-xs font-bold text-[#533afd]">
+                Priority Action Required
+              </span>
+            </div>
+            <span className="text-xs font-mono text-[#777588]">Lead #LD-2024-893</span>
+          </div>
+
+          <div className="mt-5">
+            <div className="flex items-baseline gap-3">
+              <h2 className="text-2xl font-bold tracking-tight text-[#0d1738]">York Electrical</h2>
+              <span className="text-xs font-medium text-[#777588]">Queens, NY · $797 Value</span>
+            </div>
+            <p className="mt-1 text-base font-semibold text-[#533afd]">
+              Action: Send the Master Report & Live Preview Link
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-[#42506a]">
+              The 7×7 Local Map Grid, SEO Audit (95/100), 28 Service Pages, and 8-article content roadmap have been generated. Delivery email is drafted with the private magic link.
+            </p>
+          </div>
+
+          {/* Stepper Progress Bar */}
+          <div className="mt-6 border-t border-[#e5e7f2] pt-5">
+            <div className="flex items-center justify-between text-xs font-semibold text-[#777588]">
+              <span>New Lead</span>
+              <span>Research</span>
+              <span className="text-[#533afd] font-bold">Report Ready</span>
+              <span>Conversation</span>
+              <span>Paid</span>
+            </div>
+            <div className="mt-2 flex h-2 w-full overflow-hidden rounded-full bg-[#e8eeff]">
+              <div className="w-3/5 rounded-full bg-[#533afd]" />
+            </div>
+          </div>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              onClick={() => setView("Reports")}
+              className="inline-flex items-center gap-2 rounded-md bg-[#533afd] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#432bd9]"
+            >
+              <Mail className="h-4 w-4" /> Open Report & Send Link <ArrowRight className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setView("Communications")}
+              className="inline-flex items-center gap-2 rounded-md border border-[#e5e7f2] bg-white px-4 py-2.5 text-sm font-semibold text-[#0d1738] transition hover:bg-[#f0f3ff]"
+            >
+              <PhoneCall className="h-4 w-4" /> View Call Track Script
+            </button>
+          </div>
+        </div>
+
+        {/* Financial & Pipeline Pulse */}
+        <div className="flex flex-col justify-between rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#777588]">
+                Revenue Pulse
+              </span>
+              <CircleDollarSign className="h-5 w-5 text-[#533afd]" />
+            </div>
+            <p className="mt-4 text-4xl font-bold tracking-tight text-[#0d1738]">$3,985</p>
+            <p className="mt-1 text-xs text-[#0b8f5b] font-semibold">
+              + $797 pending payment today
+            </p>
+
+            <div className="mt-5 space-y-2 text-xs">
+              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-2">
+                <span className="text-[#777588]">Paid Builds (This Month)</span>
+                <span className="font-bold text-[#0d1738]">5 clients ($3,985)</span>
+              </div>
+              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-2">
+                <span className="text-[#777588]">Awaiting Payment</span>
+                <span className="font-bold text-[#533afd]">4 leads ($3,188)</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[#777588]">Blocked Revenue</span>
+                <span className="font-bold text-[#ba1a1a]">$5,400 (Pending Action)</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 h-28 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={REVENUE_TREND} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="revPulse" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#533afd" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#533afd" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <Area type="monotone" dataKey="collected" stroke="#533afd" fill="url(#revPulse)" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. PIPELINE VELOCITY STAGES */}
+      <section className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-[#0d1738]">Lead Pipeline Velocity</h3>
+            <p className="text-xs text-[#777588]">27 total active leads in flight</p>
+          </div>
+          <span className="rounded-full bg-[#f0f3ff] px-3 py-1 text-xs font-bold text-[#533afd]">
+            Avg Velocity: 48h to Delivery
+          </span>
+        </div>
+
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
+          {PIPELINE_DATA.map((p) => (
+            <div
+              key={p.stage}
+              className={`rounded-xl border p-4 transition ${
+                p.active
+                  ? "border-[#533afd] bg-[#f0f3ff]"
+                  : "border-[#e5e7f2] bg-[#f9f9ff]"
+              }`}
+            >
+              <p className="text-xs font-semibold text-[#777588]">{p.stage}</p>
+              <p className="mt-2 text-2xl font-bold text-[#0d1738]">{p.count}</p>
+              <p className="mt-1 text-xs font-medium text-[#533afd]">{p.value}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 4. HIGH-INTENT PRIORITY ACTION QUEUE */}
+      <section className="overflow-hidden rounded-2xl border border-[#e5e7f2] bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-[#e5e7f2] p-6">
+          <div>
+            <h3 className="text-lg font-semibold text-[#0d1738]">Action Queue</h3>
+            <p className="text-xs text-[#777588]">Every qualified lead with a single deterministic next action.</p>
+          </div>
+          <button
+            onClick={() => setView("Lead workspace")}
+            className="text-xs font-bold text-[#533afd] hover:underline"
+          >
+            View All 27 Leads <ChevronRight className="inline h-3 w-3" />
+          </button>
+        </div>
+
+        <div className="divide-y divide-[#e5e7f2]">
+          {PRIORITY_LEADS.map((lead) => (
+            <div
+              key={lead.id}
+              className="flex flex-col justify-between gap-4 p-5 transition hover:bg-[#f9f9ff] sm:flex-row sm:items-center"
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f0f3ff] text-sm font-bold text-[#533afd]">
+                  {lead.name[0]}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-[#0d1738]">{lead.name}</p>
+                    <span className="rounded-full bg-[#f0f3ff] px-2 py-0.5 text-[10px] font-bold text-[#533afd]">
+                      {lead.trade}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#777588]">{lead.location} · {lead.estValue}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="text-left sm:text-right">
+                  <p className="text-xs font-semibold text-[#0d1738]">{lead.nextAction}</p>
+                  <p className="text-[11px] font-medium text-[#ba1a1a]">Due: {lead.due}</p>
+                </div>
+                <button
+                  onClick={() => setView(lead.priority ? "Reports" : "Lead workspace")}
+                  className="inline-flex items-center gap-1 rounded-md bg-[#533afd] px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-[#432bd9]"
+                >
+                  Action <ArrowRight className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
 }
