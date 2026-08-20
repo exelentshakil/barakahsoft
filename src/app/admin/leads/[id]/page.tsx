@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { ExternalLink } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { LeadDetailTabs } from "@/components/admin/LeadDetailTabs";
 import { OverviewTab } from "@/components/admin/lead-tabs/OverviewTab";
@@ -46,6 +47,14 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           <p className="text-sm text-muted-foreground">{lead.source_url}</p>
         </div>
         <div className="flex items-center gap-1">
+          <a
+            href={`/s/${lead.slug}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-md bg-[#533afd] px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-[#432bd9] mr-1"
+          >
+            <ExternalLink className="h-3.5 w-3.5" /> Customer Proposal Portal
+          </a>
           <Badge variant="outline">{lead.status}</Badge>
           <Badge variant="secondary">{lead.source}</Badge>
           {/* v4 Phase R2 — operator context for closing-script personalization,

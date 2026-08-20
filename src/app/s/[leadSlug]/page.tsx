@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSiteData } from "@/lib/get-site-data";
 import { PremiumLeadHomepage } from "@/components/site-shell/PremiumLeadHomepage";
+import { LiveClientProposal } from "@/components/portal/LiveClientProposal";
 
 // THE homepage — one crawlable document. Every service/area gets a #slug
 // mega-menu anchor here pre-payment; title/meta/canonical/FAQPage/
@@ -24,47 +25,65 @@ export async function generateMetadata({ params }: { params: Promise<{ leadSlug:
   };
 }
 
-export default async function LeadSitePage({ params }: { params: Promise<{ leadSlug: string }> }) {
+export default async function LeadSitePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ leadSlug: string }>;
+  searchParams?: Promise<{ view?: string; auth?: string }>;
+}) {
   const { leadSlug } = await params;
+  const sParams = searchParams ? await searchParams : {};
   const result = await getSiteData(leadSlug);
   if (!result) notFound();
 
-  const { payload } = result;
+  const { payload, lead, scrapeResults, artifact } = result;
 
-  const localBusinessSchema = {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    name: payload.businessName,
-    telephone: payload.nap.phone ?? undefined,
-    email: payload.nap.email ?? undefined,
-    address: payload.nap.address ?? undefined,
-    sameAs: payload.socialUrls.length > 0 ? payload.socialUrls : undefined,
-    aggregateRating:
-      payload.proof.rating && payload.proof.reviewCount
-        ? { "@type": "AggregateRating", ratingValue: payload.proof.rating, reviewCount: payload.proof.reviewCount }
-        : undefined,
-  };
+  // If viewing the direct website preview
+  if (sParams.view === "preview") {
+    const localBusinessSchema = {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      name: payload.businessName,
+      telephone: payload.nap.phone ?? undefined,
+      email: payload.nap.email ?? undefined,
+      address: payload.nap.address ?? undefined,
+      sameAs: payload.socialUrls.length > 0 ? payload.socialUrls : undefined,
+      aggregateRating:
+        payload.proof.rating && payload.proof.reviewCount
+          ? { "@type": "AggregateRating", ratingValue: payload.proof.rating, reviewCount: payload.proof.reviewCount }
+          : undefined,
+    };
 
-  const faqSchema =
-    payload.faq.length > 0
-      ? {
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          mainEntity: payload.faq.map((f) => ({
-            "@type": "Question",
-            name: f.h2,
-            acceptedAnswer: { "@type": "Answer", text: f.body_content },
-          })),
-        }
-      : null;
+    const faqSchema =
+      payload.faq.length > 0
+        ? {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: payload.faq.map((f) => ({
+              "@type": "Question",
+              name: f.h2,
+              acceptedAnswer: { "@type": "Answer", text: f.body_content },
+            })),
+          }
+        : null;
 
+    return (
+      <>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
+        {faqSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
+        <PremiumLeadHomepage payload={payload} />
+      </>
+    );
+  }
+
+  // By default, render the full interactive Master Proposal & Website X-Ray!
   return (
-    <>
-      {/* next/font/google can't do per-request fonts — this is a real
-          Google Fonts CDN link, App Router hoists it into <head>. */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
-      {faqSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
-      <PremiumLeadHomepage payload={payload} />
-    </>
+    <LiveClientProposal
+      lead={lead}
+      payload={payload}
+      scrapeResults={scrapeResults}
+      artifact={artifact}
+    />
   );
 }
