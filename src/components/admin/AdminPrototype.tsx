@@ -166,11 +166,11 @@ const MAP_GRID = [
   { id: 49, name: "Far Rockaway", rank: 22, competitor: "Atlantic Coast Wire (61 Reviews)", status: "missing", lostJobs: "$3,000" },
 ];
 
-const COMPETITOR_BARS = [
-  { name: "York Electrical (Rebuilt)", speed: 98, pages: 28 },
-  { name: "Entech Electrical", speed: 48, pages: 6 },
-  { name: "Brightline Power", speed: 65, pages: 4 },
-  { name: "Citywide Power", speed: 40, pages: 8 },
+const COMPETITOR_BENCHMARKS = [
+  { name: "York Electrical (Rebuilt)", reviews: "450+ ★ 5.0", speed: "0.12s (98/100)", routes: "28 Pages", territory: "All 49 Queens Zones", status: "Leader" },
+  { name: "Entech Electrical", reviews: "168 ★ 4.9", speed: "0.82s (48/100)", routes: "6 Pages", territory: "Astoria Only", status: "Competitor" },
+  { name: "Brightline Power Co", reviews: "155 ★ 5.0", speed: "0.47s (65/100)", routes: "4 Pages", territory: "Sunnyside Only", status: "Competitor" },
+  { name: "Citywide Power NYC", reviews: "140 ★ 4.8", speed: "0.95s (40/100)", routes: "8 Pages", territory: "LIC / Forest Hills", status: "Competitor" },
 ];
 
 const RADAR_DATA = [
@@ -383,7 +383,7 @@ export function AdminPrototype() {
               </div>
             </div>
 
-            {/* LINEAR STEP 2: VISUAL AUDIT & 7×7 LOCAL MAP GRID (WITH LIVE INSPECTOR & COMPETITORS) */}
+            {/* LINEAR STEP 2: VISUAL AUDIT & 7×7 LOCAL MAP GRID */}
             <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-5">
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
                 <div className="flex items-center gap-2.5">
@@ -467,21 +467,50 @@ export function AdminPrototype() {
               </div>
             </div>
 
-            {/* LINEAR STEP 3: COMPETITOR RADAR & GOOGLE AI OVERVIEW INTEL */}
-            <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-5">
+            {/* LINEAR STEP 3: COMPETITOR HEAD-TO-HEAD BENCHMARK & GOOGLE AI Q&A INTEL */}
+            <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-6">
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
                 <div className="flex items-center gap-2.5">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f0f3ff] text-xs font-bold text-[#533afd]">
                     3
                   </span>
-                  <h3 className="font-bold text-base text-[#0d1738]">Competitor Benchmark & Google AI Q&A Intel</h3>
+                  <h3 className="font-bold text-base text-[#0d1738]">Competitor Head-to-Head Benchmark & Google AI Q&A</h3>
                 </div>
                 <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b] shrink-0">
                   <BarChart3 className="h-3 w-3" /> 4 Competitors Benchmarked
                 </span>
               </div>
 
-              <div className="grid gap-6 sm:grid-cols-[1fr_1fr] sm:items-center">
+              {/* Competitor Benchmark Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-[#e5e7f2] text-[#777588] uppercase text-[10px]">
+                      <th className="pb-3 font-bold">Company</th>
+                      <th className="pb-3 font-bold">Google Reviews</th>
+                      <th className="pb-3 font-bold">Mobile Speed</th>
+                      <th className="pb-3 font-bold">Service Routes</th>
+                      <th className="pb-3 font-bold">Territory Dominance</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#e5e7f2]">
+                    {COMPETITOR_BENCHMARKS.map((comp) => (
+                      <tr
+                        key={comp.name}
+                        className={comp.status === "Leader" ? "bg-[#f0f3ff] font-bold text-[#533afd]" : "text-[#42506a]"}
+                      >
+                        <td className="py-3 font-semibold">{comp.name}</td>
+                        <td className="py-3">{comp.reviews}</td>
+                        <td className="py-3">{comp.speed}</td>
+                        <td className="py-3">{comp.routes}</td>
+                        <td className="py-3">{comp.territory}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="grid gap-6 sm:grid-cols-[1fr_1fr] sm:items-center pt-2 border-t border-[#e5e7f2]">
                 <div className="h-56 w-full">
                   <p className="text-xs font-bold uppercase tracking-wider text-[#777588] mb-2">Market Positioning Radar</p>
                   <ResponsiveContainer width="100%" height="100%">
