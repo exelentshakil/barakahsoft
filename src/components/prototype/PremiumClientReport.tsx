@@ -11,7 +11,7 @@ const SIGNALS = [
 
 export function PremiumClientReport({ setTab }: { setTab: (tab: string) => void }) {
   return <div className="space-y-8">
-    <section className="relative overflow-hidden rounded-[28px] bg-[#07284d] p-7 text-white shadow-[0_24px_70px_rgba(7,40,77,0.2)] lg:p-10">
+    <section className="premium-report-hero relative overflow-hidden rounded-[28px] bg-[#07284d] p-7 text-white shadow-[0_24px_70px_rgba(7,40,77,0.2)] lg:p-10">
       <div className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-[#ffd12d]/15 blur-3xl" />
       <div className="relative flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
         <div className="max-w-2xl"><div className="flex items-center gap-3"><span className="rounded-full bg-[#ffd12d] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-[#111]">Your redesign report</span><span className="text-xs text-white/55">York Electrical</span></div><h1 className="mt-5 max-w-xl text-4xl font-semibold leading-[1.05] tracking-[-0.05em] sm:text-6xl">The gap is clear. The next step is yours.</h1><p className="mt-5 max-w-xl text-base leading-7 text-white/70">We studied your business, market, website, and competitors, then built a better direction around what is already true about your company.</p></div>

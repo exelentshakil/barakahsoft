@@ -6,7 +6,8 @@ export function StripeDashboardTheme() {
       --prototype-purple: #533afd;
       --prototype-ink: #0d1738;
       --prototype-pink: #ffe0ef;
-      font-family: "Sohne", "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f9f9ff;
     }
     [data-prototype-dashboard] [class*="bg-[#ffd12d]"] { background-color: var(--prototype-purple) !important; }
     [data-prototype-dashboard] [class*="hover:bg-[#f5c400]"]:hover { background-color: #432bd9 !important; }
@@ -34,5 +35,9 @@ export function StripeDashboardTheme() {
     [data-prototype-dashboard] aside nav a:hover { background-color: #fafaff !important; color: #0c68c8 !important; }
     [data-prototype-dashboard] aside nav button[class*="bg-white/10"] { background-color: #fff8d9 !important; color: #0c68c8 !important; }
     [data-prototype-dashboard] aside nav button[class*="text-[#ffd12d]"] { background-color: #fff8d9 !important; color: #533afd !important; }
+    [data-prototype-dashboard] .premium-report-hero { background: linear-gradient(135deg, #f0f3ff 0%, #f9f9ff 62%, #ffe0ef 150%) !important; color: #0d1738 !important; border: 1px solid #e5e2ff; box-shadow: none !important; }
+    [data-prototype-dashboard] .premium-report-hero [class*="text-white"] { color: #42506a !important; }
+    [data-prototype-dashboard] .premium-report-hero [class*="text-white/70"],
+    [data-prototype-dashboard] .premium-report-hero [class*="text-white/55"] { color: #474556 !important; }
   `}</style>;
 }
