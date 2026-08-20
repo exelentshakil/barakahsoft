@@ -289,7 +289,7 @@ export function AdminPrototype() {
                   </span>
                   <h3 className="font-bold text-base text-[#0d1738]">Automated Visual Audit & Queens Search Matrix</h3>
                 </div>
-                <span className="text-xs font-bold text-[#533afd]">Speed Lift: 29 $\to$ 98 / 100</span>
+                <span className="text-xs font-bold text-[#533afd]">Speed Lift: 29 → 98 / 100</span>
               </div>
 
               <div className="grid gap-6 sm:grid-cols-[1.1fr_0.9fr] sm:items-center">
