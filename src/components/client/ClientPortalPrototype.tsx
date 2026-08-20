@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   ChevronRight,
   CircleDollarSign,
+  Clock,
   ExternalLink,
   Eye,
   FileCode2,
@@ -16,6 +17,7 @@ import {
   Globe2,
   HelpCircle,
   Layers,
+  Lock,
   MapPin,
   MessageCircle,
   Phone,
@@ -25,6 +27,7 @@ import {
   Smartphone,
   Sparkles,
   Star,
+  Tag,
   Users,
   Zap,
 } from "lucide-react";
@@ -185,19 +188,19 @@ export function ClientPortalPrototype() {
           </div>
         </section>
 
-        {/* 3. DIRECT PROBLEM-TO-SOLUTION MAPPING (HIGHLIGHTING INTAKE SELECTIONS) */}
+        {/* 3. DIRECT PROBLEM-TO-SOLUTION MAPPING (ALL 6 ISSUES VISIBLE) */}
         <section className="space-y-6">
           <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
-                Direct Problem-to-Solution Mapping
+                Complete Architectural Audit
               </span>
               <h2 className="mt-1 text-2xl font-bold text-[#0d1738] sm:text-3xl">
-                How the Rebuilt Platform Solves Your 6 Core Pains
+                6 Verified Issues Discovered & How the Rebuild Solves Them
               </h2>
             </div>
             <span className="rounded-full bg-[#f0f3ff] px-3 py-1 text-xs font-bold text-[#533afd]">
-              ★ Personalized to Your Intake Submission
+              ★ Includes Your Selected Intake Goals
             </span>
           </div>
 
@@ -272,7 +275,9 @@ export function ClientPortalPrototype() {
                   <Bot className="h-5 w-5 text-[#533afd]" />
                   <h3 className="font-bold text-[#0d1738]">4. Invisible in AI Search (ChatGPT & Gemini)</h3>
                 </div>
-                <span className="rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b]">Solved</span>
+                <span className="rounded-full bg-[#f0f3ff] px-2.5 py-0.5 text-xs font-bold text-[#533afd]">
+                  Audit Discovery
+                </span>
               </div>
               <div className="space-y-2 text-xs">
                 <p className="rounded bg-[#fff8f8] border border-[#ffdad6] p-3 text-[#ba1a1a]">
@@ -291,7 +296,9 @@ export function ClientPortalPrototype() {
                   <CircleDollarSign className="h-5 w-5 text-[#533afd]" />
                   <h3 className="font-bold text-[#0d1738]">5. Not Enough High-Ticket Inquiries</h3>
                 </div>
-                <span className="rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b]">Solved</span>
+                <span className="rounded-full bg-[#f0f3ff] px-2.5 py-0.5 text-xs font-bold text-[#533afd]">
+                  Audit Discovery
+                </span>
               </div>
               <div className="space-y-2 text-xs">
                 <p className="rounded bg-[#fff8f8] border border-[#ffdad6] p-3 text-[#ba1a1a]">
@@ -310,7 +317,9 @@ export function ClientPortalPrototype() {
                   <FileText className="h-5 w-5 text-[#533afd]" />
                   <h3 className="font-bold text-[#0d1738]">6. Thin Content & Empty Pages</h3>
                 </div>
-                <span className="rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b]">Solved</span>
+                <span className="rounded-full bg-[#f0f3ff] px-2.5 py-0.5 text-xs font-bold text-[#533afd]">
+                  Audit Discovery
+                </span>
               </div>
               <div className="space-y-2 text-xs">
                 <p className="rounded bg-[#fff8f8] border border-[#ffdad6] p-3 text-[#ba1a1a]">
@@ -417,35 +426,56 @@ export function ClientPortalPrototype() {
           </div>
         </section>
 
-        {/* 6. COMPLETE PACKAGE CHECKLIST */}
-        <section className="rounded-2xl border border-[#e5e7f2] bg-white p-8 shadow-sm">
-          <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end border-b border-[#e5e7f2] pb-5">
+        {/* 6. TRANSPARENT PRICING & VALUE ANCHORING */}
+        <section className="rounded-2xl border-2 border-[#533afd] bg-white p-8 sm:p-10 shadow-sm space-y-8">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start border-b border-[#e5e7f2] pb-6">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
-                Complete Scope of Work
-              </span>
-              <h2 className="mt-1 text-2xl font-bold text-[#0d1738]">
-                Everything Included in Your New Website
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-[#f0f3ff] px-3 py-0.5 text-xs font-bold text-[#533afd]">
+                  Transparent Proposal & Launch Pricing
+                </span>
+                <span className="rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b]">
+                  Save $800 Today
+                </span>
+              </div>
+              <h2 className="mt-2 text-3xl font-bold text-[#0d1738]">
+                Complete Website Build & Queens Launch
               </h2>
+              <p className="mt-1 text-sm text-[#42506a]">
+                Standard agency value anchored at $1,597 — discounted to $797 for new client onboarding.
+              </p>
             </div>
-            <div className="text-left sm:text-right">
-              <span className="text-3xl font-bold text-[#0d1738]">$797</span>
-              <span className="text-xs text-[#777588] block">Flat one-time price · 100% You Own All Files</span>
+
+            {/* Price Tag Box */}
+            <div className="rounded-xl bg-[#f9f9ff] border border-[#c7d0fb] p-4 text-left sm:text-right shrink-0">
+              <span className="text-xs text-[#777588] line-through font-semibold">
+                Standard Value: $1,597
+              </span>
+              <div className="mt-0.5 flex items-baseline gap-1 sm:justify-end">
+                <span className="text-4xl font-bold text-[#0d1738]">$797</span>
+                <span className="text-xs font-semibold text-[#777588]">USD flat</span>
+              </div>
+              <span className="text-[11px] font-bold text-[#0b8f5b] block mt-1">
+                ✓ 100% Client-Owned · Zero Monthly Lock-in
+              </span>
             </div>
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 text-sm">
+          <div className="grid gap-4 sm:grid-cols-2 text-sm">
             {[
-              "Rebuilt Modern Homepage built around your real logo, photos, and colors",
-              "28 Dedicated Pages for all your real services (Panel Upgrades, EV Chargers, DOB)",
-              "8 Original Launch Articles written for Queens homeowners (never blank)",
-              "AI Search & LocalBusiness JSON-LD Schema (ChatGPT & Gemini ready)",
-              "0.12s Mobile Load Time with sticky 1-tap emergency call buttons",
-              "Connected to your domain (yorkelectrical.com) with SSL security",
-            ].map((item) => (
-              <div key={item} className="flex items-start gap-3 rounded-lg border border-[#e5e7f2] p-4 bg-[#f9f9ff]">
-                <CheckCircle2 className="h-5 w-5 shrink-0 text-[#0b8f5b] mt-0.5" />
-                <span className="font-semibold text-[#0d1738]">{item}</span>
+              { item: "Rebuilt Modern Homepage built around your real logo, photos, and colors", val: "$400 Value" },
+              { item: "28 Dedicated Service Landing Pages (Panel Upgrades, EV Chargers, DOB)", val: "$600 Value" },
+              { item: "8 Original Launch Articles written for Queens homeowners (never blank)", val: "$300 Value" },
+              { item: "AI Search & LocalBusiness JSON-LD Schema (ChatGPT & Gemini ready)", val: "$150 Value" },
+              { item: "0.12s Mobile Load Time with sticky 1-tap emergency call buttons", val: "$100 Value" },
+              { item: "Connected to your domain (yorkelectrical.com) with SSL security", val: "Included Free" },
+            ].map((d) => (
+              <div key={d.item} className="flex items-start justify-between gap-3 rounded-lg border border-[#e5e7f2] p-4 bg-[#f9f9ff]">
+                <div className="flex items-start gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-[#0b8f5b] mt-0.5" />
+                  <span className="font-semibold text-[#0d1738] text-xs sm:text-sm">{d.item}</span>
+                </div>
+                <span className="text-[11px] font-bold text-[#533afd] shrink-0">{d.val}</span>
               </div>
             ))}
           </div>
@@ -490,7 +520,7 @@ export function ClientPortalPrototype() {
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
                 <div>
                   <h3 className="text-xl font-bold text-[#0d1738]">Launch York Electrical Website</h3>
-                  <p className="text-xs text-[#777588]">One-time flat build payment · Zero recurring lock-in</p>
+                  <p className="text-xs text-[#777588]">One-time flat build payment · Save $800 Today</p>
                 </div>
                 <button
                   onClick={() => setShowCheckout(false)}
@@ -522,7 +552,10 @@ export function ClientPortalPrototype() {
                   <span className="font-bold text-[#0d1738]">100% You Own All Files</span>
                 </div>
                 <div className="flex justify-between items-center border-t border-[#c7d0fb] pt-3 text-sm">
-                  <span className="font-bold text-[#0d1738]">Total Due Today</span>
+                  <div>
+                    <span className="font-bold text-[#0d1738] block">Total Due Today</span>
+                    <span className="text-[10px] text-[#777588] line-through">Standard Value: $1,597</span>
+                  </div>
                   <span className="text-xl font-bold text-[#533afd]">$797.00 USD</span>
                 </div>
               </div>
