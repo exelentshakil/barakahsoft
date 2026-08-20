@@ -107,7 +107,7 @@ const MAP_POINTS = [
 ];
 
 const COMPETITOR_BARS = [
-  { name: "York Electrical (Rebuilt)", speed: 98, pages: 28 },
+  { name: "York (Rebuilt)", speed: 98, pages: 28 },
   { name: "Entech Electrical", speed: 48, pages: 6 },
   { name: "Brightline Power", speed: 65, pages: 4 },
   { name: "Citywide Power", speed: 40, pages: 8 },
@@ -125,23 +125,23 @@ const RADAR_DATA = [
 const GOOGLE_PAA_QUESTIONS = [
   {
     q: "Do I need a NYC DOB permit for a 200-amp electrical panel upgrade in Queens?",
-    a: "Yes. All panel upgrades in NYC require an electrical permit from the NYC DOB and an official Con Edison meter disconnect inspection. York Electrical handles the entire filing end-to-end.",
-    article: "Covered by Launch Article #1",
+    a: "Yes. All panel upgrades in NYC require a DOB permit & ConEd inspection. York Electrical handles the filing end-to-end.",
+    article: "Launch Article #1",
   },
   {
     q: "How much does a commercial Level 2 EV charger installation cost in NYC?",
-    a: "Commercial Level 2 installations typically range from $1,500 to $4,500 depending on conduit run distance, panel capacity, and dedicated 240V breaker needs.",
-    article: "Covered by Launch Article #2",
+    a: "Commercial Level 2 installations typically range from $1,500 to $4,500 depending on conduit run distance and panel capacity.",
+    article: "Launch Article #2",
   },
   {
     q: "How fast can an NYC ECB electrical violation be cleared before property sale?",
-    a: "A licensed NYC Master Electrician can perform the correction, file a Certificate of Correction with DOB, and clear the violation in 24 to 72 hours.",
-    article: "Covered by Launch Article #3",
+    a: "A licensed NYC Master Electrician can file a Certificate of Correction with DOB and clear the violation in 24 to 72 hours.",
+    article: "Launch Article #3",
   },
   {
     q: "What is the ROI of commercial LED lighting retrofits under NYC Local Law 97?",
-    a: "Commercial properties reduce lighting energy usage by up to 65%, avoiding LL97 carbon penalties and achieving full payback within 14 to 22 months.",
-    article: "Covered by Launch Article #4",
+    a: "Commercial properties reduce lighting energy usage by up to 65%, avoiding LL97 carbon penalties with full payback in 14-22 months.",
+    article: "Launch Article #4",
   },
 ];
 
@@ -162,7 +162,7 @@ export function ClientPortalPrototype() {
           </div>
 
           <div className="flex items-center gap-4">
-            <span className="rounded-full bg-[#eaf8f0] px-3 py-1 text-xs font-semibold text-[#0b8f5b] inline-flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-3 py-1 text-xs font-semibold text-[#0b8f5b] shrink-0">
               <CheckCircle2 className="h-3.5 w-3.5" /> Proposal Ready
             </span>
             <a
@@ -230,12 +230,12 @@ export function ClientPortalPrototype() {
           </div>
         </section>
 
-        {/* 3. THE WEBSITE X-RAY: 6 VERIFIED FRICTION POINTS VS RESOLUTIONS */}
+        {/* 3. THE WEBSITE X-RAY: 6 VERIFIED FRICTION POINTS (TWO-ROW CLEAN HEADER) */}
         <section className="space-y-6">
           <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
-                Complete Architectural Audit
+                Website Diagnostic X-Ray
               </span>
               <h2 className="mt-1 text-2xl font-bold tracking-tight text-[#0d1738] sm:text-3xl">
                 6 Critical Friction Points Found on Your Old Site & How We Solved Them
@@ -249,138 +249,150 @@ export function ClientPortalPrototype() {
           <div className="grid gap-6 md:grid-cols-2">
             {/* PAIN 1 */}
             <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
-                <div className="flex items-center gap-2.5">
-                  <Smartphone className="h-5 w-5 text-[#533afd]" />
-                  <h3 className="font-bold text-base text-[#0d1738]">1. Outdated Mobile Design & Slow Speed</h3>
+              <div className="border-b border-[#e5e7f2] pb-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f0f3ff] text-[#533afd]">
+                    <Smartphone className="h-4 w-4" />
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#e3dfff] px-2.5 py-0.5 text-xs font-bold text-[#533afd]">
+                    <Target className="h-3 w-3" /> Selected Focus
+                  </span>
                 </div>
-                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#e3dfff] px-3 py-1 text-xs font-bold text-[#533afd] shrink-0">
-                  <Target className="h-3 w-3" /> Selected Focus
-                </span>
+                <h3 className="font-bold text-base text-[#0d1738]">1. Outdated Mobile Design & Slow Speed</h3>
               </div>
-              <div className="space-y-3 text-xs leading-relaxed">
+              <div className="space-y-2.5 text-xs leading-relaxed">
                 <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Old Site X-Ray (Friction)</span>
+                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a] text-[10px]">Old Site X-Ray (Friction)</span>
                   <p className="mt-1 text-[#42506a]">Took 8.4s to load on 4G cellular. Users had to pinch-zoom and hunt through menus just to find your emergency phone number.</p>
                 </div>
                 <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Resolution</span>
-                  <p className="mt-1 text-[#0d1738] font-medium">0.12s mobile load time with a persistent 1-tap "Call (718) 353-7227" emergency bar fixed to the mobile screen.</p>
+                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b] text-[10px]">Rebuilt Resolution</span>
+                  <p className="mt-1 text-[#0d1738] font-semibold">0.12s mobile load time with a persistent 1-tap "Call (718) 353-7227" emergency bar fixed to the mobile screen.</p>
                 </div>
               </div>
             </div>
 
             {/* PAIN 2 */}
             <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
-                <div className="flex items-center gap-2.5">
-                  <Star className="h-5 w-5 fill-[#ffd12d] text-[#ffd12d]" />
-                  <h3 className="font-bold text-base text-[#0d1738]">2. Buried 450+ Google Reviews & NYC License</h3>
+              <div className="border-b border-[#e5e7f2] pb-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f0f3ff] text-[#533afd]">
+                    <Star className="h-4 w-4 fill-[#ffd12d] text-[#ffd12d]" />
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#e3dfff] px-2.5 py-0.5 text-xs font-bold text-[#533afd]">
+                    <Target className="h-3 w-3" /> Selected Focus
+                  </span>
                 </div>
-                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#e3dfff] px-3 py-1 text-xs font-bold text-[#533afd] shrink-0">
-                  <Target className="h-3 w-3" /> Selected Focus
-                </span>
+                <h3 className="font-bold text-base text-[#0d1738]">2. Buried 450+ Google Reviews & NYC License</h3>
               </div>
-              <div className="space-y-3 text-xs leading-relaxed">
+              <div className="space-y-2.5 text-xs leading-relaxed">
                 <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Old Site X-Ray (Friction)</span>
+                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a] text-[10px]">Old Site X-Ray (Friction)</span>
                   <p className="mt-1 text-[#42506a]">Your strongest trust proof (450+ 5-star reviews & 37-year master license) was hidden at the very bottom of the page where 70% of visitors never scroll.</p>
                 </div>
                 <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Resolution</span>
-                  <p className="mt-1 text-[#0d1738] font-medium">Google 5.0 Rating verified badge & Master Lic. #11288 headline proof placed front-and-center before customers bounce.</p>
+                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b] text-[10px]">Rebuilt Resolution</span>
+                  <p className="mt-1 text-[#0d1738] font-semibold">Google 5.0 Rating verified badge & Master Lic. #11288 headline proof placed front-and-center before customers bounce.</p>
                 </div>
               </div>
             </div>
 
             {/* PAIN 3 */}
             <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
-                <div className="flex items-center gap-2.5">
-                  <MapPin className="h-5 w-5 text-[#533afd]" />
-                  <h3 className="font-bold text-base text-[#0d1738]">3. Invisible on Google Across Most of Queens</h3>
+              <div className="border-b border-[#e5e7f2] pb-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f0f3ff] text-[#533afd]">
+                    <MapPin className="h-4 w-4" />
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#e3dfff] px-2.5 py-0.5 text-xs font-bold text-[#533afd]">
+                    <Target className="h-3 w-3" /> Selected Focus
+                  </span>
                 </div>
-                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#e3dfff] px-3 py-1 text-xs font-bold text-[#533afd] shrink-0">
-                  <Target className="h-3 w-3" /> Selected Focus
-                </span>
+                <h3 className="font-bold text-base text-[#0d1738]">3. Invisible on Google Across Most of Queens</h3>
               </div>
-              <div className="space-y-3 text-xs leading-relaxed">
+              <div className="space-y-2.5 text-xs leading-relaxed">
                 <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Old Site X-Ray (Friction)</span>
+                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a] text-[10px]">Old Site X-Ray (Friction)</span>
                   <p className="mt-1 text-[#42506a]">Our 49-point Queens scan showed you rank #1 in Flushing, but are completely missing from Astoria, LIC, Forest Hills, and Jamaica.</p>
                 </div>
                 <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Resolution</span>
-                  <p className="mt-1 text-[#0d1738] font-medium">28 localized Queens service landing pages establishing direct geographic search relevance across all target zip codes.</p>
+                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b] text-[10px]">Rebuilt Resolution</span>
+                  <p className="mt-1 text-[#0d1738] font-semibold">28 localized Queens service landing pages establishing direct geographic search relevance across all target zip codes.</p>
                 </div>
               </div>
             </div>
 
             {/* PAIN 4 */}
             <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
-                <div className="flex items-center gap-2.5">
-                  <Bot className="h-5 w-5 text-[#533afd]" />
-                  <h3 className="font-bold text-base text-[#0d1738]">4. Invisible in AI Search (ChatGPT & Gemini)</h3>
+              <div className="border-b border-[#e5e7f2] pb-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f0f3ff] text-[#533afd]">
+                    <Bot className="h-4 w-4" />
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#f0f3ff] px-2.5 py-0.5 text-xs font-bold text-[#533afd]">
+                    <Sparkles className="h-3 w-3" /> Audit Discovery
+                  </span>
                 </div>
-                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#f0f3ff] px-3 py-1 text-xs font-bold text-[#533afd] shrink-0">
-                  <Sparkles className="h-3 w-3" /> Audit Discovery
-                </span>
+                <h3 className="font-bold text-base text-[#0d1738]">4. Invisible in AI Search (ChatGPT & Gemini)</h3>
               </div>
-              <div className="space-y-3 text-xs leading-relaxed">
+              <div className="space-y-2.5 text-xs leading-relaxed">
                 <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Old Site X-Ray (Friction)</span>
+                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a] text-[10px]">Old Site X-Ray (Friction)</span>
                   <p className="mt-1 text-[#42506a]">Zero structured schema. When users ask ChatGPT or Google AI for the best Queens electrician, AI engines cannot verify your license or services.</p>
                 </div>
                 <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Resolution</span>
-                  <p className="mt-1 text-[#0d1738] font-medium">Complete LocalBusiness JSON-LD schema & Entity FAQ markup so AI search models verify and cite York Electrical as #1.</p>
+                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b] text-[10px]">Rebuilt Resolution</span>
+                  <p className="mt-1 text-[#0d1738] font-semibold">Complete LocalBusiness JSON-LD schema & Entity FAQ markup so AI search models verify and cite York Electrical as #1.</p>
                 </div>
               </div>
             </div>
 
             {/* PAIN 5 */}
             <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
-                <div className="flex items-center gap-2.5">
-                  <CircleDollarSign className="h-5 w-5 text-[#533afd]" />
-                  <h3 className="font-bold text-base text-[#0d1738]">5. Big Jobs Bundled in 1 Generic Paragraph</h3>
+              <div className="border-b border-[#e5e7f2] pb-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f0f3ff] text-[#533afd]">
+                    <CircleDollarSign className="h-4 w-4" />
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#f0f3ff] px-2.5 py-0.5 text-xs font-bold text-[#533afd]">
+                    <Sparkles className="h-3 w-3" /> Audit Discovery
+                  </span>
                 </div>
-                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#f0f3ff] px-3 py-1 text-xs font-bold text-[#533afd] shrink-0">
-                  <Sparkles className="h-3 w-3" /> Audit Discovery
-                </span>
+                <h3 className="font-bold text-base text-[#0d1738]">5. Big Jobs Bundled in 1 Generic Paragraph</h3>
               </div>
-              <div className="space-y-3 text-xs leading-relaxed">
+              <div className="space-y-2.5 text-xs leading-relaxed">
                 <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Old Site X-Ray (Friction)</span>
+                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a] text-[10px]">Old Site X-Ray (Friction)</span>
                   <p className="mt-1 text-[#42506a]">$3,500 panel upgrades and $2,000 EV charger installs were lumped in one single bulleted list, losing all long-tail keyword search volume.</p>
                 </div>
                 <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Resolution</span>
-                  <p className="mt-1 text-[#0d1738] font-medium">Dedicated high-ticket landing routes with NYC permit guidance, panel sizing details, and instant quote forms.</p>
+                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b] text-[10px]">Rebuilt Resolution</span>
+                  <p className="mt-1 text-[#0d1738] font-semibold">Dedicated high-ticket landing routes with NYC permit guidance, panel sizing details, and instant quote forms.</p>
                 </div>
               </div>
             </div>
 
             {/* PAIN 6 */}
             <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
-                <div className="flex items-center gap-2.5">
-                  <FileText className="h-5 w-5 text-[#533afd]" />
-                  <h3 className="font-bold text-base text-[#0d1738]">6. Thin Content & Empty Pages</h3>
+              <div className="border-b border-[#e5e7f2] pb-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f0f3ff] text-[#533afd]">
+                    <FileText className="h-4 w-4" />
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#f0f3ff] px-2.5 py-0.5 text-xs font-bold text-[#533afd]">
+                    <Sparkles className="h-3 w-3" /> Audit Discovery
+                  </span>
                 </div>
-                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#f0f3ff] px-3 py-1 text-xs font-bold text-[#533afd] shrink-0">
-                  <Sparkles className="h-3 w-3" /> Audit Discovery
-                </span>
+                <h3 className="font-bold text-base text-[#0d1738]">6. Thin Content & Empty Pages</h3>
               </div>
-              <div className="space-y-3 text-xs leading-relaxed">
+              <div className="space-y-2.5 text-xs leading-relaxed">
                 <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Old Site X-Ray (Friction)</span>
+                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a] text-[10px]">Old Site X-Ray (Friction)</span>
                   <p className="mt-1 text-[#42506a]">Zero helpful articles explaining NYC electrical codes, DOB violations, or LED retrofit ROI, signaling to search engines that the site was inactive.</p>
                 </div>
                 <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Resolution</span>
-                  <p className="mt-1 text-[#0d1738] font-medium">8 original, human-reviewed launch articles so your website has authoritative depth and answers real customer questions from day one.</p>
+                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b] text-[10px]">Rebuilt Resolution</span>
+                  <p className="mt-1 text-[#0d1738] font-semibold">8 original, human-reviewed launch articles so your website has authoritative depth and answers real customer questions from day one.</p>
                 </div>
               </div>
             </div>
@@ -389,7 +401,7 @@ export function ClientPortalPrototype() {
 
         {/* 4. GOOGLE AI OVERVIEW & GENERATIVE SEARCH READINESS (GEO) */}
         <section className="rounded-2xl border border-[#e5e7f2] bg-white p-8 sm:p-10 shadow-sm space-y-6">
-          <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
+          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center border-b border-[#e5e7f2] pb-4">
             <div>
               <div className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-[#533afd]" />
@@ -407,7 +419,7 @@ export function ClientPortalPrototype() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 pt-2">
-            {GOOGLE_PAA_QUESTIONS.map((item, idx) => (
+            {GOOGLE_PAA_QUESTIONS.map((item) => (
               <div key={item.q} className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-[#533afd] uppercase tracking-wider">

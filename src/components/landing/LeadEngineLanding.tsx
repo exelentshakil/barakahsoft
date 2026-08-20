@@ -1,8 +1,10 @@
+import Link from "next/link";
 import {
   ArrowRight,
   BarChart3,
   Check,
   CircleDollarSign,
+  ExternalLink,
   Eye,
   FileText,
   Megaphone,
@@ -104,38 +106,64 @@ export function LeadEngineLanding() {
             </div>
           </div>
 
-          <div className="mx-auto mt-14 max-w-5xl overflow-hidden rounded-2xl border border-[#c8ddec] bg-[#f6fbff] shadow-[0_20px_60px_rgba(7,40,77,0.12)]">
-            <div className="relative">
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                controls
-                preload="metadata"
-                className="aspect-[2/1] w-full object-cover"
+          {/* Live Software & Client Portal Preview Card */}
+          <div className="mx-auto mt-14 max-w-5xl overflow-hidden rounded-2xl border border-[#c8ddec] bg-white shadow-[0_20px_60px_rgba(7,40,77,0.12)]">
+            <div className="border-b border-[#e5e7f2] bg-[#f9f9ff] px-6 py-4 flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-2">
+                <span className="flex h-2.5 w-2.5 rounded-full bg-[#0b8f5b] animate-pulse" />
+                <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
+                  Live Client Proposal & X-Ray Preview
+                </span>
+              </div>
+              <Link
+                href="/client-portal-prototype"
+                className="inline-flex items-center gap-1 text-xs font-bold text-[#533afd] hover:underline"
               >
-                <source
-                  src="https://liepxeeugfrxmidcmbxo.supabase.co/storage/v1/object/public/landing/barakahsoft-hero.mp4"
-                  type="video/mp4"
-                />
-              </video>
-              <span className="absolute left-5 top-5 rounded-md bg-[#07284d] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white">
-                The industries we serve
-              </span>
+                Inspect Full Interactive Client Portal <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
-            <div className="flex flex-col gap-3 border-t border-[#c8ddec] bg-white px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="font-bold text-[#07284d]">
-                   A custom homepage concept
-                </p>
-                <p className="mt-1 text-sm text-[#71869a]">
-                   Researched, designed, and reviewed by our team around your business.
+
+            <div className="p-6 sm:p-8 grid gap-6 sm:grid-cols-3 bg-white">
+              <div className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5 space-y-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#533afd]">1. Local Search Matrix</span>
+                <p className="text-sm font-bold text-[#07284d]">7×7 Queens Search Grid</p>
+                <p className="text-xs text-[#60778d] leading-relaxed">
+                  We check 49 local zip codes to show exactly where competitors are taking your phone calls.
                 </p>
               </div>
-              <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#0c68c8]">
-                Research · Build · Manage
-              </span>
+
+              <div className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5 space-y-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#533afd]">2. Rebuilt Speed</span>
+                <p className="text-sm font-bold text-[#07284d]">0.12s Mobile Load Time</p>
+                <p className="text-xs text-[#60778d] leading-relaxed">
+                  Engineered with a sticky 1-tap call button so emergency customers connect instantly.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5 space-y-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#533afd]">3. AI Search Ready</span>
+                <p className="text-sm font-bold text-[#07284d]">ChatGPT & Gemini Schema</p>
+                <p className="text-xs text-[#60778d] leading-relaxed">
+                  Structured LocalBusiness FAQ schema so AI search engines cite your business as #1.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 border-t border-[#e5e7f2] bg-[#f0f3ff] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-bold text-sm text-[#07284d]">
+                  Delivered in 48 hours to your private tracking portal.
+                </p>
+                <p className="text-xs text-[#60778d]">
+                  Yours to keep with zero obligation. No credit card required.
+                </p>
+              </div>
+              <Link
+                href="/client-portal-prototype"
+                className="inline-flex items-center gap-1.5 rounded-md bg-[#533afd] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#432bd9] shrink-0"
+              >
+                Explore Live Example Portal <ExternalLink className="h-3.5 w-3.5" />
+              </Link>
             </div>
           </div>
         </div>
