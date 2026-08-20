@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -7,13 +8,9 @@ const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-displ
 
 const LOGO_URL = "/icon.png";
 const SITE_URL = "https://home.barakahsoft.com";
-const TITLE = "Free Homepage Redesign | BarakahSoft";
-const DESCRIPTION = "Get a free, human-reviewed homepage redesign built from your real business, branding, services, and images. No card and no obligation.";
+const TITLE = "Free Homepage Redesign & Local AI Search Audit | BarakahSoft";
+const DESCRIPTION = "Get a free, human-reviewed homepage redesign & Queens/NYC search audit built from your real business, branding, and services. No card and no obligation.";
 
-// Product-Hunt-ready metadata: real OG/Twitter card image + description
-// (previously just a bare title/description, no icons block at all) so a
-// shared link or a PH submission card renders the real logo, not a blank
-// preview.
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: TITLE,
@@ -42,6 +39,29 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
+      <head>
+        <Script id="meta-pixel" strategy="afterInteractive">
+          {`!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1777973306713413');
+fbq('track', 'PageView');`}
+        </Script>
+        <noscript>
+          <img
+            height="1"
+            width="1"
+            style={{ display: "none" }}
+            src="https://www.facebook.com/tr?id=1777973306713413&ev=PageView&noscript=1"
+            alt=""
+          />
+        </noscript>
+      </head>
       <body className="min-h-screen bg-white font-sans text-slate-900 antialiased">{children}</body>
     </html>
   );

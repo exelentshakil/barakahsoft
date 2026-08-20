@@ -89,14 +89,15 @@ export function LeadEngineLanding() {
         <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-20 lg:pb-24 lg:pt-28">
           <div className="mx-auto max-w-4xl text-center">
             <p className="mx-auto mb-6 w-fit rounded-full bg-[#e8f4ff] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[#075da8]">
-              Free homepage redesign
+              Free 48h Redesign & Local AI Search Audit
             </p>
             <h1 className="font-sans text-5xl font-semibold leading-[1.02] tracking-[-0.055em] text-[#07284d] sm:text-7xl">
               Get your homepage redesigned for free.
             </h1>
             <p className="mx-auto mt-7 max-w-2xl text-lg leading-8 text-[#5c7186]">
-              See exactly how your homepage could look. We&apos;ll create a custom
-              concept around your real business and deliver it for review in 48 hours.
+              See how your business ranks on Google & AI search, and how a modern,
+              fast homepage turns lost mobile visitors into booked customer calls.
+              Delivered in 48 hours with zero obligation.
             </p>
             <div className="mt-9">
               <RedesignIntakeFlow />

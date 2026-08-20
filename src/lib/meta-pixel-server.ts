@@ -15,7 +15,7 @@ export async function fireMetaCapiEvent(input: {
   clickId?: string;
   sourceUrl: string;
 }) {
-  const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+  const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID || "1777973306713413";
   const accessToken = process.env.META_CAPI_TOKEN;
   if (!pixelId || !accessToken) {
     console.log("[meta-pixel] (stub) would fire CAPI event", input.eventName, input.eventId);

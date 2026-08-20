@@ -6,385 +6,113 @@ Status: Design source of truth for the admin dashboard and client report prototy
 
 Design two connected experiences for the same lead:
 
-- Admin workspace: extremely simple for the operator. It answers “What should I do next, and will it move this lead toward payment?”
-- Client report: persuasive and visual. It answers “What did you find, what did you build, and why should I continue?”
+- **Admin workspace**: extremely simple for the operator. It answers *“What should I do next, and will it move this lead toward payment?”* (like a clean Shopify orders fulfillment dashboard).
+- **Client report**: persuasive, visual, and frictionless. It answers *“What did you find, what did you build, and why should I buy the full website?”*
 
-The report is the main sales asset. It must make the value of the work obvious without a sales call or technical explanation.
+The report is the main sales asset. It must make the value of the work obvious in under 60 seconds without requiring a technical explanation or phone pitch.
 
-## 2. Story
+## 2. The 8 Target Trades & High-Ticket Monetization
 
-Every lead follows one visible story:
+BarakahSoft exclusively targets 8 high-ticket home-service trades where a single closed customer pays for the $797 website multiple times over:
+
+| Trade | High-Margin Service | Typical Job Value | ROI on $797 Website |
+| :--- | :--- | :--- | :--- |
+| **Electricians** | 200-Amp Panel Upgrade / EV Charger | $2,500 – $4,500 | **1 job = 3x–5x ROI** |
+| **Roofers** | Full Roof Replacement | $8,000 – $18,000 | **1 job = 10x–20x ROI** |
+| **HVAC** | Heat Pump / AC Replacement | $6,000 – $14,000 | **1 job = 8x–15x ROI** |
+| **Restoration** | Water Damage / Mold Remediation | $3,500 – $12,000 | **1 job = 4x–15x ROI** |
+| **Plumbers** | Main Line Sewer Replacement / Water Heater | $2,000 – $6,000 | **1 job = 3x–7x ROI** |
+| **Remodelers** | Kitchen / Bathroom Remodel | $15,000 – $45,000 | **1 job = 20x–50x ROI** |
+| **Movers** | Long Distance / Full House Move | $1,800 – $5,000 | **1 job = 2x–6x ROI** |
+| **Contractors** | Commercial Tenant Build-Outs | $10,000 – $50,000 | **1 job = 12x–60x ROI** |
+
+## 3. End-to-End Story & Order Lifecycle
+
+Every lead follows a Shopify-like visual lifecycle tracker:
 
 ```text
-Website received
-    -> Business and market researched
-    -> Problems made visible
-    -> Better homepage and website built
-    -> Client reviews the evidence
-    -> Client asks a question or approves
-    -> Payment
-    -> Website handoff and launch
+1. Website Received (Instant Brevo confirmation email with private magic link)
+    ↓
+2. AI Search & Local Audit (PageSpeed 29 → 98, 7×7 Queens map grid, LocalBusiness schema)
+    ↓
+3. Homepage & Sitemaps Built (28 service routes + 8 launch articles drafted)
+    ↓
+4. Customer Review & Approval (Interactive Before/After slider, radar benchmark, 1-click approve)
+    ↓
+5. Payment & Handoff ($797 Stripe checkout, custom DNS connection, standalone Next.js zip)
 ```
 
-The interface must make this story visible through progress, visuals, comparisons, and one next action. Do not make the user assemble the story from separate data tables.
+## 4. Visual Direction & Graphic Design Principles
 
-## 3. Visual Direction
-
-Use a Stripe-inspired product interface without copying Stripe branding.
+### The 80/20 Visual-to-Text Rule
+- **80% Visual**: Interactive Before/After split sliders, 7×7 local map grids, radar charts, circular progress gauges, sitemap node trees, and progress rails.
+- **20% Text**: Concise labels, single-sentence takeaways, and high-contrast action buttons.
+- **Visual Hierarchy (Eye-Tracking)**: Every viewport must guide the user's eye directly to **one primary goal** (e.g. *See New Homepage* or *Approve & Continue*).
 
 ### Colors
-
-- Primary action: `#533AFD`.
-- Ink: `#0D1738`.
-- Body text: `#42506A`.
-- Page background: `#FFFFFF` or `#F7F8FC`.
-- Border: `#E5E7F2`.
-- Positive: `#0B8F5B`.
-- Warning: `#B7791F`.
-- Problem: `#D14343`.
-- BarakahSoft yellow `#FFD12D`: small accent only for the logo, selected emphasis, or a single important highlight. Never use yellow for text.
-
-### Geometry
-
-- Page and card spacing must follow an 8px grid.
-- Header height: 64px.
-- Desktop content width: 1120-1240px.
-- Card radius: 8px.
-- Button radius: 4px.
-- Pills only use full radius.
-- Avoid giant rounded containers and excessive shadows.
-- Use one visual focal point per screen.
-
-### Typography
-
-- Use `Sohne`, `SF Pro Display`, or the closest available system fallback.
-- H1: 40-48px desktop, 32px mobile.
-- H2: 24-32px.
-- Body: 14-16px.
-- Supporting labels: 11-12px.
-- Never use yellow text.
-- Never use technical terms in client-facing copy.
-
-### Visual Ratio
-
-- 80% visual: charts, progress rails, maps, before/after previews, status indicators, diagrams, and comparison blocks.
-- 20% text: short labels, one-sentence explanations, and action instructions.
-- No wall of text.
-- No page made primarily from repeated information cards.
-
-## 4. Admin Workspace
-
-### Admin navigation
-
-Use a clean white sidebar with the BarakahSoft wordmark, not the square app icon.
-
-Navigation:
-
-- Home.
-- Leads.
-- Reports.
-- Conversations.
-- Delivery.
-- Settings.
-
-Only one item may be active. The active item uses the purple primary color and a light purple background. Inactive items are muted ink. No active-state color may disappear after hydration or navigation.
-
-### Admin home: Today
-
-The first screen is not a metrics wall. It is an action queue.
-
-Top section:
-
-- Heading: `Today`.
-- Subtitle: `The next action that moves a lead closer to payment.`
-- Primary button: `Open active lead`.
-
-Main visual:
-
-- Selected lead: `York Electrical`.
-- Action: `Send the master report`.
-- Status: report ready, preview ready, conversation not started.
-- Primary action: `Open report`.
-- Secondary action: `Open conversation`.
-
-Pipeline visual:
-
-```text
-New -> Research -> Report ready -> Conversation -> Paid
-```
-
-Each stage shows count, not paragraphs. The selected lead is highlighted.
-
-Revenue panel:
-
-- Paid websites this period.
-- Awaiting payment.
-- Recurring clients.
-- Money blocked by a missing next action.
-
-Next-action list:
-
-- Lead name.
-- One action.
-- Due time.
-- One button.
-
-Do not show SEO tables, raw generation logs, or every build detail on the admin home. Those belong inside the selected lead workspace.
-
-## 5. Admin Lead Workspace
-
-The lead workspace is the complete internal record. It must preserve every useful tool without making the home screen heavy.
-
-Workspace sections:
-
-1. Brief and source inputs.
-2. ICP and business understanding.
-3. Services and sitemap.
-4. SEO audit.
-5. Local map grid.
-6. Competitor comparison.
-7. Issue-versus-fix report.
-8. Homepage and full website preview.
-9. Content and article plan.
-10. Generation progress.
-11. QA checklist.
-12. Client conversation.
-13. How to close.
-14. Payment and delivery.
-
-Each section must show:
-
-- Status.
-- One sentence explaining the result.
-- Visual evidence where applicable.
-- One next action.
-
-### SEO audit visual
-
-Show a score ring or horizontal score bar, followed by grouped issue counts:
-
-- Technical.
-- Content.
-- Mobile.
-- Conversion.
-- Structured data.
-
-Every issue must connect to a proposed fix. Avoid showing a score without meaning.
-
-### Map grid visual
-
-Show the actual tracked service-area grid.
-
-- Each cell represents one search location.
-- Green: visible in the local pack.
-- Amber: outside the target range.
-- Red: not found.
-- Include a clear summary such as `10 of 49 locations visible today`.
-- Include a small explanation that the map is evidence of current visibility, not a permanent ranking promise.
-
-### Competitor visual
-
-Use a horizontal comparison chart for:
-
-- Review count.
-- Rating.
-- Site speed.
-- Service coverage.
-- Trust proof.
-
-Highlight the lead separately from competitors. The chart must answer: `What are they doing that this business can improve?`
-
-### Issue versus fix visual
-
-This is the core sales artifact.
-
-Each issue should be a visual three-step block:
-
-```text
-Evidence found -> Why it matters -> What we changed
-```
-
-Include a screenshot, highlighted UI region, or simple before/after illustration whenever possible.
-
-### Generation and QA
-
-Use a visual progress rail, not a log:
-
-```text
-Research -> Brief -> Homepage -> Service pages -> Articles -> QA -> Client review
-```
-
-QA should show pass/fail counts and the two or three decisions blocking delivery. Do not show raw model names or internal prompts to clients.
-
-### How to close
-
-This is admin-only. It must never appear in the client portal.
-
-Show:
-
-- Current lead outcome.
-- Next email or call.
-- Script.
-- Due time.
-- Checkout status.
-- Payment status.
-
-The operator should be able to move a lead from `new` to `contacted`, `qualified`, `won`, or `lost` without hunting through the interface.
-
-## 6. Client Portal
-
-The client receives a private expiring link by email. No password setup is required. The link opens the master report directly.
-
-The client should not see a technical dashboard. It should feel like a premium project/order tracker.
-
-### Client header
-
-- BarakahSoft wordmark with no background tile.
-- Project name.
-- Compact navigation: `Report`, `Website`, `Conversation`, `Handoff`.
-- Secure-link indicator.
-- `Message team` opens Crisp.
-
-### Client master report
-
-The first viewport must show:
-
-- A strong one-sentence conclusion.
-- One before/after homepage visual.
-- One primary button: `See the new homepage`.
-- One secondary button: `Ask the team`.
-- A five-step progress rail.
-
-Recommended story:
-
-```text
-Your business already has the proof.
-The current website hides it.
-We made the value easier to see.
-Here is the evidence and the new direction.
-```
-
-### Client report visual sections
-
-The report must visibly include all of these, in a guided order:
-
-1. What we used: business, ICP, brand, services, source material.
-2. Current website snapshot.
-3. SEO health and issue groups.
-4. Local map grid.
-5. Competitor comparison.
-6. Issue-versus-fix blocks.
-7. Before/after homepage.
-8. Service coverage and sitemap progress.
-9. Article/content progress.
-10. QA progress.
-11. Conversation and change request.
-12. Approval and payment.
-
-The client does not need to understand the phrase “SEO audit,” but the visual can use that label with a one-sentence explanation: `How easy it is for search engines and customers to understand your site.`
-
-The client does not need to understand “generation.” Use `Website progress`.
-
-The client does not see “How to close.” Use `What happens next` for the client-facing equivalent.
-
-### Client actions
-
-- `See the new homepage` opens the preview.
-- `Ask the team` opens Crisp.
-- `Request a change` opens Crisp with the project context.
-- `Approve the work` moves to payment.
-- `Continue with BarakahSoft` opens the agreed checkout.
-
-No dead buttons. No fake download actions in the production product.
-
-## 7. Data And State Requirements
-
-Every lead must have one visible state:
-
-```text
-New
-Researching
-Report ready
-Preview delivered
-Conversation
-Qualified
-Approved
-Payment pending
-Paid
-In production
-Ready for handoff
-Live
-Lost
-```
-
-The client sees a simplified version:
-
-```text
-Received
-Research complete
-New direction ready
-Your review
-Payment and handoff
-Live
-```
-
-Every state stores:
-
-- Timestamp.
-- Owner.
-- Next action.
-- Evidence or attachment.
-- Client-visible message.
-- Internal note.
-
-## 8. Email And Live Report
-
-After landing-page submission:
-
-1. Save the lead.
-2. Send an immediate confirmation email.
-3. Include a private report link.
-4. Show `Website received` in the client timeline.
-5. Update the same report as research, map, competitor, redesign, QA, approval, payment, and handoff stages change.
-
-The report URL must be lead-specific, expiring, and inaccessible to other leads.
-
-## 9. Acceptance Criteria
-
-### Friction budget
-
-Every visible element must do one of three jobs:
-
-- Prove a problem.
-- Show the work or its progress.
-- Move the lead toward a question, approval, payment, or handoff.
-
-Anything else belongs in an internal detail view or is removed. The system should use AI and connected APIs to do the research, comparison, checking, and fixing behind the scenes. The client should see the useful result, not the machinery.
-
-The design is rejected if:
-
-- The client must read multiple paragraphs to understand the value.
-- Yellow is used for body text, labels, or headings.
-- The dashboard opens with more than one competing primary action.
-- The admin cannot identify the next action within five seconds.
-- The client cannot see the map grid, before/after, and issue-versus-fix evidence.
-- “How to close,” model details, or technical export terms appear in the client portal.
-- Cards, buttons, and headers use inconsistent spacing or radius.
-- A button does not clearly open a report, preview, Crisp conversation, approval, or checkout.
-
-The design succeeds when a client can answer these questions without help:
-
-- What was wrong?
-- Why did it matter?
-- What did BarakahSoft change?
-- What does the new website look like?
-- What do I do next?
-
-The operator succeeds when they can answer these questions immediately:
-
-- Which lead needs attention?
-- What should I send or say?
-- Has the lead responded?
-- Has the client approved?
-- Has payment arrived?
-- What can be launched now?
+- **Primary Action**: `#533AFD` (Stripe Purple) — used exclusively for the single most important action per screen.
+- **Ink**: `#0D1738` — deep high-contrast text and authoritative headings.
+- **Body text**: `#42506A` — legible, accessible neutral slate.
+- **Page background**: `#F9F9FF` — clean, airy canvas.
+- **Card background**: `#FFFFFF` — 1px border `#E5E7F2`, subtle soft elevation.
+- **Success / Lift**: `#0B8F5B` (Green) — passed audits, positive rankings, complete milestones.
+- **Warning**: `#B7791F` (Amber) — rank 4–10 edge checkpoints, items needing review.
+- **Friction / Problem**: `#BA1A1A` (Red) — missing rank 11+ checkpoints, 8.4s mobile load time.
+- **BarakahSoft Yellow `#FFD12D`**: Reserved strictly for subtle branding accents and logo highlights. **Never use yellow for body text or labels.**
+
+### Geometry & Spacing
+- **8px Grid**: All spacing, padding, and margins use strict 8px increments (8px, 16px, 24px, 32px, 48px).
+- **Desktop Width**: 1120px to 1280px maximum content width.
+- **Card Radius**: 8px (or 16px on hero containers) for clean structural appearance.
+- **Button Radius**: 4px to 6px for a precise, tool-like feel.
+- **Pills / Status Chips**: Full pill radius (`rounded-full`) to distinguish status from actions.
+
+## 5. Admin Workspace Specification
+
+### Navigation
+- Clean white sidebar (280px width) with the official BarakahSoft wordmark.
+- Active navigation item uses light purple background (`#E3DFFF`) and primary purple text (`#533AFD`).
+- Inactive items remain high-contrast muted slate (`#42506A`).
+
+### Command Center: Today View
+Like a Shopify orders dashboard, it shows only what needs operator action today:
+1. **Urgent Decision Hero**: The #1 prioritized lead (e.g., *York Electrical — Send Master Report*).
+2. **Revenue Pulse**: Real-time collected funds, pending checks ($797 each), and pipeline trajectory.
+3. **Pipeline Velocity Tracker**: 5-stage progress rail (`New` → `Research` → `Report Ready` → `Conversation` → `Paid`).
+4. **Action Queue**: One-click actions with due dates and estimated values.
+
+### Lead Production Workspace (The 9 Core Tabs)
+1. **Generation Brief**: Verified Company Facts (Lic. #11288), Prohibited Claims (no fake claims), Brand Tokens (HEX swatches, typography), Persona targeting.
+2. **SEO Audit**: Before vs. After gauges (Mobile speed 29/100 $\to$ 98/100, LCP 8.4s $\to$ 0.12s, Schema 0 $\to$ 4 types) and 10 critical fixes.
+3. **Local Map Grid**: Interactive 7×7 geographic scan of 49 Queens checkpoints with live node inspector.
+4. **Competitors**: Market Positioning Benchmark chart comparing reviews, rating, and service routes vs. local competitors.
+5. **Issue vs. Fix Matrix**: 3-stage architecture (`Friction` $\to$ `Revenue Consequence` $\to$ `Implemented Solution`).
+6. **Sitemap Parity**: 38 of 38 pre-rendered routes (28 services + 8 launch articles) with word counts and 100% route verification.
+7. **QA Release Gate**: 6 automated human-reviewed gates before magic-link dispatch.
+8. **How to Close**: 1-click Brevo transactional email dispatch, click-to-call phone button (`tel:+1...`), objection handling cheatsheet, and Stripe $797 payment link generator.
+9. **Delivery & Handoff**: DNS CNAME validator for custom domains and Next.js 15 standalone zip package builder.
+
+## 6. Client Portal & Master Report Specification
+
+### Private Magic Link Access
+- Distributed via automated Brevo confirmation email upon landing page intake submission (`?auth=magic_xxx`).
+- No passwords, no login credentials, zero access friction.
+- Completely isolated per lead — impossible to view another client's project.
+
+### Master Report Visual Structure
+1. **Executive Header**: Verified business name, 37-year proof, Google 5.0 badges, and primary CTA (*See New Homepage*).
+2. **Project Trajectory Stepper**: Visual order tracker showing progress from *Website Received* to *Live*.
+3. **Interactive Before vs. After Split View**: Direct side-by-side contrast proving why the old site leaked calls and how the rebuild converts them.
+4. **7×7 Local Search Map Grid**: Interactive grid of 49 search checkpoints with click-to-inspect rank and competitor intelligence.
+5. **Market Radar Benchmark**: Recharts radar comparing Search Coverage, Speed, UX, Depth, Proof, and Schema.
+6. **SEO Infrastructure Scorecard**: 95/100 circular score ring with categorical breakdown.
+7. **Route & Content Library Matrix**: 28 genuine service cards and 8 original launch articles.
+8. **Direct Call to Action**: *Approve & Continue* (initiates Stripe checkout) or *Ask Question* (opens Crisp chat).
+
+## 7. Acceptance Criteria
+
+The system succeeds when:
+- An operator can view the admin home and take the next commercial action in under 5 seconds.
+- A non-technical business owner can open the private report link on mobile, understand the before/after difference in 30 seconds, and click *Approve* without confusion.
+- All 9 workspace tabs render interactive, high-fidelity visual representations rather than plain text walls.
+- Standalone Next.js exports build cleanly with zero agency lock-in.

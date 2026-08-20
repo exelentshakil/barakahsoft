@@ -70,22 +70,95 @@ export function RedesignIntakeFlow() {
       <p className="mt-3 w-full text-center text-xs text-[#7890a5]">Free · No credit card · Yours to keep</p>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="overflow-hidden border-0 p-0 shadow-2xl sm:max-w-lg">
-          <div className="h-1 bg-[#ef1550]" />
+        <DialogContent className="overflow-hidden border border-[#e5e7f2] p-0 shadow-2xl sm:max-w-lg bg-white">
+          <div className="h-1 bg-[#533afd]" />
           <div className="p-6 sm:p-8">
-            <div className="mb-6 flex items-center justify-between text-xs font-bold text-[#ef1550]"><span>Free homepage redesign</span><span>Step {step} of 2</span></div>
+            <div className="mb-6 flex items-center justify-between text-xs font-bold text-[#533afd]">
+              <span>Free Homepage Redesign</span>
+              <span>Step {step} of 2</span>
+            </div>
             {step === 1 ? (
               <form onSubmit={(event) => { event.preventDefault(); setStep(2); }}>
-                <DialogHeader><DialogTitle>What is your website struggling with?</DialogTitle><DialogDescription>Select everything that applies. We&apos;ll use this in the audit and redesign brief.</DialogDescription></DialogHeader>
-                <div className="mt-6 space-y-2">{LEAD_PROBLEMS.map((problem) => <button type="button" key={problem} onClick={() => toggle(problem)} className={`flex w-full items-center justify-between rounded-lg border p-4 text-left text-sm font-semibold transition ${helpNeeded.includes(problem) ? "border-[#ef1550] bg-rose-50 text-[#111827]" : "border-[#d9e1e8] bg-white text-[#364152] hover:border-[#ef1550]/50"}`}><span>{problem}</span><span className={`flex h-5 w-5 items-center justify-center rounded-full border ${helpNeeded.includes(problem) ? "border-[#ef1550] bg-[#ef1550] text-white" : "border-[#b8c2cc]"}`}>{helpNeeded.includes(problem) && <Check className="h-3 w-3" />}</span></button>)}</div>
-                <div className="mt-4"><Label htmlFor="anything-else">Anything else? (optional)</Label><Textarea id="anything-else" value={anythingElse} onChange={(event) => setAnythingElse(event.target.value)} placeholder="Tell us what is frustrating you about the current site." className="mt-1" /></div>
-                <Button type="submit" className="mt-6 w-full rounded-lg bg-[#ffd12d] text-[#07284d] hover:bg-[#f5c400]">Continue <ArrowRight className="h-4 w-4" /></Button>
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-bold text-[#0d1738]">What is your website struggling with?</DialogTitle>
+                  <DialogDescription className="text-xs text-[#777588]">
+                    Select everything that applies. We&apos;ll use this in the audit and redesign brief.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="mt-6 space-y-2">
+                  {LEAD_PROBLEMS.map((problem) => (
+                    <button
+                      type="button"
+                      key={problem}
+                      onClick={() => toggle(problem)}
+                      className={`flex w-full items-center justify-between rounded-lg border p-4 text-left text-sm font-semibold transition ${
+                        helpNeeded.includes(problem)
+                          ? "border-[#533afd] bg-[#f0f3ff] text-[#0d1738]"
+                          : "border-[#e5e7f2] bg-white text-[#42506a] hover:border-[#533afd]/50"
+                      }`}
+                    >
+                      <span>{problem}</span>
+                      <span
+                        className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                          helpNeeded.includes(problem)
+                            ? "border-[#533afd] bg-[#533afd] text-white"
+                            : "border-[#c8c4da]"
+                        }`}
+                      >
+                        {helpNeeded.includes(problem) && <Check className="h-3 w-3" />}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-4">
+                  <Label htmlFor="anything-else" className="text-xs font-bold text-[#0d1738]">Anything else? (optional)</Label>
+                  <Textarea
+                    id="anything-else"
+                    value={anythingElse}
+                    onChange={(event) => setAnythingElse(event.target.value)}
+                    placeholder="Tell us what is frustrating you about the current site."
+                    className="mt-1 border-[#e5e7f2] text-xs"
+                  />
+                </div>
+                <Button type="submit" className="mt-6 w-full rounded-md bg-[#533afd] py-3 text-sm font-bold text-white hover:bg-[#432bd9]">
+                  Continue to Final Step <ArrowRight className="h-4 w-4" />
+                </Button>
               </form>
             ) : (
               <form onSubmit={submit}>
-                <DialogHeader><DialogTitle>Where should we send your redesign?</DialogTitle><DialogDescription>We&apos;ll use these details only to deliver the concept and follow up about your request.</DialogDescription></DialogHeader>
-                <div className="mt-6 space-y-4"><div><Label htmlFor="redesign-name">First name</Label><Input id="redesign-name" required value={name} onChange={(event) => setName(event.target.value)} className="mt-1" /></div><div><Label htmlFor="redesign-email">Email</Label><Input id="redesign-email" required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1" /></div><div><Label htmlFor="redesign-phone">Phone (optional)</Label><Input id="redesign-phone" type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} className="mt-1" /></div><label className="flex items-start gap-2 text-xs text-[#60778d]"><Checkbox required checked={consent} onChange={(event) => setConsent(event.target.checked)} className="mt-0.5" /><span>I agree to be contacted by email, call, or text about this redesign. Consent is not a condition of purchase.</span></label>{error && <p className="text-sm text-red-600">{error}</p>}</div>
-                <div className="mt-6 flex items-center justify-between gap-3"><button type="button" onClick={() => setStep(1)} className="text-sm font-semibold text-[#60778d]">← Back</button><Button type="submit" disabled={submitting} className="rounded-lg bg-[#ffd12d] text-[#07284d] hover:bg-[#f5c400]">{submitting ? "Sending..." : "Get my free redesign"}</Button></div>
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-bold text-[#0d1738]">Where should we send your redesign?</DialogTitle>
+                  <DialogDescription className="text-xs text-[#777588]">
+                    We&apos;ll use these details to deliver the concept and follow up about your request.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="mt-6 space-y-4">
+                  <div>
+                    <Label htmlFor="redesign-name" className="text-xs font-bold text-[#0d1738]">First name</Label>
+                    <Input id="redesign-name" required value={name} onChange={(event) => setName(event.target.value)} className="mt-1 border-[#e5e7f2]" />
+                  </div>
+                  <div>
+                    <Label htmlFor="redesign-email" className="text-xs font-bold text-[#0d1738]">Email address</Label>
+                    <Input id="redesign-email" required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1 border-[#e5e7f2]" />
+                  </div>
+                  <div>
+                    <Label htmlFor="redesign-phone" className="text-xs font-bold text-[#0d1738]">Phone number (for 1-tap call confirmation)</Label>
+                    <Input id="redesign-phone" type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} className="mt-1 border-[#e5e7f2]" />
+                  </div>
+                  <label className="flex items-start gap-2 text-xs text-[#42506a]">
+                    <Checkbox required checked={consent} onChange={(event) => setConsent(event.target.checked)} className="mt-0.5" />
+                    <span>I agree to be contacted by email, call, or text about this redesign. Consent is not a condition of purchase.</span>
+                  </label>
+                  {error && <p className="text-sm text-[#ba1a1a]">{error}</p>}
+                </div>
+                <div className="mt-6 flex items-center justify-between gap-3">
+                  <button type="button" onClick={() => setStep(1)} className="text-xs font-semibold text-[#777588] hover:text-[#0d1738]">
+                    ← Back
+                  </button>
+                  <Button type="submit" disabled={submitting} className="rounded-md bg-[#533afd] px-6 py-2.5 text-xs font-bold text-white hover:bg-[#432bd9]">
+                    {submitting ? "Building Report..." : "Get My Free Redesign"}
+                  </Button>
+                </div>
               </form>
             )}
           </div>
