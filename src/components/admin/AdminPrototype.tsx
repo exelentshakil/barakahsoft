@@ -127,8 +127,9 @@ const MAP_GRID = Array.from({ length: 49 }, (_, i) => ({
 
 export function AdminPrototype() {
   const [view, setView] = useState<View>("Queue");
-  const [activeTab, setActiveTab] = useState("Brief");
+  const [activeTab, setActiveTab] = useState("Brief & Facts");
   const [emailSent, setEmailSent] = useState(false);
+  const [activeEmailStep, setActiveEmailStep] = useState<1 | 2 | 3>(2);
 
   return (
     <div className="min-h-screen bg-[#f9f9ff] text-[#0d1738]">
@@ -182,7 +183,7 @@ export function AdminPrototype() {
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center border-b border-[#e5e7f2] pb-5">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="flex h-2 w-2 rounded-full bg-[#533afd] animate-ping" />
+                    <span className="flex h-2.5 w-2.5 rounded-full bg-[#533afd] animate-ping" />
                     <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
                       Next Order to Process
                     </span>
@@ -198,11 +199,11 @@ export function AdminPrototype() {
                   onClick={() => setView("Workspace")}
                   className="inline-flex items-center gap-1.5 rounded-md border border-[#e5e7f2] px-3.5 py-2 text-xs font-bold text-[#0d1738] hover:bg-[#f0f3ff]"
                 >
-                  Open Deep Workspace <ArrowRight className="h-3.5 w-3.5" />
+                  Open Lead Workspace <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               </div>
 
-              {/* 3 Action Buttons */}
+              {/* 3 Direct Fulfillment Actions */}
               <div className="grid gap-3 sm:grid-cols-3">
                 {/* Send Brevo Email */}
                 <div className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-4 flex flex-col justify-between gap-3">
@@ -251,9 +252,94 @@ export function AdminPrototype() {
                   </button>
                 </div>
               </div>
+
+              {/* 4. AUTOMATED EMAIL LIFECYCLE PREVIEW */}
+              <div className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5 space-y-4">
+                <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
+                      Automated Brevo Sequence Preview
+                    </span>
+                    <p className="text-xs text-[#777588]">Live template sent to the lead at each stage.</p>
+                  </div>
+                  <div className="flex gap-1">
+                    {[
+                      { step: 1, label: "Email 1: Instant Confirmation" },
+                      { step: 2, label: "Email 2: Concept Ready" },
+                      { step: 3, label: "Email 3: 24h Follow-up" },
+                    ].map((s) => (
+                      <button
+                        key={s.step}
+                        onClick={() => setActiveEmailStep(s.step as 1 | 2 | 3)}
+                        className={`rounded px-2.5 py-1 text-[11px] font-bold transition ${
+                          activeEmailStep === s.step
+                            ? "bg-[#533afd] text-white"
+                            : "bg-white border border-[#e5e7f2] text-[#42506a] hover:bg-[#f0f3ff]"
+                        }`}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Email Content Box */}
+                <div className="rounded-lg border border-[#c7d0fb] bg-white p-4 text-xs space-y-2 font-sans">
+                  <div className="flex justify-between border-b border-[#e5e7f2] pb-2 text-[11px] text-[#777588]">
+                    <span><strong>To:</strong> david@yorkelectrical.com</span>
+                    <span><strong>From:</strong> BarakahSoft &lt;noreply@barakahsoft.com&gt;</span>
+                  </div>
+
+                  {activeEmailStep === 1 && (
+                    <>
+                      <p className="font-bold text-[#0d1738]">
+                        Subject: We received your website — follow your redesign live (York Electrical)
+                      </p>
+                      <p className="text-[#42506a] leading-relaxed">
+                        "Hi David, our engineering team received your request for York Electrical. We are currently scraping your website, extracting branding tokens, running your Queens 7×7 search grid, and rebuilding your homepage."
+                      </p>
+                      <div className="pt-2">
+                        <span className="inline-block rounded bg-[#f0f3ff] border border-[#c7d0fb] px-3 py-1.5 font-mono text-[11px] font-bold text-[#533afd]">
+                          https://home.barakahsoft.com/client-portal-prototype?auth=magic_983
+                        </span>
+                        <span className="block mt-1 text-[10px] text-[#777588]">
+                          ▲ This private tracking URL lets the customer follow progress live as each stage finishes.
+                        </span>
+                      </div>
+                    </>
+                  )}
+
+                  {activeEmailStep === 2 && (
+                    <>
+                      <p className="font-bold text-[#0d1738]">
+                        Subject: Your New Homepage & Queens Market Audit Are Ready (York Electrical)
+                      </p>
+                      <p className="text-[#42506a] leading-relaxed">
+                        "Hi David, we completed the research, 7×7 Queens local search grid, and rebuilt homepage for York Electrical. Access your secure interactive proposal below to review the before/after and 28 service pages:"
+                      </p>
+                      <div className="pt-2">
+                        <span className="inline-block rounded bg-[#533afd] px-3 py-1.5 font-mono text-[11px] font-bold text-white">
+                          View Your Proposal & Rebuilt Website →
+                        </span>
+                      </div>
+                    </>
+                  )}
+
+                  {activeEmailStep === 3 && (
+                    <>
+                      <p className="font-bold text-[#0d1738]">
+                        Subject: Quick follow-up on York Electrical's Queens search audit
+                      </p>
+                      <p className="text-[#42506a] leading-relaxed">
+                        "Hi David, following up on the Queens map grid we sent over. We noticed competitors are taking the top 3 spots in Astoria and LIC because your old site lacked dedicated pages for those neighborhoods. Let us know if you'd like us to turn on the new site."
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
             </section>
 
-            {/* 4. ORDERS QUEUE TABLE */}
+            {/* 5. ORDERS QUEUE TABLE */}
             <section className="overflow-hidden rounded-2xl border border-[#e5e7f2] bg-white shadow-sm">
               <div className="border-b border-[#e5e7f2] p-5 flex justify-between items-center">
                 <div>
@@ -307,7 +393,7 @@ export function AdminPrototype() {
             </section>
           </>
         ) : (
-          /* 5. DEEP WORKSPACE VIEW (WHEN OPENED) */
+          /* 6. DEEP WORKSPACE VIEW (WHEN OPENED) */
           <section className="space-y-6">
             <button
               onClick={() => setView("Queue")}
@@ -383,7 +469,7 @@ export function AdminPrototype() {
 
               {activeTab === "Sitemap (28 Pages)" && (
                 <div className="grid gap-2 sm:grid-cols-2 text-xs">
-                  {SITEMAP_ROUTES.slice(0, 8).map((r) => (
+                  {SITEMAP_ROUTES.map((r) => (
                     <div key={r.path} className="flex justify-between border border-[#e5e7f2] p-2.5 rounded-lg">
                       <span className="font-semibold text-[#0d1738]">{r.label}</span>
                       <span className="font-mono text-[#777588]">{r.path}</span>

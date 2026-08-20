@@ -33,11 +33,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  PolarAngleAxis,
-  PolarGrid,
-  PolarRadiusAxis,
-  Radar,
-  RadarChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -106,32 +101,9 @@ const COMPETITOR_BARS = [
   { name: "Citywide Power", speed: 40, pages: 8, score: 45 },
 ];
 
-const PROPOSED_SERVICES = [
-  "24/7 Emergency Electrical Repair",
-  "Electrical Panel Upgrade (200 Amp)",
-  "DOB Code Violation Corrections",
-  "Level 2 EV Charger Installation",
-  "Circuit Breaker Repair & Diagnostics",
-  "Cloth & Knob-and-Tube Rewiring",
-  "Aluminum Wiring Remediation",
-  "Commercial Tenant Build-Outs",
-  "Commercial LED Lighting Retrofits",
-  "Dedicated Heavy Appliance Circuits",
-  "Smoke & CO Detector Upgrades",
-  "Smart Home Wiring Infrastructure",
-];
-
-const PROPOSED_ARTICLES = [
-  { title: "5 Signs You Need to Upgrade Your Electrical Panel in Queens", readTime: "5 min", intent: "Residential & Commercial" },
-  { title: "Level 2 EV Charger Installation: NYC Permits & Costs Explained", readTime: "6 min", intent: "High-Intent Buyers" },
-  { title: "NYC ECB & DOB Electrical Violations: How to Clear Them Fast", readTime: "7 min", intent: "Urgent Compliance" },
-  { title: "Commercial LED Lighting Retrofits: ROI and LL97 Compliance", readTime: "8 min", intent: "Property Managers" },
-];
-
 export function ClientPortalPrototype() {
   const [selectedPoint, setSelectedPoint] = useState<(typeof MAP_POINTS)[0]>(MAP_POINTS[8]);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [activeViewMode, setActiveViewMode] = useState<"after" | "before">("after");
 
   return (
     <div className="min-h-screen bg-[#f9f9ff] text-[#0d1738]">
@@ -141,13 +113,13 @@ export function ClientPortalPrototype() {
           <div className="flex items-center gap-3">
             <img src={LOGO_URL} alt="BarakahSoft" className="h-7 w-auto" />
             <span className="hidden text-xs font-semibold text-[#777588] sm:inline">
-              · York Electrical Proposal
+              · York Electrical Proposal & Tracking Portal
             </span>
           </div>
 
           <div className="flex items-center gap-3">
             <span className="rounded-full bg-[#eaf8f0] px-3 py-1 text-xs font-bold text-[#0b8f5b] inline-flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5" /> Concept Ready
+              <CheckCircle2 className="h-3.5 w-3.5" /> Live Proposal Ready
             </span>
             <a
               href="tel:+13075336678"
@@ -174,7 +146,7 @@ export function ClientPortalPrototype() {
             York Electrical Contractors
           </h1>
           <p className="mt-4 text-base leading-relaxed text-[#42506a] sm:text-lg">
-            We mapped your real 37-year history, NYC license #11288, and 450+ 5-star Google reviews against top local competitors. Here is the verified gap and the rebuilt platform that fixes it.
+            We mapped your real 37-year track record, NYC license #11288, and 450+ 5-star Google reviews against top local competitors. Here is the verified gap and the rebuilt platform that fixes the exact challenges you submitted.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-4">
@@ -213,29 +185,33 @@ export function ClientPortalPrototype() {
           </div>
         </section>
 
-        {/* 3. SOLVING ALL 6 INTAKE PAIN POINTS DIRECTLY */}
+        {/* 3. DIRECT PROBLEM-TO-SOLUTION MAPPING (HIGHLIGHTING INTAKE SELECTIONS) */}
         <section className="space-y-6">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
-              Direct Problem-to-Solution Mapping
+          <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
+                Direct Problem-to-Solution Mapping
+              </span>
+              <h2 className="mt-1 text-2xl font-bold text-[#0d1738] sm:text-3xl">
+                How the Rebuilt Platform Solves Your 6 Core Pains
+              </h2>
+            </div>
+            <span className="rounded-full bg-[#f0f3ff] px-3 py-1 text-xs font-bold text-[#533afd]">
+              ★ Personalized to Your Intake Submission
             </span>
-            <h2 className="mt-1 text-2xl font-bold text-[#0d1738] sm:text-3xl">
-              How the Rebuilt Platform Solves Your 6 Core Pains
-            </h2>
-            <p className="mt-1 text-sm text-[#42506a]">
-              Every issue selected during intake paired directly with its architectural resolution.
-            </p>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
-            {/* PAIN 1: Outdated Design / Looks Wrong on Phones */}
-            <div className="rounded-2xl border border-[#e5e7f2] bg-white p-6 shadow-sm space-y-4">
+            {/* PAIN 1 */}
+            <div className="rounded-2xl border border-[#c7d0fb] bg-white p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-3">
                 <div className="flex items-center gap-2">
                   <Smartphone className="h-5 w-5 text-[#533afd]" />
                   <h3 className="font-bold text-[#0d1738]">1. Outdated Design & Mobile Friction</h3>
                 </div>
-                <span className="rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b]">Solved</span>
+                <span className="rounded-full bg-[#e3dfff] px-2.5 py-0.5 text-[10px] font-bold text-[#533afd]">
+                  Selected in Intake ★
+                </span>
               </div>
               <div className="space-y-2 text-xs">
                 <p className="rounded bg-[#fff8f8] border border-[#ffdad6] p-3 text-[#ba1a1a]">
@@ -247,14 +223,16 @@ export function ClientPortalPrototype() {
               </div>
             </div>
 
-            {/* PAIN 2: Visitors Don't Convert into Calls */}
-            <div className="rounded-2xl border border-[#e5e7f2] bg-white p-6 shadow-sm space-y-4">
+            {/* PAIN 2 */}
+            <div className="rounded-2xl border border-[#c7d0fb] bg-white p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-3">
                 <div className="flex items-center gap-2">
                   <Star className="h-5 w-5 fill-[#ffd12d] text-[#ffd12d]" />
                   <h3 className="font-bold text-[#0d1738]">2. Visitors Leaving Without Calling</h3>
                 </div>
-                <span className="rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b]">Solved</span>
+                <span className="rounded-full bg-[#e3dfff] px-2.5 py-0.5 text-[10px] font-bold text-[#533afd]">
+                  Selected in Intake ★
+                </span>
               </div>
               <div className="space-y-2 text-xs">
                 <p className="rounded bg-[#fff8f8] border border-[#ffdad6] p-3 text-[#ba1a1a]">
@@ -266,14 +244,16 @@ export function ClientPortalPrototype() {
               </div>
             </div>
 
-            {/* PAIN 3: Nobody Finds Us on Google */}
-            <div className="rounded-2xl border border-[#e5e7f2] bg-white p-6 shadow-sm space-y-4">
+            {/* PAIN 3 */}
+            <div className="rounded-2xl border border-[#c7d0fb] bg-white p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-3">
                 <div className="flex items-center gap-2">
                   <MapPin className="h-5 w-5 text-[#533afd]" />
                   <h3 className="font-bold text-[#0d1738]">3. Nobody Finds Us on Google Search</h3>
                 </div>
-                <span className="rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b]">Solved</span>
+                <span className="rounded-full bg-[#e3dfff] px-2.5 py-0.5 text-[10px] font-bold text-[#533afd]">
+                  Selected in Intake ★
+                </span>
               </div>
               <div className="space-y-2 text-xs">
                 <p className="rounded bg-[#fff8f8] border border-[#ffdad6] p-3 text-[#ba1a1a]">
@@ -285,7 +265,7 @@ export function ClientPortalPrototype() {
               </div>
             </div>
 
-            {/* PAIN 4: Invisible in AI Search (ChatGPT / Gemini) */}
+            {/* PAIN 4 */}
             <div className="rounded-2xl border border-[#e5e7f2] bg-white p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-3">
                 <div className="flex items-center gap-2">
@@ -304,7 +284,7 @@ export function ClientPortalPrototype() {
               </div>
             </div>
 
-            {/* PAIN 5: Not Enough Leads or Big Jobs */}
+            {/* PAIN 5 */}
             <div className="rounded-2xl border border-[#e5e7f2] bg-white p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-3">
                 <div className="flex items-center gap-2">
@@ -323,7 +303,7 @@ export function ClientPortalPrototype() {
               </div>
             </div>
 
-            {/* PAIN 6: Content Depth & Blank Site */}
+            {/* PAIN 6 */}
             <div className="rounded-2xl border border-[#e5e7f2] bg-white p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-3">
                 <div className="flex items-center gap-2">
