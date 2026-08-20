@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
+  AlertCircle,
+  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   BarChart3,
@@ -42,6 +44,21 @@ import {
   Users,
   Zap,
 } from "lucide-react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  PolarAngleAxis,
+  PolarGrid,
+  PolarRadiusAxis,
+  Radar,
+  RadarChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 const LOGO_URL = "https://barakahsoft.com/wp-content/uploads/2026/01/Logo1.png";
 
@@ -102,13 +119,52 @@ const MAP_GRID = Array.from({ length: 49 }, (_, i) => ({
   status: i < 10 ? "visible" : i < 20 ? "outside" : "missing",
 }));
 
+const COMPETITOR_BARS = [
+  { name: "York Electrical (Rebuilt)", speed: 98, pages: 28 },
+  { name: "Entech Electrical", speed: 48, pages: 6 },
+  { name: "Brightline Power", speed: 65, pages: 4 },
+  { name: "Citywide Power", speed: 40, pages: 8 },
+];
+
+const RADAR_DATA = [
+  { subject: "Search Coverage", York: 90, Competitors: 45, fullMark: 100 },
+  { subject: "Mobile Speed", York: 98, Competitors: 35, fullMark: 100 },
+  { subject: "Conversion UX", York: 95, Competitors: 40, fullMark: 100 },
+  { subject: "Service Depth", York: 92, Competitors: 30, fullMark: 100 },
+  { subject: "Trust & Proof", York: 96, Competitors: 60, fullMark: 100 },
+  { subject: "Structured Schema", York: 100, Competitors: 25, fullMark: 100 },
+];
+
+const GOOGLE_PAA_QUESTIONS = [
+  {
+    q: "Do I need a NYC DOB permit for a 200-amp electrical panel upgrade in Queens?",
+    a: "Yes. All panel upgrades in NYC require a DOB permit & ConEd inspection. York Electrical handles the filing.",
+    article: "Article #1",
+  },
+  {
+    q: "How much does a commercial Level 2 EV charger installation cost in NYC?",
+    a: "Commercial Level 2 installations typically range from $1,500 to $4,500 depending on conduit run distance.",
+    article: "Article #2",
+  },
+  {
+    q: "How fast can an NYC ECB electrical violation be cleared before property sale?",
+    a: "A licensed NYC Master Electrician can file a Certificate of Correction with DOB in 24 to 72 hours.",
+    article: "Article #3",
+  },
+  {
+    q: "What is the ROI of commercial LED lighting retrofits under NYC Local Law 97?",
+    a: "Commercial properties reduce lighting energy usage by up to 65%, avoiding LL97 carbon penalties.",
+    article: "Article #4",
+  },
+];
+
 export function AdminPrototype() {
   const [selectedLead, setSelectedLead] = useState(LEADS[0]);
   const [emailSent, setEmailSent] = useState(false);
   const [selectedMapNode, setSelectedMapNode] = useState(8);
 
   return (
-    <div className="min-h-screen bg-[#f9f9ff] text-[#0d1738] font-sans">
+    <div className="min-h-screen bg-[#f9f9ff] text-[#0d1738] font-sans antialiased">
       {/* 1. TOP BAR */}
       <header className="sticky top-0 z-30 border-b border-[#e5e7f2] bg-white">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
@@ -343,12 +399,54 @@ export function AdminPrototype() {
               </div>
             </div>
 
-            {/* LINEAR STEP 3: REBUILT 28-PAGE SITEMAP & ARTICLES */}
+            {/* LINEAR STEP 3: COMPETITOR RADAR & GOOGLE AI OVERVIEW INTEL */}
             <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-5">
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
                 <div className="flex items-center gap-2.5">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f0f3ff] text-xs font-bold text-[#533afd]">
                     3
+                  </span>
+                  <h3 className="font-bold text-base text-[#0d1738]">Competitor Radar & Google AI Search Q&A Intel</h3>
+                </div>
+                <span className="rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b]">
+                  4 Competitors Benchmarked
+                </span>
+              </div>
+
+              <div className="grid gap-6 sm:grid-cols-[1fr_1fr] sm:items-center">
+                <div className="h-56 w-full">
+                  <p className="text-xs font-bold uppercase tracking-wider text-[#777588] mb-2">Market Positioning Radar</p>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart cx="50%" cy="50%" outerRadius="75%" data={RADAR_DATA}>
+                      <PolarGrid stroke="#e5e7f2" />
+                      <PolarAngleAxis dataKey="subject" tick={{ fill: "#777588", fontSize: 9 }} />
+                      <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                      <Radar name="York Electrical (Rebuilt)" dataKey="York" stroke="#533afd" fill="#533afd" fillOpacity={0.4} />
+                      <Radar name="Competitor Avg" dataKey="Competitors" stroke="#777588" fill="#777588" fillOpacity={0.15} />
+                      <Tooltip contentStyle={{ backgroundColor: "#ffffff", borderColor: "#e5e7f2", borderRadius: 8, fontSize: 11 }} />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Google PAA Snippets */}
+                <div className="space-y-2 text-xs">
+                  <p className="text-xs font-bold uppercase tracking-wider text-[#777588]">Google AI Overview Queries Answered</p>
+                  {GOOGLE_PAA_QUESTIONS.slice(0, 3).map((item) => (
+                    <div key={item.q} className="rounded-lg bg-[#f9f9ff] border border-[#e5e7f2] p-2.5">
+                      <p className="font-bold text-[#0d1738] truncate">"{item.q}"</p>
+                      <p className="text-[#0b8f5b] text-[11px] mt-0.5">✓ Answered in {item.article}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* LINEAR STEP 4: REBUILT 28-PAGE SITEMAP & ARTICLES */}
+            <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-5">
+              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f0f3ff] text-xs font-bold text-[#533afd]">
+                    4
                   </span>
                   <h3 className="font-bold text-base text-[#0d1738]">Rebuilt Platform (28 Service Routes + 8 Articles)</h3>
                 </div>
@@ -381,12 +479,12 @@ export function AdminPrototype() {
               </div>
             </div>
 
-            {/* LINEAR STEP 4: 1-CLICK BREVO DELIVERY & LIVE TRACKING */}
+            {/* LINEAR STEP 5: 1-CLICK BREVO DELIVERY & LIVE TRACKING */}
             <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-5">
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
                 <div className="flex items-center gap-2.5">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f0f3ff] text-xs font-bold text-[#533afd]">
-                    4
+                    5
                   </span>
                   <h3 className="font-bold text-base text-[#0d1738]">Automated Brevo Delivery & Live Proposal Link</h3>
                 </div>
@@ -416,7 +514,7 @@ export function AdminPrototype() {
               </div>
             </div>
 
-            {/* LINEAR STEP 5: CLOSE & STRIPE $797 CHECKOUT */}
+            {/* LINEAR STEP 6: CLOSE & STRIPE $797 CHECKOUT */}
             <div className="rounded-2xl bg-[#0d1738] p-7 text-white shadow-md flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
               <div>
                 <div className="flex items-center gap-2">
