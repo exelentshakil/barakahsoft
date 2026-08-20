@@ -108,45 +108,65 @@ export function LeadEngineLanding() {
             </div>
           </div>
 
-          {/* Live Software & Client Portal Preview Card */}
+          {/* Product Onboarding & Flow Walkthrough Video Container */}
           <div className="mx-auto mt-14 max-w-5xl overflow-hidden rounded-2xl border border-[#c8ddec] bg-white shadow-[0_20px_60px_rgba(7,40,77,0.12)]">
-            <div className="border-b border-[#e5e7f2] bg-[#f9f9ff] px-6 py-4 flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+            <div className="border-b border-[#e5e7f2] bg-[#f9f9ff] px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="flex h-2.5 w-2.5 rounded-full bg-[#0b8f5b] animate-pulse" />
                 <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
-                  Live Client Proposal & X-Ray Preview
+                  Product Walkthrough · How Your 48h Redesign Is Built
                 </span>
               </div>
-              <Link
-                href="/client-portal-prototype"
-                className="inline-flex items-center gap-1 text-xs font-bold text-[#533afd] hover:underline"
-              >
-                Inspect Full Interactive Client Portal <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+              <span className="text-xs font-semibold text-[#777588] hidden sm:inline">
+                48-Hour Free Delivery Process
+              </span>
             </div>
 
+            {/* Video Player (.webm with .mp4 fallback) */}
+            <div className="relative bg-[#07284d]">
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                controls
+                preload="metadata"
+                className="aspect-[16/9] w-full object-cover"
+              >
+                <source
+                  src="https://liepxeeugfrxmidcmbxo.supabase.co/storage/v1/object/public/landing/barakahsoft-onboarding-walkthrough.webm"
+                  type="video/webm"
+                />
+                <source
+                  src="https://liepxeeugfrxmidcmbxo.supabase.co/storage/v1/object/public/landing/barakahsoft-hero.mp4"
+                  type="video/mp4"
+                />
+              </video>
+            </div>
+
+            {/* 3 Step Chapters Under Video */}
             <div className="p-6 sm:p-8 grid gap-6 sm:grid-cols-3 bg-white">
               <div className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5 space-y-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#533afd]">1. Local Search Matrix</span>
-                <p className="text-sm font-bold text-[#07284d]">7×7 Queens Search Grid</p>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#533afd]">01. Submit URL</span>
+                <p className="text-sm font-bold text-[#07284d]">We Extract Your Real Brand</p>
                 <p className="text-xs text-[#60778d] leading-relaxed">
-                  We check 49 local zip codes to show exactly where competitors are taking your phone calls.
+                  We scrape your real logo, NYC license proof, 450+ Google reviews, and genuine services.
                 </p>
               </div>
 
               <div className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5 space-y-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#533afd]">2. Rebuilt Speed</span>
-                <p className="text-sm font-bold text-[#07284d]">0.12s Mobile Load Time</p>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#533afd]">02. 48h Rebuild</span>
+                <p className="text-sm font-bold text-[#07284d]">We Build Your 28 Pages</p>
                 <p className="text-xs text-[#60778d] leading-relaxed">
-                  Engineered with a sticky 1-tap call button so emergency customers connect instantly.
+                  We run your local 7×7 Queens search matrix and build a 0.12s mobile-first website with 1-tap call buttons.
                 </p>
               </div>
 
               <div className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5 space-y-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#533afd]">3. AI Search Ready</span>
-                <p className="text-sm font-bold text-[#07284d]">ChatGPT & Gemini Schema</p>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#533afd]">03. Private Link</span>
+                <p className="text-sm font-bold text-[#07284d]">You Review & Keep Concept</p>
                 <p className="text-xs text-[#60778d] leading-relaxed">
-                  Structured LocalBusiness FAQ schema so AI search engines cite your business as #1.
+                  Delivered straight to your private tracking portal. Launch the full site for $797 or keep the concept for free.
                 </p>
               </div>
             </div>
@@ -154,18 +174,18 @@ export function LeadEngineLanding() {
             <div className="flex flex-col gap-3 border-t border-[#e5e7f2] bg-[#f0f3ff] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="font-bold text-sm text-[#07284d]">
-                  Delivered in 48 hours to your private tracking portal.
+                  Ready to see your business redesigned?
                 </p>
                 <p className="text-xs text-[#60778d]">
-                  Yours to keep with zero obligation. No credit card required.
+                  No card required. Delivered to your private link in 48 hours.
                 </p>
               </div>
-              <Link
-                href="/client-portal-prototype"
-                className="inline-flex items-center gap-1.5 rounded-md bg-[#533afd] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#432bd9] shrink-0"
+              <a
+                href="#top"
+                className="inline-flex items-center gap-1.5 rounded-md bg-[#ffd12d] px-5 py-2.5 text-xs font-bold text-[#07284d] transition hover:bg-[#f5c400] shadow-sm shrink-0"
               >
-                Explore Live Example Portal <ExternalLink className="h-3.5 w-3.5" />
-              </Link>
+                Get My Free Redesign <ArrowRight className="h-3.5 w-3.5" />
+              </a>
             </div>
           </div>
         </div>
