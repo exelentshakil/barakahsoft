@@ -27,6 +27,7 @@ import {
   WandSparkles,
 } from "lucide-react";
 import { StripeDashboardTheme } from "@/components/prototype/StripeDashboardTheme";
+import { PremiumAdminHome } from "@/components/prototype/PremiumAdminHome";
 
 type View = "Overview" | "Lead workspace" | "Reports" | "Communications" | "Delivery";
 
@@ -113,5 +114,5 @@ function Delivery() { return <div className="mt-6 grid gap-6 lg:grid-cols-3">{[[
 
 export function AdminPrototype() {
   const [view, setView] = useState<View>("Overview");
-  return <div data-prototype-dashboard className="min-h-screen bg-[#f5f9fc] text-[#1e212b]"><StripeDashboardTheme /><Sidebar view={view} setView={setView} /><main className="lg:pl-64"><Header view={view} /><div className="mx-auto max-w-[1500px] p-5 lg:p-8">{view === "Overview" ? <AdminStoryOverview setView={setView} /> : view === "Lead workspace" ? <Workspace /> : view === "Reports" ? <IssueReport /> : view === "Communications" ? <Delivery /> : <Delivery />}<p className="mt-10 text-center text-xs text-[#9ab0c1]">Dummy data prototype · designed to validate the complete PRD workflow before production implementation.</p></div></main></div>;
+  return <div data-prototype-dashboard className="min-h-screen bg-[#f5f9fc] text-[#1e212b]"><StripeDashboardTheme /><Sidebar view={view} setView={setView} /><main className="lg:pl-64"><Header view={view} /><div className="mx-auto max-w-[1500px] p-5 lg:p-8">{view === "Overview" ? <PremiumAdminHome setView={setView} /> : view === "Lead workspace" ? <Workspace /> : view === "Reports" ? <IssueReport /> : view === "Communications" ? <Delivery /> : <Delivery />}<p className="mt-10 text-center text-xs text-[#9ab0c1]">Dummy data prototype · designed to validate the complete PRD workflow before production implementation.</p></div></main></div>;
 }
