@@ -98,10 +98,10 @@ const MAP_POINTS = [
 ];
 
 const COMPETITOR_BARS = [
-  { name: "York Electrical (Rebuilt)", speed: 98, pages: 28, score: 95 },
-  { name: "Entech Electrical", speed: 48, pages: 6, score: 62 },
-  { name: "Brightline Power", speed: 65, pages: 4, score: 58 },
-  { name: "Citywide Power", speed: 40, pages: 8, score: 45 },
+  { name: "York Electrical (Rebuilt)", speed: 98, pages: 28 },
+  { name: "Entech Electrical", speed: 48, pages: 6 },
+  { name: "Brightline Power", speed: 65, pages: 4 },
+  { name: "Citywide Power", speed: 40, pages: 8 },
 ];
 
 export function ClientPortalPrototype() {
@@ -109,24 +109,24 @@ export function ClientPortalPrototype() {
   const [showCheckout, setShowCheckout] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#f9f9ff] text-[#0d1738]">
+    <div className="min-h-screen bg-[#f9f9ff] text-[#0d1738] font-sans">
       {/* 1. HEADER */}
       <header className="sticky top-0 z-30 border-b border-[#e5e7f2] bg-white/95 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-5">
+        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
           <div className="flex items-center gap-3">
             <img src={LOGO_URL} alt="BarakahSoft" className="h-7 w-auto" />
-            <span className="hidden text-xs font-semibold text-[#777588] sm:inline">
-              · York Electrical Proposal & Tracking Portal
+            <span className="hidden text-xs font-medium text-[#777588] sm:inline">
+              · York Electrical Proposal
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="rounded-full bg-[#eaf8f0] px-3 py-1 text-xs font-bold text-[#0b8f5b] inline-flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5" /> Live Proposal Ready
+          <div className="flex items-center gap-4">
+            <span className="rounded-full bg-[#eaf8f0] px-3 py-1 text-xs font-semibold text-[#0b8f5b] inline-flex items-center gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Concept Ready
             </span>
             <a
               href="tel:+13075336678"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0d1738] hover:text-[#533afd]"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0d1738] transition hover:text-[#533afd]"
             >
               <Phone className="h-3.5 w-3.5 text-[#533afd]" />
               <span>(307) 533-6678</span>
@@ -135,9 +135,9 @@ export function ClientPortalPrototype() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-5 py-10 space-y-12">
+      <main className="mx-auto max-w-5xl px-6 py-12 space-y-16">
         {/* 2. HERO STORY */}
-        <section className="rounded-2xl border border-[#c7d0fb] bg-white p-8 sm:p-10 shadow-sm">
+        <section className="rounded-2xl border border-[#c7d0fb] bg-white p-8 sm:p-12 shadow-sm space-y-6">
           <div className="flex items-center gap-2">
             <span className="flex h-2.5 w-2.5 rounded-full bg-[#533afd] animate-pulse" />
             <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
@@ -145,196 +145,209 @@ export function ClientPortalPrototype() {
             </span>
           </div>
 
-          <h1 className="mt-3 text-3xl font-bold tracking-tight text-[#0d1738] sm:text-5xl">
+          <h1 className="text-3xl font-bold tracking-tight text-[#0d1738] sm:text-5xl leading-tight">
             York Electrical Contractors
           </h1>
-          <p className="mt-4 text-base leading-relaxed text-[#42506a] sm:text-lg">
-            We mapped your real 37-year track record, NYC license #11288, and 450+ 5-star Google reviews against top local competitors. Here is the verified gap and the rebuilt platform that fixes the exact challenges you submitted.
+          
+          <p className="max-w-3xl text-base leading-relaxed text-[#42506a] sm:text-lg">
+            We mapped your real 37-year track record, NYC Master Electrician license #11288, and 450+ 5-star Google reviews against top local competitors. Here is the verified gap and the complete rebuilt platform designed to turn local searchers into customer calls.
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-4">
+          <div className="pt-2 flex flex-wrap gap-4">
             <a
               href="/s/york-electrical"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-md bg-[#533afd] px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#432bd9]"
+              className="inline-flex items-center gap-2 rounded-md bg-[#533afd] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#432bd9]"
             >
               Open Live Homepage Preview <ExternalLink className="h-4 w-4" />
             </a>
             <button
               onClick={() => setShowCheckout(true)}
-              className="inline-flex items-center gap-2 rounded-md bg-[#0b8f5b] px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#09744a]"
+              className="inline-flex items-center gap-2 rounded-md bg-[#0b8f5b] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#09744a]"
             >
               Launch Complete Website ($797) <ArrowRight className="h-4 w-4" />
             </button>
           </div>
 
           {/* Stepper */}
-          <div className="mt-10 border-t border-[#e5e7f2] pt-6">
-            <div className="grid grid-cols-3 gap-3 text-center text-xs">
-              <div className="rounded-lg bg-[#f0f3ff] p-3">
-                <span className="font-bold text-[#533afd]">Step 1: Complete ✓</span>
-                <p className="mt-1 text-[#0d1738] font-semibold">Free Redesign & Audit</p>
+          <div className="border-t border-[#e5e7f2] pt-8">
+            <div className="grid grid-cols-3 gap-4 text-center text-xs">
+              <div className="rounded-xl bg-[#f0f3ff] p-4 border border-[#e5e7f2]">
+                <span className="font-bold text-[#533afd]">Step 1: Done ✓</span>
+                <p className="mt-1 text-[#0d1738] font-semibold text-sm">Free Redesign & Audit</p>
               </div>
-              <div className="rounded-lg border-2 border-[#533afd] bg-white p-3 shadow-sm">
+              <div className="rounded-xl border-2 border-[#533afd] bg-white p-4 shadow-sm">
                 <span className="font-bold text-[#533afd]">Step 2: Current</span>
-                <p className="mt-1 text-[#0d1738] font-semibold">Review the Solution</p>
+                <p className="mt-1 text-[#0d1738] font-semibold text-sm">You Review the Work</p>
               </div>
-              <div className="rounded-lg bg-[#f9f9ff] p-3 text-[#777588]">
+              <div className="rounded-xl bg-[#f9f9ff] p-4 text-[#777588] border border-[#e5e7f2]">
                 <span className="font-bold">Step 3: Next</span>
-                <p className="mt-1 font-semibold">Launch & Capture Calls</p>
+                <p className="mt-1 font-semibold text-sm">Launch in 48 Hours</p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* 3. DIRECT PROBLEM-TO-SOLUTION MAPPING (ALL 6 ISSUES VISIBLE) */}
+        {/* 3. DIRECT PROBLEM-TO-SOLUTION MAPPING */}
         <section className="space-y-6">
           <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
                 Complete Architectural Audit
               </span>
-              <h2 className="mt-1 text-2xl font-bold text-[#0d1738] sm:text-3xl">
+              <h2 className="mt-1 text-2xl font-bold tracking-tight text-[#0d1738] sm:text-3xl">
                 6 Verified Issues Discovered & How the Rebuild Solves Them
               </h2>
             </div>
-            <span className="rounded-full bg-[#f0f3ff] px-3 py-1 text-xs font-bold text-[#533afd]">
-              ★ Includes Your Selected Intake Goals
+            <span className="rounded-full bg-[#f0f3ff] px-3 py-1 text-xs font-semibold text-[#533afd]">
+              Direct Problem-to-Solution Mapping
             </span>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
             {/* PAIN 1 */}
-            <div className="rounded-2xl border border-[#c7d0fb] bg-white p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-3">
-                <div className="flex items-center gap-2">
+            <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
+                <div className="flex items-center gap-2.5">
                   <Smartphone className="h-5 w-5 text-[#533afd]" />
-                  <h3 className="font-bold text-[#0d1738]">1. Outdated Design & Mobile Friction</h3>
+                  <h3 className="font-bold text-base text-[#0d1738]">1. Outdated Design & Mobile Friction</h3>
                 </div>
-                <span className="rounded-full bg-[#e3dfff] px-2.5 py-0.5 text-[10px] font-bold text-[#533afd]">
-                  Selected in Intake ★
+                <span className="rounded-full bg-[#e3dfff] px-2.5 py-0.5 text-[11px] font-bold text-[#533afd]">
+                  Your Focus
                 </span>
               </div>
-              <div className="space-y-2 text-xs">
-                <p className="rounded bg-[#fff8f8] border border-[#ffdad6] p-3 text-[#ba1a1a]">
-                  <strong>Before (Friction):</strong> Old site took 8.4s to load on 4G. Users had to pinch-zoom and hunt through menus for the emergency phone number.
-                </p>
-                <p className="rounded bg-[#f0fcf4] border border-[#c8ead8] p-3 text-[#0b8f5b]">
-                  <strong>Rebuilt Solution:</strong> 0.12s mobile load time with a persistent 1-tap "Call (718) 353-7227" emergency bar on every screen.
-                </p>
+              <div className="space-y-3 text-xs leading-relaxed">
+                <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
+                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Before (Friction)</span>
+                  <p className="mt-1 text-[#42506a]">Old site took 8.4s to load on 4G. Users had to pinch-zoom and hunt through menus for the emergency phone number.</p>
+                </div>
+                <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
+                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Solution</span>
+                  <p className="mt-1 text-[#0d1738] font-medium">0.12s mobile load time with a persistent 1-tap "Call (718) 353-7227" emergency bar on every screen.</p>
+                </div>
               </div>
             </div>
 
             {/* PAIN 2 */}
-            <div className="rounded-2xl border border-[#c7d0fb] bg-white p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-3">
-                <div className="flex items-center gap-2">
+            <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
+                <div className="flex items-center gap-2.5">
                   <Star className="h-5 w-5 fill-[#ffd12d] text-[#ffd12d]" />
-                  <h3 className="font-bold text-[#0d1738]">2. Visitors Leaving Without Calling</h3>
+                  <h3 className="font-bold text-base text-[#0d1738]">2. Visitors Leaving Without Calling</h3>
                 </div>
-                <span className="rounded-full bg-[#e3dfff] px-2.5 py-0.5 text-[10px] font-bold text-[#533afd]">
-                  Selected in Intake ★
+                <span className="rounded-full bg-[#e3dfff] px-2.5 py-0.5 text-[11px] font-bold text-[#533afd]">
+                  Your Focus
                 </span>
               </div>
-              <div className="space-y-2 text-xs">
-                <p className="rounded bg-[#fff8f8] border border-[#ffdad6] p-3 text-[#ba1a1a]">
-                  <strong>Before (Friction):</strong> 450+ 5-star Google reviews and 37 years of NYC licensing were hidden at the very bottom of the page.
-                </p>
-                <p className="rounded bg-[#f0fcf4] border border-[#c8ead8] p-3 text-[#0b8f5b]">
-                  <strong>Rebuilt Solution:</strong> Google 5.0 Verified badge & Master Lic. #11288 headline proof placed where customers decide to call.
-                </p>
+              <div className="space-y-3 text-xs leading-relaxed">
+                <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
+                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Before (Friction)</span>
+                  <p className="mt-1 text-[#42506a]">450+ 5-star Google reviews and 37 years of NYC licensing were hidden at the very bottom of the page.</p>
+                </div>
+                <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
+                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Solution</span>
+                  <p className="mt-1 text-[#0d1738] font-medium">Google 5.0 Verified badge & Master Lic. #11288 headline proof placed where customers decide to call.</p>
+                </div>
               </div>
             </div>
 
             {/* PAIN 3 */}
-            <div className="rounded-2xl border border-[#c7d0fb] bg-white p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-3">
-                <div className="flex items-center gap-2">
+            <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
+                <div className="flex items-center gap-2.5">
                   <MapPin className="h-5 w-5 text-[#533afd]" />
-                  <h3 className="font-bold text-[#0d1738]">3. Nobody Finds Us on Google Search</h3>
+                  <h3 className="font-bold text-base text-[#0d1738]">3. Nobody Finds Us on Google Search</h3>
                 </div>
-                <span className="rounded-full bg-[#e3dfff] px-2.5 py-0.5 text-[10px] font-bold text-[#533afd]">
-                  Selected in Intake ★
+                <span className="rounded-full bg-[#e3dfff] px-2.5 py-0.5 text-[11px] font-bold text-[#533afd]">
+                  Your Focus
                 </span>
               </div>
-              <div className="space-y-2 text-xs">
-                <p className="rounded bg-[#fff8f8] border border-[#ffdad6] p-3 text-[#ba1a1a]">
-                  <strong>Before (Friction):</strong> 49 Queens scan checkpoints showed rank #1 in Flushing, but missing from Astoria, LIC, and Forest Hills.
-                </p>
-                <p className="rounded bg-[#f0fcf4] border border-[#c8ead8] p-3 text-[#0b8f5b]">
-                  <strong>Rebuilt Solution:</strong> 28 localized Queens service pages establishing direct geographic relevance across all target zip codes.
-                </p>
+              <div className="space-y-3 text-xs leading-relaxed">
+                <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
+                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Before (Friction)</span>
+                  <p className="mt-1 text-[#42506a]">49 Queens scan checkpoints showed rank #1 in Flushing, but missing from Astoria, LIC, and Forest Hills.</p>
+                </div>
+                <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
+                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Solution</span>
+                  <p className="mt-1 text-[#0d1738] font-medium">28 localized Queens service pages establishing direct geographic relevance across all target zip codes.</p>
+                </div>
               </div>
             </div>
 
             {/* PAIN 4 */}
-            <div className="rounded-2xl border border-[#e5e7f2] bg-white p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-3">
-                <div className="flex items-center gap-2">
+            <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
+                <div className="flex items-center gap-2.5">
                   <Bot className="h-5 w-5 text-[#533afd]" />
-                  <h3 className="font-bold text-[#0d1738]">4. Invisible in AI Search (ChatGPT & Gemini)</h3>
+                  <h3 className="font-bold text-base text-[#0d1738]">4. Invisible in AI Search (ChatGPT & Gemini)</h3>
                 </div>
-                <span className="rounded-full bg-[#f0f3ff] px-2.5 py-0.5 text-xs font-bold text-[#533afd]">
-                  Audit Discovery
+                <span className="rounded-full bg-[#f0f3ff] px-2.5 py-0.5 text-[11px] font-bold text-[#533afd]">
+                  Audit Finding
                 </span>
               </div>
-              <div className="space-y-2 text-xs">
-                <p className="rounded bg-[#fff8f8] border border-[#ffdad6] p-3 text-[#ba1a1a]">
-                  <strong>Before (Friction):</strong> Zero structured schema. AI chatbots could not verify services, license numbers, or service areas.
-                </p>
-                <p className="rounded bg-[#f0fcf4] border border-[#c8ead8] p-3 text-[#0b8f5b]">
-                  <strong>Rebuilt Solution:</strong> Complete LocalBusiness JSON-LD schema & Entity FAQ markup so AI search models cite York Electrical as #1.
-                </p>
+              <div className="space-y-3 text-xs leading-relaxed">
+                <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
+                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Before (Friction)</span>
+                  <p className="mt-1 text-[#42506a]">Zero structured schema. AI chatbots could not verify services, license numbers, or service areas.</p>
+                </div>
+                <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
+                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Solution</span>
+                  <p className="mt-1 text-[#0d1738] font-medium">Complete LocalBusiness JSON-LD schema & Entity FAQ markup so AI search models cite York Electrical as #1.</p>
+                </div>
               </div>
             </div>
 
             {/* PAIN 5 */}
-            <div className="rounded-2xl border border-[#e5e7f2] bg-white p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-3">
-                <div className="flex items-center gap-2">
+            <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
+                <div className="flex items-center gap-2.5">
                   <CircleDollarSign className="h-5 w-5 text-[#533afd]" />
-                  <h3 className="font-bold text-[#0d1738]">5. Not Enough High-Ticket Inquiries</h3>
+                  <h3 className="font-bold text-base text-[#0d1738]">5. Not Enough High-Ticket Inquiries</h3>
                 </div>
-                <span className="rounded-full bg-[#f0f3ff] px-2.5 py-0.5 text-xs font-bold text-[#533afd]">
-                  Audit Discovery
+                <span className="rounded-full bg-[#f0f3ff] px-2.5 py-0.5 text-[11px] font-bold text-[#533afd]">
+                  Audit Finding
                 </span>
               </div>
-              <div className="space-y-2 text-xs">
-                <p className="rounded bg-[#fff8f8] border border-[#ffdad6] p-3 text-[#ba1a1a]">
-                  <strong>Before (Friction):</strong> $3,500 panel upgrades and $2,000 EV charger installs were bundled in one generic bullet list.
-                </p>
-                <p className="rounded bg-[#f0fcf4] border border-[#c8ead8] p-3 text-[#0b8f5b]">
-                  <strong>Rebuilt Solution:</strong> Dedicated landing routes with permit details, pricing guidance, and commercial quote forms.
-                </p>
+              <div className="space-y-3 text-xs leading-relaxed">
+                <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
+                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Before (Friction)</span>
+                  <p className="mt-1 text-[#42506a]">$3,500 panel upgrades and $2,000 EV charger installs were bundled in one generic bullet list.</p>
+                </div>
+                <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
+                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Solution</span>
+                  <p className="mt-1 text-[#0d1738] font-medium">Dedicated landing routes with permit details, pricing guidance, and commercial quote forms.</p>
+                </div>
               </div>
             </div>
 
             {/* PAIN 6 */}
-            <div className="rounded-2xl border border-[#e5e7f2] bg-white p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-3">
-                <div className="flex items-center gap-2">
+            <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
+                <div className="flex items-center gap-2.5">
                   <FileText className="h-5 w-5 text-[#533afd]" />
-                  <h3 className="font-bold text-[#0d1738]">6. Thin Content & Empty Pages</h3>
+                  <h3 className="font-bold text-base text-[#0d1738]">6. Thin Content & Empty Pages</h3>
                 </div>
-                <span className="rounded-full bg-[#f0f3ff] px-2.5 py-0.5 text-xs font-bold text-[#533afd]">
-                  Audit Discovery
+                <span className="rounded-full bg-[#f0f3ff] px-2.5 py-0.5 text-[11px] font-bold text-[#533afd]">
+                  Audit Finding
                 </span>
               </div>
-              <div className="space-y-2 text-xs">
-                <p className="rounded bg-[#fff8f8] border border-[#ffdad6] p-3 text-[#ba1a1a]">
-                  <strong>Before (Friction):</strong> Zero blog articles explaining NYC electrical codes, DOB violations, or LED retrofit ROI.
-                </p>
-                <p className="rounded bg-[#f0fcf4] border border-[#c8ead8] p-3 text-[#0b8f5b]">
-                  <strong>Rebuilt Solution:</strong> 8 original, human-reviewed launch articles so your website has authoritative depth from day one.
-                </p>
+              <div className="space-y-3 text-xs leading-relaxed">
+                <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
+                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Before (Friction)</span>
+                  <p className="mt-1 text-[#42506a]">Zero blog articles explaining NYC electrical codes, DOB violations, or LED retrofit ROI.</p>
+                </div>
+                <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
+                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Solution</span>
+                  <p className="mt-1 text-[#0d1738] font-medium">8 original, human-reviewed launch articles so your website has authoritative depth from day one.</p>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         {/* 4. VISUAL SEARCH GRID (QUEENS MAP) */}
-        <section className="rounded-2xl border border-[#e5e7f2] bg-white p-8 shadow-sm">
+        <section className="rounded-2xl border border-[#e5e7f2] bg-white p-8 sm:p-10 shadow-sm space-y-6">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
@@ -347,7 +360,7 @@ export function ClientPortalPrototype() {
                 Query: <span className="font-semibold text-[#0d1738]">"licensed electrician near me"</span>. Click any cell to inspect ranking.
               </p>
             </div>
-            <div className="flex items-center gap-3 text-xs font-bold">
+            <div className="flex items-center gap-3 text-xs font-semibold">
               <span className="flex items-center gap-1.5 text-[#533afd]">
                 <span className="h-3 w-3 rounded-sm bg-[#533afd]" /> Rank #1–3 (Dominant)
               </span>
@@ -357,7 +370,7 @@ export function ClientPortalPrototype() {
             </div>
           </div>
 
-          <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_1fr] lg:items-center">
+          <div className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:items-center pt-2">
             {/* Matrix */}
             <div className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5">
               <div className="grid grid-cols-7 gap-2">
@@ -377,7 +390,7 @@ export function ClientPortalPrototype() {
                   </button>
                 ))}
               </div>
-              <p className="mt-3 text-center text-xs text-[#777588]">
+              <p className="mt-4 text-center text-xs text-[#777588]">
                 Coordinates across Flushing, Bayside, Astoria, LIC, Forest Hills, Jamaica
               </p>
             </div>
@@ -386,11 +399,11 @@ export function ClientPortalPrototype() {
             <div className="space-y-4 rounded-xl border border-[#c7d0fb] bg-[#f0f3ff] p-6 text-xs sm:text-sm">
               <div className="flex justify-between items-center">
                 <span className="font-bold text-[#533afd] uppercase text-xs">Checkpoint #{selectedPoint.id} Inspector</span>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${selectedPoint.status === "visible" ? "bg-[#eaf8f0] text-[#0b8f5b]" : "bg-[#ffdad6] text-[#ba1a1a]"}`}>
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${selectedPoint.status === "visible" ? "bg-[#eaf8f0] text-[#0b8f5b]" : "bg-[#ffdad6] text-[#ba1a1a]"}`}>
                   Rank #{selectedPoint.rank}
                 </span>
               </div>
-              <h3 className="text-lg font-bold text-[#0d1738]">{selectedPoint.name}</h3>
+              <h3 className="text-xl font-bold text-[#0d1738]">{selectedPoint.name}</h3>
               <p className="text-[#42506a] leading-relaxed">
                 {selectedPoint.status === "visible"
                   ? "You dominate this neighborhood in the top 3. Customers find your number immediately."
@@ -401,18 +414,18 @@ export function ClientPortalPrototype() {
         </section>
 
         {/* 5. COMPETITOR BENCHMARK */}
-        <section className="rounded-2xl border border-[#e5e7f2] bg-white p-8 shadow-sm">
+        <section className="rounded-2xl border border-[#e5e7f2] bg-white p-8 sm:p-10 shadow-sm space-y-6">
           <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
             Market Benchmark
           </span>
-          <h2 className="mt-1 text-2xl font-bold text-[#0d1738]">
+          <h2 className="text-2xl font-bold text-[#0d1738]">
             York Electrical vs. Top 3 Local Competitors
           </h2>
-          <p className="mt-1 text-sm text-[#42506a]">
+          <p className="text-sm text-[#42506a]">
             How the rebuilt platform puts you ahead in speed, UX, and service route depth.
           </p>
 
-          <div className="mt-6 h-60 w-full">
+          <div className="mt-4 h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={COMPETITOR_BARS} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid stroke="#e5e7f2" vertical={false} />
@@ -447,7 +460,7 @@ export function ClientPortalPrototype() {
             </div>
 
             {/* Price Tag Box */}
-            <div className="rounded-xl bg-[#f9f9ff] border border-[#c7d0fb] p-4 text-left sm:text-right shrink-0">
+            <div className="rounded-xl bg-[#f9f9ff] border border-[#c7d0fb] p-5 text-left sm:text-right shrink-0">
               <span className="text-xs text-[#777588] line-through font-semibold">
                 Standard Value: $1,597
               </span>
@@ -473,7 +486,7 @@ export function ClientPortalPrototype() {
               <div key={d.item} className="flex items-start justify-between gap-3 rounded-lg border border-[#e5e7f2] p-4 bg-[#f9f9ff]">
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-[#0b8f5b] mt-0.5" />
-                  <span className="font-semibold text-[#0d1738] text-xs sm:text-sm">{d.item}</span>
+                  <span className="font-medium text-[#0d1738] text-xs sm:text-sm">{d.item}</span>
                 </div>
                 <span className="text-[11px] font-bold text-[#533afd] shrink-0">{d.val}</span>
               </div>
@@ -482,7 +495,7 @@ export function ClientPortalPrototype() {
         </section>
 
         {/* 7. BIG DECISION BOX */}
-        <section className="rounded-2xl bg-[#0d1738] p-8 sm:p-10 text-white shadow-lg text-center space-y-6">
+        <section className="rounded-2xl bg-[#0d1738] p-8 sm:p-12 text-white shadow-lg text-center space-y-6">
           <span className="rounded-full bg-[#533afd] px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-white">
             Ready to Launch?
           </span>
@@ -493,7 +506,7 @@ export function ClientPortalPrototype() {
             No long contracts, no monthly hostage fees. We connect your domain, set up the full 28 pages, and make sure your phone starts ringing.
           </p>
 
-          <div className="pt-2 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="pt-2 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <button
               onClick={() => setShowCheckout(true)}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md bg-[#533afd] px-8 py-4 text-base font-bold text-white shadow-md transition hover:bg-[#432bd9]"
