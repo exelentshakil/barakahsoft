@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
+  Activity,
   ArrowRight,
   Bot,
   Check,
@@ -23,6 +24,7 @@ import {
   Phone,
   PhoneCall,
   Search,
+  ShieldAlert,
   ShieldCheck,
   Smartphone,
   Sparkles,
@@ -109,20 +111,20 @@ export function ClientPortalPrototype() {
   const [showCheckout, setShowCheckout] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#f9f9ff] text-[#0d1738] font-sans">
+    <div className="min-h-screen bg-[#f9f9ff] text-[#0d1738] font-sans antialiased">
       {/* 1. HEADER */}
       <header className="sticky top-0 z-30 border-b border-[#e5e7f2] bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
           <div className="flex items-center gap-3">
             <img src={LOGO_URL} alt="BarakahSoft" className="h-7 w-auto" />
             <span className="hidden text-xs font-medium text-[#777588] sm:inline">
-              · York Electrical Proposal
+              · York Electrical Proposal & X-Ray Portal
             </span>
           </div>
 
           <div className="flex items-center gap-4">
             <span className="rounded-full bg-[#eaf8f0] px-3 py-1 text-xs font-semibold text-[#0b8f5b] inline-flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5" /> Concept Ready
+              <CheckCircle2 className="h-3.5 w-3.5" /> Proposal Ready
             </span>
             <a
               href="tel:+13075336678"
@@ -136,12 +138,12 @@ export function ClientPortalPrototype() {
       </header>
 
       <main className="mx-auto max-w-5xl px-6 py-12 space-y-16">
-        {/* 2. HERO STORY */}
+        {/* 2. HERO STORY & X-RAY SUMMARY */}
         <section className="rounded-2xl border border-[#c7d0fb] bg-white p-8 sm:p-12 shadow-sm space-y-6">
           <div className="flex items-center gap-2">
             <span className="flex h-2.5 w-2.5 rounded-full bg-[#533afd] animate-pulse" />
             <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
-              Your Free Redesign Is Ready
+              Digital X-Ray & Proposal Ready
             </span>
           </div>
 
@@ -150,7 +152,7 @@ export function ClientPortalPrototype() {
           </h1>
           
           <p className="max-w-3xl text-base leading-relaxed text-[#42506a] sm:text-lg">
-            We mapped your real 37-year track record, NYC Master Electrician license #11288, and 450+ 5-star Google reviews against top local competitors. Here is the verified gap and the complete rebuilt platform designed to turn local searchers into customer calls.
+            We performed a deep technical X-Ray of your website, Queens Google search rankings, and local competitors. Your business has an incredible 37-year reputation and 450+ 5-star reviews — but your old website was hiding that proof and leaking customer calls. Here is the verified breakdown and the complete rebuilt platform.
           </p>
 
           <div className="pt-2 flex flex-wrap gap-4">
@@ -175,29 +177,29 @@ export function ClientPortalPrototype() {
             <div className="grid grid-cols-3 gap-4 text-center text-xs">
               <div className="rounded-xl bg-[#f0f3ff] p-4 border border-[#e5e7f2]">
                 <span className="font-bold text-[#533afd]">Step 1: Done ✓</span>
-                <p className="mt-1 text-[#0d1738] font-semibold text-sm">Free Redesign & Audit</p>
+                <p className="mt-1 text-[#0d1738] font-semibold text-sm">Website X-Ray & Audit</p>
               </div>
               <div className="rounded-xl border-2 border-[#533afd] bg-white p-4 shadow-sm">
                 <span className="font-bold text-[#533afd]">Step 2: Current</span>
-                <p className="mt-1 text-[#0d1738] font-semibold text-sm">You Review the Work</p>
+                <p className="mt-1 text-[#0d1738] font-semibold text-sm">You Review the Solution</p>
               </div>
               <div className="rounded-xl bg-[#f9f9ff] p-4 text-[#777588] border border-[#e5e7f2]">
                 <span className="font-bold">Step 3: Next</span>
-                <p className="mt-1 font-semibold text-sm">Launch in 48 Hours</p>
+                <p className="mt-1 font-semibold text-sm">Go-Live in 48 Hours</p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* 3. DIRECT PROBLEM-TO-SOLUTION MAPPING */}
+        {/* 3. THE WEBSITE X-RAY: 6 VERIFIED FRICTION POINTS VS ARCHITECTURAL RESOLUTIONS */}
         <section className="space-y-6">
           <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
-                Complete Architectural Audit
+                Website Diagnostic X-Ray
               </span>
               <h2 className="mt-1 text-2xl font-bold tracking-tight text-[#0d1738] sm:text-3xl">
-                6 Verified Issues Discovered & How the Rebuild Solves Them
+                6 Critical Friction Points Found on Your Old Site & How We Solved Them
               </h2>
             </div>
             <span className="rounded-full bg-[#f0f3ff] px-3 py-1 text-xs font-semibold text-[#533afd]">
@@ -211,7 +213,7 @@ export function ClientPortalPrototype() {
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
                 <div className="flex items-center gap-2.5">
                   <Smartphone className="h-5 w-5 text-[#533afd]" />
-                  <h3 className="font-bold text-base text-[#0d1738]">1. Outdated Design & Mobile Friction</h3>
+                  <h3 className="font-bold text-base text-[#0d1738]">1. Outdated Mobile Design & Slow Speed</h3>
                 </div>
                 <span className="rounded-full bg-[#e3dfff] px-2.5 py-0.5 text-[11px] font-bold text-[#533afd]">
                   Your Focus
@@ -219,12 +221,12 @@ export function ClientPortalPrototype() {
               </div>
               <div className="space-y-3 text-xs leading-relaxed">
                 <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Before (Friction)</span>
-                  <p className="mt-1 text-[#42506a]">Old site took 8.4s to load on 4G. Users had to pinch-zoom and hunt through menus for the emergency phone number.</p>
+                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Old Site X-Ray (Friction)</span>
+                  <p className="mt-1 text-[#42506a]">Took 8.4s to load on 4G cellular. Users had to pinch-zoom and hunt through menus just to find your emergency phone number.</p>
                 </div>
                 <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Solution</span>
-                  <p className="mt-1 text-[#0d1738] font-medium">0.12s mobile load time with a persistent 1-tap "Call (718) 353-7227" emergency bar on every screen.</p>
+                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Resolution</span>
+                  <p className="mt-1 text-[#0d1738] font-medium">0.12s mobile load time with a persistent 1-tap "Call (718) 353-7227" emergency bar fixed to the mobile screen.</p>
                 </div>
               </div>
             </div>
@@ -234,7 +236,7 @@ export function ClientPortalPrototype() {
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
                 <div className="flex items-center gap-2.5">
                   <Star className="h-5 w-5 fill-[#ffd12d] text-[#ffd12d]" />
-                  <h3 className="font-bold text-base text-[#0d1738]">2. Visitors Leaving Without Calling</h3>
+                  <h3 className="font-bold text-base text-[#0d1738]">2. Buried 450+ Google Reviews & NYC License</h3>
                 </div>
                 <span className="rounded-full bg-[#e3dfff] px-2.5 py-0.5 text-[11px] font-bold text-[#533afd]">
                   Your Focus
@@ -242,12 +244,12 @@ export function ClientPortalPrototype() {
               </div>
               <div className="space-y-3 text-xs leading-relaxed">
                 <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Before (Friction)</span>
-                  <p className="mt-1 text-[#42506a]">450+ 5-star Google reviews and 37 years of NYC licensing were hidden at the very bottom of the page.</p>
+                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Old Site X-Ray (Friction)</span>
+                  <p className="mt-1 text-[#42506a]">Your strongest trust proof (450+ 5-star reviews & 37-year master license) was hidden at the very bottom of the page where 70% of visitors never scroll.</p>
                 </div>
                 <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Solution</span>
-                  <p className="mt-1 text-[#0d1738] font-medium">Google 5.0 Verified badge & Master Lic. #11288 headline proof placed where customers decide to call.</p>
+                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Resolution</span>
+                  <p className="mt-1 text-[#0d1738] font-medium">Google 5.0 Rating verified badge & Master Lic. #11288 headline proof placed front-and-center before customers bounce.</p>
                 </div>
               </div>
             </div>
@@ -257,7 +259,7 @@ export function ClientPortalPrototype() {
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
                 <div className="flex items-center gap-2.5">
                   <MapPin className="h-5 w-5 text-[#533afd]" />
-                  <h3 className="font-bold text-base text-[#0d1738]">3. Nobody Finds Us on Google Search</h3>
+                  <h3 className="font-bold text-base text-[#0d1738]">3. Invisible on Google Across Most of Queens</h3>
                 </div>
                 <span className="rounded-full bg-[#e3dfff] px-2.5 py-0.5 text-[11px] font-bold text-[#533afd]">
                   Your Focus
@@ -265,12 +267,12 @@ export function ClientPortalPrototype() {
               </div>
               <div className="space-y-3 text-xs leading-relaxed">
                 <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Before (Friction)</span>
-                  <p className="mt-1 text-[#42506a]">49 Queens scan checkpoints showed rank #1 in Flushing, but missing from Astoria, LIC, and Forest Hills.</p>
+                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Old Site X-Ray (Friction)</span>
+                  <p className="mt-1 text-[#42506a]">Our 49-point Queens scan showed you rank #1 in Flushing, but are completely missing from Astoria, LIC, Forest Hills, and Jamaica.</p>
                 </div>
                 <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Solution</span>
-                  <p className="mt-1 text-[#0d1738] font-medium">28 localized Queens service pages establishing direct geographic relevance across all target zip codes.</p>
+                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Resolution</span>
+                  <p className="mt-1 text-[#0d1738] font-medium">28 localized Queens service landing pages establishing direct geographic search relevance across all target zip codes.</p>
                 </div>
               </div>
             </div>
@@ -288,12 +290,12 @@ export function ClientPortalPrototype() {
               </div>
               <div className="space-y-3 text-xs leading-relaxed">
                 <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Before (Friction)</span>
-                  <p className="mt-1 text-[#42506a]">Zero structured schema. AI chatbots could not verify services, license numbers, or service areas.</p>
+                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Old Site X-Ray (Friction)</span>
+                  <p className="mt-1 text-[#42506a]">Zero structured schema. When users ask ChatGPT or Google AI for the best Queens electrician, AI engines cannot verify your license or services.</p>
                 </div>
                 <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Solution</span>
-                  <p className="mt-1 text-[#0d1738] font-medium">Complete LocalBusiness JSON-LD schema & Entity FAQ markup so AI search models cite York Electrical as #1.</p>
+                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Resolution</span>
+                  <p className="mt-1 text-[#0d1738] font-medium">Complete LocalBusiness JSON-LD schema & Entity FAQ markup so AI search models verify and cite York Electrical as #1.</p>
                 </div>
               </div>
             </div>
@@ -303,7 +305,7 @@ export function ClientPortalPrototype() {
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
                 <div className="flex items-center gap-2.5">
                   <CircleDollarSign className="h-5 w-5 text-[#533afd]" />
-                  <h3 className="font-bold text-base text-[#0d1738]">5. Not Enough High-Ticket Inquiries</h3>
+                  <h3 className="font-bold text-base text-[#0d1738]">5. Big Jobs Bundled in 1 Generic Paragraph</h3>
                 </div>
                 <span className="rounded-full bg-[#f0f3ff] px-2.5 py-0.5 text-[11px] font-bold text-[#533afd]">
                   Audit Finding
@@ -311,12 +313,12 @@ export function ClientPortalPrototype() {
               </div>
               <div className="space-y-3 text-xs leading-relaxed">
                 <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Before (Friction)</span>
-                  <p className="mt-1 text-[#42506a]">$3,500 panel upgrades and $2,000 EV charger installs were bundled in one generic bullet list.</p>
+                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Old Site X-Ray (Friction)</span>
+                  <p className="mt-1 text-[#42506a]">$3,500 panel upgrades and $2,000 EV charger installs were lumped in one single bulleted list, losing all long-tail keyword search volume.</p>
                 </div>
                 <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Solution</span>
-                  <p className="mt-1 text-[#0d1738] font-medium">Dedicated landing routes with permit details, pricing guidance, and commercial quote forms.</p>
+                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Resolution</span>
+                  <p className="mt-1 text-[#0d1738] font-medium">Dedicated high-ticket landing routes with NYC permit guidance, panel sizing details, and instant quote forms.</p>
                 </div>
               </div>
             </div>
@@ -334,12 +336,12 @@ export function ClientPortalPrototype() {
               </div>
               <div className="space-y-3 text-xs leading-relaxed">
                 <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Before (Friction)</span>
-                  <p className="mt-1 text-[#42506a]">Zero blog articles explaining NYC electrical codes, DOB violations, or LED retrofit ROI.</p>
+                  <span className="font-bold uppercase tracking-wider text-[#ba1a1a]">Old Site X-Ray (Friction)</span>
+                  <p className="mt-1 text-[#42506a]">Zero helpful articles explaining NYC electrical codes, DOB violations, or LED retrofit ROI, signaling to search engines that the site was inactive.</p>
                 </div>
                 <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
-                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Solution</span>
-                  <p className="mt-1 text-[#0d1738] font-medium">8 original, human-reviewed launch articles so your website has authoritative depth from day one.</p>
+                  <span className="font-bold uppercase tracking-wider text-[#0b8f5b]">Rebuilt Resolution</span>
+                  <p className="mt-1 text-[#0d1738] font-medium">8 original, human-reviewed launch articles so your website has authoritative depth and answers real customer questions from day one.</p>
                 </div>
               </div>
             </div>
@@ -597,7 +599,17 @@ export function ClientPortalPrototype() {
 
       {/* FOOTER */}
       <footer className="border-t border-[#e5e7f2] bg-white py-8 text-center text-xs text-[#777588]">
-        <p>© 2026 BarakahSoft LLC · Direct line: +1 (307) 533-6678 · hello@barakahsoft.com</p>
+        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
+          <p>© 2026 BarakahSoft LLC · Verified Client Proposal Portal</p>
+          <div className="flex items-center gap-6">
+            <a href="tel:+13075336678" className="hover:text-[#533afd] transition font-medium">
+              Direct line: +1 (307) 533-6678
+            </a>
+            <a href="mailto:hello@barakahsoft.com" className="hover:text-[#533afd] transition font-medium">
+              hello@barakahsoft.com
+            </a>
+          </div>
+        </div>
       </footer>
     </div>
   );
