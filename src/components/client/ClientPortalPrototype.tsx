@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   Activity,
   ArrowRight,
-  BarChart3,
   Bot,
   Check,
   CheckCircle2,
@@ -108,10 +107,10 @@ const MAP_POINTS = [
 ];
 
 const COMPETITOR_BARS = [
-  { name: "York Electrical (Rebuilt)", speed: 98, pages: 28, score: 95 },
-  { name: "Entech Electrical", speed: 48, pages: 6, score: 62 },
-  { name: "Brightline Power", speed: 65, pages: 4, score: 58 },
-  { name: "Citywide Power", speed: 40, pages: 8, score: 45 },
+  { name: "York Electrical (Rebuilt)", speed: 98, pages: 28 },
+  { name: "Entech Electrical", speed: 48, pages: 6 },
+  { name: "Brightline Power", speed: 65, pages: 4 },
+  { name: "Citywide Power", speed: 40, pages: 8 },
 ];
 
 const RADAR_DATA = [
@@ -121,6 +120,29 @@ const RADAR_DATA = [
   { subject: "Service Depth", York: 92, Competitors: 30, fullMark: 100 },
   { subject: "Trust & Proof", York: 96, Competitors: 60, fullMark: 100 },
   { subject: "Structured Schema", York: 100, Competitors: 25, fullMark: 100 },
+];
+
+const GOOGLE_PAA_QUESTIONS = [
+  {
+    q: "Do I need a NYC DOB permit for a 200-amp electrical panel upgrade in Queens?",
+    a: "Yes. All panel upgrades in NYC require an electrical permit from the NYC DOB and an official Con Edison meter disconnect inspection. York Electrical handles the entire filing end-to-end.",
+    article: "Covered by Launch Article #1",
+  },
+  {
+    q: "How much does a commercial Level 2 EV charger installation cost in NYC?",
+    a: "Commercial Level 2 installations typically range from $1,500 to $4,500 depending on conduit run distance, panel capacity, and dedicated 240V breaker needs.",
+    article: "Covered by Launch Article #2",
+  },
+  {
+    q: "How fast can an NYC ECB electrical violation be cleared before property sale?",
+    a: "A licensed NYC Master Electrician can perform the correction, file a Certificate of Correction with DOB, and clear the violation in 24 to 72 hours.",
+    article: "Covered by Launch Article #3",
+  },
+  {
+    q: "What is the ROI of commercial LED lighting retrofits under NYC Local Law 97?",
+    a: "Commercial properties reduce lighting energy usage by up to 65%, avoiding LL97 carbon penalties and achieving full payback within 14 to 22 months.",
+    article: "Covered by Launch Article #4",
+  },
 ];
 
 export function ClientPortalPrototype() {
@@ -365,7 +387,49 @@ export function ClientPortalPrototype() {
           </div>
         </section>
 
-        {/* 4. SEO INFRASTRUCTURE & TECHNICAL AUDIT GAUGE */}
+        {/* 4. GOOGLE AI OVERVIEW & GENERATIVE SEARCH READINESS (GEO) */}
+        <section className="rounded-2xl border border-[#e5e7f2] bg-white p-8 sm:p-10 shadow-sm space-y-6">
+          <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-[#533afd]" />
+                <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
+                  Google AI Overview & Generative Search Readiness (GEO)
+                </span>
+              </div>
+              <h2 className="mt-1 text-2xl font-bold text-[#0d1738]">
+                How Your 8 Launch Articles Answer What Queens Customers Ask Google & ChatGPT
+              </h2>
+            </div>
+            <span className="rounded-full bg-[#eaf8f0] px-3 py-1 text-xs font-bold text-[#0b8f5b]">
+              FAQ Schema Fortified
+            </span>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 pt-2">
+            {GOOGLE_PAA_QUESTIONS.map((item, idx) => (
+              <div key={item.q} className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-[#533afd] uppercase tracking-wider">
+                    {item.article}
+                  </span>
+                  <span className="rounded bg-[#e3dfff] px-2 py-0.5 text-[10px] font-bold text-[#533afd]">
+                    Google AI Q&A
+                  </span>
+                </div>
+                <h4 className="font-bold text-sm text-[#0d1738]">
+                  "{item.q}"
+                </h4>
+                <div className="rounded-lg bg-white border border-[#e5e7f2] p-3 text-xs text-[#42506a] leading-relaxed">
+                  <strong className="text-[#0b8f5b] block mb-1">✓ Rebuilt Direct Answer Snippet:</strong>
+                  {item.a}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 5. SEO INFRASTRUCTURE & TECHNICAL AUDIT GAUGE */}
         <section className="rounded-2xl border border-[#e5e7f2] bg-white p-8 sm:p-10 shadow-sm space-y-6">
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-[#533afd]" />
@@ -374,7 +438,7 @@ export function ClientPortalPrototype() {
             </span>
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-[#0d1738]">
-            Full Diagnostic Scorecard: 29/100 Baseline $\to$ 95/100 Rebuilt Platform
+            Full Diagnostic Scorecard: 29/100 Baseline → 95/100 Rebuilt Platform
           </h2>
 
           <div className="grid gap-6 sm:grid-cols-4 pt-2">
@@ -398,7 +462,7 @@ export function ClientPortalPrototype() {
           </div>
         </section>
 
-        {/* 5. VISUAL SEARCH GRID (QUEENS MAP) */}
+        {/* 6. VISUAL SEARCH GRID (QUEENS MAP) */}
         <section className="rounded-2xl border border-[#e5e7f2] bg-white p-8 sm:p-10 shadow-sm space-y-6">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div>
@@ -465,7 +529,7 @@ export function ClientPortalPrototype() {
           </div>
         </section>
 
-        {/* 6. COMPETITOR BENCHMARK & RADAR */}
+        {/* 7. COMPETITOR BENCHMARK & RADAR */}
         <section className="rounded-2xl border border-[#e5e7f2] bg-white p-8 sm:p-10 shadow-sm space-y-6">
           <div className="flex items-center justify-between">
             <div>
@@ -510,7 +574,7 @@ export function ClientPortalPrototype() {
           </div>
         </section>
 
-        {/* 7. TRANSPARENT PRICING & VALUE ANCHORING */}
+        {/* 8. TRANSPARENT PRICING & VALUE ANCHORING */}
         <section className="rounded-2xl border-2 border-[#533afd] bg-white p-8 sm:p-10 shadow-sm space-y-8">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start border-b border-[#e5e7f2] pb-6">
             <div>
@@ -565,7 +629,7 @@ export function ClientPortalPrototype() {
           </div>
         </section>
 
-        {/* 8. BIG DECISION BOX */}
+        {/* 9. BIG DECISION BOX */}
         <section className="rounded-2xl bg-[#0d1738] p-8 sm:p-12 text-white shadow-lg text-center space-y-6">
           <span className="rounded-full bg-[#533afd] px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-white">
             Ready to Launch?
