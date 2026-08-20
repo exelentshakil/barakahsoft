@@ -113,11 +113,58 @@ const LEADS = [
   },
 ];
 
-const MAP_GRID = Array.from({ length: 49 }, (_, i) => ({
-  id: i + 1,
-  rank: i < 10 ? 1 : i < 20 ? 6 : 22,
-  status: i < 10 ? "visible" : i < 20 ? "outside" : "missing",
-}));
+// Complete 49 Queens Scan Checkpoints with Real Neighborhoods & Competitors
+const MAP_GRID = [
+  { id: 1, name: "Astoria North", rank: 14, competitor: "Entech Electrical (168 Reviews)", status: "missing", lostJobs: "$4,500" },
+  { id: 2, name: "Astoria Ditmars", rank: 12, competitor: "Entech Electrical (168 Reviews)", status: "missing", lostJobs: "$3,500" },
+  { id: 3, name: "Long Island City", rank: 18, competitor: "Citywide Power (140 Reviews)", status: "missing", lostJobs: "$8,000" },
+  { id: 4, name: "Sunnyside", rank: 11, competitor: "Brightline Power (155 Reviews)", status: "missing", lostJobs: "$2,500" },
+  { id: 5, name: "Woodside", rank: 8, competitor: "Brightline Power (155 Reviews)", status: "outside", lostJobs: "$2,000" },
+  { id: 6, name: "Jackson Heights", rank: 3, competitor: "York Electrical (450+ Reviews)", status: "visible", lostJobs: "$0 (Dominating)" },
+  { id: 7, name: "East Elmhurst", rank: 15, competitor: "Metro Sparks (89 Reviews)", status: "missing", lostJobs: "$3,000" },
+  { id: 8, name: "Corona Plaza", rank: 2, competitor: "York Electrical (450+ Reviews)", status: "visible", lostJobs: "$0 (Dominating)" },
+  { id: 9, name: "Flushing Main", rank: 1, competitor: "York Electrical (450+ Reviews)", status: "visible", lostJobs: "$0 (Dominating)" },
+  { id: 10, name: "Flushing Chinatown", rank: 2, competitor: "York Electrical (450+ Reviews)", status: "visible", lostJobs: "$0 (Dominating)" },
+  { id: 11, name: "Murray Hill", rank: 1, competitor: "York Electrical (450+ Reviews)", status: "visible", lostJobs: "$0 (Dominating)" },
+  { id: 12, name: "Broadway Station", rank: 1, competitor: "York Electrical (450+ Reviews)", status: "visible", lostJobs: "$0 (Dominating)" },
+  { id: 13, name: "Auburndale", rank: 1, competitor: "York Electrical (450+ Reviews)", status: "visible", lostJobs: "$0 (Dominating)" },
+  { id: 14, name: "Bayside West", rank: 1, competitor: "York Electrical (450+ Reviews)", status: "visible", lostJobs: "$0 (Dominating)" },
+  { id: 15, name: "Bayside Bell Blvd", rank: 1, competitor: "York Electrical (450+ Reviews)", status: "visible", lostJobs: "$0 (Dominating)" },
+  { id: 16, name: "Bay Terrace", rank: 2, competitor: "York Electrical (450+ Reviews)", status: "visible", lostJobs: "$0 (Dominating)" },
+  { id: 17, name: "Whitestone", rank: 1, competitor: "York Electrical (450+ Reviews)", status: "visible", lostJobs: "$0 (Dominating)" },
+  { id: 18, name: "Malba", rank: 5, competitor: "North Shore Electric (62 Reviews)", status: "outside", lostJobs: "$1,500" },
+  { id: 19, name: "College Point", rank: 9, competitor: "Queens Light Co (45 Reviews)", status: "outside", lostJobs: "$2,000" },
+  { id: 20, name: "Rego Park", rank: 16, competitor: "Citywide Power (140 Reviews)", status: "missing", lostJobs: "$4,000" },
+  { id: 21, name: "Forest Hills 71st", rank: 14, competitor: "Citywide Power (140 Reviews)", status: "missing", lostJobs: "$6,500" },
+  { id: 22, name: "Kew Gardens", rank: 19, competitor: "Metro Sparks (89 Reviews)", status: "missing", lostJobs: "$3,500" },
+  { id: 23, name: "Richmond Hill", rank: 22, competitor: "South Queens Wire (55 Reviews)", status: "missing", lostJobs: "$2,500" },
+  { id: 24, name: "Woodhaven", rank: 17, competitor: "South Queens Wire (55 Reviews)", status: "missing", lostJobs: "$2,000" },
+  { id: 25, name: "Ozone Park", rank: 24, competitor: "Crossbay Electric (38 Reviews)", status: "missing", lostJobs: "$3,000" },
+  { id: 26, name: "Howard Beach", rank: 15, competitor: "Crossbay Electric (38 Reviews)", status: "missing", lostJobs: "$4,500" },
+  { id: 27, name: "Middle Village", rank: 11, competitor: "Apex Sparks (72 Reviews)", status: "missing", lostJobs: "$3,500" },
+  { id: 28, name: "Glendale", rank: 13, competitor: "Apex Sparks (72 Reviews)", status: "missing", lostJobs: "$2,500" },
+  { id: 29, name: "Ridgewood", rank: 20, competitor: "Brooklyn Border Pro (110 Reviews)", status: "missing", lostJobs: "$5,000" },
+  { id: 30, name: "Maspeth", rank: 14, competitor: "Industrial Power (68 Reviews)", status: "missing", lostJobs: "$4,000" },
+  { id: 31, name: "Fresh Meadows", rank: 4, competitor: "Northeast Electric (54 Reviews)", status: "outside", lostJobs: "$1,500" },
+  { id: 32, name: "Oakland Gardens", rank: 6, competitor: "Northeast Electric (54 Reviews)", status: "outside", lostJobs: "$1,500" },
+  { id: 33, name: "Little Neck", rank: 7, competitor: "Nassau Border Sparks (48 Reviews)", status: "outside", lostJobs: "$2,000" },
+  { id: 34, name: "Douglaston", rank: 5, competitor: "Nassau Border Sparks (48 Reviews)", status: "outside", lostJobs: "$2,500" },
+  { id: 35, name: "Floral Park", rank: 12, competitor: "Long Island Wire (36 Reviews)", status: "missing", lostJobs: "$2,000" },
+  { id: 36, name: "Bellerose", rank: 14, competitor: "Long Island Wire (36 Reviews)", status: "missing", lostJobs: "$1,500" },
+  { id: 37, name: "Queens Village", rank: 19, competitor: "East Queens Tech (51 Reviews)", status: "missing", lostJobs: "$3,000" },
+  { id: 38, name: "Hollis Hills", rank: 9, competitor: "East Queens Tech (51 Reviews)", status: "outside", lostJobs: "$1,500" },
+  { id: 39, name: "Jamaica Estates", rank: 13, competitor: "Mid-Island Electric (65 Reviews)", status: "missing", lostJobs: "$4,000" },
+  { id: 40, name: "Jamaica Center", rank: 21, competitor: "Metro Sparks (89 Reviews)", status: "missing", lostJobs: "$5,000" },
+  { id: 41, name: "St. Albans", rank: 25, competitor: "Southeast Power (42 Reviews)", status: "missing", lostJobs: "$2,500" },
+  { id: 42, name: "Cambria Heights", rank: 23, competitor: "Southeast Power (42 Reviews)", status: "missing", lostJobs: "$2,000" },
+  { id: 43, name: "Rosedale", rank: 27, competitor: "South Shore Wire (33 Reviews)", status: "missing", lostJobs: "$2,000" },
+  { id: 44, name: "Laurelton", rank: 24, competitor: "South Shore Wire (33 Reviews)", status: "missing", lostJobs: "$2,000" },
+  { id: 45, name: "Springfield Gardens", rank: 26, competitor: "JFK Corridor Elec (74 Reviews)", status: "missing", lostJobs: "$3,000" },
+  { id: 46, name: "Rockaway Beach", rank: 18, competitor: "Seaside Electrical (58 Reviews)", status: "missing", lostJobs: "$3,500" },
+  { id: 47, name: "Belle Harbor", rank: 12, competitor: "Seaside Electrical (58 Reviews)", status: "missing", lostJobs: "$4,000" },
+  { id: 48, name: "Arverne", rank: 20, competitor: "Seaside Electrical (58 Reviews)", status: "missing", lostJobs: "$2,500" },
+  { id: 49, name: "Far Rockaway", rank: 22, competitor: "Atlantic Coast Wire (61 Reviews)", status: "missing", lostJobs: "$3,000" },
+];
 
 const COMPETITOR_BARS = [
   { name: "York Electrical (Rebuilt)", speed: 98, pages: 28 },
@@ -161,7 +208,7 @@ const GOOGLE_PAA_QUESTIONS = [
 export function AdminPrototype() {
   const [selectedLead, setSelectedLead] = useState(LEADS[0]);
   const [emailSent, setEmailSent] = useState(false);
-  const [selectedMapNode, setSelectedMapNode] = useState(8);
+  const [selectedNode, setSelectedNode] = useState(MAP_GRID[0]); // Default to Astoria North (missing node)
 
   return (
     <div className="min-h-screen bg-[#f9f9ff] text-[#0d1738] font-sans antialiased">
@@ -336,64 +383,85 @@ export function AdminPrototype() {
               </div>
             </div>
 
-            {/* LINEAR STEP 2: VISUAL AUDIT & 7×7 LOCAL MAP GRID */}
+            {/* LINEAR STEP 2: VISUAL AUDIT & 7×7 LOCAL MAP GRID (WITH LIVE INSPECTOR & COMPETITORS) */}
             <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-5">
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
                 <div className="flex items-center gap-2.5">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f0f3ff] text-xs font-bold text-[#533afd]">
                     2
                   </span>
-                  <h3 className="font-bold text-base text-[#0d1738]">Automated Visual Audit & Queens Search Matrix</h3>
+                  <h3 className="font-bold text-base text-[#0d1738]">
+                    Interactive Queens 7×7 Search Grid & Lost Revenue Scanner
+                  </h3>
                 </div>
                 <span className="text-xs font-bold text-[#533afd]">Speed Lift: 29 → 98 / 100</span>
               </div>
 
-              <div className="grid gap-6 sm:grid-cols-[1.1fr_0.9fr] sm:items-center">
+              <div className="grid gap-6 sm:grid-cols-[1fr_1fr] sm:items-center">
                 {/* 7x7 Grid */}
                 <div className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#777588] block mb-2.5">
-                    Queens 7×7 Search Grid (49 Scan Nodes)
-                  </span>
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#777588]">
+                      Click Any of 49 Queens Scan Nodes:
+                    </span>
+                    <span className="text-[11px] font-bold text-[#533afd]">Node #{selectedNode.id} Selected</span>
+                  </div>
+
                   <div className="grid grid-cols-7 gap-2">
                     {MAP_GRID.map((pt) => (
                       <button
                         key={pt.id}
-                        onClick={() => setSelectedMapNode(pt.id)}
+                        onClick={() => setSelectedNode(pt)}
                         className={`aspect-square rounded flex items-center justify-center text-[10px] font-bold transition ${
                           pt.status === "visible"
-                            ? "bg-[#533afd] text-white"
+                            ? "bg-[#533afd] text-white hover:bg-[#432bd9]"
                             : pt.status === "outside"
-                            ? "bg-[#ffe086] text-[#231b00]"
-                            : "bg-[#ffdad6] text-[#ba1a1a]"
-                        } ${selectedMapNode === pt.id ? "ring-2 ring-[#0d1738] scale-110" : ""}`}
+                            ? "bg-[#ffe086] text-[#231b00] hover:bg-[#eec218]"
+                            : "bg-[#ffdad6] text-[#ba1a1a] hover:bg-[#ffb4ab]"
+                        } ${selectedNode.id === pt.id ? "ring-2 ring-[#0d1738] scale-110 shadow-sm" : ""}`}
                       >
                         {pt.rank}
                       </button>
                     ))}
                   </div>
+
                   <div className="mt-3 flex justify-between text-[11px] text-[#777588]">
-                    <span>Rank #1-3 (10 Nodes)</span>
-                    <span className="text-[#ba1a1a] font-semibold">Missing (39 Nodes)</span>
+                    <span>Rank #1–3 (10 Dominant)</span>
+                    <span className="text-[#ba1a1a] font-bold">Missing (39 Nodes)</span>
                   </div>
                 </div>
 
-                {/* Audit Key Metrics */}
-                <div className="space-y-3 text-xs leading-relaxed">
-                  <div className="rounded-xl bg-[#f0f3ff] p-4 border border-[#c7d0fb]">
-                    <p className="font-bold text-[#533afd]">Audit Discovery for Closing Call:</p>
-                    <p className="text-[#42506a] mt-1">
-                      York Electrical dominates Flushing/Bayside, but is completely invisible in Astoria, LIC, and Forest Hills.
-                    </p>
+                {/* Interactive Node Competitor Inspector Box */}
+                <div className="space-y-4 rounded-xl border border-[#c7d0fb] bg-[#f0f3ff] p-5 text-xs">
+                  <div className="flex justify-between items-center border-b border-[#c7d0fb] pb-2.5">
+                    <span className="font-bold text-[#533afd] uppercase text-[11px]">
+                      Node #{selectedNode.id}: {selectedNode.name}
+                    </span>
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                        selectedNode.status === "visible"
+                          ? "bg-[#eaf8f0] text-[#0b8f5b]"
+                          : "bg-[#ffdad6] text-[#ba1a1a]"
+                      }`}
+                    >
+                      {selectedNode.status === "visible" ? "Rank #1-3 Leader" : `Rank #${selectedNode.rank} (Missing)`}
+                    </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-3 text-center">
-                    <div className="rounded-xl border border-[#e5e7f2] p-3 bg-[#f9f9ff]">
-                      <span className="text-[10px] font-semibold text-[#777588]">Mobile Load Time</span>
-                      <p className="text-xl font-bold text-[#0b8f5b] mt-0.5">0.12s</p>
+
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-[#777588]">Competitor Holding Search Spot:</span>
+                      <p className="font-bold text-[#0d1738] text-sm mt-0.5">{selectedNode.competitor}</p>
                     </div>
-                    <div className="rounded-xl border border-[#e5e7f2] p-3 bg-[#f9f9ff]">
-                      <span className="text-[10px] font-semibold text-[#777588]">AI Schema Markup</span>
-                      <p className="text-xl font-bold text-[#533afd] mt-0.5">LocalBusiness</p>
+                    <div>
+                      <span className="text-[#777588]">Estimated Lost Job Volume in this Area:</span>
+                      <p className="font-bold text-[#ba1a1a] text-sm mt-0.5">{selectedNode.lostJobs} / month</p>
                     </div>
+                  </div>
+
+                  <div className="rounded-lg bg-white p-3 border border-[#c7d0fb] text-[11px] leading-relaxed text-[#42506a]">
+                    <strong className="text-[#533afd] block mb-0.5">Closing Call Insight:</strong>
+                    "In {selectedNode.name}, {selectedNode.competitor.split(' ')[0]} takes the calls because your old site didn't mention {selectedNode.name}. The new site builds a dedicated page for this neighborhood to reclaim these jobs."
                   </div>
                 </div>
               </div>
@@ -406,7 +474,7 @@ export function AdminPrototype() {
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f0f3ff] text-xs font-bold text-[#533afd]">
                     3
                   </span>
-                  <h3 className="font-bold text-base text-[#0d1738]">Competitor Radar & Google AI Search Q&A Intel</h3>
+                  <h3 className="font-bold text-base text-[#0d1738]">Competitor Benchmark & Google AI Q&A Intel</h3>
                 </div>
                 <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b] shrink-0">
                   <BarChart3 className="h-3 w-3" /> 4 Competitors Benchmarked
