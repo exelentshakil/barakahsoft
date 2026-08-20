@@ -753,66 +753,163 @@ function QaReleaseTab() {
 
 // 8. HOW TO CLOSE TAB
 function HowToCloseTab() {
+  const [emailSent, setEmailSent] = useState(false);
+
   return (
     <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-      <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-6">
-        <h3 className="text-xl font-bold text-[#0d1738]">Closing Sequence & Objection Handling</h3>
-        
-        <div className="space-y-4 text-xs">
-          <div className="rounded-xl border border-[#533afd] bg-[#f0f3ff] p-4">
-            <div className="flex justify-between items-center">
-              <span className="font-bold text-[#533afd]">Step 1: Send Free Concept (Due Today)</span>
-              <span className="rounded bg-[#533afd] text-white px-2 py-0.5 text-[10px] font-bold">Immediate</span>
+      <div className="space-y-6">
+        {/* Timed Closing Sequence */}
+        <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-6">
+          <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
+            <div>
+              <h3 className="text-xl font-bold text-[#0d1738]">Deterministic Closing Sequence</h3>
+              <p className="text-xs text-[#777588]">Zero email client switching — send Brevo transactional emails & click-to-call directly.</p>
             </div>
-            <p className="mt-2 text-[#42506a]">
-              "Hi David, sent over the rebuilt homepage and Queens map audit for York Electrical. Take a look with no pressure."
+            <span className="rounded-full bg-[#f0f3ff] px-2.5 py-0.5 text-xs font-bold text-[#533afd]">
+              Lead: David (York Electrical)
+            </span>
+          </div>
+
+          <div className="space-y-4 text-xs">
+            {/* Step 1: Brevo Instant Send */}
+            <div className="rounded-xl border border-[#533afd] bg-[#f0f3ff] p-5 space-y-3">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-[#533afd]" />
+                  <span className="font-bold text-[#533afd]">Step 1: Instant Brevo Magic Link Delivery</span>
+                </div>
+                <span className="rounded bg-[#533afd] text-white px-2 py-0.5 text-[10px] font-bold">
+                  {emailSent ? "Sent via Brevo ✓" : "Due Today · Immediate"}
+                </span>
+              </div>
+
+              {/* Live Brevo Email Preview */}
+              <div className="rounded-lg border border-[#c7d0fb] bg-white p-4 space-y-2">
+                <div className="flex justify-between text-[11px] text-[#777588] border-b border-[#e5e7f2] pb-2">
+                  <span><strong>To:</strong> david@yorkelectrical.com</span>
+                  <span><strong>Sender:</strong> BarakahSoft &lt;noreply@barakahsoft.com&gt;</span>
+                </div>
+                <p className="font-semibold text-[#0d1738]">
+                  Subject: Your Rebuilt Homepage & Queens Market Audit (York Electrical)
+                </p>
+                <p className="text-[#42506a] leading-relaxed">
+                  "Hi David, we completed the research, 7×7 Queens local search grid, and rebuilt homepage for York Electrical. Access your secure interactive portal below:"
+                </p>
+                <div className="pt-2">
+                  <span className="inline-block rounded bg-[#533afd] px-3 py-1.5 font-mono text-[11px] font-bold text-white">
+                    https://preview.barakahsoft.com/s/york-electrical?auth=magic_983
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center pt-1">
+                <span className="text-[11px] text-[#777588]">Automated via Brevo API</span>
+                <button
+                  onClick={() => setEmailSent(true)}
+                  disabled={emailSent}
+                  className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-xs font-bold text-white transition ${
+                    emailSent ? "bg-[#0b8f5b]" : "bg-[#533afd] hover:bg-[#432bd9]"
+                  }`}
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  {emailSent ? "Email Sent via Brevo ✓" : "1-Click Send Brevo Email Now"}
+                </button>
+              </div>
+            </div>
+
+            {/* Step 2: Click-to-Call on Phone */}
+            <div className="rounded-xl border border-[#e5e7f2] bg-white p-5 space-y-3">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <PhoneCall className="h-4 w-4 text-[#0b8f5b]" />
+                  <span className="font-bold text-[#0d1738]">Step 2: Walkthrough Call (Click-to-Call)</span>
+                </div>
+                <span className="rounded bg-[#f9f9ff] border border-[#e5e7f2] px-2 py-0.5 text-[10px] font-semibold text-[#777588]">
+                  Due Tomorrow
+                </span>
+              </div>
+              <p className="text-[#42506a]">
+                Review the 10/49 map grid and ask if the 39 missing areas align with where they want more high-value jobs.
+              </p>
+              <div className="pt-1">
+                <a
+                  href="tel:+17183537227"
+                  className="inline-flex items-center gap-2 rounded-md bg-[#0b8f5b] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#09744a]"
+                >
+                  <PhoneCall className="h-3.5 w-3.5" /> Call Lead on Phone: +1 (718) 353-7227
+                </a>
+              </div>
+            </div>
+
+            {/* Step 3: Automated Follow-Up Sequences */}
+            <div className="rounded-xl border border-[#e5e7f2] bg-white p-4 text-[#777588] flex justify-between items-center">
+              <div>
+                <p className="font-bold text-[#0d1738]">Step 3: Automated Follow-Up #2</p>
+                <p className="text-[11px]">Triggers automatically via Brevo if unopened within 24 hours.</p>
+              </div>
+              <span className="rounded bg-[#f9f9ff] border border-[#e5e7f2] px-2 py-0.5 text-[10px] font-bold text-[#777588]">
+                Auto-Scheduled
+              </span>
+            </div>
+          </div>
+
+          {/* Objection Handling Cheat Sheet */}
+          <div className="border-t border-[#e5e7f2] pt-5 space-y-3">
+            <p className="text-xs font-bold uppercase tracking-wider text-[#777588]">
+              Objection Handling Scripts
             </p>
-          </div>
-
-          <div className="rounded-xl border border-[#e5e7f2] p-4 text-[#777588]">
-            <p className="font-bold text-[#0d1738]">Step 2: Walkthrough Call (Due Tomorrow)</p>
-            <p className="mt-1">Review the 10/49 map grid and ask if missing areas match current customer calls.</p>
-          </div>
-
-          <div className="rounded-xl border border-[#e5e7f2] p-4 text-[#777588]">
-            <p className="font-bold text-[#0d1738]">Step 3: Collect $797 Full Build</p>
-            <p className="mt-1">Send Stripe checkout link. Production begins upon receipt.</p>
-          </div>
-        </div>
-
-        {/* Objection Handling Cheat Sheet */}
-        <div className="border-t border-[#e5e7f2] pt-4 space-y-2">
-          <p className="text-xs font-bold uppercase tracking-wider text-[#777588]">Quick Objection Scripts</p>
-          <div className="rounded-lg bg-[#f9f9ff] p-3 text-xs">
-            <p className="font-bold text-[#0d1738]">"We get all our business from word of mouth."</p>
-            <p className="mt-1 text-[#777588]">Script: "Exactly — when they hear about you, they look you up on mobile. The new site ensures they call you instead of checking the next guy."</p>
+            <div className="grid gap-2 sm:grid-cols-2 text-xs">
+              <div className="rounded-lg bg-[#f9f9ff] border border-[#e5e7f2] p-3">
+                <p className="font-bold text-[#0d1738]">"We get all business by word of mouth."</p>
+                <p className="mt-1 text-[#42506a]">
+                  "When people hear about you, they look you up on mobile. The new site ensures they call you instead of checking the next guy."
+                </p>
+              </div>
+              <div className="rounded-lg bg-[#f9f9ff] border border-[#e5e7f2] p-3">
+                <p className="font-bold text-[#0d1738]">"I already have a web designer."</p>
+                <p className="mt-1 text-[#42506a]">
+                  "Show them the 10/49 map grid and 0.12s speed benchmark — if they can match this route depth and schema, stick with them."
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Stripe Payment Trigger */}
-      <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-4">
-        <h3 className="font-bold text-[#0d1738]">Stripe Checkout Trigger</h3>
-        <p className="text-xs text-[#777588]">Send one-click payment link directly to customer.</p>
-        
-        <div className="rounded-lg bg-[#f0f3ff] p-4 text-xs space-y-2">
-          <div className="flex justify-between">
-            <span className="text-[#777588]">Product</span>
-            <span className="font-bold text-[#0d1738]">Full Website Package</span>
+      <div className="space-y-6">
+        <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
+            <h3 className="font-bold text-[#0d1738]">Stripe One-Click Checkout</h3>
+            <CircleDollarSign className="h-5 w-5 text-[#533afd]" />
           </div>
-          <div className="flex justify-between">
-            <span className="text-[#777588]">Scope</span>
-            <span className="font-bold text-[#0d1738]">28 Services + 8 Posts</span>
-          </div>
-          <div className="flex justify-between border-t border-[#e5e7f2] pt-2">
-            <span className="font-bold text-[#0d1738]">Total</span>
-            <span className="font-bold text-[#533afd]">$797.00 USD</span>
-          </div>
-        </div>
+          <p className="text-xs text-[#777588]">
+            Generate and dispatch secure checkout link via SMS and email.
+          </p>
 
-        <button className="w-full rounded-md bg-[#533afd] py-3 text-xs font-bold text-white shadow-sm hover:bg-[#432bd9]">
-          Generate Stripe Payment Link
-        </button>
+          <div className="rounded-xl bg-[#f0f3ff] p-4 text-xs space-y-2.5">
+            <div className="flex justify-between">
+              <span className="text-[#777588]">Product</span>
+              <span className="font-bold text-[#0d1738]">Full Website Build</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#777588]">Scope</span>
+              <span className="font-bold text-[#0d1738]">28 Services + 8 Posts</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#777588]">Delivery SLA</span>
+              <span className="font-bold text-[#0b8f5b]">48 Hours Post-Payment</span>
+            </div>
+            <div className="flex justify-between border-t border-[#c7d0fb] pt-2">
+              <span className="font-bold text-[#0d1738]">Amount Due</span>
+              <span className="text-base font-bold text-[#533afd]">$797.00 USD</span>
+            </div>
+          </div>
+
+          <button className="w-full rounded-md bg-[#533afd] py-3 text-xs font-bold text-white shadow-sm transition hover:bg-[#432bd9]">
+            Send $797 Stripe Payment Link
+          </button>
+        </div>
       </div>
     </div>
   );
