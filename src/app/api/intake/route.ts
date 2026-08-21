@@ -4,6 +4,7 @@ import { sendInstantLeadAlert, sendInstantLeadConfirmationEmail } from "@/lib/no
 import { fireMetaCapiEvent } from "@/lib/meta-pixel-server";
 import { isPersonaSlug } from "@/lib/personas";
 import { isLeadProblem } from "@/lib/lead-problems";
+import { inngest } from "@/inngest/client";
 
 function slugify(url: string): string {
   try {
@@ -19,7 +20,8 @@ function slugify(url: string): string {
 // returns: the lead row, and sendInstantLeadAlert — synchronously, not via
 // Inngest, so the operator's call happens within minutes, decoupled from
 // the redesign build. Phase 1 deliberately stops after persistence and
-// alerting; an operator starts research/build work only after review.
+// alerting; the research event is also best-effort so a provider outage never
+// loses a submitted lead.
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   if (!body?.source_url || !body?.name || !body?.email || !body?.tcpa_consent) {
@@ -60,6 +62,7 @@ export async function POST(req: Request) {
     const results = await Promise.allSettled([
       sendInstantLeadAlert(lead),
       sendInstantLeadConfirmationEmail(lead),
+      inngest.send({ name: "lead/intake.submitted", data: { lead_id: lead.id } }),
       fireMetaCapiEvent({
         eventName: "Lead",
         eventId: body.event_id ?? crypto.randomUUID(),
