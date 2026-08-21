@@ -2,8 +2,10 @@ import Link from "next/link";
 import {
   ArrowRight,
   BarChart3,
+  Bot,
   Check,
   CheckCircle2,
+  ChevronRight,
   Clock,
   Code2,
   Download,
@@ -11,12 +13,14 @@ import {
   Eye,
   FileCode2,
   FileText,
+  Gauge,
   Globe2,
   HelpCircle,
   Image as ImageIcon,
   Laptop,
   Layers,
   Layout,
+  Lock,
   Mail,
   Megaphone,
   MessageCircle,
@@ -143,30 +147,42 @@ const ROW_2_CONCEPTS = [
   },
 ];
 
-const PROCESS_STEPS = [
+const VISUAL_JOURNEY = [
   {
-    number: "01",
-    tag: "Takes 2 Minutes",
-    title: "Submit Your Website",
-    body: "Share your current website URL and what you want to improve. Tell us where your current site is leaking calls or missing high-value services.",
+    step: "01",
+    tag: "Instant Ingestion",
+    title: "Submit URL & Friction Audit",
+    body: "We analyze your site in real time, extract your real branding and reviews, and diagnose why your current site is losing phone calls.",
+    badge: "Step 01",
+    icon: Globe2,
+    highlights: ["Speed baseline test", "5.0 ★ proof audit", "Competitor gap scan"],
   },
   {
-    number: "02",
-    tag: "Within 48 Hours",
-    title: "We Audit & Rebuild Your Homepage",
-    body: "We extract your genuine branding, run local speed diagnostics, analyze competitor search gaps, and craft a bespoke desktop & mobile concept.",
+    step: "02",
+    tag: "48-Hour Rebuild",
+    title: "Custom High-Converting Concept",
+    body: "Our design team crafts a high-contrast, modern homepage with 0.12s mobile load time, sticky 1-tap call bar, and dedicated service sections.",
+    badge: "Step 02 · 100% Free",
+    icon: Laptop,
+    highlights: ["0.12s Mobile first-paint", "Tailored brand colors", "1-Tap call conversion"],
   },
   {
-    number: "03",
-    tag: "Straight to Your Inbox",
-    title: "Review in Your Private Portal",
-    body: "You receive a private magic link with your interactive Digital X-Ray audit, 49-point local search matrix, and full live homepage preview.",
+    step: "03",
+    tag: "Private Portal",
+    title: "Review Your Interactive X-Ray",
+    body: "Open your private portal to explore your 49-point local search matrix, 6-axis competitor radar, and live interactive homepage preview.",
+    badge: "Step 03 · Zero Risk",
+    icon: BarChart3,
+    highlights: ["49-Point search grid", "Competitor radar", "Live preview link"],
   },
   {
-    number: "04",
-    tag: "No Strings Attached",
-    title: "Decide What's Next",
-    body: "Love the direction? We launch the full multi-page platform on your domain. Not ready? Keep the redesign concept 100% free of charge.",
+    step: "04",
+    tag: "Handoff & Go-Live",
+    title: "Launch on Your Domain",
+    body: "Love the direction? We connect your custom domain with SSL and deploy your standalone Next.js platform in 48 hours. Not ready? Keep the concept free.",
+    badge: "Step 04 · Your Terms",
+    icon: Rocket,
+    highlights: ["Custom domain & SSL", "Standalone Next.js export", "AI assistant active"],
   },
 ];
 
@@ -329,100 +345,62 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 5. VISUAL WEBSITE GENERATION & ASSET ENGINE EXPLAINER */}
-      <section className="border-b border-[#d9e8f4] bg-white py-20 lg:py-28">
+      {/* 5. VISUAL STEP 0 TO DELIVERY JOURNEY (Modern SaaS Visual Timeline) */}
+      <section id="how-it-works" className="border-b border-[#d9e8f4] bg-white py-20 lg:py-28">
         <div className="mx-auto max-w-6xl px-6 space-y-16">
           <div className="text-center space-y-3">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">High-Value Website Architecture</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">From First Touch to Live Launch</p>
             <h2 className="font-sans text-3xl font-extrabold tracking-tight text-[#07284d] sm:text-5xl">
-              HOW WE ENGINEER INDUSTRY-LEADING WEBSITES
+              HOW YOUR 48-HOUR REDESIGN WORKS
             </h2>
             <p className="mx-auto max-w-2xl text-sm leading-relaxed text-[#60778d] sm:text-base">
-              Images and structured assets are the heart of conversion. Here is how your website is built from scraped data to standalone Next.js deployment.
+              A transparent, zero-risk progression. From your initial website submission to private X-Ray diagnosis and official domain launch.
             </p>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-2xl border border-[#c8ddec] bg-[#f8fbfe] p-6 space-y-3 shadow-sm">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8f4ff] text-[#0c68c8]">
-                <Globe2 className="h-5 w-5" />
-              </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#0c68c8]">Step 1: Ingestion</span>
-              <h3 className="font-bold text-base text-[#07284d]">Sitemap & Brand Scraping</h3>
-              <p className="text-xs text-[#60778d] leading-relaxed">
-                Firecrawl extracts real logo vectors, brand color tokens, 5-star Google reviews, licenses, and genuine service offerings.
-              </p>
-            </div>
+            {VISUAL_JOURNEY.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.step}
+                  className="group relative flex flex-col justify-between rounded-2xl border border-[#c8ddec] bg-[#f8fbfe] p-6 shadow-[0_8px_24px_rgba(7,40,77,0.05)] transition duration-300 hover:-translate-y-1.5 hover:border-[#0c68c8] hover:bg-white hover:shadow-[0_18px_40px_rgba(7,40,77,0.12)]"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8f4ff] text-[#0c68c8]">
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <span className="rounded-full bg-white border border-[#c8ddec] px-2.5 py-0.5 text-[10px] font-bold text-[#0c68c8]">
+                        {item.badge}
+                      </span>
+                    </div>
 
-            <div className="rounded-2xl border border-[#c8ddec] bg-[#f8fbfe] p-6 space-y-3 shadow-sm">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8f4ff] text-[#0c68c8]">
-                <ImageIcon className="h-5 w-5" />
-              </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#0c68c8]">Step 2: Visual Polish</span>
-              <h3 className="font-bold text-base text-[#07284d]">Hero & Service Image Slots</h3>
-              <p className="text-xs text-[#60778d] leading-relaxed">
-                Dedicated image slots for owner headshot cutouts, fleet trucks, and individual high-definition service route cards.
-              </p>
-            </div>
+                    <div className="space-y-1">
+                      <span className="font-mono text-[11px] font-bold text-[#777588] uppercase tracking-wider">
+                        {item.tag}
+                      </span>
+                      <h3 className="font-bold text-lg text-[#07284d] leading-tight">
+                        {item.title}
+                      </h3>
+                    </div>
 
-            <div className="rounded-2xl border border-[#c8ddec] bg-[#f8fbfe] p-6 space-y-3 shadow-sm">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8f4ff] text-[#0c68c8]">
-                <Zap className="h-5 w-5" />
-              </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#0c68c8]">Step 3: Conversion Tech</span>
-              <h3 className="font-bold text-base text-[#07284d]">0.12s Speed & AI Schema</h3>
-              <p className="text-xs text-[#60778d] leading-relaxed">
-                Sticky 1-tap call bar, interactive AI lead assistant, and valid LocalBusiness entity schema for ChatGPT & Google AI citation.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-[#c8ddec] bg-[#f8fbfe] p-6 space-y-3 shadow-sm">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8f4ff] text-[#0c68c8]">
-                <Download className="h-5 w-5" />
-              </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#0c68c8]">Step 4: Zero Lock-In</span>
-              <h3 className="font-bold text-base text-[#07284d]">Standalone Next.js Export</h3>
-              <p className="text-xs text-[#60778d] leading-relaxed">
-                100% clean standalone project export. Deploy to Vercel free tier in 1 click with custom domain SSL or low-cost $30/mo maintenance.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 6. "FROM FORM TO FRESH DESIGN — IN 48 HOURS" */}
-      <section id="how-it-works" className="border-b border-[#d9e8f4] bg-[#f8fbfe] py-20 lg:py-28">
-        <div className="mx-auto max-w-5xl px-6 space-y-14">
-          <div className="text-center space-y-3">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Our Process</p>
-            <h2 className="font-sans text-3xl font-extrabold tracking-tight text-[#07284d] sm:text-5xl">
-              FROM FORM TO FRESH DESIGN — IN 48 HOURS
-            </h2>
-            <p className="mx-auto max-w-xl text-sm leading-relaxed text-[#60778d]">
-              A simple process. No payment, no obligation. Just a professional redesign concept delivered straight to your private tracking portal.
-            </p>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            {PROCESS_STEPS.map((s) => (
-              <div
-                key={s.number}
-                className="relative rounded-2xl border border-[#c8ddec] bg-white p-7 shadow-[0_8px_24px_rgba(7,40,77,0.05)] space-y-3 flex flex-col justify-between"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8f4ff] font-black text-[#0c68c8] text-base">
-                      {s.number}
-                    </span>
-                    <span className="rounded-full bg-[#f4f7fb] border border-[#c8ddec] px-3 py-1 text-[11px] font-bold text-[#07284d]">
-                      {s.tag}
-                    </span>
+                    <p className="text-xs leading-relaxed text-[#60778d]">
+                      {item.body}
+                    </p>
                   </div>
-                  <h3 className="text-xl font-bold text-[#07284d]">{s.title}</h3>
-                  <p className="text-xs text-[#60778d] leading-relaxed">{s.body}</p>
+
+                  <div className="mt-6 border-t border-[#e2edf5] pt-4 space-y-2">
+                    {item.highlights.map((hl) => (
+                      <div key={hl} className="flex items-center gap-2 text-[11px] font-semibold text-[#07284d]">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#0c68c8] shrink-0" />
+                        <span>{hl}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="text-center pt-2">
@@ -436,8 +414,8 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 7. "EVERYTHING YOU GET, FREE" (Navy + Gold High Value Box) */}
-      <section id="what-you-get" className="border-b border-[#d9e8f4] bg-white py-20 lg:py-28">
+      {/* 6. "EVERYTHING YOU GET, FREE" (Navy + Gold High Value Box) */}
+      <section id="what-you-get" className="border-b border-[#d9e8f4] bg-[#f8fbfe] py-20 lg:py-28">
         <div className="mx-auto max-w-3xl px-6 space-y-10">
           <div className="text-center space-y-3">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Full Free Deliverables</p>
@@ -490,13 +468,13 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 8. TEAM SHOWCASE */}
+      {/* 7. TEAM SHOWCASE */}
       <LandingTeamShowcase />
 
-      {/* 9. FAQ ACCORDION */}
+      {/* 8. FAQ ACCORDION */}
       <FAQAccordion />
 
-      {/* 10. BOTTOM CALL-TO-ACTION BANNER */}
+      {/* 9. BOTTOM CALL-TO-ACTION BANNER */}
       <section className="border-t border-[#d9e8f4] bg-[#07284d] py-20 text-center text-white">
         <div className="mx-auto max-w-3xl px-6 space-y-6">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#ffd12d]">
@@ -528,7 +506,7 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 11. FOOTER */}
+      {/* 10. FOOTER */}
       <Footer />
       <CrispChat />
     </main>
