@@ -85,6 +85,7 @@ export function LiveClientProposal({
   const beforeLcp = pagespeed.lcp || "8.4s";
 
   const selectedPains = lead.help_needed && lead.help_needed.length > 0 ? lead.help_needed : LEAD_PROBLEMS.slice(0, 3);
+  const isPaid = Boolean(lead.paid_at) || lead.status === "paid" || lead.status === "live";
 
   // Computed 49 local scan nodes for client service radius
   const mapPoints = Array.from({ length: 49 }, (_, i) => ({
@@ -142,7 +143,7 @@ export function LiveClientProposal({
 
           <div className="flex items-center gap-4">
             <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-3 py-1 text-xs font-semibold text-[#0b8f5b] shrink-0">
-              <CheckCircle2 className="h-3.5 w-3.5" /> Proposal Ready
+              <CheckCircle2 className="h-3.5 w-3.5" /> {isPaid ? "Launch in Progress" : "Proposal Ready"}
             </span>
             <a
               href="tel:+13075336678"
@@ -182,12 +183,18 @@ export function LiveClientProposal({
             >
               Open Live Homepage Preview <ExternalLink className="h-4 w-4" />
             </a>
-            <button
-              onClick={() => setShowCheckout(true)}
-              className="inline-flex items-center gap-2 rounded-md bg-[#0b8f5b] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#09744a]"
-            >
-              Launch Complete Lead Machine ($797) <ArrowRight className="h-4 w-4" />
-            </button>
+            {isPaid ? (
+              <div className="inline-flex items-center gap-2 rounded-md bg-[#eaf8f0] px-6 py-3.5 text-sm font-semibold text-[#0b8f5b]">
+                <CheckCircle2 className="h-4 w-4" /> Payment received · launch workflow active
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowCheckout(true)}
+                className="inline-flex items-center gap-2 rounded-md bg-[#0b8f5b] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#09744a]"
+              >
+                Launch Complete Lead Machine ($797) <ArrowRight className="h-4 w-4" />
+              </button>
+            )}
           </div>
 
           {/* Stepper */}
@@ -198,12 +205,12 @@ export function LiveClientProposal({
                 <p className="mt-1 text-[#0d1738] font-semibold text-sm">Website X-Ray & Audit</p>
               </div>
               <div className="rounded-xl border-2 border-[#533afd] bg-white p-4 shadow-sm">
-                <span className="font-bold text-[#533afd]">Step 2: Current</span>
-                <p className="mt-1 text-[#0d1738] font-semibold text-sm">You Review the Lead Machine</p>
+                <span className={`font-bold ${isPaid ? "text-[#0b8f5b]" : "text-[#533afd]"}`}>{isPaid ? "Step 2: Complete ✓" : "Step 2: Current"}</span>
+                <p className="mt-1 text-[#0d1738] font-semibold text-sm">{isPaid ? "Launch Approved" : "You Review the Lead Machine"}</p>
               </div>
-              <div className="rounded-xl bg-[#f9f9ff] p-4 text-[#777588] border border-[#e5e7f2]">
-                <span className="font-bold">Step 3: Next</span>
-                <p className="mt-1 font-semibold text-sm">Launch the Lead Machine</p>
+              <div className={`rounded-xl p-4 border ${isPaid ? "border-2 border-[#0b8f5b] bg-[#eaf8f0] text-[#0b8f5b]" : "border-[#e5e7f2] bg-[#f9f9ff] text-[#777588]"}`}>
+                <span className="font-bold">{isPaid ? "Step 3: Active" : "Step 3: Next"}</span>
+                <p className="mt-1 font-semibold text-sm">{isPaid ? "QA, Domain & Go-Live" : "Launch the Lead Machine"}</p>
               </div>
             </div>
           </div>
@@ -589,22 +596,24 @@ export function LiveClientProposal({
         {/* 7. BIG DECISION BOX */}
         <section className="rounded-2xl bg-[#0d1738] p-8 sm:p-12 text-white shadow-lg text-center space-y-6">
           <span className="rounded-full bg-[#533afd] px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-white">
-            Ready to Launch?
+            {isPaid ? "Launch Workflow Active" : "Ready to Launch?"}
           </span>
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            Launch Your New Lead Machine in 48 Hours
+            {isPaid ? "Your Lead Machine Is Moving Into Production" : "Launch Your New Lead Machine in 48 Hours"}
           </h2>
           <p className="mx-auto max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
             A $797 flat build that connects search visibility, trust proof, service demand, and fast call paths. Optional Meta ads management is quoted separately.
           </p>
 
           <div className="pt-2 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <button
-              onClick={() => setShowCheckout(true)}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md bg-[#533afd] px-8 py-4 text-base font-bold text-white shadow-md transition hover:bg-[#432bd9]"
-            >
-              Approve & Launch My Lead Machine ($797) <ArrowRight className="h-5 w-5" />
-            </button>
+            {!isPaid && (
+              <button
+                onClick={() => setShowCheckout(true)}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md bg-[#533afd] px-8 py-4 text-base font-bold text-white shadow-md transition hover:bg-[#432bd9]"
+              >
+                Approve & Launch My Lead Machine ($797) <ArrowRight className="h-5 w-5" />
+              </button>
+            )}
             <a
               href="tel:+13075336678"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md border border-white/25 px-6 py-4 text-sm font-bold text-white transition hover:bg-white/10"
@@ -624,7 +633,7 @@ export function LiveClientProposal({
             <div className="w-full max-w-lg rounded-2xl bg-white p-6 sm:p-8 shadow-2xl space-y-6 text-[#0d1738] border border-[#e5e7f2]">
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
                 <div>
-                  <h3 className="text-xl font-bold text-[#0d1738]">Launch {businessName} Website</h3>
+                  <h3 className="text-xl font-bold text-[#0d1738]">Launch {businessName}&apos;s Lead Machine</h3>
                   <p className="text-xs text-[#777588]">One-time flat build payment · Save $800 Today</p>
                 </div>
                 <button
