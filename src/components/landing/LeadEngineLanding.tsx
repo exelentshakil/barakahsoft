@@ -179,10 +179,10 @@ const VISUAL_JOURNEY = [
     step: "04",
     tag: "Handoff & Go-Live",
     title: "Launch on Your Domain",
-    body: "Love the direction? We connect your custom domain with SSL and deploy your standalone Next.js platform in 48 hours. Not ready? Keep the concept free.",
+    body: "Love the direction? We connect your domain, set up the full website, and launch it live in 48 hours. Not ready? Keep the concept 100% free.",
     badge: "Step 04 · Your Terms",
     icon: Rocket,
-    highlights: ["Custom domain & SSL", "Standalone Next.js export", "AI assistant active"],
+    highlights: ["Connected to your domain", "100% Client-owned website", "Fast call conversion"],
   },
 ];
 

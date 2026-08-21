@@ -508,7 +508,7 @@ export function LiveClientProposal({
                 )}
               </div>
               <span className="text-[11px] font-bold text-[#0b8f5b] block mt-1">
-                ✓ 100% Client-Owned · Standalone Clean Code
+                ✓ 100% Client-Owned · No Monthly Lock-In
               </span>
             </div>
           </div>
@@ -520,7 +520,7 @@ export function LiveClientProposal({
               { item: "8 original launch articles written for local customers (never blank)", val: "$300 Value" },
               { item: "AI search readiness and LocalBusiness schema foundation", val: "$150 Value" },
               { item: "0.12s Mobile Load Time with sticky 1-tap call buttons and AI lead assistant", val: "$100 Value" },
-              { item: "Connected to your custom domain with SSL security & clean Vercel hosting", val: "Included Free" },
+              { item: "Connected to your custom domain with SSL security & fast reliable hosting", val: "Included Free" },
             ].map((d) => (
               <div key={d.item} className="flex items-start justify-between gap-3 rounded-lg border border-[#e5e7f2] p-4 bg-[#f9f9ff]">
                 <div className="flex items-start gap-2.5">
@@ -584,7 +584,7 @@ export function LiveClientProposal({
           </div>
 
           <p className="text-xs text-white/50">
-            Backed by our satisfaction review. 100% standalone exportable Next.js code.
+            Backed by our satisfaction review. 100% client-owned with zero monthly hostage fees.
           </p>
         </section>
 
@@ -626,7 +626,7 @@ export function LiveClientProposal({
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[#777588] font-semibold">Ownership</span>
-                  <span className="font-bold text-[#0d1738]">100% Clean Standalone Next.js Export</span>
+                  <span className="font-bold text-[#0d1738]">100% You Own the Website</span>
                 </div>
                 <div className="flex justify-between items-center border-t border-[#c7d0fb] pt-3 text-sm">
                   <div>
