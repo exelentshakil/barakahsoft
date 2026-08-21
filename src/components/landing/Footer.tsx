@@ -22,13 +22,11 @@ export function Footer() {
             <div className="mt-4 space-y-3 text-sm">
               <a href="tel:+13075336678" className="block transition-colors hover:text-primary">+1 (307) 533-6678</a>
               <a href="mailto:hello@barakahsoft.com" className="block text-muted-foreground transition-colors hover:text-primary">hello@barakahsoft.com</a>
-              <address className="flex items-start gap-2.5 not-italic text-muted-foreground">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <address className="flex items-start gap-2 rounded-lg border border-border/70 bg-muted/30 px-3 py-2.5 not-italic text-xs leading-5 text-muted-foreground">
+                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
                 <span>
-                  <span className="block font-medium text-foreground">BarakahSoft LLC</span>
-                  <span className="block">30 N. Gould St., Suite R</span>
-                  <span className="block">Sheridan, WY 82801</span>
-                  <span className="mt-1 block text-xs">United States</span>
+                  <span className="block font-medium text-foreground">Business address</span>
+                  <span>30 N. Gould St. Ste R · Sheridan, WY 82801</span>
                 </span>
               </address>
             </div>
