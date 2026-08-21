@@ -19,6 +19,7 @@ import {
   Globe2,
   HelpCircle,
   Layers,
+  Loader2,
   Lock,
   MapPin,
   MessageCircle,
@@ -75,7 +76,7 @@ export function LiveClientProposal({
   const businessName = lead.business_name || payload.businessName || "Your Business";
   const contactName = lead.contact_name || "there";
   const phone = payload.nap.phone || lead.phone || "(307) 533-6678";
-  const address = payload.nap.address || "Queens, NY";
+  const address = payload.nap.address || "United States";
   const rating = payload.proof.rating || "5.0";
   const reviewCount = payload.proof.reviewCount ? `${payload.proof.reviewCount}+` : "450+";
 
@@ -86,9 +87,19 @@ export function LiveClientProposal({
 
   const selectedPains = lead.help_needed && lead.help_needed.length > 0 ? lead.help_needed : LEAD_PROBLEMS.slice(0, 3);
   const isPaid = Boolean(lead.paid_at) || lead.status === "paid" || lead.status === "live";
+  const isApproved = artifact?.qa_status === "approved" || ["qa_approved", "ready", "delivered", "paid", "live"].includes(lead.status);
+
+  // Dynamic Pricing from Admin Configuration
+  const pricingData = (artifact?.extracted_assets?.pricing as any) ?? {};
+  const pricingModel: "flat" | "monthly" | "hybrid" = pricingData.model || "flat";
+  const setupPrice = typeof pricingData.setupPrice === "number" ? pricingData.setupPrice : 797;
+  const monthlyPrice = typeof pricingData.monthlyPrice === "number" ? pricingData.monthlyPrice : 0;
+  const standardValue = typeof pricingData.standardValue === "number" ? pricingData.standardValue : 1597;
+  const discountLabel = pricingData.discountLabel || "Save $800 Today";
+
   const launchSteps = [
     { label: "Payment received", complete: isPaid, detail: "Stripe checkout confirmed" },
-    { label: "Human QA review", complete: artifact?.qa_status === "approved", detail: artifact?.qa_status === "approved" ? "Approved by the BarakahSoft team" : "Final fact and conversion review" },
+    { label: "Human QA review", complete: isApproved, detail: isApproved ? "Approved by the BarakahSoft team" : "Final fact and conversion review" },
     { label: "Domain connection", complete: Boolean(lead.custom_domain), detail: lead.custom_domain || "Domain details will be confirmed with you" },
     { label: "Website live", complete: Boolean(lead.live_at) || lead.status === "live", detail: lead.live_at ? "Live on the connected domain" : "Follows QA and domain setup" },
   ];
@@ -126,7 +137,7 @@ export function LiveClientProposal({
       if (data.url) {
         window.location.href = data.url;
       } else {
-        alert("Proceeding to secure Stripe Checkout...");
+        alert("Redirecting to secure Stripe checkout...");
       }
     } catch {
       alert("Redirecting to checkout session...");
@@ -136,7 +147,7 @@ export function LiveClientProposal({
   }
 
   return (
-    <div className="min-h-screen bg-[#f9f9ff] text-[#0d1738] font-sans antialiased">
+    <div className="min-h-screen bg-[#f9f9ff] text-[#0d1738] font-sans antialiased relative">
       {/* 1. HEADER */}
       <header className="sticky top-0 z-30 border-b border-[#e5e7f2] bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
@@ -149,7 +160,8 @@ export function LiveClientProposal({
 
           <div className="flex items-center gap-4">
             <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-3 py-1 text-xs font-semibold text-[#0b8f5b] shrink-0">
-              <CheckCircle2 className="h-3.5 w-3.5" /> {isPaid ? "Launch in Progress" : "Proposal Ready"}
+              <CheckCircle2 className="h-3.5 w-3.5" />{" "}
+              {isPaid ? "Launch in Progress" : isApproved ? "Proposal Ready" : "Analyzing & Rebuilding"}
             </span>
             <a
               href="tel:+13075336678"
@@ -162,8 +174,69 @@ export function LiveClientProposal({
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6 py-12 space-y-16">
-        {/* 2. HERO STORY & X-RAY SUMMARY */}
+      {/* 2. PROCESSING / GATING OVERLAY SKELETON (When QA is still underway) */}
+      {!isApproved && !isPaid && (
+        <div className="mx-auto max-w-3xl px-6 pt-10 pb-6">
+          <div className="rounded-3xl border border-[#c7d0fb] bg-white p-8 shadow-xl text-center space-y-6">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#f0f3ff] px-4 py-1.5 text-xs font-bold text-[#533afd]">
+              <Loader2 className="h-4 w-4 animate-spin text-[#533afd]" />
+              Analyzing Your Website & Rebuilding Concept
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold text-[#0d1738] sm:text-3xl">
+                We are building your 48-hour custom concept for {businessName}
+              </h2>
+              <p className="text-xs text-[#42506a] max-w-lg mx-auto leading-relaxed sm:text-sm">
+                Our engineering and design team is extracting your verified brand proof, running local speed diagnostics, and creating a modern mobile-first homepage.
+              </p>
+            </div>
+
+            {/* Live Step Progress Tracker */}
+            <div className="grid gap-3 sm:grid-cols-2 text-left text-xs pt-2">
+              <div className="flex items-start gap-2.5 rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-3.5">
+                <CheckCircle2 className="h-4 w-4 text-[#0b8f5b] shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold text-[#0d1738]">1. Ingestion & Brand Extraction</p>
+                  <p className="text-[11px] text-muted-foreground">Scraped genuine brand colors & reviews</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2.5 rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-3.5">
+                <Loader2 className="h-4 w-4 animate-spin text-[#533afd] shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold text-[#0d1738]">2. Speed & Competitor Scan</p>
+                  <p className="text-[11px] text-muted-foreground">Measuring mobile load times & search gaps</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2.5 rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-3.5">
+                <Clock className="h-4 w-4 text-[#777588] shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold text-[#0d1738]">3. Desktop & Mobile Rebuild</p>
+                  <p className="text-[11px] text-muted-foreground">Tailored 0.12s first-paint layout</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2.5 rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-3.5">
+                <ShieldCheck className="h-4 w-4 text-[#777588] shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold text-[#0d1738]">4. Final Human QA Review</p>
+                  <p className="text-[11px] text-muted-foreground">Verification before proposal unlocks</p>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-[#777588] pt-2">
+              🔒 You will receive an instant notification as soon as your concept and audit are ready to review.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 3. PROPOSAL CONTENT (Blurred if in processing state) */}
+      <main className={`mx-auto max-w-5xl px-6 py-12 space-y-16 transition duration-500 ${!isApproved && !isPaid ? "blur-md opacity-40 pointer-events-none select-none" : ""}`}>
+        {/* HERO STORY & X-RAY SUMMARY */}
         <section className="rounded-2xl border border-[#c7d0fb] bg-white p-8 sm:p-12 shadow-sm space-y-6">
           <div className="flex items-center gap-2">
             <span className="flex h-2.5 w-2.5 rounded-full bg-[#533afd] animate-pulse" />
@@ -198,7 +271,7 @@ export function LiveClientProposal({
                 onClick={() => setShowCheckout(true)}
                 className="inline-flex items-center gap-2 rounded-md bg-[#0b8f5b] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#09744a]"
               >
-                Launch Complete Lead Machine ($797) <ArrowRight className="h-4 w-4" />
+                Launch Complete Lead Machine {pricingModel === "monthly" ? `($${monthlyPrice}/mo)` : `($${setupPrice})`} <ArrowRight className="h-4 w-4" />
               </button>
             )}
           </div>
@@ -222,7 +295,7 @@ export function LiveClientProposal({
           </div>
         </section>
 
-        {/* 3. PROBLEM-TO-SOLUTION MAPPING (ALL 6 ISSUES) */}
+        {/* PROBLEM-TO-SOLUTION MAPPING (ALL 6 ISSUES) */}
         <section className="space-y-6">
           <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
             <div>
@@ -255,7 +328,7 @@ export function LiveClientProposal({
               <div className="space-y-2.5 text-xs leading-relaxed">
                 <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
                   <span className="font-bold uppercase tracking-wider text-[#ba1a1a] text-[10px]">Old Site X-Ray (Friction)</span>
-                  <p className="mt-1 text-[#42506a]">Took {beforeLcp} to load on 4G cellular. Users had to pinch-zoom and hunt through menus just to find your emergency phone number.</p>
+                  <p className="mt-1 text-[#42506a]">Took {beforeLcp} to load on 4G cellular. Users had to hunt through clunky menus just to find your emergency phone number.</p>
                 </div>
                 <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
                   <span className="font-bold uppercase tracking-wider text-[#0b8f5b] text-[10px]">Rebuilt Resolution</span>
@@ -280,7 +353,7 @@ export function LiveClientProposal({
               <div className="space-y-2.5 text-xs leading-relaxed">
                 <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
                   <span className="font-bold uppercase tracking-wider text-[#ba1a1a] text-[10px]">Old Site X-Ray (Friction)</span>
-                  <p className="mt-1 text-[#42506a]">Your strongest proof ({reviewCount} 5-star Google reviews & licensing) was hidden at the very bottom where 70% of visitors never scroll.</p>
+                  <p className="mt-1 text-[#42506a]">Your strongest proof ({reviewCount} 5-star reviews & licensing) was hidden at the very bottom where 70% of visitors never scroll.</p>
                 </div>
                 <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
                   <span className="font-bold uppercase tracking-wider text-[#0b8f5b] text-[10px]">Rebuilt Resolution</span>
@@ -330,7 +403,7 @@ export function LiveClientProposal({
               <div className="space-y-2.5 text-xs leading-relaxed">
                 <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
                   <span className="font-bold uppercase tracking-wider text-[#ba1a1a] text-[10px]">Old Site X-Ray (Friction)</span>
-                  <p className="mt-1 text-[#42506a]">Zero structured schema. When users ask ChatGPT or Google AI for trusted local contractors, AI models cannot verify your business.</p>
+                  <p className="mt-1 text-[#42506a]">Zero structured schema. When users ask ChatGPT or Google AI for trusted local businesses, AI models cannot verify your credentials.</p>
                 </div>
                 <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
                   <span className="font-bold uppercase tracking-wider text-[#0b8f5b] text-[10px]">Rebuilt Resolution</span>
@@ -355,11 +428,11 @@ export function LiveClientProposal({
               <div className="space-y-2.5 text-xs leading-relaxed">
                 <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
                   <span className="font-bold uppercase tracking-wider text-[#ba1a1a] text-[10px]">Old Site X-Ray (Friction)</span>
-                  <p className="mt-1 text-[#42506a]">High-value replacement and installation jobs were lumped in a bulleted list, losing all long-tail keyword search inquiries.</p>
+                  <p className="mt-1 text-[#42506a]">High-value jobs were lumped in a generic bulleted list, losing all high-intent search traffic.</p>
                 </div>
                 <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
                   <span className="font-bold uppercase tracking-wider text-[#0b8f5b] text-[10px]">Rebuilt Resolution</span>
-                  <p className="mt-1 text-[#0d1738] font-semibold">Dedicated high-ticket landing routes with permit guidance, technical details, and commercial quote forms.</p>
+                  <p className="mt-1 text-[#0d1738] font-semibold">Dedicated high-ticket landing routes with technical details and instant commercial quote forms.</p>
                 </div>
               </div>
             </div>
@@ -380,7 +453,7 @@ export function LiveClientProposal({
               <div className="space-y-2.5 text-xs leading-relaxed">
                 <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
                   <span className="font-bold uppercase tracking-wider text-[#ba1a1a] text-[10px]">Old Site X-Ray (Friction)</span>
-                  <p className="mt-1 text-[#42506a]">Zero helpful articles explaining local codes or common customer questions, signaling to search engines that the site was inactive.</p>
+                  <p className="mt-1 text-[#42506a]">Zero helpful articles or FAQs explaining common customer questions, signaling to search engines that the site was inactive.</p>
                 </div>
                 <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
                   <span className="font-bold uppercase tracking-wider text-[#0b8f5b] text-[10px]">Rebuilt Resolution</span>
@@ -391,160 +464,7 @@ export function LiveClientProposal({
           </div>
         </section>
 
-        {/* 4. SPEED & SEO SCORECARD */}
-        <section className="rounded-2xl border border-[#e5e7f2] bg-white p-8 sm:p-10 shadow-sm space-y-6">
-          <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <Gauge className="h-5 w-5 text-[#533afd]" />
-                <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
-                  SEO & Technical Speed Health Monitor
-                </span>
-              </div>
-              <h2 className="mt-1 text-2xl font-bold tracking-tight text-[#0d1738]">
-                Diagnostic Scorecard: {beforeScore}/100 Baseline → 95/100 Rebuilt Platform
-              </h2>
-            </div>
-            <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-3 py-1 text-xs font-bold text-[#0b8f5b] shrink-0">
-              <CheckCircle2 className="h-3.5 w-3.5" /> 70× Speed Lift
-            </span>
-          </div>
-
-          <div className="grid gap-6 sm:grid-cols-4 pt-2">
-            {[
-              {
-                icon: Smartphone,
-                label: "Mobile Speed Score",
-                beforeVal: beforeScore,
-                afterVal: 98,
-                lift: "70× Faster",
-                desc: "0.12s first contentful paint on 4G cellular",
-              },
-              {
-                icon: Clock,
-                label: "Load Time (LCP)",
-                beforeVal: 15,
-                afterVal: 96,
-                lift: "0.12s vs " + beforeLcp,
-                desc: "Instant render stops emergency customers bouncing",
-              },
-              {
-                icon: Layers,
-                label: "Visual Stability (CLS)",
-                beforeVal: 20,
-                afterVal: 100,
-                lift: "0.00 Shift",
-                desc: "Zero layout jumping when tapping phone buttons",
-              },
-              {
-                icon: Bot,
-                label: "Local Schema Types",
-                beforeVal: 0,
-                afterVal: 100,
-                lift: "4 Schemas",
-                desc: "LocalBusiness entity markup active",
-              },
-            ].map((m) => (
-              <div key={m.label} className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm text-[#533afd]">
-                    <m.icon className="h-4 w-4" />
-                  </div>
-                  <span className="inline-flex items-center rounded-full bg-[#eaf8f0] px-2 py-0.5 text-[10px] font-bold text-[#0b8f5b]">
-                    {m.lift}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-xs font-bold text-[#0d1738]">{m.label}</span>
-                  <div className="mt-2 space-y-1.5">
-                    <div className="flex items-center gap-2 text-[10px]">
-                      <span className="w-10 text-[#ba1a1a] font-bold">Old</span>
-                      <div className="h-1.5 flex-1 rounded-full bg-[#e5e7f2] overflow-hidden">
-                        <div className="h-full bg-[#ba1a1a] rounded-full" style={{ width: `${m.beforeVal}%` }} />
-                      </div>
-                      <span className="w-8 text-right font-mono text-[#ba1a1a]">{m.beforeVal}%</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[10px]">
-                      <span className="w-10 text-[#0b8f5b] font-bold">Rebuilt</span>
-                      <div className="h-1.5 flex-1 rounded-full bg-[#e5e7f2] overflow-hidden">
-                        <div className="h-full bg-[#0b8f5b] rounded-full" style={{ width: `${m.afterVal}%` }} />
-                      </div>
-                      <span className="w-8 text-right font-mono text-[#0b8f5b] font-bold">{m.afterVal}%</span>
-                    </div>
-                  </div>
-                </div>
-                <p className="text-[11px] text-[#777588] leading-tight pt-1">{m.desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* 5. 7x7 LOCAL MAP MATRIX */}
-        <section className="rounded-2xl border border-[#e5e7f2] bg-white p-8 sm:p-10 shadow-sm space-y-6">
-          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
-                Geographic Visibility Audit
-              </span>
-              <h2 className="mt-1 text-2xl font-bold text-[#0d1738]">
-                Local Search Matrix (49 Surrounding Checkpoints)
-              </h2>
-              <p className="mt-1 text-sm text-[#42506a]">
-                Query: <span className="font-semibold text-[#0d1738]">"{payload.businessName} services near me"</span> in {address}.
-              </p>
-            </div>
-            <div className="flex items-center gap-3 text-xs font-semibold">
-              <span className="flex items-center gap-1.5 text-[#533afd]">
-                <span className="h-3 w-3 rounded-sm bg-[#533afd]" /> Rank #1–3 (Dominant)
-              </span>
-              <span className="flex items-center gap-1.5 text-[#ba1a1a]">
-                <span className="h-3 w-3 rounded-sm bg-[#ffdad6]" /> Rank 11+ (Missing)
-              </span>
-            </div>
-          </div>
-
-          <div className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:items-center pt-2">
-            <div className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5">
-              <div className="grid grid-cols-7 gap-2">
-                {mapPoints.map((pt) => (
-                  <button
-                    key={pt.id}
-                    onClick={() => setSelectedPoint(pt)}
-                    className={`aspect-square rounded-md flex items-center justify-center text-[10px] font-bold transition ${
-                      pt.status === "visible"
-                        ? "bg-[#533afd] text-white hover:bg-[#432bd9]"
-                        : pt.status === "outside"
-                        ? "bg-[#ffe086] text-[#231b00] hover:bg-[#eec218]"
-                        : "bg-[#ffdad6] text-[#ba1a1a] hover:bg-[#ffb4ab]"
-                    } ${selectedPoint.id === pt.id ? "ring-2 ring-[#0d1738] scale-105" : ""}`}
-                  >
-                    {pt.rank}
-                  </button>
-                ))}
-              </div>
-              <p className="mt-4 text-center text-xs text-[#777588]">
-                Coordinates across surrounding neighborhood zones in {address}
-              </p>
-            </div>
-
-            <div className="space-y-4 rounded-xl border border-[#c7d0fb] bg-[#f0f3ff] p-6 text-xs sm:text-sm">
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-[#533afd] uppercase text-xs">Checkpoint #{selectedPoint.id} Inspector</span>
-                <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${selectedPoint.status === "visible" ? "bg-[#eaf8f0] text-[#0b8f5b]" : "bg-[#ffdad6] text-[#ba1a1a]"}`}>
-                  Rank #{selectedPoint.rank}
-                </span>
-              </div>
-              <h3 className="text-xl font-bold text-[#0d1738]">{address} Zone #{selectedPoint.id}</h3>
-              <p className="text-[#42506a] leading-relaxed">
-                {selectedPoint.status === "visible"
-                  ? "You dominate this neighborhood in the top 3. Customers find your phone number immediately."
-                  : `Competitors take the calls here because your old site didn't mention this area. The rebuilt platform adds localized pages to capture this search volume.`}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* 6. TRANSPARENT PRICING & VALUE ANCHORING */}
+        {/* 4. DYNAMIC ADMIN-CONFIGURED PRICING SECTION */}
         <section className="rounded-2xl border-2 border-[#533afd] bg-white p-8 sm:p-10 shadow-sm space-y-8">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start border-b border-[#e5e7f2] pb-6">
             <div>
@@ -553,28 +473,42 @@ export function LiveClientProposal({
                   <Tag className="h-3 w-3" /> Proposal & Launch Pricing
                 </span>
                 <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-3 py-1 text-xs font-bold text-[#0b8f5b] shrink-0">
-                  <Sparkles className="h-3 w-3" /> Save $800 Today
+                  <Sparkles className="h-3 w-3" /> {discountLabel}
                 </span>
               </div>
               <h2 className="mt-2 text-3xl font-bold text-[#0d1738]">
                 Complete Lead Machine Build & Local Launch
               </h2>
               <p className="mt-1 text-sm text-[#42506a]">
-                Standard agency value anchored at $1,597 — discounted to $797 for new client onboarding.
+                Standard agency value anchored at ${standardValue} — tailored for {businessName}.
               </p>
             </div>
 
             {/* Price Tag Box */}
             <div className="rounded-xl bg-[#f9f9ff] border border-[#c7d0fb] p-5 text-left sm:text-right shrink-0">
               <span className="text-xs text-[#777588] line-through font-semibold">
-                Standard Value: $1,597
+                Standard Value: ${standardValue}
               </span>
               <div className="mt-0.5 flex items-baseline gap-1 sm:justify-end">
-                <span className="text-4xl font-bold text-[#0d1738]">$797</span>
-                <span className="text-xs font-semibold text-[#777588]">USD flat</span>
+                {pricingModel === "monthly" ? (
+                  <>
+                    <span className="text-4xl font-bold text-[#0d1738]">${monthlyPrice}</span>
+                    <span className="text-xs font-semibold text-[#777588]">/ month</span>
+                  </>
+                ) : pricingModel === "hybrid" ? (
+                  <>
+                    <span className="text-3xl font-bold text-[#0d1738]">${setupPrice}</span>
+                    <span className="text-xs font-semibold text-[#777588]">setup + ${monthlyPrice}/mo</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-4xl font-bold text-[#0d1738]">${setupPrice}</span>
+                    <span className="text-xs font-semibold text-[#777588]">USD flat</span>
+                  </>
+                )}
               </div>
               <span className="text-[11px] font-bold text-[#0b8f5b] block mt-1">
-                ✓ 100% Client-Owned · Zero Monthly Lock-in
+                ✓ 100% Client-Owned · Standalone Clean Code
               </span>
             </div>
           </div>
@@ -583,10 +517,10 @@ export function LiveClientProposal({
             {[
               { item: "Conversion-focused homepage built around your real logo, proof, services, and calls to action", val: "$400 Value" },
               { item: "28 dedicated service landing pages that give high-value jobs a clear path to contact you", val: "$600 Value" },
-              { item: "8 Original Launch Articles written for local homeowners (never blank)", val: "$300 Value" },
+              { item: "8 original launch articles written for local customers (never blank)", val: "$300 Value" },
               { item: "AI search readiness and LocalBusiness schema foundation", val: "$150 Value" },
-              { item: "0.12s Mobile Load Time with sticky 1-tap emergency call buttons", val: "$100 Value" },
-              { item: "Connected to your custom domain with SSL security included", val: "Included Free" },
+              { item: "0.12s Mobile Load Time with sticky 1-tap call buttons and AI lead assistant", val: "$100 Value" },
+              { item: "Connected to your custom domain with SSL security & clean Vercel hosting", val: "Included Free" },
             ].map((d) => (
               <div key={d.item} className="flex items-start justify-between gap-3 rounded-lg border border-[#e5e7f2] p-4 bg-[#f9f9ff]">
                 <div className="flex items-start gap-2.5">
@@ -599,7 +533,7 @@ export function LiveClientProposal({
           </div>
         </section>
 
-        {/* 7. BIG DECISION BOX */}
+        {/* 5. BIG DECISION BOX */}
         <section className="rounded-2xl bg-[#0d1738] p-8 sm:p-12 text-white shadow-lg text-center space-y-6">
           <span className="rounded-full bg-[#533afd] px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-white">
             {isPaid ? "Launch Workflow Active" : "Ready to Launch?"}
@@ -607,34 +541,38 @@ export function LiveClientProposal({
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
             {isPaid ? "Your Lead Machine Is Moving Into Production" : "Launch Your New Lead Machine in 48 Hours"}
           </h2>
-           <p className="mx-auto max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
-             A $797 flat build that connects search visibility, trust proof, service demand, and fast call paths. Optional Meta ads management is quoted separately.
-           </p>
+          <p className="mx-auto max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
+            {pricingModel === "monthly"
+              ? `A $${monthlyPrice}/month zero-down plan that connects search visibility, trust proof, service demand, and fast call paths.`
+              : pricingModel === "hybrid"
+              ? `A $${setupPrice} setup + $${monthlyPrice}/month ongoing package that delivers full market takeover.`
+              : `A $${setupPrice} flat build that connects search visibility, trust proof, service demand, and fast call paths.`}
+          </p>
 
-           {isPaid && (
-             <div className="mx-auto w-full max-w-2xl rounded-xl border border-white/15 bg-white/5 p-4 text-left">
-               <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#ffd12d]">Live launch checklist</p>
-               <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                 {launchSteps.map((step) => (
-                   <div key={step.label} className="flex items-start gap-3 rounded-lg border border-white/10 bg-white/5 p-3">
-                     <CheckCircle2 className={`mt-0.5 h-4 w-4 shrink-0 ${step.complete ? "text-[#6ee7b7]" : "text-white/35"}`} />
-                     <div>
-                       <p className="text-sm font-semibold text-white">{step.label}</p>
-                       <p className="mt-0.5 text-xs text-white/55">{step.detail}</p>
-                     </div>
-                   </div>
-                 ))}
-               </div>
-             </div>
-           )}
+          {isPaid && (
+            <div className="mx-auto w-full max-w-2xl rounded-xl border border-white/15 bg-white/5 p-4 text-left">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#ffd12d]">Live launch checklist</p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {launchSteps.map((step) => (
+                  <div key={step.label} className="flex items-start gap-3 rounded-lg border border-white/10 bg-white/5 p-3">
+                    <CheckCircle2 className={`mt-0.5 h-4 w-4 shrink-0 ${step.complete ? "text-[#6ee7b7]" : "text-white/35"}`} />
+                    <div>
+                      <p className="text-sm font-semibold text-white">{step.label}</p>
+                      <p className="mt-0.5 text-xs text-white/55">{step.detail}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-           <div className="pt-2 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <div className="pt-2 flex flex-col items-center justify-center gap-4 sm:flex-row">
             {!isPaid && (
               <button
                 onClick={() => setShowCheckout(true)}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md bg-[#533afd] px-8 py-4 text-base font-bold text-white shadow-md transition hover:bg-[#432bd9]"
               >
-                Approve & Launch My Lead Machine ($797) <ArrowRight className="h-5 w-5" />
+                Approve & Launch My Lead Machine {pricingModel === "monthly" ? `($${monthlyPrice}/mo)` : `($${setupPrice})`} <ArrowRight className="h-5 w-5" />
               </button>
             )}
             <a
@@ -646,7 +584,7 @@ export function LiveClientProposal({
           </div>
 
           <p className="text-xs text-white/50">
-            Backed by our satisfaction review. You only launch if you love the build.
+            Backed by our satisfaction review. 100% standalone exportable Next.js code.
           </p>
         </section>
 
@@ -657,7 +595,9 @@ export function LiveClientProposal({
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
                 <div>
                   <h3 className="text-xl font-bold text-[#0d1738]">Launch {businessName}&apos;s Lead Machine</h3>
-                  <p className="text-xs text-[#777588]">One-time flat build payment · Save $800 Today</p>
+                  <p className="text-xs text-[#777588]">
+                    {pricingModel === "monthly" ? `$${monthlyPrice}/mo Zero Down` : `$${setupPrice} One-Time Flat Build · ${discountLabel}`}
+                  </p>
                 </div>
                 <button
                   onClick={() => setShowCheckout(false)}
@@ -673,8 +613,8 @@ export function LiveClientProposal({
                   <span className="font-bold text-[#0d1738]">28 Service Pages + 8 Launch Articles</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[#777588] font-semibold">AI Search Setup</span>
-                  <span className="font-bold text-[#0d1738]">ChatGPT & Gemini Local Schema</span>
+                  <span className="text-[#777588] font-semibold">AI Search & Assistant</span>
+                  <span className="font-bold text-[#0d1738]">Local Schema + Callback Bot</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[#777588] font-semibold">Domain Setup</span>
@@ -686,14 +626,16 @@ export function LiveClientProposal({
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[#777588] font-semibold">Ownership</span>
-                  <span className="font-bold text-[#0d1738]">100% You Own All Files</span>
+                  <span className="font-bold text-[#0d1738]">100% Clean Standalone Next.js Export</span>
                 </div>
                 <div className="flex justify-between items-center border-t border-[#c7d0fb] pt-3 text-sm">
                   <div>
                     <span className="font-bold text-[#0d1738] block">Total Due Today</span>
-                    <span className="text-[10px] text-[#777588] line-through">Standard Value: $1,597</span>
+                    <span className="text-[10px] text-[#777588] line-through">Standard Value: ${standardValue}</span>
                   </div>
-                  <span className="text-xl font-bold text-[#533afd]">$797.00 USD</span>
+                  <span className="text-xl font-bold text-[#533afd]">
+                    {pricingModel === "monthly" ? `$${monthlyPrice}.00 USD / mo` : `$${setupPrice}.00 USD`}
+                  </span>
                 </div>
               </div>
 
@@ -701,9 +643,13 @@ export function LiveClientProposal({
                 <button
                   onClick={handleCheckout}
                   disabled={checkoutLoading}
-                  className="w-full rounded-md bg-[#533afd] py-4 text-sm font-bold text-white shadow-md transition hover:bg-[#432bd9]"
+                  className="w-full rounded-md bg-[#533afd] py-4 text-sm font-bold text-white shadow-md transition hover:bg-[#432bd9] disabled:opacity-60"
                 >
-                  {checkoutLoading ? "Redirecting to Stripe..." : "Pay $797 via Card / Apple Pay"}
+                  {checkoutLoading
+                    ? "Redirecting..."
+                    : pricingModel === "monthly"
+                    ? `Subscribe $${monthlyPrice}/mo via Card / Apple Pay`
+                    : `Pay $${setupPrice} via Card / Apple Pay`}
                 </button>
                 <p className="text-center text-[11px] text-[#777588]">
                   🔒 256-bit encrypted checkout via Stripe · Verified BarakahSoft LLC
@@ -712,7 +658,7 @@ export function LiveClientProposal({
                   onClick={() => setShowCheckout(false)}
                   className="w-full text-center text-xs font-semibold text-[#777588] hover:text-[#0d1738] pt-1"
                 >
-                  Cancel and review website preview
+                  Cancel and review proposal preview
                 </button>
               </div>
             </div>
@@ -721,7 +667,7 @@ export function LiveClientProposal({
       </main>
 
       {/* FOOTER */}
-      <footer className="border-t border-[#e5e7f2] bg-white py-8 text-center text-xs text-[#777588]">
+      <footer className="border-t border-[#e5e7f2] bg-white py-6 text-center text-xs text-[#777588] mt-12">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
           <p>© 2026 BarakahSoft LLC · Verified Client Proposal Portal (portal.barakahsoft.com)</p>
           <div className="flex items-center gap-6">

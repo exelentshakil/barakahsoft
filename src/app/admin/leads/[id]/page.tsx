@@ -73,7 +73,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
       <LeadDetailTabs
         tabs={[
-          { id: "overview", label: "Overview", content: <OverviewTab lead={lead} /> },
+          { id: "overview", label: "Overview", content: <OverviewTab lead={lead} artifact={artifact ?? null} /> },
           { id: "redesign", label: "Redesign", content: <RedesignTab lead={lead} artifact={artifact ?? null} /> },
           { id: "audit", label: "Audit", content: await AuditTab({ scrapeResults: scrapeResults ?? null }) },
           {

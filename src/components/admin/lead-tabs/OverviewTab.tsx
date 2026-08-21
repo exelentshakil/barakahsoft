@@ -1,7 +1,8 @@
 import { Phone, Mail, Globe, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { DomainManager } from "@/components/admin/DomainManager";
-import type { Lead } from "@/types/database";
+import { PricingManager } from "@/components/admin/PricingManager";
+import type { Lead, Artifact } from "@/types/database";
 
 function Row({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | null }) {
   if (!value) return null;
@@ -16,7 +17,9 @@ function Row({ icon: Icon, label, value }: { icon: React.ElementType; label: str
   );
 }
 
-export function OverviewTab({ lead }: { lead: Lead }) {
+export function OverviewTab({ lead, artifact }: { lead: Lead; artifact?: Artifact | null }) {
+  const pricing = (artifact?.extracted_assets?.pricing as any) ?? null;
+
   return (
     <div className="grid gap-6 sm:grid-cols-2">
       <Card>
@@ -51,6 +54,10 @@ export function OverviewTab({ lead }: { lead: Lead }) {
           )}
         </CardContent>
       </Card>
+
+      <div className="sm:col-span-2">
+        <PricingManager leadId={lead.id} currentPricing={pricing} />
+      </div>
 
       <div className="sm:col-span-2">
         <DomainManager lead={lead} />

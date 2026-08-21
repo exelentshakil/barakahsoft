@@ -1,540 +1,440 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  BarChart3,
   Check,
   CheckCircle2,
-  CircleDollarSign,
   ExternalLink,
   Eye,
   FileText,
-  Layers,
-  Megaphone,
+  Globe2,
+  HelpCircle,
+  Laptop,
+  Mail,
+  MessageCircle,
+  Phone,
+  PhoneCall,
   Rocket,
   ShieldCheck,
+  Smartphone,
   Sparkles,
-  Target,
-  Users,
-  Workflow,
+  Zap,
 } from "lucide-react";
 import { RedesignIntakeFlow } from "@/components/landing/RedesignIntakeFlow";
 import { Footer } from "@/components/landing/Footer";
 import { FAQAccordion } from "@/components/landing/FAQAccordion";
-import { Nav } from "@/components/landing/Nav";
-import { IndustryShowcase } from "@/components/landing/IndustryShowcase";
-import { LandingTeamShowcase } from "@/components/landing/LandingTeamShowcase";
-import { IndustryCoverage } from "@/components/landing/IndustryCoverage";
 import { CrispChat } from "@/components/CrispChat";
-import landing from "../../../content/landing.json";
 
-const NAVY = "#07284D";
-const YELLOW = "#FFD12D";
-
-const SYSTEM = [
+const REAL_PORTFOLIO_SAMPLES = [
   {
-    icon: Target,
-    number: "01",
-    title: "Audit the current website",
-    body: "We identify evidenced mobile, conversion, content, and visibility problems.",
+    title: "QSA Self Storage",
+    category: "Self Storage & Logistics",
+    url: "qsaselfstorage.co.uk",
+    headline: "Looking for Belfast's Best Self Storage?",
+    image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80",
+    theme: "from-amber-500/20 to-stone-900",
   },
   {
-    icon: FileText,
-    number: "02",
-    title: "Benchmark the quality bar",
-    body: "We study the strongest category examples before choosing the redesign direction.",
+    title: "K Neeson Removals",
+    category: "Removals & Logistics",
+    url: "kneesonremovals.com",
+    headline: "Stress-Free Home & Commercial Moving",
+    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
+    theme: "from-blue-600/20 to-slate-900",
   },
   {
-    icon: Megaphone,
-    number: "03",
-    title: "Design the homepage concept",
-    body: "We use your real logo, colours, services, facts, and best usable images.",
+    title: "BME Electrical",
+    category: "Electrical & Engineering",
+    url: "bmeelectrical.co.uk",
+    headline: "Commercial & Industrial Electrical Contractors",
+    image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=800&q=80",
+    theme: "from-yellow-500/20 to-slate-950",
   },
   {
-    icon: Workflow,
-    number: "04",
-    title: "Deliver the preview and audit",
-    body: "You see what was wrong, what changed, and whether the direction is worth continuing.",
+    title: "Fitter Finances",
+    category: "Financial & Advisory",
+    url: "fitterfinances.com",
+    headline: "Clear Financial Guidance & Growth Planning",
+    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
+    theme: "from-emerald-500/20 to-slate-900",
+  },
+  {
+    title: "Canavan Construction",
+    category: "Construction & Remodeling",
+    url: "canavanconstruction.com",
+    headline: "High-End Residential & Commercial Builds",
+    image: "https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?auto=format&fit=crop&w=800&q=80",
+    theme: "from-orange-500/20 to-stone-900",
+  },
+  {
+    title: "Harry Coates Studio",
+    category: "Artist & Gallery",
+    url: "harrycoates.com",
+    headline: "Contemporary Fine Art & Visual Exhibitions",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
+    theme: "from-purple-500/20 to-zinc-950",
   },
 ];
 
-function Kicker({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">
-      {children}
-    </p>
-  );
-}
+const MOBILE_MOCKUPS = [
+  {
+    title: "Self Storage",
+    headline: "Belfast's #1 Self Storage Facility",
+    bg: "bg-amber-950/90",
+    accent: "bg-amber-400 text-stone-950",
+    img: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=400&q=80",
+  },
+  {
+    title: "Financial Advisory",
+    headline: "Over £6,000 in Debt? Get Help Today",
+    bg: "bg-emerald-950/90",
+    accent: "bg-emerald-400 text-stone-950",
+    img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80",
+  },
+  {
+    title: "Electrical Contractors",
+    headline: "Commercial Electrical Installations",
+    bg: "bg-slate-950",
+    accent: "bg-yellow-400 text-stone-950",
+    img: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=400&q=80",
+  },
+  {
+    title: "Roofing & Exterior",
+    headline: "5.0 ★ Rated Roof Replacement",
+    bg: "bg-blue-950",
+    accent: "bg-blue-400 text-white",
+    img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=400&q=80",
+  },
+];
+
+const PROCESS_STEPS = [
+  {
+    number: "1",
+    tag: "Takes 2 Minutes",
+    title: "Fill Out the Form",
+    body: "Share your current website URL and what you want to improve. Tell us what is frustrating about the current site.",
+  },
+  {
+    number: "2",
+    tag: "Within 48 Hours",
+    title: "We Design Your Homepage",
+    body: "Our team crafts a custom, high-converting redesign concept for your business — complete with desktop and mobile views.",
+  },
+  {
+    number: "3",
+    tag: "Straight to Your Inbox",
+    title: "Check Your Private Portal",
+    body: "You receive an email and SMS with your private link so you can see exactly how it looks, loads, and converts.",
+  },
+  {
+    number: "4",
+    tag: "No Strings Attached",
+    title: "Decide What's Next",
+    body: "Love the design? We can launch the full website for you with custom domain setup. Not ready? Keep the concept 100% free of charge.",
+  },
+];
 
 export function LeadEngineLanding() {
-  const brandStyle = {
-    "--primary": "213 83% 16%",
-    "--ring": "213 83% 16%",
-    "--primary-h": "213",
-    "--primary-s": "83%",
-    "--primary-l": "16%",
-    "--brand-gold": "47 100% 59%",
-  } as React.CSSProperties;
-
   return (
-    <main id="top" style={brandStyle} className="bg-white text-[#1e212b]">
-      <Nav />
+    <div className="min-h-screen bg-[#070913] text-white font-sans antialiased selection:bg-[#ff1744] selection:text-white">
+      {/* 1. TOP NAVBAR */}
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#070913]/90 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+          <Link href="/" className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-[#ff1744] to-[#ff5252] text-white font-black text-lg shadow-md">
+              B
+            </span>
+            <span className="font-bold text-lg tracking-tight text-white">
+              Barakah<span className="text-[#ff1744]">Soft</span>
+            </span>
+          </Link>
 
-      <section className="relative overflow-hidden border-b border-[#d9e8f4] bg-white">
-        <div
-          className="absolute -right-32 -top-40 h-[34rem] w-[34rem] rounded-full bg-[#e5f4ff] blur-3xl"
-          aria-hidden="true"
-        />
-        <div
-          className="pointer-events-none absolute inset-0 opacity-60 [background-image:linear-gradient(to_right,rgba(7,40,77,0.045)_1px,transparent_1px),linear-gradient(to_bottom,rgba(7,40,77,0.045)_1px,transparent_1px)] [background-size:52px_52px] [mask-image:linear-gradient(to_bottom,black,transparent_78%)]"
-          aria-hidden="true"
-        />
-        <div className="pointer-events-none absolute left-[9%] top-32 hidden h-3 w-3 rounded-full bg-[#ffd12d] shadow-[0_0_0_8px_rgba(255,209,45,0.14)] lg:block" aria-hidden="true" />
-        <div className="pointer-events-none absolute right-[12%] top-52 hidden h-2 w-2 rounded-full bg-[#0c68c8] shadow-[0_0_0_7px_rgba(12,104,200,0.12)] lg:block" aria-hidden="true" />
-        <div className="pointer-events-none absolute bottom-28 left-[16%] hidden h-2 w-2 rounded-full bg-[#702486] shadow-[0_0_0_7px_rgba(112,36,134,0.1)] lg:block" aria-hidden="true" />
-        <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-20 lg:pb-24 lg:pt-28">
-          <div className="mx-auto max-w-4xl text-center">
-            <p className="mx-auto mb-6 w-fit rounded-full border border-[#f1c400] bg-[#fff7c7] px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-[#07284d] shadow-sm">
-              Free 48-hour lead-machine audit
-            </p>
-            <h1 className="font-sans text-5xl font-semibold leading-[1.02] tracking-[-0.055em] text-[#07284d] sm:text-7xl">
-              Turn your home-service website into a lead machine.
-            </h1>
-            <p className="mx-auto mt-7 max-w-2xl text-lg leading-8 text-[#5c7186]">
-              For electricians, plumbers, HVAC companies, roofers, remodelers, movers,
-              restoration teams, and contractors: we map where local buyers are finding
-              your competitors, show what is leaking calls today, and build a private
-              redesign that proves how your website can turn attention into qualified
-              calls. Delivered in 48 hours with zero obligation.
-            </p>
-            <div className="mt-9">
-              <RedesignIntakeFlow />
-            </div>
+          <nav className="hidden md:flex items-center gap-7 text-xs font-semibold uppercase tracking-wider text-slate-300">
+            <a href="#examples" className="hover:text-white transition">Examples</a>
+            <a href="#how-it-works" className="hover:text-white transition">How It Works</a>
+            <a href="#what-you-get" className="hover:text-white transition">What You Get</a>
+            <a href="#faq" className="hover:text-white transition">FAQ</a>
+            <a href="tel:+13075336678" className="hover:text-[#ff1744] transition flex items-center gap-1.5 normal-case font-bold text-sm">
+              <Phone className="h-3.5 w-3.5 text-[#ff1744]" /> +1 (307) 533-6678
+            </a>
+          </nav>
+
+          <a
+            href="#top"
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#ff1744] px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg transition hover:bg-[#d50000] hover:scale-105"
+          >
+            Get My Free Redesign
+          </a>
+        </div>
+      </header>
+
+      {/* 2. HERO SECTION */}
+      <section id="top" className="relative overflow-hidden pt-16 pb-24 lg:pt-24 lg:pb-32">
+        {/* Glow Gradients */}
+        <div className="pointer-events-none absolute left-1/2 -top-40 -translate-x-1/2 h-[32rem] w-[50rem] rounded-full bg-gradient-to-b from-[#ff1744]/20 via-[#ff1744]/5 to-transparent blur-3xl" />
+
+        <div className="relative mx-auto max-w-4xl px-6 text-center space-y-6">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#ff1744]/40 bg-[#ff1744]/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#ff5252]">
+            <span className="flex h-2 w-2 rounded-full bg-[#ff1744] animate-ping" />
+            Free Homepage Redesign
           </div>
 
-          {/* Product Onboarding & Flow Walkthrough Video Container */}
-          <div className="mx-auto mt-14 max-w-5xl overflow-hidden rounded-2xl border border-[#c8ddec] bg-white shadow-[0_20px_60px_rgba(7,40,77,0.12)]">
-            <div className="border-b border-[#e5e7f2] bg-[#f9f9ff] px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="flex h-2.5 w-2.5 rounded-full bg-[#0b8f5b] animate-pulse" />
-                <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
-                   Product Walkthrough · How Your 48h Lead Machine Is Built
-                </span>
+          <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-6xl lg:text-7xl leading-[1.08]">
+            GET YOUR HOMEPAGE <br />
+            REDESIGNED <span className="bg-gradient-to-r from-[#ff1744] via-[#ff5252] to-[#ff7979] bg-clip-text text-transparent underline decoration-[#ff1744]/40 underline-offset-8">FOR FREE</span>
+          </h1>
+
+          <p className="mx-auto max-w-2xl text-base text-slate-300 sm:text-lg leading-relaxed">
+            See exactly how your homepage could look. A custom concept, delivered in 48 hours. Free, no strings attached.
+          </p>
+
+          <div className="pt-4">
+            <RedesignIntakeFlow />
+          </div>
+
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400">
+            <span className="flex items-center gap-1.5 text-slate-300">
+              <Check className="h-4 w-4 text-[#ff1744]" /> Free · No credit card required
+            </span>
+            <span className="flex items-center gap-1.5 text-slate-300">
+              <Check className="h-4 w-4 text-[#ff1744]" /> Yours to keep forever
+            </span>
+            <span className="flex items-center gap-1.5 text-slate-300">
+              <Check className="h-4 w-4 text-[#ff1744]" /> Over 50+ websites launched
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. "SEE WHAT YOUR NEW WEBSITE COULD LOOK LIKE" (GALLERY) */}
+      <section id="examples" className="border-t border-white/10 bg-[#0b0e1b] py-24">
+        <div className="mx-auto max-w-6xl px-6 space-y-14">
+          <div className="text-center space-y-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-[#ff1744]">Real Redesigns</p>
+            <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
+              SEE WHAT YOUR NEW WEBSITE COULD LOOK LIKE
+            </h2>
+            <p className="mx-auto max-w-2xl text-sm text-slate-400">
+              Real homepages we built for real businesses across trades, services, financial, and ecommerce.
+            </p>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {REAL_PORTFOLIO_SAMPLES.map((sample) => (
+              <div
+                key={sample.title}
+                className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#12162a] shadow-xl transition duration-300 hover:-translate-y-1.5 hover:border-[#ff1744]/50"
+              >
+                {/* Browser Window Header */}
+                <div className="flex items-center gap-1.5 border-b border-white/10 bg-[#171c35] px-4 py-2.5 text-[11px] text-slate-400">
+                  <span className="h-2 w-2 rounded-full bg-[#ff5f56]" />
+                  <span className="h-2 w-2 rounded-full bg-[#ffbd2e]" />
+                  <span className="h-2 w-2 rounded-full bg-[#27c93f]" />
+                  <span className="ml-2 truncate font-mono text-[10px] text-slate-400">{sample.url}</span>
+                </div>
+
+                {/* Screenshot Area */}
+                <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
+                  <img
+                    src={sample.image}
+                    alt={sample.title}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105 opacity-90 group-hover:opacity-100"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#12162a] via-transparent to-transparent" />
+                </div>
+
+                <div className="p-5 space-y-1">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#ff5252]">
+                    {sample.category}
+                  </span>
+                  <h3 className="font-bold text-base text-white">{sample.title}</h3>
+                  <p className="text-xs text-slate-400 truncate">{sample.headline}</p>
+                </div>
               </div>
-              <span className="text-xs font-semibold text-[#777588] hidden sm:inline">
-                48-Hour Free Delivery Process
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 4. "LOOKS GREAT ON MOBILE, TOO" */}
+      <section className="border-t border-white/10 bg-[#070913] py-24 overflow-hidden">
+        <div className="mx-auto max-w-6xl px-6 space-y-14">
+          <div className="text-center space-y-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-[#ff1744]">Mobile-First Experience</p>
+            <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
+              LOOKS GREAT ON MOBILE, TOO
+            </h2>
+            <p className="mx-auto max-w-2xl text-sm text-slate-400">
+              Every redesign is built mobile-first. 0.12s first paint with sticky 1-tap call bars so visitors turn into paying customers on their phones.
+            </p>
+          </div>
+
+          {/* 4 Mobile Handsets */}
+          <div className="grid gap-6 grid-cols-2 md:grid-cols-4 max-w-5xl mx-auto">
+            {MOBILE_MOCKUPS.map((m) => (
+              <div
+                key={m.title}
+                className="relative overflow-hidden rounded-[2.5rem] border-4 border-slate-700 bg-slate-950 p-2 shadow-2xl transition duration-300 hover:border-[#ff1744] hover:-translate-y-2"
+              >
+                {/* Speaker Notch */}
+                <div className="mx-auto h-3.5 w-20 rounded-full bg-slate-800 mb-2" />
+
+                <div className="aspect-[9/16] overflow-hidden rounded-[2rem] bg-[#12162a] flex flex-col justify-between p-4 relative">
+                  <img
+                    src={m.img}
+                    alt={m.title}
+                    className="absolute inset-0 h-full w-full object-cover opacity-35"
+                  />
+                  <div className="relative z-10 space-y-2">
+                    <span className={`inline-block rounded px-2 py-0.5 text-[9px] font-extrabold uppercase ${m.accent}`}>
+                      {m.title}
+                    </span>
+                    <h4 className="text-xs font-bold text-white leading-tight">
+                      {m.headline}
+                    </h4>
+                  </div>
+
+                  <div className="relative z-10 pt-4">
+                    <div className="rounded-lg bg-[#ff1744] py-2 text-center text-[10px] font-bold text-white shadow-md">
+                      📞 Call Now (1-Tap)
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 5. "FROM FORM TO FRESH DESIGN — IN 48 HOURS" */}
+      <section id="how-it-works" className="border-t border-white/10 bg-[#0b0e1b] py-24">
+        <div className="mx-auto max-w-5xl px-6 space-y-16">
+          <div className="text-center space-y-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-[#ff1744]">How It Works</p>
+            <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
+              FROM FORM TO FRESH DESIGN — IN 48 HOURS
+            </h2>
+            <p className="mx-auto max-w-xl text-sm text-slate-400">
+              A simple process. No payment, no obligation. Just a professional redesign concept delivered to your inbox.
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {PROCESS_STEPS.map((s) => (
+              <div
+                key={s.number}
+                className="relative rounded-2xl border border-white/10 bg-[#12162a] p-7 shadow-lg space-y-3 flex flex-col justify-between"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#ff1744]/20 border border-[#ff1744]/40 font-black text-[#ff5252]">
+                      {s.number}
+                    </span>
+                    <span className="rounded-full bg-white/5 border border-white/10 px-3 py-1 text-[11px] font-bold text-slate-300">
+                      {s.tag}
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-bold text-white">{s.title}</h3>
+                  <p className="text-xs text-slate-300 leading-relaxed">{s.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center pt-4">
+            <a
+              href="#top"
+              className="inline-flex items-center gap-2 rounded-full bg-[#ff1744] px-8 py-4 text-sm font-bold uppercase tracking-wider text-white shadow-xl transition hover:bg-[#d50000] hover:scale-105"
+            >
+              Get My Free Redesign <ArrowRight className="h-4 w-4" />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. "EVERYTHING YOU GET, FREE" */}
+      <section id="what-you-get" className="border-t border-white/10 bg-[#070913] py-24">
+        <div className="mx-auto max-w-3xl px-6 space-y-12">
+          <div className="text-center space-y-3">
+            <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
+              EVERYTHING YOU GET, FREE
+            </h2>
+            <p className="text-sm text-slate-400">
+              We show our work before asking for anything. Love it and want the full site build? Great. Not now? The concept is yours to keep, no strings.
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-[#ff1744]/30 bg-gradient-to-b from-[#161a33] to-[#0d1022] p-8 sm:p-10 shadow-2xl space-y-6">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <span className="font-bold text-base text-white">Full Free Deliverables</span>
+              <span className="rounded-full bg-[#ff1744] px-3 py-1 text-xs font-black text-white uppercase">
+                100% Free
               </span>
             </div>
 
-            {/* Video Player (.webm with .mp4 fallback) */}
-            <div className="relative bg-[#07284d]">
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                controls
-                preload="metadata"
-                className="aspect-[16/9] w-full object-cover"
-              >
-                <source
-                  src="https://liepxeeugfrxmidcmbxo.supabase.co/storage/v1/object/public/landing/barakahsoft-onboarding-walkthrough.webm"
-                  type="video/webm"
-                />
-                <source
-                  src="https://liepxeeugfrxmidcmbxo.supabase.co/storage/v1/object/public/landing/barakahsoft-hero.mp4"
-                  type="video/mp4"
-                />
-              </video>
+            <div className="space-y-4 text-sm">
+              {[
+                "Homepage redesign mockup tailored to your real brand & logo",
+                "Desktop and mobile-first responsive layout",
+                "Conversion-written copy for your services and offers",
+                "Delivered to your private tracking portal in 48 hours",
+                "Yours to keep forever with zero obligation",
+              ].map((item) => (
+                <div key={item} className="flex items-start gap-3 text-slate-200">
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#ff1744]/20 text-[#ff5252] mt-0.5">
+                    <Check className="h-3.5 w-3.5" />
+                  </div>
+                  <span>{item}</span>
+                </div>
+              ))}
             </div>
 
-            {/* 3 Step Chapters Under Video */}
-            <div className="p-6 sm:p-8 grid gap-6 sm:grid-cols-3 bg-white">
-              <div className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5 space-y-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#533afd]">01. Submit URL</span>
-                <p className="text-sm font-bold text-[#07284d]">We Extract Your Real Brand</p>
-                <p className="text-xs text-[#60778d] leading-relaxed">
-                  We scrape your real logo, NYC license proof, 450+ Google reviews, and genuine services.
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5 space-y-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#533afd]">02. 48h Rebuild</span>
-                 <p className="text-sm font-bold text-[#07284d]">We Build the Conversion System</p>
-                <p className="text-xs text-[#60778d] leading-relaxed">
-                   We connect search coverage, service pages, trust proof, fast mobile UX, and 1-tap call paths into one system.
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5 space-y-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#533afd]">03. Private Link</span>
-                 <p className="text-sm font-bold text-[#07284d]">You Review the Lead Machine</p>
-                <p className="text-xs text-[#60778d] leading-relaxed">
-                   See the diagnosis, the rebuilt customer journey, and the launch plan in your private portal. Continue only if the value is clear.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 border-t border-[#e5e7f2] bg-[#f0f3ff] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="font-bold text-sm text-[#07284d]">
-                   Ready to see where your next calls are leaking?
-                </p>
-                <p className="text-xs text-[#60778d]">
-                  No card required. Delivered to your private link in 48 hours.
-                </p>
-              </div>
+            <div className="pt-4">
               <a
                 href="#top"
-                className="inline-flex items-center gap-1.5 rounded-md bg-[#ffd12d] px-5 py-2.5 text-xs font-bold text-[#07284d] transition hover:bg-[#f5c400] shadow-sm shrink-0"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#ff1744] py-4 text-sm font-bold uppercase tracking-wider text-white shadow-lg transition hover:bg-[#d50000]"
               >
-                Get My Free Redesign <ArrowRight className="h-3.5 w-3.5" />
+                Get My Free Redesign <ArrowRight className="h-4 w-4" />
               </a>
+              <p className="text-center text-[11px] text-slate-400 mt-2">
+                48h delivery · No credit card · Yours to keep forever
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="border-b border-[#d9e8f4] bg-[#07284d] py-8 text-white">
-        <div className="mx-auto grid max-w-6xl gap-6 px-6 sm:grid-cols-3">
-          <div className="flex items-start gap-4 sm:border-r sm:border-white/15 sm:pr-6">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-[#ffd12d]">
-              <Sparkles className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#ffd12d]">Step 01</span>
-                <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-white/80">Free</span>
-              </div>
-              <p className="mt-1 font-bold text-base text-white">Premium Homepage Concept</p>
-              <p className="mt-0.5 text-xs text-white/70">Custom design built from your real branding and images.</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-4 sm:border-r sm:border-white/15 sm:pr-6">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-[#ffd12d]">
-              <FileText className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#ffd12d]">Step 02</span>
-                <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-white/80">Included</span>
-              </div>
-              <p className="mt-1 font-bold text-base text-white">Redesign + Evidence Audit</p>
-              <p className="mt-0.5 text-xs text-white/70">7×7 search grid, competitor benchmark, and speed analysis.</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-[#ffd12d]">
-              <CheckCircle2 className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#ffd12d]">Step 03</span>
-                <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-white/80">Zero Risk</span>
-              </div>
-              <p className="mt-1 font-bold text-base text-white">Your Decision, No Obligation</p>
-              <p className="mt-0.5 text-xs text-white/70">Yours to keep. Continue only if you see the commercial value.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="landing-grid-surface border-b border-[#d9e8f4] py-20 lg:py-28">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="grid gap-12 lg:grid-cols-[0.75fr_1.25fr] lg:items-end">
-            <div>
-              <Kicker>Why start with the homepage?</Kicker>
-              <h2 className="font-sans text-4xl font-semibold leading-tight tracking-[-0.04em] text-[#07284d] sm:text-5xl">
-                You should see the direction before you hire anyone.
-              </h2>
-            </div>
-            <p className="max-w-xl text-lg leading-8 text-[#60778d]">
-              Your website is often the first place a customer decides whether
-              to trust you. We make that first impression easier to judge before
-              you commit to a larger project.
-            </p>
-          </div>
-          <div className="mt-14 grid gap-5 md:grid-cols-3">
-            {[
-              [
-                "The visual gap",
-                "The site works, but looks weaker than the businesses customers already trust.",
-              ],
-              [
-                "The mobile gap",
-                "The message, services, and contact path become harder to use on a phone.",
-              ],
-              [
-                "The visibility gap",
-                "Weak structure, thin service coverage, and unclear answers limit search visibility.",
-              ],
-            ].map(([title, body], index) => (
-              <div
-                key={title}
-                className="rounded-xl border border-[#c8ddec] bg-[#f8fbfe] p-6"
-              >
-                <p className="text-4xl font-semibold tracking-tight text-[#b8d8ef]">
-                  0{index + 1}
-                </p>
-                <h3 className="mt-8 text-lg font-bold text-[#07284d]">
-                  {title}
-                </h3>
-                <p className="mt-3 text-sm leading-6 text-[#657c90]">{body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="how-it-works" className="scroll-mt-24 border-b border-[#d9e8f4] bg-[#eef7ff] py-24 lg:py-32">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="max-w-2xl">
-            <Kicker>What we actually do</Kicker>
-            <h2 className="font-sans text-4xl font-semibold leading-tight tracking-[-0.04em] text-[#07284d] sm:text-5xl">
-              A free redesign, built by people who look at the details.
-            </h2>
-            <p className="mt-5 text-lg leading-8 text-[#60778d]">
-              We use modern tools to move quickly, but the research, judgment,
-              editing, and final review stay with our team.
-            </p>
-          </div>
-          <div className="mt-14 grid gap-5 sm:grid-cols-2">
-            {SYSTEM.map(({ icon: Icon, number, title, body }) => (
-              <div
-                key={number}
-                className="group rounded-2xl border border-[#c8ddec] bg-white p-7 shadow-[0_8px_24px_rgba(7,40,77,0.05)] transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(7,40,77,0.1)]"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#fff7c7] text-[#07284d]">
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <span className="text-sm font-bold text-[#0c68c8]">
-                    {number}
-                  </span>
-                </div>
-                <h3 className="mt-9 text-xl font-bold text-[#07284d]">
-                  {title}
-                </h3>
-                <p className="mt-3 max-w-md text-sm leading-6 text-[#657c90]">
-                  {body}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="landing-grid-surface border-b border-[#d9e8f4] py-20 lg:py-28">
-        <div className="mx-auto grid max-w-6xl gap-12 px-6 lg:grid-cols-[1fr_1fr] lg:items-center">
-          <div>
-            <Kicker>What you receive</Kicker>
-            <h2 className="font-sans text-4xl font-semibold leading-tight tracking-[-0.04em] text-[#07284d] sm:text-5xl">
-              Something useful, not another sales pitch.
-            </h2>
-            <p className="mt-5 text-lg leading-8 text-[#60778d]">
-              You receive a clear homepage direction and an honest explanation
-              of what could improve on the current site.
-            </p>
-            <div className="mt-8 space-y-4">
-              {[
-                "Evidence from the current website.",
-                "A human-reviewed homepage concept.",
-                "A clear next step only if you want one.",
-              ].map((line) => (
-                <p
-                  key={line}
-                  className="flex items-center gap-3 text-sm font-semibold text-[#07284d]"
-                >
-                  <Check className="h-5 w-5 text-[#0c68c8]" />
-                  {line}
-                </p>
-              ))}
-            </div>
-            <p className="mt-7 max-w-xl text-sm leading-6 text-[#657c90]">
-              If you decide to continue, we can carry over useful existing blog
-              posts or create 8-10 original launch posts so the finished website
-              has useful depth from day one.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-[#c8ddec] bg-white p-5 shadow-[0_20px_60px_rgba(7,40,77,0.1)]">
-            <div className="flex items-center justify-between border-b border-[#e2edf5] pb-4">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#0c68c8]">
-                  Illustrative delivery view
-                </p>
-                <p className="mt-1 font-bold text-[#07284d]">
-                  Your redesign report
-                </p>
-              </div>
-              <BarChart3 className="h-5 w-5 text-[#0c68c8]" />
-            </div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              {[
-                ["Audit", "Evidence", Target],
-                ["Homepage", "Mockup", CircleDollarSign],
-                ["Review", "Human", Eye],
-              ].map(([label, value, Icon]) => (
-                <div
-                  key={label as string}
-                  className="rounded-xl bg-[#eef7ff] p-4"
-                >
-                  <Icon className="h-5 w-5 text-[#0c68c8]" />
-                  <p className="mt-5 text-xl font-bold text-[#07284d]">
-                    {value as string}
-                  </p>
-                  <p className="mt-1 text-xs text-[#657c90]">
-                    {label as string}
-                  </p>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 rounded-xl border border-[#e2edf5] p-4">
-              <div className="flex items-center justify-between border-b border-[#e2edf5] pb-3 text-xs font-bold uppercase tracking-wider text-[#71869a]">
-                <span>What we watch</span>
-                <span>Status</span>
-              </div>
-              {[
-                  "Mobile clarity",
-                  "Service messaging",
-                  "Trust signals",
-                  "Contact path",
-              ].map((item) => (
-                <div
-                  key={item}
-                  className="flex items-center justify-between border-b border-[#eef3f7] py-3 text-sm"
-                >
-                  <span className="font-semibold text-[#07284d]">{item}</span>
-                  <span className="text-xs font-bold text-emerald-700">
-                    Reviewing
-                  </span>
-                </div>
-              ))}
-            </div>
-            <p className="mt-4 text-xs leading-5 text-[#71869a]">
-              Illustrative preview of a homepage audit. The final report reflects
-              your business, current website, and selected design direction.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-b border-[#d9e8f4] bg-[#07284d] py-12 text-white lg:py-16">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
-            <div>
-              <Kicker>A clear exchange</Kicker>
-              <h2 className="max-w-lg font-sans text-4xl font-semibold leading-tight tracking-[-0.04em] text-white sm:text-5xl">
-                You share the business. We show what better could look like.
-              </h2>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {[
-                [
-                  "You provide",
-                  "Your current website, selected pain points, and the contact details needed to deliver the concept.",
-                ],
-                [
-                  "We provide",
-                  "A homepage concept, website audit, category benchmark, and a clear explanation of what changed.",
-                ],
-                [
-                  "The concept",
-                  "Free. No card, no deposit, and no obligation to continue.",
-                ],
-                [
-                  "You decide",
-                  "Use the direction, ask a question, or simply walk away.",
-                ],
-              ].map(([title, body]) => (
-                <div
-                  key={title}
-                  className="rounded-xl border border-white/15 bg-white/5 p-5"
-                >
-                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#ffd12d]">
-                    {title}
-                  </p>
-                  <p className="mt-4 text-sm leading-6 text-slate-200">
-                    {body}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="mt-7 flex flex-col gap-4 border-t border-white/15 pt-6 sm:flex-row sm:items-center sm:justify-between"><p className="text-sm text-slate-200">Ready to see a better direction before you spend anything?</p><a href="#top" className="inline-flex w-fit items-center gap-2 rounded-lg bg-[#ffd12d] px-5 py-3 text-sm font-bold text-[#111] transition hover:bg-[#f5c400]">Get my free redesign <ArrowRight className="h-4 w-4" /></a></div>
-        </div>
-      </section>
-
-      <section id="lead-machine-value" className="landing-grid-surface border-b border-[#d9e8f4] py-20 lg:py-28">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="mx-auto max-w-3xl text-center">
-            <Kicker>What the 48-hour offer solves</Kicker>
-            <h2 className="font-sans text-4xl font-semibold leading-tight tracking-[-0.04em] text-[#07284d] sm:text-5xl">
-              Your free audit should give you more than a pretty homepage.
-            </h2>
-            <p className="mt-5 text-lg leading-8 text-[#60778d]">
-              In 48 hours, we show you the practical improvements that can help your business get found, earn trust, and turn more visits into conversations.
-            </p>
-          </div>
-
-          <div className="mt-12 grid gap-5 lg:grid-cols-3">
-            <article className="flex flex-col rounded-2xl border border-[#c8ddec] bg-white p-7 shadow-[0_8px_24px_rgba(7,40,77,0.05)]">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#0c68c8]">Problem 01</span>
-                <Rocket className="h-5 w-5 text-[#0c68c8]" />
-              </div>
-              <h3 className="mt-6 text-2xl font-bold text-[#07284d]">You need to get online fast</h3>
-              <p className="mt-3 text-sm font-semibold text-[#0c68c8]">A clear first version beats waiting another four weeks.</p>
-              <p className="mt-4 text-sm leading-6 text-[#657c90]">We show the leanest path to a credible, high-converting presence: focused pages, a clear offer, trust proof, and a direct way for customers to contact you.</p>
-              <p className="mt-6 border-t border-[#e2edf5] pt-5 text-xs font-bold text-[#07284d]">Useful for: New contractors, startups, and businesses testing a market.</p>
-            </article>
-
-            <article className="flex flex-col rounded-2xl border-2 border-[#533afd] bg-[#f0f3ff] p-7 shadow-[0_18px_45px_rgba(83,58,253,0.16)]">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#533afd]">Problem 02</span>
-                <Megaphone className="h-5 w-5 text-[#533afd]" />
-              </div>
-              <h3 className="mt-6 text-2xl font-bold text-[#07284d]">Your site gets attention but not conversations</h3>
-              <p className="mt-3 text-sm font-semibold text-[#533afd]">A website should make the next step obvious.</p>
-              <p className="mt-4 text-sm leading-6 text-[#42506a]">We map the conversion layer: AI-assisted chat, lead capture, callback requests, click-to-call, service-specific paths, and the trust signals that help a visitor act.</p>
-              <p className="mt-6 border-t border-[#c7d0fb] pt-5 text-xs font-bold text-[#07284d]">The outcome: fewer dead ends between a customer finding you and contacting you.</p>
-            </article>
-
-            <article className="flex flex-col rounded-2xl border border-[#c8ddec] bg-white p-7 shadow-[0_8px_24px_rgba(7,40,77,0.05)]">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#0c68c8]">Problem 03</span>
-                <Layers className="h-5 w-5 text-[#0c68c8]" />
-              </div>
-              <h3 className="mt-6 text-2xl font-bold text-[#07284d]">Your business will outgrow a thin starter site</h3>
-              <p className="mt-3 text-sm font-semibold text-[#0c68c8]">Start focused without rebuilding from scratch later.</p>
-              <p className="mt-4 text-sm leading-6 text-[#657c90]">We identify the next layer of value: service and location coverage, local search structure, useful content, competitive gaps, and a path that can expand as demand grows.</p>
-              <p className="mt-6 border-t border-[#e2edf5] pt-5 text-xs font-bold text-[#07284d]">The deliverable: a practical growth map, not a pile of disconnected pages.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <LandingTeamShowcase />
-      <IndustryShowcase />
-      <IndustryCoverage />
+      {/* 7. FAQ ACCORDION */}
       <FAQAccordion />
-      <section className="border-t border-[#d9e8f4] bg-[#eef7ff] py-24 text-center">
-        <div className="mx-auto max-w-3xl px-6">
-          <Kicker>Start with the first impression</Kicker>
-          <h2 className="font-sans text-4xl font-semibold tracking-[-0.04em] text-[#07284d] sm:text-6xl">
-            See what your business could look like.
+
+      {/* 8. BOTTOM CALL-TO-ACTION BANNER */}
+      <section className="border-t border-white/10 bg-gradient-to-b from-[#0e1226] to-[#070913] py-20 text-center">
+        <div className="mx-auto max-w-3xl px-6 space-y-6">
+          <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
+            READY TO TRANSFORM <br />
+            YOUR HOMEPAGE?
           </h2>
-          <p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-[#60778d]">
-            Send us your website. We&apos;ll review it and create a free homepage
-            direction worth talking about.
+          <p className="mx-auto max-w-xl text-base text-slate-300">
+            Get a professional redesign concept that turns visitors into paying customers. Delivered in 48 hours. Completely free.
           </p>
-          <div className="mt-8 flex justify-center">
-            <RedesignIntakeFlow />
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a
+              href="#top"
+              className="inline-flex items-center gap-2 rounded-full bg-[#ff1744] px-8 py-4 text-sm font-bold uppercase tracking-wider text-white shadow-xl transition hover:bg-[#d50000] hover:scale-105"
+            >
+              Get My Free Redesign <ArrowRight className="h-4 w-4" />
+            </a>
+            <a
+              href="tel:+13075336678"
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-6 py-4 text-sm font-bold text-white transition hover:bg-white/10"
+            >
+              <Phone className="h-4 w-4 text-[#ff1744]" /> Call +1 (307) 533-6678
+            </a>
           </div>
         </div>
       </section>
+
       <Footer />
       <CrispChat />
-    </main>
+    </div>
   );
 }
