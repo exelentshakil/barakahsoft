@@ -2,6 +2,7 @@ import { Phone, Mail, Globe, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { DomainManager } from "@/components/admin/DomainManager";
 import { PricingManager } from "@/components/admin/PricingManager";
+import { DeliveryEmailComposer } from "@/components/admin/DeliveryEmailComposer";
 import type { Lead, Artifact } from "@/types/database";
 
 function Row({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | null }) {
@@ -33,7 +34,7 @@ export function OverviewTab({ lead, artifact }: { lead: Lead; artifact?: Artifac
 
       <Card>
         <CardContent className="space-y-3 p-4">
-          <p className="text-sm font-medium">Pipeline</p>
+          <p className="text-sm font-medium">Pipeline Status</p>
           {[
             { label: "Delivered", value: lead.delivered_at },
             { label: "Paid", value: lead.paid_at },
@@ -54,6 +55,10 @@ export function OverviewTab({ lead, artifact }: { lead: Lead; artifact?: Artifac
           )}
         </CardContent>
       </Card>
+
+      <div className="sm:col-span-2">
+        <DeliveryEmailComposer lead={lead} />
+      </div>
 
       <div className="sm:col-span-2">
         <PricingManager leadId={lead.id} currentPricing={pricing} />

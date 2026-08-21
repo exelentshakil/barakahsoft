@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
+  CloudDownload,
   Download,
   ExternalLink,
   Eye,
@@ -14,6 +16,7 @@ import {
   Phone,
   PhoneCall,
   Plus,
+  RefreshCw,
   Rocket,
   ShieldCheck,
   Smartphone,
@@ -35,7 +38,10 @@ interface AssetSlottingManagerProps {
 }
 
 export function AssetSlottingManager({ lead, artifact }: AssetSlottingManagerProps) {
+  const router = useRouter();
   const [exporting, setExporting] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+  const [archivedMsg, setArchivedMsg] = useState<string | null>(null);
   const [uploadingSlot, setUploadingSlot] = useState<string | null>(null);
 
   // Asset slot state
@@ -80,7 +86,6 @@ export function AssetSlottingManager({ lead, artifact }: AssetSlottingManagerPro
           setServiceImages((prev) => ({ ...prev, [slot]: data.url }));
         }
       } else {
-        // Local preview fallback if storage bucket has local session constraints
         const objectUrl = URL.createObjectURL(file);
         if (slot === "hero_cutout") setHeroCutout(objectUrl);
         else if (slot === "logo") setLogoUrl(objectUrl);
@@ -93,6 +98,27 @@ export function AssetSlottingManager({ lead, artifact }: AssetSlottingManagerPro
       else setServiceImages((prev) => ({ ...prev, [slot]: objectUrl }));
     } finally {
       setUploadingSlot(null);
+    }
+  }
+
+  async function handleArchiveRemoteAssets() {
+    setArchiving(true);
+    setArchivedMsg(null);
+    try {
+      const res = await fetch(`/api/leads/${lead.id}/assets/archive`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setArchivedMsg(`✓ Successfully migrated & optimized ${data.migratedCount} remote image assets into permanent Supabase Storage!`);
+        router.refresh();
+      } else {
+        alert("Failed to archive remote assets.");
+      }
+    } catch {
+      alert("Error archiving remote assets.");
+    } finally {
+      setArchiving(false);
     }
   }
 
@@ -119,21 +145,39 @@ export function AssetSlottingManager({ lead, artifact }: AssetSlottingManagerPro
               </h3>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Images are the heart of conversion. Slot in AI owner cutouts, fleet trucks, and 6 core service routes to build top-tier websites.
+              Images are the heart of conversion. Hotlink for instant previews, 1-click archive to permanent Supabase Storage, and export clean standalone code.
             </p>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+            <Button
+              onClick={handleArchiveRemoteAssets}
+              disabled={archiving}
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs font-semibold border-primary text-primary hover:bg-primary/10"
+            >
+              <CloudDownload className="h-4 w-4" />
+              {archiving ? "Downloading & Optimizing..." : "Migrate Hotlinks to Supabase Storage"}
+            </Button>
+
             <Button
               onClick={handleExportZip}
               disabled={exporting}
+              size="sm"
               className="gap-2 font-bold bg-[#07284d] text-white hover:bg-[#0c68c8]"
             >
               <Download className="h-4 w-4 text-[#ffd12d]" />
-              {exporting ? "Compiling Standalone Zip..." : "Export Next.js Project (.zip)"}
+              {exporting ? "Compiling Zip..." : "Export Next.js Project (.zip)"}
             </Button>
           </div>
         </div>
+
+        {archivedMsg && (
+          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-xs font-semibold text-emerald-700">
+            {archivedMsg}
+          </div>
+        )}
 
         {/* 1. VISUAL LIVE HERO COMPOSER (Spennato / BlueBuilt / Roofworx Caliber) */}
         <div className="space-y-3">
