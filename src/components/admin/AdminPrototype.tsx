@@ -538,41 +538,83 @@ export function AdminPrototype() {
               </div>
             </div>
 
-            {/* LINEAR STEP 4: REBUILT 28-PAGE SITEMAP & ARTICLES */}
-            <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-5">
+            {/* LINEAR STEP 4: VISUAL ASSET SLOTTING & HIGH-VALUE REBUILD */}
+            <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-6">
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
                 <div className="flex items-center gap-2.5">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f0f3ff] text-xs font-bold text-[#533afd]">
                     4
                   </span>
-                  <h3 className="font-bold text-base text-[#0d1738]">Rebuilt Platform (28 Service Routes + 8 Articles)</h3>
+                  <h3 className="font-bold text-base text-[#0d1738]">Visual Asset Engine & Hero Studio</h3>
                 </div>
-                <a
-                  href="/s/york-electrical"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-bold text-[#533afd] hover:underline"
+                <button
+                  onClick={() => alert("Standalone Next.js Project (.zip) generated for " + selectedLead.company + "!\n\n✓ Isolated Next 15 package\n✓ Tailored schema & Tailwind\n✓ Ready to 1-click import into Vercel Free Tier or AWS.")}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-[#07284d] px-3.5 py-1.5 text-xs font-bold text-white hover:bg-[#0c68c8]"
                 >
-                  Inspect Live Preview <ExternalLink className="h-3.5 w-3.5" />
-                </a>
+                  <FileCode2 className="h-3.5 w-3.5 text-[#ffd12d]" /> Export Next.js Zip
+                </button>
               </div>
 
-              <div className="grid gap-2.5 sm:grid-cols-2 text-xs">
-                {[
-                  { name: "Homepage (0.12s First Paint)", path: "/" },
-                  { name: "24/7 Emergency Dispatch", path: "/services/emergency-electrician-queens-ny" },
-                  { name: "200-Amp Panel Upgrade", path: "/services/electrical-panel-upgrade-queens-ny" },
-                  { name: "Level 2 EV Charger Install", path: "/services/ev-charger-installation-queens-ny" },
-                  { name: "DOB Code Violations Clearance", path: "/services/electrical-code-violation-corrections" },
-                  { name: "Commercial Tenant Fit-Outs", path: "/services/commercial-electrician-queens-ny" },
-                  { name: "Signs You Need Panel Upgrade", path: "/blog/signs-you-need-electrical-panel-upgrade" },
-                  { name: "NYC EV Charger Permit Guide", path: "/blog/level-2-ev-charger-installation-queens-ny" },
-                ].map((r) => (
-                  <div key={r.path} className="flex justify-between items-center rounded-lg border border-[#e5e7f2] p-3 bg-[#f9f9ff]">
-                    <span className="font-medium text-[#0d1738]">{r.name}</span>
-                    <span className="rounded bg-[#eaf8f0] px-2 py-0.5 text-[10px] font-bold text-[#0b8f5b]">Pre-rendered</span>
+              {/* Rendered Live Hero Preview Box (Spennato/BlueBuilt/Roofworx Standard) */}
+              <div className="relative overflow-hidden rounded-xl border-2 border-[#07284d] bg-[#07284d] text-white p-6 shadow-xl space-y-4">
+                <div className="flex items-center justify-between border-b border-white/10 pb-2 text-[10px]">
+                  <span className="font-semibold flex items-center gap-1">
+                    <Phone className="h-3 w-3 text-[#ffd12d]" /> 24/7 Dispatch: {selectedLead.phone}
+                  </span>
+                  <span className="bg-[#ff1744] text-white font-bold px-2 py-0.5 rounded uppercase text-[9px]">
+                    Get Free Quote
+                  </span>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-[1.3fr_0.7fr] items-center">
+                  <div className="space-y-2">
+                    <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[9px] font-bold text-[#ffd12d] uppercase">
+                      #1 Verified {selectedLead.trade} in {selectedLead.location}
+                    </span>
+                    <h2 className="text-xl sm:text-2xl font-black uppercase leading-tight">
+                      {selectedLead.company.toUpperCase()}
+                    </h2>
+                    <div className="flex flex-wrap gap-1.5 text-[9px] font-bold pt-1">
+                      <span className="bg-white/10 px-2 py-0.5 rounded border border-white/10">⭐ 5.0 (450+ Reviews)</span>
+                      <span className="bg-white/10 px-2 py-0.5 rounded border border-white/10">🛡️ 100% Guaranteed</span>
+                    </div>
                   </div>
-                ))}
+
+                  <div className="flex flex-col items-center bg-white/5 rounded-lg p-2 text-center border border-white/10">
+                    <div className="h-24 w-full flex items-center justify-center overflow-hidden">
+                      <img
+                        src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&q=80"
+                        alt="Owner"
+                        className="h-full w-auto object-contain drop-shadow-lg"
+                      />
+                    </div>
+                    <span className="text-[10px] font-bold text-[#ffd12d] mt-1">
+                      {selectedLead.contact} (Founder)
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Asset Slotting Grid */}
+              <div className="grid gap-3 sm:grid-cols-3 text-xs">
+                <div className="rounded-lg border border-[#e5e7f2] p-3 space-y-1.5 bg-[#f9f9ff]">
+                  <span className="font-bold text-[#0d1738] block text-[11px]">Slot 1: Hero Cutout</span>
+                  <span className="rounded bg-[#eaf8f0] px-2 py-0.5 text-[10px] font-bold text-[#0b8f5b] inline-block">
+                    ✓ PNG Headshot Active
+                  </span>
+                </div>
+                <div className="rounded-lg border border-[#e5e7f2] p-3 space-y-1.5 bg-[#f9f9ff]">
+                  <span className="font-bold text-[#0d1738] block text-[11px]">Slot 2: 6 Service Cards</span>
+                  <span className="rounded bg-[#eaf8f0] px-2 py-0.5 text-[10px] font-bold text-[#0b8f5b] inline-block">
+                    ✓ 6 High-Res Photos Slotted
+                  </span>
+                </div>
+                <div className="rounded-lg border border-[#e5e7f2] p-3 space-y-1.5 bg-[#f9f9ff]">
+                  <span className="font-bold text-[#0d1738] block text-[11px]">Slot 3: 8 Launch Articles</span>
+                  <span className="rounded bg-[#eaf8f0] px-2 py-0.5 text-[10px] font-bold text-[#0b8f5b] inline-block">
+                    ✓ Google AI Q&A Ready
+                  </span>
+                </div>
               </div>
             </div>
 
