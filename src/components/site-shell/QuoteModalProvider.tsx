@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { QuoteRequestModal } from "@/components/site-shell/QuoteRequestModal";
+import { LeadAssistant } from "@/components/site-shell/LeadAssistant";
 import type { SitePayload } from "@/components/site-shell/types";
 
 // Real, delivered-site-wide lead-capture: every "Get a free quote" CTA
@@ -29,6 +30,7 @@ export function QuoteModalProvider({ payload, children }: { payload: SitePayload
     <QuoteModalContext.Provider value={value}>
       {children}
       <QuoteRequestModal payload={payload} open={open} onOpenChange={setOpen} />
+      <LeadAssistant payload={payload} />
     </QuoteModalContext.Provider>
   );
 }

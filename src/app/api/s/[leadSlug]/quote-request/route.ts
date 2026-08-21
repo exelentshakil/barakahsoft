@@ -11,6 +11,16 @@ function getResend() {
 
 const fromEmail = () => process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
+function escapeHtml(value: string) {
+  return value.replace(/[&<>'"]/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "'": "&#39;",
+    '"': "&quot;",
+  })[character] ?? character);
+}
+
 // Public, unauthenticated -- any visitor to a delivered site can submit
 // this. Sends directly to the CLIENT's own real scraped email (never
 // BarakahSoft's), so a real visitor's request actually reaches the
@@ -45,6 +55,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ leadSlu
   const name = body.name.trim().slice(0, 200);
   const contact = body.contact.trim().slice(0, 200);
   const message = typeof body.message === "string" ? body.message.trim().slice(0, 2000) : "";
+  const safeName = escapeHtml(name);
+  const safeContact = escapeHtml(contact);
+  const safeMessage = escapeHtml(message);
   // Reply-To only when the submitted contact actually looks like an email --
   // a phone number there isn't a valid Reply-To header.
   const replyTo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact) ? contact : undefined;
@@ -57,9 +70,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ leadSlu
       subject: `New quote request from ${name} — ${result.payload.businessName}`,
       html: `
         <p>New quote request from your website (${result.payload.businessName}).</p>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Contact:</strong> ${contact}</p>
-        ${message ? `<p><strong>Message:</strong> ${message}</p>` : ""}
+        <p><strong>Name:</strong> ${safeName}</p>
+        <p><strong>Contact:</strong> ${safeContact}</p>
+        ${message ? `<p><strong>Message:</strong> ${safeMessage}</p>` : ""}
       `,
     });
     await createAdminClient().from("lead_inquiries").insert({
