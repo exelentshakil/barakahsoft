@@ -91,11 +91,18 @@ export function LiveClientProposal({
 
   // Dynamic Pricing from Admin Configuration
   const pricingData = (artifact?.extracted_assets?.pricing as any) ?? {};
-  const pricingModel: "flat" | "monthly" | "hybrid" = pricingData.model || "flat";
+  const pricingModel: "flat" | "monthly" | "hybrid" = pricingData.model || (pricingData.monthlyPrice > 0 && pricingData.setupPrice === 0 ? "monthly" : pricingData.monthlyPrice > 0 ? "hybrid" : "flat");
   const setupPrice = typeof pricingData.setupPrice === "number" ? pricingData.setupPrice : 797;
   const monthlyPrice = typeof pricingData.monthlyPrice === "number" ? pricingData.monthlyPrice : 0;
   const standardValue = typeof pricingData.standardValue === "number" ? pricingData.standardValue : 1597;
-  const discountLabel = pricingData.discountLabel || "Save $800 Today";
+  const discountLabel = pricingData.discountLabel || (setupPrice === 0 ? "$0 Setup · Monthly Plan" : "Custom Client Proposal");
+
+  const priceFormattedLabel =
+    setupPrice === 0 && monthlyPrice > 0
+      ? `$0 Setup · $${monthlyPrice}/mo`
+      : setupPrice > 0 && monthlyPrice > 0
+      ? `$${setupPrice} Setup + $${monthlyPrice}/mo`
+      : `$${setupPrice}`;
 
   const launchSteps = [
     { label: "Payment received", complete: isPaid, detail: "Stripe checkout confirmed" },
@@ -130,7 +137,7 @@ export function LiveClientProposal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           lead_id: lead.id,
-          tier: "website",
+          tier: monthlyPrice > 0 ? "hosting" : "website",
         }),
       });
       const data = await res.json();
@@ -271,7 +278,7 @@ export function LiveClientProposal({
                 onClick={() => setShowCheckout(true)}
                 className="inline-flex items-center gap-2 rounded-md bg-[#0b8f5b] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#09744a]"
               >
-                Launch Complete Lead Machine {pricingModel === "monthly" ? `($${monthlyPrice}/mo)` : `($${setupPrice})`} <ArrowRight className="h-4 w-4" />
+                Launch Complete Lead Machine ({priceFormattedLabel}) <ArrowRight className="h-4 w-4" />
               </button>
             )}
           </div>
@@ -477,10 +484,10 @@ export function LiveClientProposal({
                 </span>
               </div>
               <h2 className="mt-2 text-3xl font-bold text-[#0d1738]">
-                Complete Lead Machine Build & Local Launch
+                Custom Launch & Ongoing Plan
               </h2>
               <p className="mt-1 text-sm text-[#42506a]">
-                Standard agency value anchored at ${standardValue} — tailored for {businessName}.
+                Standard agency value anchored at ${standardValue} — curated specifically for {businessName}.
               </p>
             </div>
 
@@ -490,12 +497,14 @@ export function LiveClientProposal({
                 Standard Value: ${standardValue}
               </span>
               <div className="mt-0.5 flex items-baseline gap-1 sm:justify-end">
-                {pricingModel === "monthly" ? (
+                {setupPrice === 0 && monthlyPrice > 0 ? (
                   <>
-                    <span className="text-4xl font-bold text-[#0d1738]">${monthlyPrice}</span>
-                    <span className="text-xs font-semibold text-[#777588]">/ month</span>
+                    <span className="text-3xl font-bold text-[#0d1738]">$0</span>
+                    <span className="text-xs font-semibold text-[#777588]">setup +</span>
+                    <span className="text-3xl font-bold text-[#533afd] ml-1">${monthlyPrice}</span>
+                    <span className="text-xs font-semibold text-[#777588]">/mo</span>
                   </>
-                ) : pricingModel === "hybrid" ? (
+                ) : setupPrice > 0 && monthlyPrice > 0 ? (
                   <>
                     <span className="text-3xl font-bold text-[#0d1738]">${setupPrice}</span>
                     <span className="text-xs font-semibold text-[#777588]">setup + ${monthlyPrice}/mo</span>
@@ -503,12 +512,16 @@ export function LiveClientProposal({
                 ) : (
                   <>
                     <span className="text-4xl font-bold text-[#0d1738]">${setupPrice}</span>
-                    <span className="text-xs font-semibold text-[#777588]">USD flat</span>
+                    <span className="text-xs font-semibold text-[#777588]">USD setup</span>
                   </>
                 )}
               </div>
               <span className="text-[11px] font-bold text-[#0b8f5b] block mt-1">
-                ✓ 100% Client-Owned · No Monthly Lock-In
+                {setupPrice === 0 && monthlyPrice > 0
+                  ? `✓ $0 Upfront · $${monthlyPrice}/mo Hosting & Maintenance`
+                  : setupPrice > 0 && monthlyPrice > 0
+                  ? `✓ $${setupPrice} Setup · $${monthlyPrice}/mo Ongoing Retainer`
+                  : `✓ 100% Client-Owned Website`}
               </span>
             </div>
           </div>
@@ -542,11 +555,11 @@ export function LiveClientProposal({
             {isPaid ? "Your Lead Machine Is Moving Into Production" : "Launch Your New Lead Machine in 48 Hours"}
           </h2>
           <p className="mx-auto max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
-            {pricingModel === "monthly"
-              ? `A $${monthlyPrice}/month zero-down plan that connects search visibility, trust proof, service demand, and fast call paths.`
-              : pricingModel === "hybrid"
-              ? `A $${setupPrice} setup + $${monthlyPrice}/month ongoing package that delivers full market takeover.`
-              : `A $${setupPrice} flat build that connects search visibility, trust proof, service demand, and fast call paths.`}
+            {setupPrice === 0 && monthlyPrice > 0
+              ? `A $0 setup fee + $${monthlyPrice}/month ongoing hosting and management plan tailored for ${businessName}.`
+              : setupPrice > 0 && monthlyPrice > 0
+              ? `A $${setupPrice} setup fee + $${monthlyPrice}/month ongoing management package tailored for ${businessName}.`
+              : `A $${setupPrice} one-time build tailored for ${businessName}.`}
           </p>
 
           {isPaid && (
@@ -572,7 +585,7 @@ export function LiveClientProposal({
                 onClick={() => setShowCheckout(true)}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md bg-[#533afd] px-8 py-4 text-base font-bold text-white shadow-md transition hover:bg-[#432bd9]"
               >
-                Approve & Launch My Lead Machine {pricingModel === "monthly" ? `($${monthlyPrice}/mo)` : `($${setupPrice})`} <ArrowRight className="h-5 w-5" />
+                Approve & Launch ({priceFormattedLabel}) <ArrowRight className="h-5 w-5" />
               </button>
             )}
             <a
@@ -584,7 +597,7 @@ export function LiveClientProposal({
           </div>
 
           <p className="text-xs text-white/50">
-            Backed by our satisfaction review. 100% client-owned with zero monthly hostage fees.
+            Backed by our satisfaction review. 100% client-owned website with zero vendor lock-in.
           </p>
         </section>
 
@@ -594,9 +607,9 @@ export function LiveClientProposal({
             <div className="w-full max-w-lg rounded-2xl bg-white p-6 sm:p-8 shadow-2xl space-y-6 text-[#0d1738] border border-[#e5e7f2]">
               <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
                 <div>
-                  <h3 className="text-xl font-bold text-[#0d1738]">Launch {businessName}&apos;s Lead Machine</h3>
+                  <h3 className="text-xl font-bold text-[#0d1738]">Launch {businessName}&apos;s Website</h3>
                   <p className="text-xs text-[#777588]">
-                    {pricingModel === "monthly" ? `$${monthlyPrice}/mo Zero Down` : `$${setupPrice} One-Time Flat Build · ${discountLabel}`}
+                    {discountLabel} · Tailored B2B Proposal
                   </p>
                 </div>
                 <button
@@ -630,11 +643,11 @@ export function LiveClientProposal({
                 </div>
                 <div className="flex justify-between items-center border-t border-[#c7d0fb] pt-3 text-sm">
                   <div>
-                    <span className="font-bold text-[#0d1738] block">Total Due Today</span>
+                    <span className="font-bold text-[#0d1738] block">Pricing Terms</span>
                     <span className="text-[10px] text-[#777588] line-through">Standard Value: ${standardValue}</span>
                   </div>
                   <span className="text-xl font-bold text-[#533afd]">
-                    {pricingModel === "monthly" ? `$${monthlyPrice}.00 USD / mo` : `$${setupPrice}.00 USD`}
+                    {priceFormattedLabel}
                   </span>
                 </div>
               </div>
@@ -647,8 +660,10 @@ export function LiveClientProposal({
                 >
                   {checkoutLoading
                     ? "Redirecting..."
-                    : pricingModel === "monthly"
-                    ? `Subscribe $${monthlyPrice}/mo via Card / Apple Pay`
+                    : setupPrice === 0 && monthlyPrice > 0
+                    ? `Start $${monthlyPrice}/mo Subscription via Card / Apple Pay`
+                    : setupPrice > 0 && monthlyPrice > 0
+                    ? `Pay $${setupPrice} Setup + $${monthlyPrice}/mo`
                     : `Pay $${setupPrice} via Card / Apple Pay`}
                 </button>
                 <p className="text-center text-[11px] text-[#777588]">
