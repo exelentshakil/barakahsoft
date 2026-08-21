@@ -1,3 +1,5 @@
+import { MapPin } from "lucide-react";
+
 const LOGO_URL = "https://barakahsoft.com/wp-content/uploads/2026/01/Logo1.png";
 
 // Copyright + legal links verbatim from the live barakahsoft.com footer.
@@ -17,7 +19,19 @@ export function Footer() {
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Talk to us</p>
-            <div className="mt-4 space-y-2 text-sm"><a href="tel:+13075336678" className="block transition-colors hover:text-primary">+1 (307) 533-6678</a><a href="mailto:hello@barakahsoft.com" className="block text-muted-foreground transition-colors hover:text-primary">hello@barakahsoft.com</a><p className="text-muted-foreground">Wyoming, United States</p></div>
+            <div className="mt-4 space-y-3 text-sm">
+              <a href="tel:+13075336678" className="block transition-colors hover:text-primary">+1 (307) 533-6678</a>
+              <a href="mailto:hello@barakahsoft.com" className="block text-muted-foreground transition-colors hover:text-primary">hello@barakahsoft.com</a>
+              <address className="flex items-start gap-2.5 not-italic text-muted-foreground">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <span>
+                  <span className="block font-medium text-foreground">BarakahSoft LLC</span>
+                  <span className="block">30 N. Gould St., Suite R</span>
+                  <span className="block">Sheridan, WY 82801</span>
+                  <span className="mt-1 block text-xs">United States</span>
+                </span>
+              </address>
+            </div>
           </div>
         </div>
         <div className="flex flex-col gap-4 pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
