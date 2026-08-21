@@ -2,17 +2,14 @@ import Link from "next/link";
 import {
   ArrowRight,
   BarChart3,
-  Bot,
   Check,
   CheckCircle2,
-  Clock3,
   CircleDollarSign,
   ExternalLink,
   Eye,
   FileText,
-  MessageCircle,
+  Layers,
   Megaphone,
-  PhoneCall,
   Rocket,
   ShieldCheck,
   Sparkles,
@@ -467,59 +464,50 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      <section id="packages" className="landing-grid-surface border-b border-[#d9e8f4] py-20 lg:py-28">
+      <section id="lead-machine-value" className="landing-grid-surface border-b border-[#d9e8f4] py-20 lg:py-28">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mx-auto max-w-3xl text-center">
-            <Kicker>Choose your launch path</Kicker>
+            <Kicker>What the 48-hour offer solves</Kicker>
             <h2 className="font-sans text-4xl font-semibold leading-tight tracking-[-0.04em] text-[#07284d] sm:text-5xl">
-              Not every contractor needs the same lead machine.
+              Your free audit should give you more than a pretty homepage.
             </h2>
             <p className="mt-5 text-lg leading-8 text-[#60778d]">
-              Start with the speed, depth, and level of market ownership that fits your business right now.
+              In 48 hours, we show you the practical improvements that can help your business get found, earn trust, and turn more visits into conversations.
             </p>
           </div>
 
           <div className="mt-12 grid gap-5 lg:grid-cols-3">
             <article className="flex flex-col rounded-2xl border border-[#c8ddec] bg-white p-7 shadow-[0_8px_24px_rgba(7,40,77,0.05)]">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#0c68c8]">2–4 weeks</span>
-                <FileText className="h-5 w-5 text-[#0c68c8]" />
+                <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#0c68c8]">Problem 01</span>
+                <Rocket className="h-5 w-5 text-[#0c68c8]" />
               </div>
-              <h3 className="mt-6 text-2xl font-bold text-[#07284d]">Ultimate Contractor Website</h3>
-              <p className="mt-3 text-sm font-semibold text-[#0c68c8]">The full build. The full brand. The full market takeover.</p>
-              <p className="mt-4 text-sm leading-6 text-[#657c90]">Every service page, location page, and conversion path built around your brand and your city.</p>
-              <p className="mt-6 border-t border-[#e2edf5] pt-5 text-xs font-bold text-[#07284d]">Best for: Established contractors ready to own their local market.</p>
-              <a href="#top" className="mt-7 inline-flex items-center justify-center gap-2 rounded-lg border border-[#07284d] px-4 py-3 text-sm font-bold text-[#07284d] hover:bg-[#eef7ff]">Get started <ArrowRight className="h-4 w-4" /></a>
+              <h3 className="mt-6 text-2xl font-bold text-[#07284d]">You need to get online fast</h3>
+              <p className="mt-3 text-sm font-semibold text-[#0c68c8]">A clear first version beats waiting another four weeks.</p>
+              <p className="mt-4 text-sm leading-6 text-[#657c90]">We show the leanest path to a credible, high-converting presence: focused pages, a clear offer, trust proof, and a direct way for customers to contact you.</p>
+              <p className="mt-6 border-t border-[#e2edf5] pt-5 text-xs font-bold text-[#07284d]">Useful for: New contractors, startups, and businesses testing a market.</p>
             </article>
 
-            <article className="relative flex flex-col rounded-2xl border-2 border-[#533afd] bg-[#f0f3ff] p-7 shadow-[0_18px_45px_rgba(83,58,253,0.16)]">
-              <span className="absolute -top-3 left-6 rounded-full bg-[#533afd] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">Most popular for speed</span>
+            <article className="flex flex-col rounded-2xl border-2 border-[#533afd] bg-[#f0f3ff] p-7 shadow-[0_18px_45px_rgba(83,58,253,0.16)]">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#533afd]">24–72 hours</span>
-                <Clock3 className="h-5 w-5 text-[#533afd]" />
+                <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#533afd]">Problem 02</span>
+                <Megaphone className="h-5 w-5 text-[#533afd]" />
               </div>
-              <h3 className="mt-6 text-2xl font-bold text-[#07284d]">AI Smart Website</h3>
-              <p className="mt-3 text-sm font-semibold text-[#533afd]">For new contractors who need to get online fast.</p>
-              <p className="mt-4 text-sm leading-6 text-[#42506a]">A clean, high-converting website on a proven framework, with AI chat, lead capture, and callback features built in from day one. Under 5 pages and ready to grow.</p>
-              <div className="mt-5 grid grid-cols-3 gap-2 text-center text-[10px] font-bold text-[#07284d]">
-                <div className="rounded-lg bg-white p-3"><Bot className="mx-auto mb-1 h-4 w-4 text-[#533afd]" />AI chat</div>
-                <div className="rounded-lg bg-white p-3"><MessageCircle className="mx-auto mb-1 h-4 w-4 text-[#533afd]" />Lead capture</div>
-                <div className="rounded-lg bg-white p-3"><PhoneCall className="mx-auto mb-1 h-4 w-4 text-[#533afd]" />Callback flow</div>
-              </div>
-              <p className="mt-6 border-t border-[#c7d0fb] pt-5 text-xs font-bold text-[#07284d]">Best for: New contractors, startups, and businesses testing a new market.</p>
-              <a href="#top" className="mt-7 inline-flex items-center justify-center gap-2 rounded-lg bg-[#533afd] px-4 py-3 text-sm font-bold text-white hover:bg-[#432bd9]">Get started <ArrowRight className="h-4 w-4" /></a>
+              <h3 className="mt-6 text-2xl font-bold text-[#07284d]">Your site gets attention but not conversations</h3>
+              <p className="mt-3 text-sm font-semibold text-[#533afd]">A website should make the next step obvious.</p>
+              <p className="mt-4 text-sm leading-6 text-[#42506a]">We map the conversion layer: AI-assisted chat, lead capture, callback requests, click-to-call, service-specific paths, and the trust signals that help a visitor act.</p>
+              <p className="mt-6 border-t border-[#c7d0fb] pt-5 text-xs font-bold text-[#07284d]">The outcome: fewer dead ends between a customer finding you and contacting you.</p>
             </article>
 
             <article className="flex flex-col rounded-2xl border border-[#c8ddec] bg-white p-7 shadow-[0_8px_24px_rgba(7,40,77,0.05)]">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#0c68c8]">1–2 weeks</span>
-                <CheckCircle2 className="h-5 w-5 text-[#0c68c8]" />
+                <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#0c68c8]">Problem 03</span>
+                <Layers className="h-5 w-5 text-[#0c68c8]" />
               </div>
-              <h3 className="mt-6 text-2xl font-bold text-[#07284d]">Simple Elite Website</h3>
-              <p className="mt-3 text-sm font-semibold text-[#0c68c8]">More than a starter. Less than the full build.</p>
-              <p className="mt-4 text-sm leading-6 text-[#657c90]">A professional, custom-designed website covering your core pages, looking premium, and starting to build local trust.</p>
-              <p className="mt-6 border-t border-[#e2edf5] pt-5 text-xs font-bold text-[#07284d]">Best for: Growing contractors who want quality without the full timeline.</p>
-              <a href="#top" className="mt-7 inline-flex items-center justify-center gap-2 rounded-lg border border-[#07284d] px-4 py-3 text-sm font-bold text-[#07284d] hover:bg-[#eef7ff]">Get started <ArrowRight className="h-4 w-4" /></a>
+              <h3 className="mt-6 text-2xl font-bold text-[#07284d]">Your business will outgrow a thin starter site</h3>
+              <p className="mt-3 text-sm font-semibold text-[#0c68c8]">Start focused without rebuilding from scratch later.</p>
+              <p className="mt-4 text-sm leading-6 text-[#657c90]">We identify the next layer of value: service and location coverage, local search structure, useful content, competitive gaps, and a path that can expand as demand grows.</p>
+              <p className="mt-6 border-t border-[#e2edf5] pt-5 text-xs font-bold text-[#07284d]">The deliverable: a practical growth map, not a pile of disconnected pages.</p>
             </article>
           </div>
         </div>
