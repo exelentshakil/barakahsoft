@@ -86,6 +86,12 @@ export function LiveClientProposal({
 
   const selectedPains = lead.help_needed && lead.help_needed.length > 0 ? lead.help_needed : LEAD_PROBLEMS.slice(0, 3);
   const isPaid = Boolean(lead.paid_at) || lead.status === "paid" || lead.status === "live";
+  const launchSteps = [
+    { label: "Payment received", complete: isPaid, detail: "Stripe checkout confirmed" },
+    { label: "Human QA review", complete: artifact?.qa_status === "approved", detail: artifact?.qa_status === "approved" ? "Approved by the BarakahSoft team" : "Final fact and conversion review" },
+    { label: "Domain connection", complete: Boolean(lead.custom_domain), detail: lead.custom_domain || "Domain details will be confirmed with you" },
+    { label: "Website live", complete: Boolean(lead.live_at) || lead.status === "live", detail: lead.live_at ? "Live on the connected domain" : "Follows QA and domain setup" },
+  ];
 
   // Computed 49 local scan nodes for client service radius
   const mapPoints = Array.from({ length: 49 }, (_, i) => ({
@@ -601,11 +607,28 @@ export function LiveClientProposal({
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
             {isPaid ? "Your Lead Machine Is Moving Into Production" : "Launch Your New Lead Machine in 48 Hours"}
           </h2>
-          <p className="mx-auto max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
-            A $797 flat build that connects search visibility, trust proof, service demand, and fast call paths. Optional Meta ads management is quoted separately.
-          </p>
+           <p className="mx-auto max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
+             A $797 flat build that connects search visibility, trust proof, service demand, and fast call paths. Optional Meta ads management is quoted separately.
+           </p>
 
-          <div className="pt-2 flex flex-col items-center justify-center gap-4 sm:flex-row">
+           {isPaid && (
+             <div className="mx-auto w-full max-w-2xl rounded-xl border border-white/15 bg-white/5 p-4 text-left">
+               <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#ffd12d]">Live launch checklist</p>
+               <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                 {launchSteps.map((step) => (
+                   <div key={step.label} className="flex items-start gap-3 rounded-lg border border-white/10 bg-white/5 p-3">
+                     <CheckCircle2 className={`mt-0.5 h-4 w-4 shrink-0 ${step.complete ? "text-[#6ee7b7]" : "text-white/35"}`} />
+                     <div>
+                       <p className="text-sm font-semibold text-white">{step.label}</p>
+                       <p className="mt-0.5 text-xs text-white/55">{step.detail}</p>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             </div>
+           )}
+
+           <div className="pt-2 flex flex-col items-center justify-center gap-4 sm:flex-row">
             {!isPaid && (
               <button
                 onClick={() => setShowCheckout(true)}
