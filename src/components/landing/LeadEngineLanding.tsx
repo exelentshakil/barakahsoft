@@ -5,13 +5,18 @@ import {
   Check,
   CheckCircle2,
   Clock,
+  Code2,
+  Download,
   ExternalLink,
   Eye,
+  FileCode2,
   FileText,
   Globe2,
   HelpCircle,
+  Image as ImageIcon,
   Laptop,
   Layers,
+  Layout,
   Mail,
   Megaphone,
   MessageCircle,
@@ -22,6 +27,7 @@ import {
   Smartphone,
   Sparkles,
   Target,
+  Upload,
   Users,
   Zap,
 } from "lucide-react";
@@ -30,58 +36,110 @@ import { Footer } from "@/components/landing/Footer";
 import { FAQAccordion } from "@/components/landing/FAQAccordion";
 import { Nav } from "@/components/landing/Nav";
 import { LandingTeamShowcase } from "@/components/landing/LandingTeamShowcase";
+import { Marquee } from "@/components/landing/primitives/Marquee";
 import { CrispChat } from "@/components/CrispChat";
 
 const SUPABASE_STORAGE_URL = "https://liepxeeugfrxmidcmbxo.supabase.co/storage/v1/object/public/design-reference";
 
-const REAL_PORTFOLIO_SAMPLES = [
+const ROW_1_CONCEPTS = [
   {
     title: "Spennato Family Roofing",
-    category: "Roofing & Exteriors",
+    trade: "Roofing & Exteriors",
     url: "spennatoroofing.com",
-    headline: "40 Years of Experience · 5.0 ★ Top Rated",
+    headline: "40 Years Experience · 5.0 ★ Rated",
     image: `${SUPABASE_STORAGE_URL}/roofers/1.jpg`,
-    badge: "Roofing",
+    badge: "Roofers",
   },
   {
     title: "O'Connell Power & Electric",
-    category: "Electrical & Engineering",
+    trade: "Electrical & Engineering",
     url: "oconnellelectric.com",
-    headline: "Commercial & Industrial Electrical Solutions",
+    headline: "Commercial & Industrial Electricians",
     image: `${SUPABASE_STORAGE_URL}/electricians/1.jpg`,
-    badge: "Electrical",
+    badge: "Electricians",
   },
   {
     title: "Allstate General Contractors",
-    category: "Commercial & Residential Build",
+    trade: "Commercial & Residential",
     url: "allstatecontractors.com",
-    headline: "Full-Service Construction & Modern Renovations",
+    headline: "Full-Service Construction & Modern Builds",
     image: `${SUPABASE_STORAGE_URL}/contractors/1.jpg`,
     badge: "Contractors",
   },
   {
     title: "Timberline HVAC & Heat Pumps",
-    category: "HVAC & Climate Systems",
+    trade: "HVAC & Climate Systems",
     url: "timberlinehvac.com",
-    headline: "24/7 Emergency AC & Heating Installations",
+    headline: "24/7 Emergency AC & Heating Installs",
     image: `${SUPABASE_STORAGE_URL}/hvac/1.jpg`,
     badge: "HVAC",
   },
   {
-    title: "GM Master Plumbing",
-    category: "Plumbing & Mechanical",
+    title: "Southern Roofing & Exteriors",
+    trade: "Roofing & Restoration",
+    url: "southernroofing.com",
+    headline: "GAF Master Elite Certified Roofers",
+    image: `${SUPABASE_STORAGE_URL}/roofers/2.jpg`,
+    badge: "Roofers",
+  },
+  {
+    title: "Cool Hand Electric",
+    trade: "Electrical & EV Charging",
+    url: "coolhandelectric.com",
+    headline: "Residential Panel Upgrades & EV Chargers",
+    image: `${SUPABASE_STORAGE_URL}/electricians/2.jpg`,
+    badge: "Electricians",
+  },
+];
+
+const ROW_2_CONCEPTS = [
+  {
+    title: "GM Master Plumbing Corp",
+    trade: "Plumbing & Mechanical",
     url: "gmplumbingcorp.com",
-    headline: "Licensed Master Plumber · Emergency Dispatch",
+    headline: "Licensed Master Plumbers · 24/7 Dispatch",
     image: `${SUPABASE_STORAGE_URL}/plumbers/1.jpg`,
     badge: "Plumbing",
   },
   {
-    title: "Perfect Moving & Logistics",
-    category: "Moving & Storage",
+    title: "Perfect Moving NYC",
+    trade: "Moving & Storage Logistics",
     url: "perfectmoving.com",
-    headline: "White-Glove Residential & Commercial Moves",
+    headline: "White-Glove Residential & Office Moving",
     image: `${SUPABASE_STORAGE_URL}/movers/1.jpg`,
     badge: "Movers",
+  },
+  {
+    title: "Scott Simpson Design + Build",
+    trade: "Custom Architecture & Builds",
+    url: "scottsimpsonbuilders.com",
+    headline: "Luxury Custom Homes & Modern Renovations",
+    image: `${SUPABASE_STORAGE_URL}/contractors/2.jpg`,
+    badge: "Design-Build",
+  },
+  {
+    title: "Janney Roofing Florida",
+    trade: "Residential & Commercial Roofs",
+    url: "janneyroofing.com",
+    headline: "Florida's Highest-Rated Roofing Team",
+    image: `${SUPABASE_STORAGE_URL}/roofers/3.jpg`,
+    badge: "Roofers",
+  },
+  {
+    title: "Carini Home Services",
+    trade: "HVAC & Energy Retrofits",
+    url: "carinihomeservices.com",
+    headline: "Heat Pump Specialists & LL97 Compliance",
+    image: `${SUPABASE_STORAGE_URL}/hvac/2.jpg`,
+    badge: "HVAC",
+  },
+  {
+    title: "Piece of Cake Moving",
+    trade: "Commercial & Local Relocation",
+    url: "mypieceofcakemove.com",
+    headline: "Guaranteed Flat-Rate Moving Solutions",
+    image: `${SUPABASE_STORAGE_URL}/movers/2.jpg`,
+    badge: "Logistics",
   },
 ];
 
@@ -89,33 +147,67 @@ const PROCESS_STEPS = [
   {
     number: "01",
     tag: "Takes 2 Minutes",
-    title: "Fill Out the Form",
-    body: "Share your current website URL and what you want to fix. Tell us where your current site is leaking calls or looking outdated.",
+    title: "Submit Your Website",
+    body: "Share your current website URL and what you want to improve. Tell us where your current site is leaking calls or missing high-value services.",
   },
   {
     number: "02",
     tag: "Within 48 Hours",
     title: "We Audit & Rebuild Your Homepage",
-    body: "We extract your genuine branding, run local speed diagnostics, and design a custom high-converting concept for desktop and mobile.",
+    body: "We extract your genuine branding, run local speed diagnostics, analyze competitor search gaps, and craft a bespoke desktop & mobile concept.",
   },
   {
     number: "03",
     tag: "Straight to Your Inbox",
     title: "Review in Your Private Portal",
-    body: "You receive a private magic link to inspect your interactive Digital X-Ray audit, competitor benchmarks, and live website preview.",
+    body: "You receive a private magic link with your interactive Digital X-Ray audit, 49-point local search matrix, and full live homepage preview.",
   },
   {
     number: "04",
     tag: "No Strings Attached",
     title: "Decide What's Next",
-    body: "Love the direction? We can connect your domain and launch the full platform. Not ready? Keep the redesign concept 100% free of charge.",
+    body: "Love the direction? We launch the full multi-page platform on your domain. Not ready? Keep the redesign concept 100% free of charge.",
   },
 ];
+
+function ConceptBrowserCard({ concept }: { concept: typeof ROW_1_CONCEPTS[0] }) {
+  return (
+    <div className="group w-[360px] sm:w-[420px] overflow-hidden rounded-2xl border border-[#c8ddec] bg-white shadow-[0_10px_30px_rgba(7,40,77,0.07)] transition duration-300 hover:-translate-y-1.5 hover:border-[#0c68c8] hover:shadow-[0_20px_50px_rgba(7,40,77,0.15)]">
+      {/* Browser Window Header */}
+      <div className="flex items-center justify-between border-b border-[#e5e7f2] bg-[#f4f7fb] px-4 py-2.5 text-[11px] text-[#777588]">
+        <div className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f56]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#ffbd2e]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#27c93f]" />
+          <span className="ml-2 truncate font-mono text-[10px] text-[#42506a]">{concept.url}</span>
+        </div>
+        <span className="rounded bg-white px-2 py-0.5 text-[10px] font-bold text-[#0c68c8] border border-[#d9e8f4]">
+          {concept.badge}
+        </span>
+      </div>
+
+      {/* Screenshot Area */}
+      <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
+        <img
+          src={concept.image}
+          alt={concept.title}
+          className="h-full w-full object-cover object-top transition duration-700 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#07284d]/60 via-transparent to-transparent opacity-60" />
+      </div>
+
+      <div className="p-4 space-y-0.5">
+        <h3 className="font-bold text-sm text-[#07284d]">{concept.title}</h3>
+        <p className="text-xs text-[#60778d] truncate">{concept.headline}</p>
+      </div>
+    </div>
+  );
+}
 
 export function LeadEngineLanding() {
   return (
     <main className="min-h-screen bg-white text-[#07284d] font-sans antialiased">
-      {/* 1. TOP NAVBAR (Real BarakahSoft Branding) */}
+      {/* 1. TOP NAVBAR */}
       <Nav />
 
       {/* 2. HERO SECTION */}
@@ -208,58 +300,98 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 4. "SEE WHAT YOUR NEW WEBSITE COULD LOOK LIKE" (Real Supabase High-Def Concepts) */}
-      <section id="examples" className="border-b border-[#d9e8f4] bg-[#f8fbfe] py-20 lg:py-28">
-        <div className="mx-auto max-w-6xl px-6 space-y-12">
+      {/* 4. "SEE WHAT YOUR NEW WEBSITE COULD LOOK LIKE" (Smooth Multi-Row Marquee Showcase) */}
+      <section id="examples" className="border-b border-[#d9e8f4] bg-[#f8fbfe] py-20 lg:py-28 overflow-hidden space-y-10">
+        <div className="mx-auto max-w-4xl px-6 text-center space-y-3">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Design Quality Bar</p>
+          <h2 className="font-sans text-3xl font-extrabold tracking-tight text-[#07284d] sm:text-5xl">
+            SEE WHAT YOUR NEW WEBSITE COULD LOOK LIKE
+          </h2>
+          <p className="mx-auto max-w-2xl text-sm leading-relaxed text-[#60778d] sm:text-base">
+            Hover to pause and inspect. Every design is custom-crafted with high-contrast typography, trust badges, and instant quote dispatch.
+          </p>
+        </div>
+
+        {/* Row 1: Scrolling Left */}
+        <div className="space-y-6">
+          <Marquee gap="gap-6" durationSeconds={35}>
+            {ROW_1_CONCEPTS.map((concept) => (
+              <ConceptBrowserCard key={concept.title} concept={concept} />
+            ))}
+          </Marquee>
+
+          {/* Row 2: Scrolling Right */}
+          <Marquee gap="gap-6" durationSeconds={38} reverse>
+            {ROW_2_CONCEPTS.map((concept) => (
+              <ConceptBrowserCard key={concept.title} concept={concept} />
+            ))}
+          </Marquee>
+        </div>
+      </section>
+
+      {/* 5. VISUAL WEBSITE GENERATION & ASSET ENGINE EXPLAINER */}
+      <section className="border-b border-[#d9e8f4] bg-white py-20 lg:py-28">
+        <div className="mx-auto max-w-6xl px-6 space-y-16">
           <div className="text-center space-y-3">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Real Design Concepts</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">High-Value Website Architecture</p>
             <h2 className="font-sans text-3xl font-extrabold tracking-tight text-[#07284d] sm:text-5xl">
-              SEE WHAT YOUR NEW WEBSITE COULD LOOK LIKE
+              HOW WE ENGINEER INDUSTRY-LEADING WEBSITES
             </h2>
             <p className="mx-auto max-w-2xl text-sm leading-relaxed text-[#60778d] sm:text-base">
-              High-converting, bespoke homepages engineered around genuine proof, fast mobile rendering, and instant quote capture.
+              Images and structured assets are the heart of conversion. Here is how your website is built from scraped data to standalone Next.js deployment.
             </p>
           </div>
 
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {REAL_PORTFOLIO_SAMPLES.map((sample) => (
-              <div
-                key={sample.title}
-                className="group relative overflow-hidden rounded-2xl border border-[#c8ddec] bg-white shadow-[0_12px_30px_rgba(7,40,77,0.08)] transition duration-300 hover:-translate-y-2 hover:border-[#0c68c8] hover:shadow-[0_20px_50px_rgba(7,40,77,0.16)]"
-              >
-                {/* Browser Window Header */}
-                <div className="flex items-center gap-1.5 border-b border-[#e5e7f2] bg-[#f4f7fb] px-4 py-2.5 text-[11px] text-[#777588]">
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f56]" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#ffbd2e]" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#27c93f]" />
-                  <span className="ml-2 truncate font-mono text-[10px] text-[#42506a]">{sample.url}</span>
-                </div>
-
-                {/* Screenshot Area */}
-                <div className="relative aspect-[16/11] overflow-hidden bg-slate-100">
-                  <img
-                    src={sample.image}
-                    alt={sample.title}
-                    className="h-full w-full object-cover object-top transition duration-700 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#07284d]/60 via-transparent to-transparent opacity-80" />
-                  <span className="absolute bottom-3 left-3 rounded-full bg-[#ffd12d] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#07284d] shadow">
-                    {sample.badge}
-                  </span>
-                </div>
-
-                <div className="p-5 space-y-1">
-                  <h3 className="font-bold text-base text-[#07284d]">{sample.title}</h3>
-                  <p className="text-xs text-[#60778d]">{sample.headline}</p>
-                </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-2xl border border-[#c8ddec] bg-[#f8fbfe] p-6 space-y-3 shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8f4ff] text-[#0c68c8]">
+                <Globe2 className="h-5 w-5" />
               </div>
-            ))}
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#0c68c8]">Step 1: Ingestion</span>
+              <h3 className="font-bold text-base text-[#07284d]">Sitemap & Brand Scraping</h3>
+              <p className="text-xs text-[#60778d] leading-relaxed">
+                Firecrawl extracts real logo vectors, brand color tokens, 5-star Google reviews, licenses, and genuine service offerings.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-[#c8ddec] bg-[#f8fbfe] p-6 space-y-3 shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8f4ff] text-[#0c68c8]">
+                <ImageIcon className="h-5 w-5" />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#0c68c8]">Step 2: Visual Polish</span>
+              <h3 className="font-bold text-base text-[#07284d]">Hero & Service Image Slots</h3>
+              <p className="text-xs text-[#60778d] leading-relaxed">
+                Dedicated image slots for owner headshot cutouts, fleet trucks, and individual high-definition service route cards.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-[#c8ddec] bg-[#f8fbfe] p-6 space-y-3 shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8f4ff] text-[#0c68c8]">
+                <Zap className="h-5 w-5" />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#0c68c8]">Step 3: Conversion Tech</span>
+              <h3 className="font-bold text-base text-[#07284d]">0.12s Speed & AI Schema</h3>
+              <p className="text-xs text-[#60778d] leading-relaxed">
+                Sticky 1-tap call bar, interactive AI lead assistant, and valid LocalBusiness entity schema for ChatGPT & Google AI citation.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-[#c8ddec] bg-[#f8fbfe] p-6 space-y-3 shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8f4ff] text-[#0c68c8]">
+                <Download className="h-5 w-5" />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#0c68c8]">Step 4: Zero Lock-In</span>
+              <h3 className="font-bold text-base text-[#07284d]">Standalone Next.js Export</h3>
+              <p className="text-xs text-[#60778d] leading-relaxed">
+                100% clean standalone project export. Deploy to Vercel free tier in 1 click with custom domain SSL or low-cost $30/mo maintenance.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* 5. "FROM FORM TO FRESH DESIGN — IN 48 HOURS" */}
-      <section id="how-it-works" className="border-b border-[#d9e8f4] bg-white py-20 lg:py-28">
+      {/* 6. "FROM FORM TO FRESH DESIGN — IN 48 HOURS" */}
+      <section id="how-it-works" className="border-b border-[#d9e8f4] bg-[#f8fbfe] py-20 lg:py-28">
         <div className="mx-auto max-w-5xl px-6 space-y-14">
           <div className="text-center space-y-3">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Our Process</p>
@@ -275,14 +407,14 @@ export function LeadEngineLanding() {
             {PROCESS_STEPS.map((s) => (
               <div
                 key={s.number}
-                className="relative rounded-2xl border border-[#c8ddec] bg-[#f8fbfe] p-7 shadow-[0_8px_24px_rgba(7,40,77,0.05)] space-y-3 flex flex-col justify-between"
+                className="relative rounded-2xl border border-[#c8ddec] bg-white p-7 shadow-[0_8px_24px_rgba(7,40,77,0.05)] space-y-3 flex flex-col justify-between"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8f4ff] font-black text-[#0c68c8] text-base">
                       {s.number}
                     </span>
-                    <span className="rounded-full bg-white border border-[#c8ddec] px-3 py-1 text-[11px] font-bold text-[#07284d]">
+                    <span className="rounded-full bg-[#f4f7fb] border border-[#c8ddec] px-3 py-1 text-[11px] font-bold text-[#07284d]">
                       {s.tag}
                     </span>
                   </div>
@@ -304,8 +436,8 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 6. "EVERYTHING YOU GET, FREE" (Navy + Gold High Value Box) */}
-      <section id="what-you-get" className="border-b border-[#d9e8f4] bg-[#f8fbfe] py-20 lg:py-28">
+      {/* 7. "EVERYTHING YOU GET, FREE" (Navy + Gold High Value Box) */}
+      <section id="what-you-get" className="border-b border-[#d9e8f4] bg-white py-20 lg:py-28">
         <div className="mx-auto max-w-3xl px-6 space-y-10">
           <div className="text-center space-y-3">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Full Free Deliverables</p>
@@ -358,13 +490,13 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 7. TEAM SHOWCASE */}
+      {/* 8. TEAM SHOWCASE */}
       <LandingTeamShowcase />
 
-      {/* 8. FAQ ACCORDION */}
+      {/* 9. FAQ ACCORDION */}
       <FAQAccordion />
 
-      {/* 9. BOTTOM CALL-TO-ACTION BANNER */}
+      {/* 10. BOTTOM CALL-TO-ACTION BANNER */}
       <section className="border-t border-[#d9e8f4] bg-[#07284d] py-20 text-center text-white">
         <div className="mx-auto max-w-3xl px-6 space-y-6">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#ffd12d]">
@@ -396,7 +528,7 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 10. FOOTER */}
+      {/* 11. FOOTER */}
       <Footer />
       <CrispChat />
     </main>
