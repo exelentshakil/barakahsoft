@@ -160,11 +160,11 @@ const VISUAL_JOURNEY = [
   {
     step: "02",
     tag: "48-Hour Rebuild",
-    title: "Custom High-Converting Concept",
-    body: "Our design team crafts a high-contrast, modern homepage with 0.12s mobile load time, sticky 1-tap call bar, and dedicated service sections.",
+    title: "AI Smart Concept & Rebuild",
+    body: "Our design team crafts a high-contrast homepage with 0.12s mobile load time, AI callback assistant, and dedicated service sections.",
     badge: "Step 02 · 100% Free",
     icon: Laptop,
-    highlights: ["0.12s Mobile first-paint", "Tailored brand colors", "1-Tap call conversion"],
+    highlights: ["0.12s Mobile first-paint", "AI chat & callback capture", "1-Tap emergency call bar"],
   },
   {
     step: "03",
@@ -179,7 +179,7 @@ const VISUAL_JOURNEY = [
     step: "04",
     tag: "Handoff & Go-Live",
     title: "Launch on Your Domain",
-    body: "Love the direction? We connect your domain, set up the full website, and launch it live in 48 hours. Not ready? Keep the concept 100% free.",
+    body: "Love the direction? We connect your domain, set up the full pages, and launch it live in 48 hours. Not ready? Keep the concept free.",
     badge: "Step 04 · Your Terms",
     icon: Rocket,
     highlights: ["Connected to your domain", "100% Client-owned website", "Fast call conversion"],
@@ -236,7 +236,7 @@ export function LeadEngineLanding() {
           {/* Highlighted FREE Pill */}
           <div className="inline-flex items-center gap-2 rounded-full border border-[#f1c400] bg-[#fff7c7] px-5 py-2 text-xs font-black uppercase tracking-[0.16em] text-[#07284d] shadow-sm">
             <Sparkles className="h-4 w-4 text-[#07284d]" />
-            Free 48-Hour Homepage Redesign
+            Free 48-Hour Homepage Redesign & AI Audit
           </div>
 
           <h1 className="font-sans text-5xl font-extrabold tracking-[-0.04em] text-[#07284d] sm:text-6xl lg:text-7xl leading-[1.05]">
@@ -245,7 +245,7 @@ export function LeadEngineLanding() {
           </h1>
 
           <p className="mx-auto max-w-2xl text-base leading-relaxed text-[#5c7186] sm:text-lg">
-            See exactly how your homepage could look. We&apos;ll create a custom concept around your real business and deliver it in 48 hours — optimized for Google and AI chatbots to boost your calls and leads. Free, no strings attached.
+            See exactly how your homepage could look. We&apos;ll create a custom concept around your real business and deliver it in 48 hours — with AI chat, lead capture, and callback features built in from day one. Free, no strings attached.
           </p>
 
           <div className="pt-3">
@@ -257,7 +257,7 @@ export function LeadEngineLanding() {
               <CheckCircle2 className="h-4 w-4 text-[#0c68c8]" /> No payment · No obligation
             </span>
             <span className="flex items-center gap-1.5 text-[#07284d] font-semibold">
-              <CheckCircle2 className="h-4 w-4 text-[#0c68c8]" /> Google & AI Search Ready
+              <CheckCircle2 className="h-4 w-4 text-[#0c68c8]" /> AI Chat & Callback Ready
             </span>
             <span className="flex items-center gap-1.5 text-[#07284d] font-semibold">
               <CheckCircle2 className="h-4 w-4 text-[#0c68c8]" /> Limited daily spots available
@@ -281,8 +281,8 @@ export function LeadEngineLanding() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#ffd12d]">Step 01</span>
                 <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-white/80">100% Free</span>
               </div>
-              <p className="mt-1 font-bold text-base text-white">Custom Homepage Concept</p>
-              <p className="mt-0.5 text-xs text-white/70">Tailored to your genuine branding, real proof, and services.</p>
+              <p className="mt-1 font-bold text-base text-white">AI Smart Homepage Concept</p>
+              <p className="mt-0.5 text-xs text-white/70">Custom design with AI chat & instant callback capture.</p>
             </div>
           </div>
 
@@ -295,8 +295,8 @@ export function LeadEngineLanding() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#ffd12d]">Step 02</span>
                 <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-white/80">Included</span>
               </div>
-              <p className="mt-1 font-bold text-base text-white">Digital X-Ray & Speed Audit</p>
-              <p className="mt-0.5 text-xs text-white/70">Mobile speed test, local search matrix, and competitor benchmarks.</p>
+              <p className="mt-1 font-bold text-base text-white">Digital X-Ray & Search Audit</p>
+              <p className="mt-0.5 text-xs text-white/70">0.12s mobile speed test, 49-node map grid, and competitor radar.</p>
             </div>
           </div>
 
@@ -439,8 +439,9 @@ export function LeadEngineLanding() {
               {[
                 "Homepage redesign concept tailored to your real brand, colors & logo",
                 "Desktop and mobile-first responsive layout (0.12s first paint)",
+                "Interactive AI lead assistant & instant callback request capture",
                 "Evidence-based Digital X-Ray audit & Core Web Vitals speed test",
-                "Conversion-written copy for your services and high-margin offers",
+                "Google AI Overview & ChatGPT entity schema markup",
                 "Delivered to your private tracking portal in 48 hours",
                 "Yours to keep forever with zero obligation",
               ].map((item) => (
