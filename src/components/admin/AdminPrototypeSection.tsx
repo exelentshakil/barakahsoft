@@ -45,7 +45,7 @@ const SECTION_CONTENT = {
     eyebrow: "Client Engagement",
     intro: "Track private magic-link opens, email sequences, and Crisp chat threads.",
     items: [
-      { name: "York Electrical Delivery Email", location: "Draft ready with magic link", trade: "Resend", status: "Ready", est: "Email #1" },
+      { name: "York Electrical Delivery Email", location: "Draft ready with private portal link", trade: "Brevo", status: "Ready", est: "Email #1" },
       { name: "Summit HVAC Proposal Thread", location: "Customer replied on Crisp", trade: "Chat", status: "Needs Reply", est: "Active" },
       { name: "Brightline Follow-up Sequence", location: "Day-2 reminder scheduled", trade: "Automated", status: "Scheduled", est: "Email #2" },
     ],
@@ -53,21 +53,21 @@ const SECTION_CONTENT = {
   domains: {
     title: "Domains & Build Exports",
     eyebrow: "Handoff",
-    intro: "Connect customer-owned domains and download isolated Next.js project zips.",
+    intro: "Connect customer-owned domains and download isolated website source exports.",
     items: [
       { name: "yorkelectrical.com", location: "DNS CNAME verification", trade: "Production", status: "Pending DNS", est: "Vercel / AWS" },
-      { name: "summit-hvac-v1.zip", location: "Clean standalone source", trade: "Export", status: "Built", est: "Next.js 15" },
+      { name: "summit-hvac-v1.zip", location: "Clean standalone website source", trade: "Export", status: "Built", est: "Ready" },
       { name: "brightlineplumbing.com", location: "SSL & DNS active", trade: "Live", status: "Active", est: "Connected" },
     ],
   },
   settings: {
     title: "Platform Integrations & Config",
     eyebrow: "Infrastructure",
-    intro: "Manage Firecrawl scrapers, Stripe payment keys, Resend domains, and Supabase auth.",
+    intro: "Manage Firecrawl scrapers, Stripe payment keys, Brevo sending domains, and Supabase auth.",
     items: [
       { name: "Firecrawl Web Extraction", location: "Branding + Markdown + Sitemap", trade: "API", status: "Connected", est: "Healthy" },
       { name: "Stripe Billing & Subscriptions", location: "$797 Website + $497/mo Retainers", trade: "Webhooks", status: "Live", est: "Connected" },
-      { name: "Resend Transactional Mailer", location: "noreply@barakahsoft.com", trade: "Email", status: "Verified", est: "Healthy" },
+      { name: "Brevo Transactional Mailer", location: "hello@barakahsoft.com", trade: "Email", status: "Verified", est: "Healthy" },
       { name: "Crisp Real-time Chat", location: "Widget ID: 28d857ed", trade: "Support", status: "Active", est: "Connected" },
     ],
   },

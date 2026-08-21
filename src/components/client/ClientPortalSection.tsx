@@ -47,7 +47,7 @@ const SECTION_CONTENT = {
     intro: "Explore every generated service page and original article built for your business.",
     items: [
       { name: "Commercial & Residential Services", detail: "28 high-converting service landing pages", date: "28 Routes", status: "Ready" },
-      { name: "8-10 Original Launch Articles", detail: "Grounded in local NYC codes, EV permits, and panel upgrades", date: "8 Articles", status: "Ready" },
+      { name: "8 Original Launch Articles", detail: "Grounded in local NYC codes, EV permits, and panel upgrades", date: "8 Articles", status: "Ready" },
       { name: "About Us & Contact Dispatch", detail: "37-year family story and 1-tap emergency dispatch", date: "2 Routes", status: "Ready" },
     ],
   },
@@ -56,7 +56,7 @@ const SECTION_CONTENT = {
     eyebrow: "Client Guarantee",
     intro: "Everything we build is 100% owned by your company. Download clean standalone project files anytime.",
     items: [
-      { name: "Clean Next.js 15 Source Code", detail: "Exportable standalone project zip with zero vendor lock-in", date: "Version 1.0", status: "Ready" },
+      { name: "Standalone Website Source Files", detail: "Exportable website files with no vendor lock-in", date: "Version 1.0", status: "Ready" },
       { name: "Custom Domain Connection", detail: "yorkelectrical.com DNS verification instructions", date: "DNS", status: "Configured" },
       { name: "Support & Direct Team Chat", detail: "Direct line to Shakil and the engineering team via Crisp", date: "24/7", status: "Active" },
     ],

@@ -682,7 +682,7 @@ export function ClientPortalPrototype() {
               { item: "Rebuilt Modern Homepage built around your real logo, photos, and colors", val: "$400 Value" },
               { item: "28 Dedicated Service Landing Pages (Panel Upgrades, EV Chargers, DOB)", val: "$600 Value" },
               { item: "8 Original Launch Articles written for Queens homeowners (never blank)", val: "$300 Value" },
-              { item: "AI Search & LocalBusiness JSON-LD Schema (ChatGPT & Gemini ready)", val: "$150 Value" },
+              { item: "AI search readiness and LocalBusiness schema foundation", val: "$150 Value" },
               { item: "0.12s Mobile Load Time with sticky 1-tap emergency call buttons", val: "$100 Value" },
               { item: "Connected to your domain (yorkelectrical.com) with SSL security", val: "Included Free" },
             ].map((d) => (
@@ -706,7 +706,7 @@ export function ClientPortalPrototype() {
             Launch Your New Website in 48 Hours
           </h2>
           <p className="mx-auto max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
-            No long contracts, no monthly hostage fees. We connect your domain, set up the full 28 pages, and make sure your phone starts ringing.
+            A $797 flat website build with no required monthly plan. We connect your domain, set up the full 28 pages, and provide the foundation for more qualified calls. Optional Meta ads management is quoted separately.
           </p>
 
           <div className="pt-2 flex flex-col items-center justify-center gap-4 sm:flex-row">
