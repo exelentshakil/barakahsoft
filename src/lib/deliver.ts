@@ -1,14 +1,14 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPreviewReadyEmail } from "@/lib/notifications";
+import { createPortalToken } from "@/lib/portal-token";
 import type { Lead } from "@/types/database";
 
 // DeliverArtifact molecule — send_magic_link_email + set leads.delivered_at
-// (plan §5). "Magic link" here is just the public preview URL itself
-// (/s/[slug] needs no login, it's a public route) — there's no separate
-// token/auth step the way the admin magic-link login has one.
+// (plan §5). The delivered preview uses the same signed, expiring portal
+// token as the intake confirmation so the report is not publicly enumerable.
 export async function deliverArtifact(lead: Lead): Promise<string> {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-  const previewUrl = `${siteUrl}/s/${lead.slug}`;
+  const siteUrl = process.env.NEXT_PUBLIC_PORTAL_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const previewUrl = `${siteUrl}/s/${lead.slug}?auth=${createPortalToken(lead.id)}`;
 
   await sendPreviewReadyEmail(lead, previewUrl);
 

@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import twilio from "twilio";
 import type { Lead } from "@/types/database";
+import { createPortalToken } from "@/lib/portal-token";
 
 function getResend() {
   const key = process.env.RESEND_API_KEY;
@@ -55,7 +56,7 @@ export async function sendInstantLeadConfirmationEmail(lead: Lead) {
   const resend = getResend();
   if (!lead.email) return;
   const portalSubdomain = process.env.NEXT_PUBLIC_PORTAL_URL || "https://portal.barakahsoft.com";
-  const trackingUrl = `${portalSubdomain}/s/${lead.slug}?auth=magic_${lead.id.slice(0, 8)}`;
+  const trackingUrl = `${portalSubdomain}/s/${lead.slug}?auth=${createPortalToken(lead.id)}`;
   const businessName = lead.business_name || lead.source_url;
 
   const html = `

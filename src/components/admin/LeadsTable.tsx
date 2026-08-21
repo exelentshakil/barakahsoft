@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { ExternalLink, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 
-type LeadRow = { id: string; business_name: string | null; contact_name: string | null; source_url: string; source: string; help_needed: string[]; status: string; created_at: string };
+type LeadRow = { id: string; slug: string; business_name: string | null; contact_name: string | null; source_url: string; source: string; help_needed: string[]; status: string; created_at: string; paid_at: string | null; delivered_at: string | null };
 
 export function LeadsTable({ leads }: { leads: LeadRow[] }) {
   const router = useRouter();
@@ -79,6 +79,15 @@ export function LeadsTable({ leads }: { leads: LeadRow[] }) {
                 </div>
                 <Badge variant="outline">{lead.status}</Badge>
               </Link>
+              <a
+                href={`/s/${lead.slug}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:border-primary hover:text-primary"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ExternalLink className="h-3.5 w-3.5" /> Portal
+              </a>
               <Button
                 size="icon"
                 variant="ghost"

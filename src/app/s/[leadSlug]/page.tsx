@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getSiteData } from "@/lib/get-site-data";
 import { PremiumLeadHomepage } from "@/components/site-shell/PremiumLeadHomepage";
 import { LiveClientProposal } from "@/components/portal/LiveClientProposal";
+import { isAdminSession } from "@/lib/is-admin-session";
+import { verifyPortalToken } from "@/lib/portal-token";
 
 // THE homepage — one crawlable document. Every service/area gets a #slug
 // mega-menu anchor here pre-payment; title/meta/canonical/FAQPage/
@@ -38,9 +40,16 @@ export default async function LeadSitePage({
   if (!result) notFound();
 
   const { payload, lead, scrapeResults, artifact } = result;
+  const operator = await isAdminSession();
+  const authorized = operator || verifyPortalToken(sParams.auth, lead.id);
+
+  if (!authorized && sParams.view !== "preview") {
+    return notFound();
+  }
 
   // If viewing the direct website preview
   if (sParams.view === "preview") {
+    if (!operator && lead.status !== "paid" && lead.status !== "live") return notFound();
     const localBusinessSchema = {
       "@context": "https://schema.org",
       "@type": "LocalBusiness",
