@@ -184,7 +184,7 @@ export function LeadEngineLanding() {
           </h1>
 
           <p className="mx-auto max-w-2xl text-base text-slate-300 sm:text-lg leading-relaxed">
-            See exactly how your homepage could look. A custom concept, delivered in 48 hours. Free, no strings attached.
+            See exactly how your homepage could look. We&apos;ll create a custom concept around your real business and deliver it in 48 hours — optimized for Google and AI chatbots to boost your calls and leads. Free, no strings attached.
           </p>
 
           <div className="pt-4">
@@ -193,13 +193,16 @@ export function LeadEngineLanding() {
 
           <div className="pt-2 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400">
             <span className="flex items-center gap-1.5 text-slate-300">
-              <Check className="h-4 w-4 text-[#ff1744]" /> Free · No credit card required
+              <Check className="h-4 w-4 text-[#ff1744]" /> No payment · No obligation
+            </span>
+            <span className="flex items-center gap-1.5 text-slate-300">
+              <Check className="h-4 w-4 text-[#ff1744]" /> Google & AI Chatbot Ready
+            </span>
+            <span className="flex items-center gap-1.5 text-slate-300">
+              <Check className="h-4 w-4 text-[#ff1744]" /> Limited daily spots available
             </span>
             <span className="flex items-center gap-1.5 text-slate-300">
               <Check className="h-4 w-4 text-[#ff1744]" /> Yours to keep forever
-            </span>
-            <span className="flex items-center gap-1.5 text-slate-300">
-              <Check className="h-4 w-4 text-[#ff1744]" /> Over 50+ websites launched
             </span>
           </div>
         </div>
