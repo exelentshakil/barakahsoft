@@ -93,17 +93,18 @@ export function LeadEngineLanding() {
         <div className="pointer-events-none absolute bottom-28 left-[16%] hidden h-2 w-2 rounded-full bg-[#702486] shadow-[0_0_0_7px_rgba(112,36,134,0.1)] lg:block" aria-hidden="true" />
         <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-20 lg:pb-24 lg:pt-28">
           <div className="mx-auto max-w-4xl text-center">
-            <p className="mx-auto mb-6 w-fit rounded-full bg-[#e8f4ff] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[#075da8]">
-              Free lead-machine teardown for contractors
+            <p className="mx-auto mb-6 w-fit rounded-full border border-[#f1c400] bg-[#fff7c7] px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-[#07284d] shadow-sm">
+              Free 48-hour lead-machine audit
             </p>
             <h1 className="font-sans text-5xl font-semibold leading-[1.02] tracking-[-0.055em] text-[#07284d] sm:text-7xl">
-              Turn your contractor website into a lead machine.
+              Turn your home-service website into a lead machine.
             </h1>
             <p className="mx-auto mt-7 max-w-2xl text-lg leading-8 text-[#5c7186]">
-              We map where local buyers are finding your competitors, show what is
-              leaking calls today, and build a private redesign that proves how your
-              website can turn attention into qualified calls. Delivered in 48 hours
-              with zero obligation.
+              For electricians, plumbers, HVAC companies, roofers, remodelers, movers,
+              restoration teams, and contractors: we map where local buyers are finding
+              your competitors, show what is leaking calls today, and build a private
+              redesign that proves how your website can turn attention into qualified
+              calls. Delivered in 48 hours with zero obligation.
             </p>
             <div className="mt-9">
               <RedesignIntakeFlow />
