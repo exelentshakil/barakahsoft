@@ -32,87 +32,56 @@ import { Nav } from "@/components/landing/Nav";
 import { LandingTeamShowcase } from "@/components/landing/LandingTeamShowcase";
 import { CrispChat } from "@/components/CrispChat";
 
-const LOGO_URL = "https://barakahsoft.com/wp-content/uploads/2026/01/Logo1.png";
+const SUPABASE_STORAGE_URL = "https://liepxeeugfrxmidcmbxo.supabase.co/storage/v1/object/public/design-reference";
 
 const REAL_PORTFOLIO_SAMPLES = [
   {
-    title: "QSA Self Storage",
-    category: "Storage & Logistics",
-    url: "qsaselfstorage.co.uk",
-    headline: "Looking for Belfast's Best Self Storage?",
-    image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80",
-    badge: "Storage",
+    title: "Spennato Family Roofing",
+    category: "Roofing & Exteriors",
+    url: "spennatoroofing.com",
+    headline: "40 Years of Experience · 5.0 ★ Top Rated",
+    image: `${SUPABASE_STORAGE_URL}/roofers/1.jpg`,
+    badge: "Roofing",
   },
   {
-    title: "K Neeson Removals",
-    category: "Removals & Logistics",
-    url: "kneesonremovals.com",
-    headline: "Stress-Free Home & Commercial Moving",
-    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
-    badge: "Logistics",
-  },
-  {
-    title: "BME Electrical",
+    title: "O'Connell Power & Electric",
     category: "Electrical & Engineering",
-    url: "bmeelectrical.co.uk",
-    headline: "Commercial & Industrial Electrical Contractors",
-    image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=800&q=80",
+    url: "oconnellelectric.com",
+    headline: "Commercial & Industrial Electrical Solutions",
+    image: `${SUPABASE_STORAGE_URL}/electricians/1.jpg`,
+    badge: "Electrical",
+  },
+  {
+    title: "Allstate General Contractors",
+    category: "Commercial & Residential Build",
+    url: "allstatecontractors.com",
+    headline: "Full-Service Construction & Modern Renovations",
+    image: `${SUPABASE_STORAGE_URL}/contractors/1.jpg`,
     badge: "Contractors",
   },
   {
-    title: "Fitter Finances",
-    category: "Financial & Advisory",
-    url: "fitterfinances.com",
-    headline: "Clear Financial Guidance & Debt Recovery",
-    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
-    badge: "Financial",
+    title: "Timberline HVAC & Heat Pumps",
+    category: "HVAC & Climate Systems",
+    url: "timberlinehvac.com",
+    headline: "24/7 Emergency AC & Heating Installations",
+    image: `${SUPABASE_STORAGE_URL}/hvac/1.jpg`,
+    badge: "HVAC",
   },
   {
-    title: "Canavan Construction",
-    category: "Construction & Remodeling",
-    url: "canavanconstruction.com",
-    headline: "High-End Residential & Commercial Builds",
-    image: "https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?auto=format&fit=crop&w=800&q=80",
-    badge: "Construction",
+    title: "GM Master Plumbing",
+    category: "Plumbing & Mechanical",
+    url: "gmplumbingcorp.com",
+    headline: "Licensed Master Plumber · Emergency Dispatch",
+    image: `${SUPABASE_STORAGE_URL}/plumbers/1.jpg`,
+    badge: "Plumbing",
   },
   {
-    title: "Harry Coates Studio",
-    category: "Artist & Gallery",
-    url: "harrycoates.com",
-    headline: "Contemporary Fine Art & Visual Exhibitions",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
-    badge: "Ecommerce / Studio",
-  },
-];
-
-const MOBILE_MOCKUPS = [
-  {
-    title: "Self Storage",
-    headline: "Belfast's #1 Secure Storage Facility",
-    bg: "bg-slate-900",
-    accent: "bg-[#ffd12d] text-[#07284d]",
-    img: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=400&q=80",
-  },
-  {
-    title: "Financial Advisory",
-    headline: "Over £6,000 in Debt? Get Help Today",
-    bg: "bg-[#07284d]",
-    accent: "bg-[#ffd12d] text-[#07284d]",
-    img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80",
-  },
-  {
-    title: "Electrical & HVAC",
-    headline: "Commercial Installations & EV Charging",
-    bg: "bg-slate-950",
-    accent: "bg-[#ffd12d] text-[#07284d]",
-    img: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=400&q=80",
-  },
-  {
-    title: "Roofing & Exterior",
-    headline: "5.0 ★ Rated Roof Replacement",
-    bg: "bg-[#07284d]",
-    accent: "bg-white text-[#07284d]",
-    img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=400&q=80",
+    title: "Perfect Moving & Logistics",
+    category: "Moving & Storage",
+    url: "perfectmoving.com",
+    headline: "White-Glove Residential & Commercial Moves",
+    image: `${SUPABASE_STORAGE_URL}/movers/1.jpg`,
+    badge: "Movers",
   },
 ];
 
@@ -239,24 +208,24 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 4. "SEE WHAT YOUR NEW WEBSITE COULD LOOK LIKE" (GALLERY) */}
+      {/* 4. "SEE WHAT YOUR NEW WEBSITE COULD LOOK LIKE" (Real Supabase High-Def Concepts) */}
       <section id="examples" className="border-b border-[#d9e8f4] bg-[#f8fbfe] py-20 lg:py-28">
         <div className="mx-auto max-w-6xl px-6 space-y-12">
           <div className="text-center space-y-3">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Real Website Concepts</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Real Design Concepts</p>
             <h2 className="font-sans text-3xl font-extrabold tracking-tight text-[#07284d] sm:text-5xl">
               SEE WHAT YOUR NEW WEBSITE COULD LOOK LIKE
             </h2>
             <p className="mx-auto max-w-2xl text-sm leading-relaxed text-[#60778d] sm:text-base">
-              Real homepages we build for businesses across trades, logistics, professional services, finance, and ecommerce.
+              High-converting, bespoke homepages engineered around genuine proof, fast mobile rendering, and instant quote capture.
             </p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {REAL_PORTFOLIO_SAMPLES.map((sample) => (
               <div
                 key={sample.title}
-                className="group relative overflow-hidden rounded-2xl border border-[#c8ddec] bg-white shadow-[0_8px_24px_rgba(7,40,77,0.06)] transition duration-300 hover:-translate-y-1.5 hover:border-[#0c68c8] hover:shadow-[0_18px_40px_rgba(7,40,77,0.12)]"
+                className="group relative overflow-hidden rounded-2xl border border-[#c8ddec] bg-white shadow-[0_12px_30px_rgba(7,40,77,0.08)] transition duration-300 hover:-translate-y-2 hover:border-[#0c68c8] hover:shadow-[0_20px_50px_rgba(7,40,77,0.16)]"
               >
                 {/* Browser Window Header */}
                 <div className="flex items-center gap-1.5 border-b border-[#e5e7f2] bg-[#f4f7fb] px-4 py-2.5 text-[11px] text-[#777588]">
@@ -267,21 +236,21 @@ export function LeadEngineLanding() {
                 </div>
 
                 {/* Screenshot Area */}
-                <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
+                <div className="relative aspect-[16/11] overflow-hidden bg-slate-100">
                   <img
                     src={sample.image}
                     alt={sample.title}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    className="h-full w-full object-cover object-top transition duration-700 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#07284d]/40 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#07284d]/60 via-transparent to-transparent opacity-80" />
+                  <span className="absolute bottom-3 left-3 rounded-full bg-[#ffd12d] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#07284d] shadow">
+                    {sample.badge}
+                  </span>
                 </div>
 
                 <div className="p-5 space-y-1">
-                  <span className="inline-block rounded bg-[#e8f4ff] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#0c68c8]">
-                    {sample.badge}
-                  </span>
                   <h3 className="font-bold text-base text-[#07284d]">{sample.title}</h3>
-                  <p className="text-xs text-[#60778d] truncate">{sample.headline}</p>
+                  <p className="text-xs text-[#60778d]">{sample.headline}</p>
                 </div>
               </div>
             ))}
@@ -289,58 +258,8 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 5. "LOOKS GREAT ON MOBILE, TOO" */}
-      <section className="border-b border-[#d9e8f4] bg-white py-20 lg:py-28 overflow-hidden">
-        <div className="mx-auto max-w-6xl px-6 space-y-14">
-          <div className="text-center space-y-3">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Mobile-First Conversion</p>
-            <h2 className="font-sans text-3xl font-extrabold tracking-tight text-[#07284d] sm:text-5xl">
-              LOOKS GREAT ON MOBILE, TOO
-            </h2>
-            <p className="mx-auto max-w-2xl text-sm leading-relaxed text-[#60778d] sm:text-base">
-              Every concept is built mobile-first. 0.12s first paint speed with sticky 1-tap call buttons and fast quote dispatch so mobile visitors turn into booked conversations.
-            </p>
-          </div>
-
-          {/* 4 Mobile Handsets */}
-          <div className="grid gap-6 grid-cols-2 md:grid-cols-4 max-w-5xl mx-auto">
-            {MOBILE_MOCKUPS.map((m) => (
-              <div
-                key={m.title}
-                className="relative overflow-hidden rounded-[2.5rem] border-4 border-[#07284d] bg-[#07284d] p-2 shadow-2xl transition duration-300 hover:scale-105 hover:border-[#0c68c8]"
-              >
-                {/* Speaker Notch */}
-                <div className="mx-auto h-3.5 w-16 rounded-full bg-slate-800 mb-2" />
-
-                <div className="aspect-[9/16] overflow-hidden rounded-[2rem] bg-slate-900 flex flex-col justify-between p-4 relative">
-                  <img
-                    src={m.img}
-                    alt={m.title}
-                    className="absolute inset-0 h-full w-full object-cover opacity-40"
-                  />
-                  <div className="relative z-10 space-y-1.5">
-                    <span className={`inline-block rounded px-2 py-0.5 text-[9px] font-black uppercase ${m.accent}`}>
-                      {m.title}
-                    </span>
-                    <h4 className="text-xs font-bold text-white leading-tight">
-                      {m.headline}
-                    </h4>
-                  </div>
-
-                  <div className="relative z-10 pt-3">
-                    <div className="rounded-lg bg-[#ffd12d] py-2 text-center text-[10px] font-bold text-[#07284d] shadow-md">
-                      📞 Call Now (1-Tap)
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 6. "FROM FORM TO FRESH DESIGN — IN 48 HOURS" */}
-      <section id="how-it-works" className="border-b border-[#d9e8f4] bg-[#f8fbfe] py-20 lg:py-28">
+      {/* 5. "FROM FORM TO FRESH DESIGN — IN 48 HOURS" */}
+      <section id="how-it-works" className="border-b border-[#d9e8f4] bg-white py-20 lg:py-28">
         <div className="mx-auto max-w-5xl px-6 space-y-14">
           <div className="text-center space-y-3">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Our Process</p>
@@ -356,14 +275,14 @@ export function LeadEngineLanding() {
             {PROCESS_STEPS.map((s) => (
               <div
                 key={s.number}
-                className="relative rounded-2xl border border-[#c8ddec] bg-white p-7 shadow-[0_8px_24px_rgba(7,40,77,0.05)] space-y-3 flex flex-col justify-between"
+                className="relative rounded-2xl border border-[#c8ddec] bg-[#f8fbfe] p-7 shadow-[0_8px_24px_rgba(7,40,77,0.05)] space-y-3 flex flex-col justify-between"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8f4ff] font-black text-[#0c68c8] text-base">
                       {s.number}
                     </span>
-                    <span className="rounded-full bg-[#f4f7fb] border border-[#c8ddec] px-3 py-1 text-[11px] font-bold text-[#07284d]">
+                    <span className="rounded-full bg-white border border-[#c8ddec] px-3 py-1 text-[11px] font-bold text-[#07284d]">
                       {s.tag}
                     </span>
                   </div>
@@ -385,8 +304,8 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 7. "EVERYTHING YOU GET, FREE" (Navy + Gold High Value Box) */}
-      <section id="what-you-get" className="border-b border-[#d9e8f4] bg-white py-20 lg:py-28">
+      {/* 6. "EVERYTHING YOU GET, FREE" (Navy + Gold High Value Box) */}
+      <section id="what-you-get" className="border-b border-[#d9e8f4] bg-[#f8fbfe] py-20 lg:py-28">
         <div className="mx-auto max-w-3xl px-6 space-y-10">
           <div className="text-center space-y-3">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Full Free Deliverables</p>
@@ -394,7 +313,7 @@ export function LeadEngineLanding() {
               EVERYTHING YOU GET, FREE
             </h2>
             <p className="text-sm text-[#60778d]">
-              We show our work before asking for anything. Love it and want the full site build? Great. Not now? The concept is yours to keep, no strings.
+              We show our work before asking for anything. Love the design and want to launch it? Great. Not now? The concept is yours to keep, no strings.
             </p>
           </div>
 
@@ -439,13 +358,13 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 8. TEAM & PROOF SHOWCASE */}
+      {/* 7. TEAM SHOWCASE */}
       <LandingTeamShowcase />
 
-      {/* 9. FAQ ACCORDION */}
+      {/* 8. FAQ ACCORDION */}
       <FAQAccordion />
 
-      {/* 10. BOTTOM CALL-TO-ACTION BANNER */}
+      {/* 9. BOTTOM CALL-TO-ACTION BANNER */}
       <section className="border-t border-[#d9e8f4] bg-[#07284d] py-20 text-center text-white">
         <div className="mx-auto max-w-3xl px-6 space-y-6">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#ffd12d]">
@@ -477,7 +396,7 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 11. FOOTER (With Wyoming Address & Legal Links) */}
+      {/* 10. FOOTER */}
       <Footer />
       <CrispChat />
     </main>
