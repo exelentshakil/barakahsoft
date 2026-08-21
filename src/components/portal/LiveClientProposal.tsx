@@ -111,9 +111,8 @@ export function LiveClientProposal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          leadId: lead.id,
-          tier: "complete_website",
-          priceCents: 79700,
+          lead_id: lead.id,
+          tier: "website",
         }),
       });
       const data = await res.json();
@@ -171,7 +170,7 @@ export function LiveClientProposal({
           </h1>
 
           <p className="max-w-3xl text-base leading-relaxed text-[#42506a] sm:text-lg">
-            We performed a deep technical X-Ray of your website, local Google search rankings in {address}, and competitor positioning. Your business has real proof ({reviewCount} reviews · {rating} ★ rating) — but your old website was hiding that authority and leaking customer calls. Here is the verified breakdown and the complete rebuilt platform.
+            We performed a deep X-Ray of your website, local Google search rankings in {address}, and competitor positioning. Your business has real proof ({reviewCount} reviews · {rating} ★ rating) — but the current customer journey is hiding that authority and leaking calls. Here is the verified breakdown of the lead machine we would put in its place.
           </p>
 
           <div className="pt-2 flex flex-wrap gap-4">
@@ -187,7 +186,7 @@ export function LiveClientProposal({
               onClick={() => setShowCheckout(true)}
               className="inline-flex items-center gap-2 rounded-md bg-[#0b8f5b] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#09744a]"
             >
-              Launch Complete Website ($797) <ArrowRight className="h-4 w-4" />
+              Launch Complete Lead Machine ($797) <ArrowRight className="h-4 w-4" />
             </button>
           </div>
 
@@ -200,11 +199,11 @@ export function LiveClientProposal({
               </div>
               <div className="rounded-xl border-2 border-[#533afd] bg-white p-4 shadow-sm">
                 <span className="font-bold text-[#533afd]">Step 2: Current</span>
-                <p className="mt-1 text-[#0d1738] font-semibold text-sm">You Review the Solution</p>
+                <p className="mt-1 text-[#0d1738] font-semibold text-sm">You Review the Lead Machine</p>
               </div>
               <div className="rounded-xl bg-[#f9f9ff] p-4 text-[#777588] border border-[#e5e7f2]">
                 <span className="font-bold">Step 3: Next</span>
-                <p className="mt-1 font-semibold text-sm">Go-Live in 48 Hours</p>
+                <p className="mt-1 font-semibold text-sm">Launch the Lead Machine</p>
               </div>
             </div>
           </div>
@@ -545,7 +544,7 @@ export function LiveClientProposal({
                 </span>
               </div>
               <h2 className="mt-2 text-3xl font-bold text-[#0d1738]">
-                Complete Website Build & Local Launch
+                Complete Lead Machine Build & Local Launch
               </h2>
               <p className="mt-1 text-sm text-[#42506a]">
                 Standard agency value anchored at $1,597 — discounted to $797 for new client onboarding.
@@ -569,10 +568,10 @@ export function LiveClientProposal({
 
           <div className="grid gap-4 sm:grid-cols-2 text-sm">
             {[
-              { item: "Rebuilt Modern Homepage built around your real logo, photos, and colors", val: "$400 Value" },
-              { item: "28 Dedicated Service Landing Pages for every genuine service you offer", val: "$600 Value" },
+              { item: "Conversion-focused homepage built around your real logo, proof, services, and calls to action", val: "$400 Value" },
+              { item: "28 dedicated service landing pages that give high-value jobs a clear path to contact you", val: "$600 Value" },
               { item: "8 Original Launch Articles written for local homeowners (never blank)", val: "$300 Value" },
-              { item: "AI Search & LocalBusiness JSON-LD Schema (ChatGPT & Gemini ready)", val: "$150 Value" },
+              { item: "AI search readiness and LocalBusiness schema foundation", val: "$150 Value" },
               { item: "0.12s Mobile Load Time with sticky 1-tap emergency call buttons", val: "$100 Value" },
               { item: "Connected to your custom domain with SSL security included", val: "Included Free" },
             ].map((d) => (
@@ -593,10 +592,10 @@ export function LiveClientProposal({
             Ready to Launch?
           </span>
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            Launch Your New Website in 48 Hours
+            Launch Your New Lead Machine in 48 Hours
           </h2>
           <p className="mx-auto max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
-            No long contracts, no monthly hostage fees. We connect your domain, set up the full 28 pages, and make sure your phone starts ringing.
+            A $797 flat build that connects search visibility, trust proof, service demand, and fast call paths. Optional Meta ads management is quoted separately.
           </p>
 
           <div className="pt-2 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -604,7 +603,7 @@ export function LiveClientProposal({
               onClick={() => setShowCheckout(true)}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md bg-[#533afd] px-8 py-4 text-base font-bold text-white shadow-md transition hover:bg-[#432bd9]"
             >
-              Approve & Launch My Website ($797) <ArrowRight className="h-5 w-5" />
+              Approve & Launch My Lead Machine ($797) <ArrowRight className="h-5 w-5" />
             </button>
             <a
               href="tel:+13075336678"

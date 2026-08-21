@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Check, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Bot, Check, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -59,7 +59,7 @@ export function RedesignIntakeFlow() {
     }
   }
 
-  if (success) return <div className="mx-auto mt-7 flex max-w-xl items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-left"><CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-emerald-600" /><div><p className="font-bold text-[#07284d]">Your request is in.</p><p className="mt-1 text-sm text-[#60778d]">We&apos;ll review the website before we contact you about the free homepage concept.</p></div></div>;
+  if (success) return <div className="mx-auto mt-7 flex max-w-xl items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-left"><CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-emerald-600" /><div><p className="font-bold text-[#07284d]">Your lead-machine audit is in motion.</p><p className="mt-1 text-sm text-[#60778d]">We&apos;ll send your private report link after we map the gaps, competitors, and call opportunities.</p></div></div>;
 
   return (
     <div className="w-full">
@@ -74,13 +74,17 @@ export function RedesignIntakeFlow() {
           <div className="h-1 bg-[#533afd]" />
           <div className="p-6 sm:p-8">
             <div className="mb-6 flex items-center justify-between text-xs font-bold text-[#533afd]">
-              <span>Free Homepage Redesign</span>
+               <span>Free Lead-Machine Audit</span>
               <span>Step {step} of 2</span>
+            </div>
+            <div className="mb-6 flex items-start gap-3 rounded-xl border border-[#c7d0fb] bg-[#f0f3ff] p-3 text-left">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#533afd] text-white"><Bot className="h-4 w-4" /></span>
+              <div className="text-xs leading-relaxed text-[#42506a]"><p className="font-bold text-[#0d1738]">BarakahSoft Lead Advisor</p><p>I&apos;ll use your answers to show where your current website is losing attention and where a better customer journey can create more calls.</p></div>
             </div>
             {step === 1 ? (
               <form onSubmit={(event) => { event.preventDefault(); setStep(2); }}>
                 <DialogHeader>
-                  <DialogTitle className="text-xl font-bold text-[#0d1738]">What is your website struggling with?</DialogTitle>
+                  <DialogTitle className="text-xl font-bold text-[#0d1738]">Let&apos;s diagnose your lead flow</DialogTitle>
                   <DialogDescription className="text-xs text-[#777588]">
                     Select everything that applies. We&apos;ll use this in the audit and redesign brief.
                   </DialogDescription>
@@ -121,13 +125,13 @@ export function RedesignIntakeFlow() {
                   />
                 </div>
                 <Button type="submit" className="mt-6 w-full rounded-md bg-[#533afd] py-3 text-sm font-bold text-white hover:bg-[#432bd9]">
-                  Continue to Final Step <ArrowRight className="h-4 w-4" />
+                  Next: build my lead-machine plan <ArrowRight className="h-4 w-4" />
                 </Button>
               </form>
             ) : (
               <form onSubmit={submit}>
                 <DialogHeader>
-                  <DialogTitle className="text-xl font-bold text-[#0d1738]">Where should we send your redesign?</DialogTitle>
+                  <DialogTitle className="text-xl font-bold text-[#0d1738]">Where should we send your private plan?</DialogTitle>
                   <DialogDescription className="text-xs text-[#777588]">
                     We&apos;ll use these details to deliver the concept and follow up about your request.
                   </DialogDescription>
@@ -156,7 +160,7 @@ export function RedesignIntakeFlow() {
                     ← Back
                   </button>
                   <Button type="submit" disabled={submitting} className="rounded-md bg-[#533afd] px-6 py-2.5 text-xs font-bold text-white hover:bg-[#432bd9]">
-                    {submitting ? "Building Report..." : "Get My Free Redesign"}
+                     {submitting ? "Mapping Your Lead Flow..." : "Start My Free Audit"}
                   </Button>
                 </div>
               </form>

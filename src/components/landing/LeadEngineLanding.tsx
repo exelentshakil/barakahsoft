@@ -93,15 +93,16 @@ export function LeadEngineLanding() {
         <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-20 lg:pb-24 lg:pt-28">
           <div className="mx-auto max-w-4xl text-center">
             <p className="mx-auto mb-6 w-fit rounded-full bg-[#e8f4ff] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[#075da8]">
-              Free 48h Redesign & Local AI Search Audit
+              Free lead-machine teardown for contractors
             </p>
             <h1 className="font-sans text-5xl font-semibold leading-[1.02] tracking-[-0.055em] text-[#07284d] sm:text-7xl">
-              Get your homepage redesigned for free.
+              Turn your contractor website into a lead machine.
             </h1>
             <p className="mx-auto mt-7 max-w-2xl text-lg leading-8 text-[#5c7186]">
-              See how your business ranks on Google & AI search, and how a modern,
-              fast homepage turns lost mobile visitors into booked customer calls.
-              Delivered in 48 hours with zero obligation.
+              We map where local buyers are finding your competitors, show what is
+              leaking calls today, and build a private redesign that proves how your
+              website can turn attention into qualified calls. Delivered in 48 hours
+              with zero obligation.
             </p>
             <div className="mt-9">
               <RedesignIntakeFlow />
@@ -114,7 +115,7 @@ export function LeadEngineLanding() {
               <div className="flex items-center gap-2">
                 <span className="flex h-2.5 w-2.5 rounded-full bg-[#0b8f5b] animate-pulse" />
                 <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
-                  Product Walkthrough · How Your 48h Redesign Is Built
+                   Product Walkthrough · How Your 48h Lead Machine Is Built
                 </span>
               </div>
               <span className="text-xs font-semibold text-[#777588] hidden sm:inline">
@@ -156,17 +157,17 @@ export function LeadEngineLanding() {
 
               <div className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5 space-y-2">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-[#533afd]">02. 48h Rebuild</span>
-                <p className="text-sm font-bold text-[#07284d]">We Build Your 28 Pages</p>
+                 <p className="text-sm font-bold text-[#07284d]">We Build the Conversion System</p>
                 <p className="text-xs text-[#60778d] leading-relaxed">
-                  We run your local 7×7 Queens search matrix and build a 0.12s mobile-first website with 1-tap call buttons.
+                   We connect search coverage, service pages, trust proof, fast mobile UX, and 1-tap call paths into one system.
                 </p>
               </div>
 
               <div className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5 space-y-2">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-[#533afd]">03. Private Link</span>
-                <p className="text-sm font-bold text-[#07284d]">You Review & Keep Concept</p>
+                 <p className="text-sm font-bold text-[#07284d]">You Review the Lead Machine</p>
                 <p className="text-xs text-[#60778d] leading-relaxed">
-                  Delivered straight to your private tracking portal. Launch the full site for $797 or keep the concept for free.
+                   See the diagnosis, the rebuilt customer journey, and the launch plan in your private portal. Continue only if the value is clear.
                 </p>
               </div>
             </div>
@@ -174,7 +175,7 @@ export function LeadEngineLanding() {
             <div className="flex flex-col gap-3 border-t border-[#e5e7f2] bg-[#f0f3ff] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="font-bold text-sm text-[#07284d]">
-                  Ready to see your business redesigned?
+                   Ready to see where your next calls are leaking?
                 </p>
                 <p className="text-xs text-[#60778d]">
                   No card required. Delivered to your private link in 48 hours.

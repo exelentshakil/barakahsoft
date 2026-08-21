@@ -34,10 +34,12 @@ export async function POST(req: Request) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
       const leadId = session.metadata?.lead_id;
-      const tier = session.metadata?.tier as "hosting" | "hosting_support" | "lead_engine" | undefined;
+      const tier = session.metadata?.tier as "website" | "hosting" | "hosting_support" | "lead_engine" | undefined;
       if (leadId && tier) {
         await admin.from("leads").update({ paid_at: new Date().toISOString() }).eq("id", leadId);
-        if (tier === "lead_engine") {
+        if (tier === "website") {
+          await inngest.send({ name: "stripe/invoice.paid", data: { lead_id: leadId } });
+        } else if (tier === "lead_engine") {
           await admin.from("subscriptions").upsert({ lead_id: leadId, stripe_subscription_id: session.subscription as string, kind: "lead_engine", status: "active" }, { onConflict: "lead_id" });
         } else {
           await admin.from("hosting_subscriptions").upsert({ lead_id: leadId, stripe_subscription_id: session.subscription as string, tier, status: "active" }, { onConflict: "lead_id" });
