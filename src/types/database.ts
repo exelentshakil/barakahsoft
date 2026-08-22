@@ -182,6 +182,10 @@ export interface Artifact {
   generation_phase: number;
   // Per-lead header and footer design, chosen from the design DNA.
   chrome_spec: unknown | null;
+  // Ordered, addressable sections. bespoke_homepage_html is derived from
+  // these, so a page can be repaired one section at a time instead of
+  // regenerated whole.
+  bespoke_sections: { id: string; kind: string; label: string; html: string; locked: boolean }[];
 }
 
 export type BuildJobStage =

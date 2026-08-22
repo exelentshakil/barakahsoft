@@ -13,6 +13,7 @@ import { compileDesignTokens } from "@/lib/design-tokens";
 import { ingestRealPhotos, buildSlots, planMedia, type MediaPlan } from "@/lib/media/plan-media";
 import { buildChromeSpec } from "@/lib/chrome-spec";
 import { writeLivePage, HOME_KEY } from "@/lib/page-versions";
+import { splitIntoSections } from "@/lib/page-sections";
 import { slugifyText } from "@/lib/slug";
 import type { FunnelPageSection, Lead, ScrapeResults, Artifact } from "@/types/database";
 
@@ -222,9 +223,15 @@ export const bespokeGenerate = inngest.createFunction(
 
     await step.run("save-homepage", async () => {
       await writeLivePage(lead_id, HOME_KEY, homepage.html, "generated", homepage.rationale);
+      // Split immediately so section-level repair is available the moment
+      // the operator first looks at the page, rather than after some later
+      // action happens to trigger it.
       await admin
         .from("artifacts")
-        .update({ bespoke_rationale: homepage.rationale })
+        .update({
+          bespoke_rationale: homepage.rationale,
+          bespoke_sections: splitIntoSections(homepage.html),
+        })
         .eq("lead_id", lead_id);
       // Reviewable from here. Everything after is depth, not a blocker.
       await admin.from("leads").update({ status: "qa_pending" }).eq("id", lead_id);

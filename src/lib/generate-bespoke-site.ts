@@ -95,7 +95,7 @@ ${media.map((m) => `  [${m.slot}] ${m.url}\n      shows: ${m.caption}`).join("\n
 Every <img> needs a real alt attribute describing what the photo shows.`;
 }
 
-const VOCABULARY = `CLASS VOCABULARY — you may use only these. Any other class is stripped, so invented class names render unstyled. There are no Tailwind classes and no colours here: palette, fonts, radii and spacing are already bound to this vocabulary for this specific business.
+export const VOCABULARY_REFERENCE = `CLASS VOCABULARY — you may use only these. Any other class is stripped, so invented class names render unstyled. There are no Tailwind classes and no colours here: palette, fonts, radii and spacing are already bound to this vocabulary for this specific business.
 
 LAYOUT
   bs-section            a page section (vertical rhythm + side padding)
@@ -191,7 +191,7 @@ INTERNAL LINKS — the only routes that exist. Write them exactly as listed:
 ${knownPaths.map((p) => `  - ${p}`).join("\n")}
 ${brief.phone ? `Phone links must be tel:${brief.phone.replace(/[^\d+]/g, "")}` : "There is no phone number — use the contact page for every call to action."}
 
-${VOCABULARY}
+${VOCABULARY_REFERENCE}
 
 ${ANCHORS}
 
@@ -376,7 +376,7 @@ ${mediaBlock(media)}
 INTERNAL LINKS that exist:
 ${knownPaths.map((p) => `  - ${p}`).join("\n")}
 
-${VOCABULARY}
+${VOCABULARY_REFERENCE}
 
 Write real copy — never narrate the business's data, never count things in a heading, never use filler like "quality workmanship" or "committed to excellence". Open with a section carrying the page title as an <h1>, then the real content, then a closing call to action.
 
