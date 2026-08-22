@@ -103,12 +103,13 @@ export function BespokeGenerationStudio({
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Generation failed");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Generation failed");
       router.refresh();
       onGenerated?.();
       setTimeout(() => window.location.reload(), 400);
-    } catch (err) {
-      alert("Failed to generate website. Check input fields.");
+    } catch (err: any) {
+      alert(`Generation failed: ${err?.message || "Check input fields and retry"}`);
     } finally {
       setGenerating(false);
     }
