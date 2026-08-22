@@ -58,6 +58,7 @@ import {
 } from "recharts";
 import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 import { AssetSlottingManager } from "@/components/admin/AssetSlottingManager";
+import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStudio";
 import { SectionContentEditor } from "@/components/admin/SectionContentEditor";
 import { PricingManager } from "@/components/admin/PricingManager";
 import { EditLeadDialog } from "@/components/admin/EditLeadDialog";
@@ -606,7 +607,14 @@ export function AdminLeadWorkspace({
           </div>
         </div>
 
-        {/* LINEAR STEP 4: VISUAL ASSET ENGINE, LIVE PREVIEW & SECTION EDITOR */}
+        {/* LINEAR STEP 4: BESPOKE GENERATOR STUDIO, ASSET ENGINE & LIVE PREVIEW */}
+        <BespokeGenerationStudio
+          lead={lead}
+          artifact={artifact}
+          scrapeResults={scrapeResults}
+          onGenerated={() => setReloadKey((k) => k + 1)}
+        />
+
         {artifact && <AssetSlottingManager lead={lead} artifact={artifact} />}
 
         {/* LIVE IFRAME PREVIEW INSPECTOR (HOMEPAGE RENDERS ?view=preview SO IT SHOWS THE ACTUAL WEBSITE) */}
