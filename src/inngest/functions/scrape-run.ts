@@ -2,6 +2,7 @@ import { inngest } from "@/inngest/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { scrapeBusiness } from "@/lib/scrape";
 import { autoSelectOrResearch, presetFor } from "@/lib/inspiration-library";
+import { classifyBusiness } from "@/lib/classify-business";
 import { compileDesignTokens } from "@/lib/design-tokens";
 
 // lead/analyse.requested — step 1 of the operator flow.
@@ -38,6 +39,39 @@ export const scrapeRun = inngest.createFunction(
 
     await step.run("scrape-business", async () => {
       await scrapeBusiness(lead_id, lead.source_url, lead.business_name ?? undefined, depth ?? "light");
+    });
+
+    // Identify the business before choosing a design direction, because the
+    // direction is searched for BY TRADE. Without this the industry stayed
+    // null, research fell straight through to the house default, and the
+    // lead silently got a generic direction instead of a researched one.
+    await step.run("identify-business", async () => {
+      const { data: scrape } = await admin
+        .from("scrape_results")
+        .select("facts")
+        .eq("lead_id", lead_id)
+        .single<{ facts: Record<string, unknown> }>();
+      if (!scrape) return;
+
+      const identity = await classifyBusiness(scrape.facts);
+      if (!identity) return;
+
+      const updates: Record<string, unknown> = {};
+      // Never overwrite something a human typed.
+      if (identity.industry && !lead.industry) updates.industry = identity.industry;
+      if (identity.businessName && !lead.business_name) updates.business_name = identity.businessName;
+      if (Object.keys(updates).length > 0) {
+        await admin.from("leads").update(updates).eq("id", lead_id);
+      }
+
+      // The scraped title is usually a tagline, and the town is often absent
+      // from the page entirely, so both are written back onto the facts the
+      // brief is built from.
+      const facts = { ...scrape.facts };
+      if (identity.businessName) facts.business_name = identity.businessName;
+      if (identity.city && !facts.town) facts.town = identity.city;
+      facts.is_local_business = identity.isLocal;
+      await admin.from("scrape_results").update({ facts }).eq("lead_id", lead_id);
     });
 
     // A design direction is chosen automatically the moment the facts land,
