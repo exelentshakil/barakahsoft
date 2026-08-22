@@ -60,6 +60,7 @@ import {
 import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 import { AssetSlottingManager } from "@/components/admin/AssetSlottingManager";
 import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStudio";
+import { RefinePanel } from "@/components/admin/RefinePanel";
 import { PricingManager } from "@/components/admin/PricingManager";
 import { EditLeadDialog } from "@/components/admin/EditLeadDialog";
 import { DeleteLeadButton } from "@/components/admin/DeleteLeadButton";
@@ -434,6 +435,11 @@ export function AdminLeadWorkspace({
           scrapeResults={scrapeResults}
           onGenerated={() => setReloadKey((k) => k + 1)}
         />
+
+        {/* The human pass between the generator's first draft and the client
+            seeing anything. Generated imagery is a placeholder, and this is
+            where it gets replaced with the client's real photography. */}
+        {artifact?.bespoke_homepage_html && <RefinePanel key={reloadKey} leadId={lead.id} />}
 
         {/* LINEAR STEP 3: COMPETITOR BENCHMARK & MARKET POSITIONING (Only Real Competitors) */}
         {competitorsList.length > 0 && (

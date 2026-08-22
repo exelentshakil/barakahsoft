@@ -12,6 +12,7 @@ import { DEFAULT_DESIGN_DNA, DesignDnaSchema, type DesignDna } from "@/lib/desig
 import { compileDesignTokens } from "@/lib/design-tokens";
 import { ingestRealPhotos, buildSlots, planMedia, type MediaPlan } from "@/lib/media/plan-media";
 import { buildChromeSpec } from "@/lib/chrome-spec";
+import { writeLivePage, HOME_KEY } from "@/lib/page-versions";
 import { slugifyText } from "@/lib/slug";
 import type { FunnelPageSection, Lead, ScrapeResults, Artifact } from "@/types/database";
 
@@ -209,13 +210,10 @@ export const bespokeGenerate = inngest.createFunction(
     });
 
     await step.run("save-homepage", async () => {
+      await writeLivePage(lead_id, HOME_KEY, homepage.html, "generated", homepage.rationale);
       await admin
         .from("artifacts")
-        .update({
-          bespoke_homepage_html: homepage.html,
-          bespoke_rationale: homepage.rationale,
-          last_edited_at: new Date().toISOString(),
-        })
+        .update({ bespoke_rationale: homepage.rationale })
         .eq("lead_id", lead_id);
       // Reviewable from here. Everything after is depth, not a blocker.
       await admin.from("leads").update({ status: "qa_pending" }).eq("id", lead_id);
@@ -295,18 +293,9 @@ async function buildPages(
     done += 1;
 
     await step.run(`save-${stepId}`, async () => {
-      const { data: current } = await admin
-        .from("artifacts")
-        .select("bespoke_pages")
-        .eq("lead_id", leadId)
-        .single<{ bespoke_pages: Record<string, string> }>();
-
-      if (html) {
-        await admin
-          .from("artifacts")
-          .update({ bespoke_pages: { ...(current?.bespoke_pages ?? {}), [key]: html } })
-          .eq("lead_id", leadId);
-      }
+      // writeLivePage re-reads the stored map before merging, so a retried
+      // step never clobbers pages written by steps that already succeeded.
+      if (html) await writeLivePage(leadId, key, html, "generated");
       await bumpProgress(admin, leadId, done);
     });
   }
