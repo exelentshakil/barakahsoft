@@ -1,7 +1,7 @@
 import { inngest } from "@/inngest/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { scrapeBusiness } from "@/lib/scrape";
-import { autoSelectDna } from "@/lib/inspiration-library";
+import { autoSelectOrResearch } from "@/lib/inspiration-library";
 import { compileDesignTokens } from "@/lib/design-tokens";
 
 // scrape.run — Stage 1: Ingests Firecrawl facts, Google Places ratings, real photos,
@@ -42,7 +42,7 @@ export const scrapeRun = inngest.createFunction(
         .eq("id", lead_id)
         .single<{ industry: string | null; persona: string | null }>();
 
-      const { dna, label, sourceUrl, from } = await autoSelectDna(fresh?.industry ?? fresh?.persona ?? lead.industry);
+      const { dna, label, sourceUrl, from } = await autoSelectOrResearch(fresh?.industry ?? fresh?.persona ?? lead.industry);
 
       const { data: artifact } = await admin
         .from("artifacts")

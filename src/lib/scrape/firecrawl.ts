@@ -185,3 +185,48 @@ function mapPages(data: unknown[]): CrawledPage[] {
     })
     .filter((page) => page.url && (page.html || page.markdown));
 }
+
+
+export interface SearchHit {
+  url: string;
+  title: string;
+  description: string;
+}
+
+/**
+ * Web search, used to find the best-designed sites in a trade.
+ *
+ * This is what turns the design direction from a preset into research. It
+ * runs once per NEW industry — the winner is cached to the reference library
+ * and every later lead in that trade reuses it for nothing — so the cost is
+ * a handful of pages amortised across every future lead in that market.
+ */
+export async function searchWithFirecrawl(query: string, limit = 6): Promise<SearchHit[]> {
+  const apiKey = process.env.FIRECRAWL_API_KEY;
+  if (!apiKey) return [];
+
+  try {
+    const res = await fetch("https://api.firecrawl.dev/v1/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({ query, limit }),
+    });
+
+    if (!res.ok) {
+      console.error("[firecrawl] search returned", res.status);
+      return [];
+    }
+
+    const data = await res.json();
+    return ((data.data ?? []) as Record<string, string>[])
+      .map((hit) => ({
+        url: hit.url ?? "",
+        title: hit.title ?? "",
+        description: hit.description ?? "",
+      }))
+      .filter((hit) => /^https?:\/\//i.test(hit.url));
+  } catch (err) {
+    console.error("[firecrawl] search error:", err);
+    return [];
+  }
+}

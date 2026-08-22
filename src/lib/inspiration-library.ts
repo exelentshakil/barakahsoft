@@ -376,6 +376,29 @@ export async function autoSelectDna(
   return { dna: preset.dna, label: preset.label, sourceUrl: null, from: "preset" };
 }
 
+/**
+ * Auto-select, researching the trade first if the library has nothing.
+ *
+ * Split from autoSelectDna so callers that must stay fast (a UI read) do not
+ * accidentally trigger minutes of research, while the scrape job — which is
+ * already a background job and already the right moment — does.
+ */
+export async function autoSelectOrResearch(
+  industry: string | null | undefined
+): Promise<{ dna: DesignDna; label: string; sourceUrl: string | null; from: "library" | "preset" | "research" }> {
+  const existing = await autoSelectDna(industry);
+  if (existing.from === "library") return existing;
+
+  const text = (industry ?? "").trim();
+  if (!text) return existing;
+
+  // Imported lazily: research pulls in Firecrawl search and the DNA
+  // extractor, neither of which belongs in the hot path of a library read.
+  const { researchAndCache } = await import("@/lib/research-design-reference");
+  const researched = await researchAndCache(text);
+  return { dna: researched.dna, label: researched.label, sourceUrl: researched.sourceUrl, from: researched.from };
+}
+
 /** Save a reference so every future lead in this industry gets it automatically. */
 export async function saveToLibrary(
   industry: string,
