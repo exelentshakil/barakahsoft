@@ -73,7 +73,9 @@ Everything measured, nothing judged. **A model asked "is this good?" says yes** 
 
 **Markup blockers:** fewer than 5 sections or 350 words · any band that would render blank · no `<h1>` or no CTA above the fold · fewer than 3 CTAs · missing `tel:` where the trade converts on the phone · a claimed rating, licence or testimonial the facts do not support · more than half the services missing · sub-4.5:1 contrast · literal colours · placeholder text · **and the owner's own complaints** — someone who said "not enough enquiries" cannot receive a page with three CTAs.
 
-**Stylesheet blockers:** no hover states · no `:focus-visible` · no media queries · under 1500 characters of CSS.
+**Stylesheet blockers:** no hover states · no `:focus-visible` · no media queries · under 1500 characters of CSS · pure `#000000` · more than 6 literal colours.
+
+The full standard both generator passes are written against — 60/30/10 colour, two type families, 96–128px section rhythm, 45–75 character measure, 44px tap targets, semantic markup, explicit image dimensions — is `docs/design-standard.md`. Each rule there is measured, which is the only reason it works: "make it premium" is not checkable and every attempt to enforce it by instruction alone failed here.
 
 A rejected page is **regenerated fresh with the failures as constraints**, up to 2 attempts. Never patched — repeated patching converges on safe, which is exactly what the old five-call chain produced.
 
@@ -106,23 +108,25 @@ Reviewed application code, requested via data attributes: `data-reveal`, `data-c
 make this sellable: https://redesign.barakahsoft.com/s/<slug>?view=preview
 ```
 
-Uses `.claude/skills/sell-this-site`. It calls `GET /api/site?url=...`, which returns the real facts, design tokens, conversion intent, **every editable section**, and the quality gate's current findings.
+Uses `.claude/skills/sell-this-site`. It calls `GET /api/site?url=...`, which returns the real facts, design tokens, conversion intent, the current **`html` and `css`**, and the quality gate's findings.
 
-It then edits **section by section** — the parts that already work survive.
+It rewrites the page body against `docs/design-standard.md` and posts markup **and** stylesheet back together. `docs/master-prompt.md` is the same instruction as a standalone paste, for OpenCode or any other agent.
+
+**There is no section-level editing.** It was built and removed: splitting a page into blocks meant each block was judged alone, and a page of individually-acceptable blocks is exactly the flat, evenly-spaced result the system exists to avoid. Parts worth keeping are kept by writing them back unchanged.
 
 ### Option B — the admin, no HTML needed
 
-- **Section editor** — pick the weak section, say what is wrong in plain English. **Approving a section locks it**, and the lock is enforced in the API, so iterating on a hero can never cost a services section you liked.
 - **Refine panel** — every image slot named. Generated images are labelled **Placeholder**; upload a real photo or regenerate from a prompt.
 - **Inspiration panel** — override the researched design direction with any URL.
+- **Versions** — every write is a version, so going back is cheap.
 
 ### Rules any editor must follow
 
 1. Never state a fact, price, rating or testimonial not in the brief.
 2. Only image URLs already on the page — others are deleted at sanitise.
-3. Locked sections are rejected by the API.
-4. Never rebuild the whole site to fix one section.
-5. Colour comes from tokens. Literal colours are a gate blocker.
+3. HTML and CSS move together. New class names without rules render bare.
+4. Colour comes from tokens. Literal colours and pure black are gate blockers.
+5. `docs/design-standard.md` is the specification. Every rule in it is measured.
 
 ---
 
@@ -167,13 +171,12 @@ src/lib/design-tokens.ts            Design spec → CSS variables, contrast enfo
 src/lib/classify-business.ts        Name, trade, city, services from content
 src/lib/conversion-intent.ts        What the page is FOR, per trade
 src/lib/report-modules.ts           Which report modules apply
-src/lib/page-sections.ts            Section-level editing
 src/lib/sanitize-css.ts             CSS safety + scoping to .bespoke-page
 src/lib/openai-client.ts            Model chains, parameter self-correction
 src/inngest/functions/bespoke-generate.ts   The generation job
 ```
 
-**API surface:** `/api/site` (everything about a site from its URL) · `/api/leads/[id]/analyse` · `/generate` · `/sections` · `/slots` · `/versions` · `/audit` · `/visibility` · `/inspiration` · `/qa` · `/deliver` · `/export` · `/api/diag/services` · `/api/diag/openai`
+**API surface:** `/api/site` (everything about a site from its URL) · `/api/leads/[id]/analyse` · `/generate` · `/bespoke` (html + css) · `/slots` · `/versions` · `/audit` · `/visibility` · `/inspiration` · `/qa` · `/deliver` · `/export` · `/api/diag/services` · `/api/diag/openai`
 
 ---
 

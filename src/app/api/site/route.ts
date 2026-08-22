@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminSession } from "@/lib/is-admin-session";
-import { loadSections } from "@/lib/page-sections";
 import { criticiseDesign, issuesAsInstructions } from "@/lib/audit/design-critic";
 import { compileDesignTokens } from "@/lib/design-tokens";
 import { DesignDnaSchema, DEFAULT_DESIGN_DNA } from "@/lib/design-dna";
@@ -52,8 +51,6 @@ export async function GET(req: Request) {
   });
 
   const intent = conversionIntentFor(lead.industry, !!phone);
-  const sections = await loadSections(lead.id);
-
   // Run the critic so the caller starts from measured problems rather than
   // its own impression of the page.
   const verdict = await criticiseDesign(artifact.bespoke_homepage_html, tokens, intent, !!phone);
@@ -82,30 +79,26 @@ export async function GET(req: Request) {
       tokens: tokens.vars,
     },
     conversion: intent,
-    // The unit of editing. Send one back and only that section changes.
-    sections: sections.map((s) => ({
-      id: s.id,
-      kind: s.kind,
-      label: s.label,
-      locked: s.locked,
-      html: s.html,
-    })),
+    // The page as it stands. Rewrite whichever parts need it and send the
+    // whole body back — there is no section-level API any more, because
+    // splitting a page into editable blocks produced a worse result than
+    // rewriting it against the full design standard.
+    html: artifact.bespoke_homepage_html,
+    css: artifact.bespoke_css,
     critic: {
       passes: verdict.passes,
       issues: verdict.issues,
       instructions: verdict.issues.length > 0 ? issuesAsInstructions(verdict.issues) : null,
     },
     howToEdit: {
-      oneSection: `POST /api/leads/${lead.id}/sections with {"action":"regenerate","sectionId":"<id>","instruction":"..."}`,
-      addSection: `POST /api/leads/${lead.id}/sections with {"action":"add","sectionId":"<after-id>","description":"..."}`,
-      writeMarkup: `POST /api/leads/${lead.id}/bespoke with {"page_key":"home","html":"<section class=\\"bs-section\\">...","note":"..."}`,
+      writeMarkup: `POST /api/leads/${lead.id}/bespoke with {"page_key":"home","html":"<section>...","css":"...","note":"why"}`,
       rebuildAll: `POST /api/leads/${lead.id}/generate with {"phase":1}`,
       rules: [
-        "Only bs-* classes survive sanitising. Any other class is stripped and renders unstyled.",
+        "Write semantic HTML and a matching stylesheet. Class names are yours to choose; you write their rules.",
         "Never write a literal colour, font or shadow — every visual value comes from the tokens above.",
-        "Only image URLs already present in the page may be used; others are deleted.",
+        "Only image URLs already present in the page may be used; others are deleted at sanitise.",
         "Never state a fact, price, rating or testimonial that is not in `business` above.",
-        "Locked sections are rejected by the API. Unlock them deliberately or leave them alone.",
+        "No <script> tags. Motion comes from data attributes: data-reveal, data-count-to, data-accordion, data-bar.",
       ],
     },
   });

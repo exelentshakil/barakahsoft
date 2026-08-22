@@ -92,6 +92,48 @@ const HEX = /^#[0-9a-fA-F]{6}$/;
  * premium?" says yes; the stylesheet cannot lie about whether it declared a
  * focus-visible state.
  */
+// Distinct font families actually named in the sheet, ignoring var()
+// references (those resolve to the two token families) and generic
+// fallbacks. Used to enforce the two-family rule.
+function distinctFontFamilies(css: string): string[] {
+  const generic = new Set(["sans-serif", "serif", "monospace", "system-ui", "ui-sans-serif", "ui-serif", "ui-monospace", "cursive", "fantasy", "inherit", "initial", "unset"]);
+  const seen = new Set<string>();
+  for (const decl of css.match(/font-family\s*:[^;}]+/gi) ?? []) {
+    const value = decl.split(":").slice(1).join(":");
+    if (/var\(/i.test(value)) continue;
+    const first = value.split(",")[0].trim().replace(/["']/g, "").toLowerCase();
+    if (!first || generic.has(first)) continue;
+    seen.add(first);
+  }
+  return [...seen];
+}
+
+// The largest vertical padding the sheet declares, in pixels. clamp() is
+// read at its upper bound, which is what a desktop viewer actually gets.
+function maxVerticalPaddingPx(css: string): number | null {
+  let max: number | null = null;
+  const consider = (raw: string) => {
+    const px = /rem\s*$/i.test(raw) ? parseFloat(raw) * 16 : /px\s*$/i.test(raw) ? parseFloat(raw) : null;
+    if (px !== null && Number.isFinite(px) && (max === null || px > max)) max = px;
+  };
+
+  for (const decl of css.match(/padding(?:-block(?:-start|-end)?|-top|-bottom)?\s*:[^;}]+/gi) ?? []) {
+    const value = decl.split(":").slice(1).join(":");
+    const isShorthand = /padding\s*:/i.test(decl);
+    for (const clamped of value.match(/clamp\([^)]*\)/gi) ?? []) {
+      const args = clamped.slice(6, -1).split(",");
+      if (args.length === 3) consider(args[2].trim());
+    }
+    const stripped = value.replace(/clamp\([^)]*\)/gi, " ").replace(/var\([^)]*\)/gi, " ");
+    const lengths = stripped.match(/-?\d*\.?\d+(?:px|rem)/gi) ?? [];
+    // In a shorthand the first value is vertical; a 4-value shorthand also
+    // has a vertical third. Horizontal gutters are irrelevant here.
+    const vertical = isShorthand ? [lengths[0], lengths[2]] : lengths;
+    vertical.forEach((l) => { if (l) consider(l); });
+  }
+  return max;
+}
+
 function verifyStylesheet(css: string): QualityFinding[] {
   const findings: QualityFinding[] = [];
   const add = (severity: QualityFinding["severity"], check: string, detail: string) =>
@@ -111,12 +153,42 @@ function verifyStylesheet(css: string): QualityFinding[] {
     add("warning", "whitespace", `Only ${paddingRules} padding declarations. The page is unlikely to breathe.`);
   }
 
-  // Typography: a real scale, and a readable measure.
+  // Section rhythm. An expensive page is mostly space; a cramped one reads as
+  // cheap however good the type is. The largest vertical padding in the sheet
+  // is a fair proxy for how a section break lands, and it is measurable in a
+  // way "make it feel premium" never was.
+  const spacingPx = maxVerticalPaddingPx(css);
+  if (spacingPx !== null && spacingPx < 72) {
+    add(
+      "warning",
+      "whitespace",
+      `The largest section padding resolves to about ${Math.round(spacingPx)}px. Section breaks should reach 96-128px on desktop.`
+    );
+  }
+
+  // Touch. A button a thumb misses is a lost enquiry, and small tap targets
+  // are the clearest sign a page was designed on a desktop and never tried
+  // on a phone — which is where most of these leads actually read it.
+  if (!/min-height\s*:\s*(4[4-9]|[5-9]\d|\d{3,})px/i.test(css) && !/min-height\s*:\s*(2\.[89]|[3-9])\w*rem/i.test(css)) {
+    add("warning", "mobile", "No interactive element declares a minimum height. Tap targets should clear 44px on mobile.");
+  }
+
+  // Typography: two families at most, a real scale, and a readable measure.
   if (!/font-family/i.test(css)) {
     add("warning", "typography", "The stylesheet sets no font-family, so the page falls back to system defaults.");
   }
+  const families = distinctFontFamilies(css);
+  if (families.length > 2) {
+    add(
+      "warning",
+      "typography",
+      `${families.length} different font families (${families.slice(0, 4).join(", ")}). One display face and one body face; a third reads as clutter.`
+    );
+  }
   if (!/line-height/i.test(css)) {
     add("warning", "typography", "No line-height is set anywhere; body copy will use browser defaults.");
+  } else if (!/line-height\s*:\s*1\.[4-8]/i.test(css)) {
+    add("warning", "typography", "No line-height between 1.4 and 1.8 anywhere. Squashed body copy is the fastest way a page reads as cheap.");
   }
   if (!/max-width\s*:\s*\d+(ch|ex)/i.test(css) && !/max-width\s*:\s*6\dch/i.test(css)) {
     add("warning", "typography", "No measure constraint (max-width in ch) on body text — long lines are hard to read.");
@@ -147,6 +219,13 @@ function verifyStylesheet(css: string): QualityFinding[] {
   }
 
   // Colour discipline. Literal colours bypass the contrast-checked palette.
+  // Pure black is never the right ink. It maximises contrast to the point of
+  // eye fatigue and is the single most recognisable tell of an unconsidered
+  // palette; the compiled tokens already carry a soft charcoal instead.
+  if (/#000(000)?\b/i.test(css) || /rgba?\(\s*0\s*,\s*0\s*,\s*0\s*[,)]/i.test(css)) {
+    add("blocker", "colour", "Pure black (#000000) is used. Ink comes from the tokens, which carry a softer charcoal for readability.");
+  }
+
   const literals = css.match(/#[0-9a-f]{3,8}\b|rgba?\(\s*\d/gi)?.length ?? 0;
   if (literals > 6) {
     add("blocker", "colour", `${literals} literal colour values in the stylesheet. Colour must come from the design tokens.`);
@@ -295,6 +374,29 @@ export function verifyHomepage(
   const dupes = imgs.filter((u, i) => imgs.indexOf(u) !== i);
   if (dupes.length > 0) {
     add("warning", "composition", `${new Set(dupes).size} image(s) appear more than once.`);
+  }
+
+  // Layout shift. Without intrinsic dimensions the page jumps as each image
+  // arrives, which Google measures and which feels broken under a thumb.
+  const imgTags = html.match(/<img\b[^>]*>/gi) ?? [];
+  const undimensioned = imgTags.filter((tag) => !/\bwidth=/i.test(tag) || !/\bheight=/i.test(tag));
+  if (undimensioned.length > 0) {
+    add(
+      undimensioned.length > imgTags.length / 2 ? "blocker" : "warning",
+      "layout-shift",
+      `${undimensioned.length} of ${imgTags.length} images have no width and height attributes, so the page shifts while it loads.`
+    );
+  }
+
+  // Semantic integrity. A page assembled from nothing but nested <div> is
+  // unreadable to a crawler and to a screen reader, and it is the shape
+  // generated markup collapses into when nobody is measuring.
+  const divCount = (html.match(/<div\b/gi) ?? []).length;
+  const semanticCount = (html.match(/<(?:section|article|aside|figure|figcaption|blockquote|ul|ol|dl|address|main)\b/gi) ?? []).length;
+  if (semanticCount === 0) {
+    add("blocker", "semantics", "The markup uses no semantic elements at all — every block is a <div>.");
+  } else if (divCount > semanticCount * 8) {
+    add("warning", "semantics", `${divCount} <div>s against ${semanticCount} semantic elements. Blocks with meaning should use the element that carries it.`);
   }
 
   // ---- Palette ---------------------------------------------------------

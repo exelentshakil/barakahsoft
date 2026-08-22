@@ -13,7 +13,6 @@ import { compileDesignTokens } from "@/lib/design-tokens";
 import { ingestRealPhotos, buildSlots, planMedia, type MediaPlan } from "@/lib/media/plan-media";
 import { buildChromeSpec } from "@/lib/chrome-spec";
 import { writeLivePage, HOME_KEY } from "@/lib/page-versions";
-import { splitIntoSections } from "@/lib/page-sections";
 import { sanitizeBespokeHtml } from "@/lib/sanitize-generated-html";
 import { verifyHomepage } from "@/lib/audit/quality-gate";
 import { slugifyText } from "@/lib/slug";
@@ -298,7 +297,6 @@ export const bespokeGenerate = inngest.createFunction(
             ? verdict.findings.map((f) => `[${f.severity}] ${f.check}: ${f.detail}`).join("\n")
             : null,
           bespoke_css: homepage.css,
-          bespoke_sections: splitIntoSections(homepageHtml),
         })
         .eq("lead_id", lead_id);
       // Reviewable from here. Everything after is depth, not a blocker.

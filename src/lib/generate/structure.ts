@@ -79,7 +79,11 @@ export async function generateStructure(
   knownPaths: string[],
   previousFailures?: string
 ): Promise<StructureResult | null> {
-  const prompt = `You are a senior web designer and conversion copywriter. Write the complete homepage for a real ${brief.industry} business in ${brief.city}.
+  const prompt = `You are a Senior UI/UX Architect and Conversion Rate Optimiser. Not a coder decorating a page — someone whose job is that a visitor understands the offer and takes one action.
+
+Write the complete homepage for a real ${brief.industry} business in ${brief.city}.
+
+Clarity beats artistry every time. Where a decision is between looking clever and being understood, choose understood.
 
 The owner opens this page and decides in about four seconds whether you are better than whoever built their current site. Make committed decisions — a timid page of evenly-spaced identical cards is the failure to avoid.
 
@@ -120,14 +124,27 @@ Anything else becomes an on-page anchor. Give each service block an id of its sl
 ${brief.phone ? `Phone links: tel:${brief.phone.replace(/[^\d+]/g, "")}` : ""}
 
 ═══ HOW TO WRITE THE MARKUP ═══
-Semantic HTML5. <section> for bands, real <h1>/<h2>/<h3> hierarchy, <ul> for lists, <figure> for images with captions, <blockquote> for real quotes.
+SEMANTIC INTEGRITY. <header> is not yours to write, but <main>, <section>, <article>, <aside>, <figure>, <figcaption>, <blockquote>, <ul>, <dl> all are. Endless nested <div> is forbidden — if a block has a meaning, use the element that carries it. A screen reader and a crawler should be able to read the page structure without the CSS.
+
+Real <h1>/<h2>/<h3> hierarchy that steps down properly. Exactly one <h1>.
+
+LAYOUT GEOMETRY — the stylesheet pass builds to these, so structure the markup so they are possible:
+  - A 12-column grid on desktop, collapsing to a fluid 4-column feel on mobile.
+  - Section breaks of 96px to 128px vertically. Containers padded 24px to 32px.
+  - At least 40% of any screen is whitespace. Crowding is what makes a page look cheap.
+
+F-SHAPED READING. Western readers sweep left along the top, then down the left margin. Put the promise, the proof and the primary action on those lines. A call to action floated right in the middle of a section is a call to action nobody sees.
+
+FORMS. If the page carries a form, it is short or it is stepped. A wall of fields kills a conversion — ask for the minimum that lets someone follow up, and say what happens next.
+
+TRUST ANCHORS. Real reviews, real credentials and real guarantees belong INSIDE the conversion moment — next to the button, not in a section of their own three screens away. Hesitation happens at the point of action, so the reassurance goes there.
 
 Name classes descriptively and consistently, block-then-element:
   hero, hero__inner, hero__title, hero__actions
   services, services__grid, service-card, service-card__title
 The stylesheet pass styles exactly what you name, so be consistent — do not invent three names for the same kind of thing.
 
-Every <img> needs width, height, alt and loading="lazy" except the hero image, which takes loading="eager" and fetchpriority="high".
+Every <img> needs an explicit width and height in the attributes, real alt text, and loading="lazy" — except the hero image, which takes loading="eager" and fetchpriority="high". The dimensions are not optional: without them the page shifts while loading, which Google measures and penalises, and which feels broken under a reader's thumb.
 
 NO <style> and NO <script> — both are stripped. NO inline style attributes for anything visual. NO <header>, <nav> or <footer>: those are separate real components rendered around your output.
 

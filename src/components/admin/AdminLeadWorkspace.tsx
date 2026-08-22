@@ -60,7 +60,6 @@ import {
 import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStudio";
 import { RefinePanel } from "@/components/admin/RefinePanel";
-import { SectionEditor } from "@/components/admin/SectionEditor";
 import { VisibilityPanel } from "@/components/admin/VisibilityPanel";
 import { AuditPanel } from "@/components/admin/AuditPanel";
 import { ApprovalGate } from "@/components/admin/ApprovalGate";
@@ -508,10 +507,7 @@ export function AdminLeadWorkspace({
             seeing anything. Generated imagery is a placeholder, and this is
             where it gets replaced with the client's real photography. */}
         {artifact?.bespoke_homepage_html && (
-          <>
-            <SectionEditor key={`sections-${reloadKey}`} leadId={lead.id} onChanged={() => setReloadKey((k) => k + 1)} />
-            <RefinePanel key={`slots-${reloadKey}`} leadId={lead.id} />
-          </>
+          <RefinePanel key={`slots-${reloadKey}`} leadId={lead.id} />
         )}
 
         {/* Measured on demand, at a size the operator chooses — every cell

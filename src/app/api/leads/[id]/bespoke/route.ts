@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminSession } from "@/lib/is-admin-session";
 import { sanitizeBespokeHtml } from "@/lib/sanitize-generated-html";
 import { writeLivePage, HOME_KEY } from "@/lib/page-versions";
+import { sanitizeGeneratedCss } from "@/lib/sanitize-css";
 
 // The refinement endpoint: how a human — directly, or through Claude Code —
 // rewrites a page after the generator has produced its first draft.
@@ -44,6 +45,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       "claude-code",
       typeof body.note === "string" ? body.note.slice(0, 200) : undefined
     );
+  }
+
+  // A rewrite that changes the markup must bring its stylesheet, or the new
+  // class names have no rules and the page renders bare.
+  if (typeof body.css === "string" && body.css.trim()) {
+    const cleanCss = sanitizeGeneratedCss(body.css);
+    if (!cleanCss) {
+      return NextResponse.json(
+        { error: "That CSS was empty once sanitized. Check it is real CSS and uses no url() or @import." },
+        { status: 422 }
+      );
+    }
+    await admin.from("artifacts").update({ bespoke_css: cleanCss }).eq("lead_id", leadId);
   }
 
   // Structural fields are not page content and carry no version history.
