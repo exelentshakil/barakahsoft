@@ -41,15 +41,21 @@ export function BespokeGenerationStudio({
   const nap = (facts.nap as { address?: string; phone?: string; email?: string } | undefined) || {};
   const schema = Array.isArray(facts.existing_schema) && facts.existing_schema.length > 0 ? (facts.existing_schema[0] as any) : {};
   const sitePhotos = Array.isArray(facts.site_photos) ? (facts.site_photos as any[]) : [];
-  const primaryScrapedPhoto = sitePhotos.find((p) => p.kind === "img" && p.url?.includes("headshot"))?.url || sitePhotos[0]?.url;
+  const primaryScrapedPhoto = sitePhotos.find((p) => p.kind === "img" && p.url && (p.url.includes("headshot") || p.url.includes("photo")))?.url || sitePhotos[0]?.url;
 
-  // Auto-populated fields from Firecrawl Schema / Scrape facts
-  const defaultBusinessName = schema.name || (typeof facts.business_name === "string" && !facts.business_name.includes("Take the") ? facts.business_name : null) || "HeartCore Growth";
-  const defaultFounder = schema.founder?.name || "Jim Sabellico";
-  const defaultLogo = schema.logo || facts.logo_url || "https://heartcoregrowth.com/public/images/logos/hcg-logo.png";
-  const defaultHero = primaryScrapedPhoto || "https://heartcoregrowth.com/public/images/photos/jim-headshot.jpeg";
-  const defaultCity = schema.address?.addressLocality ? `${schema.address.addressLocality}, ${schema.address.addressRegion || "NY"}` : "Farmingdale, NY";
-  const defaultIndustry = lead.industry || "AI Integration & Strategic Marketing";
+  // Extract detected services from scraped pages navigation & headings
+  const pages = Array.isArray(facts.pages) ? (facts.pages as any[]) : [];
+  const extractedNavServices = pages.flatMap((p) => (Array.isArray(p.navLinks) ? p.navLinks.map((n: any) => n.text) : []));
+  const uniqueServices = Array.from(new Set(extractedNavServices)).filter((s) => s && s.length < 35 && !["Home", "Blog", "Contact", "About", "Privacy Policy", "Terms"].includes(s));
+  const fallbackServices = uniqueServices.length > 0 ? uniqueServices.slice(0, 6).join("\n") : "Core Service 1\nCore Service 2\nCore Service 3\nCore Service 4\nCore Service 5\nCore Service 6";
+
+  // Auto-populated fields strictly from THAT specific lead's scraped facts
+  const defaultBusinessName = schema.name || (typeof facts.business_name === "string" ? facts.business_name : null) || lead.business_name || "";
+  const defaultFounder = schema.founder?.name || lead.contact_name || "";
+  const defaultLogo = schema.logo || (typeof facts.logo_url === "string" ? facts.logo_url : "") || "";
+  const defaultHero = primaryScrapedPhoto || "";
+  const defaultCity = schema.address?.addressLocality ? `${schema.address.addressLocality}, ${schema.address.addressRegion || ""}`.trim() : typeof facts.town === "string" ? facts.town : "";
+  const defaultIndustry = lead.industry || (typeof facts.industry === "string" ? facts.industry : "Services & Growth");
 
   const [businessName, setBusinessName] = useState(defaultBusinessName);
   const [founder, setFounder] = useState(defaultFounder);
@@ -57,14 +63,14 @@ export function BespokeGenerationStudio({
   const [logoUrl, setLogoUrl] = useState(defaultLogo);
   const [city, setCity] = useState(defaultCity);
   const [industry, setIndustry] = useState(defaultIndustry);
-  const [servicesText, setServicesText] = useState(
-    "Buy Back Your Week\nAI Integration\nCustom Web Design\nSEO Strategy\nBusiness Automation\nGrowth Coaching"
-  );
-  const [primaryColor, setPrimaryColor] = useState("#533AFD");
-  const [accentColor, setAccentColor] = useState("#FFD12D");
+  const [servicesText, setServicesText] = useState(fallbackServices);
+  const [primaryColor, setPrimaryColor] = useState((facts.colors as any)?.primary || "#533AFD");
+  const [accentColor, setAccentColor] = useState((facts.colors as any)?.accent || "#FFD12D");
   const [generating, setGenerating] = useState(false);
   const [showJson, setShowJson] = useState(false);
   const [rawJson, setRawJson] = useState("");
+
+  const isScraping = lead.status === "scraping" || (!scrapeResults && lead.status === "new");
 
   async function handleGenerate(e: React.FormEvent) {
     e.preventDefault();
@@ -78,7 +84,7 @@ export function BespokeGenerationStudio({
       const payload = showJson && rawJson.trim()
         ? JSON.parse(rawJson)
         : {
-            businessName,
+            businessName: businessName || lead.source_url,
             founder,
             heroImage,
             logoUrl,
@@ -87,8 +93,8 @@ export function BespokeGenerationStudio({
             services,
             primaryColor,
             accentColor,
-            phone: lead.phone || nap.phone || "(631) 637-2772",
-            email: lead.email || nap.email || "jim@heartcoregrowth.com",
+            phone: lead.phone || nap.phone || "",
+            email: lead.email || nap.email || "",
           };
 
       const res = await fetch(`/api/leads/${lead.id}/generate`, {
@@ -105,6 +111,22 @@ export function BespokeGenerationStudio({
     } finally {
       setGenerating(false);
     }
+  }
+
+  if (isScraping) {
+    return (
+      <Card className="border border-border bg-[#f0f3ff] shadow-sm">
+        <CardContent className="p-8 text-center space-y-3">
+          <Loader2 className="h-7 w-7 animate-spin text-[#533afd] mx-auto" />
+          <h3 className="font-bold text-base text-[#0d1738]">
+            Firecrawl is analyzing {lead.source_url}...
+          </h3>
+          <p className="text-xs text-muted-foreground max-w-md mx-auto">
+            Extracting genuine brand colors, sitemaps, photos, reviews, and schema. The generation studio will auto-populate as soon as scraping completes.
+          </p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -141,7 +163,7 @@ export function BespokeGenerationStudio({
               <Label className="text-xs font-semibold">Raw branding.json Input</Label>
               <Textarea
                 rows={10}
-                placeholder='{"businessName": "HeartCore Growth", "founder": "Jim Sabellico", "heroImage": "https://...", "services": ["AI Integration", "Web Design"]}'
+                placeholder='{"businessName": "Company Name", "founder": "Owner Name", "heroImage": "https://...", "services": ["Service 1", "Service 2"]}'
                 value={rawJson}
                 onChange={(e) => setRawJson(e.target.value)}
                 className="mt-1 font-mono text-xs"
@@ -156,6 +178,7 @@ export function BespokeGenerationStudio({
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
                   className="mt-1 h-8 text-xs bg-[#f9f9ff]"
+                  placeholder="e.g. HeartCore Growth"
                   required
                 />
               </div>
@@ -189,7 +212,7 @@ export function BespokeGenerationStudio({
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value)}
                   className="mt-1 h-8 text-xs bg-[#f9f9ff]"
-                  placeholder="e.g. AI Integration & Marketing"
+                  placeholder="e.g. AI Integration & Strategic Marketing"
                 />
               </div>
 
@@ -200,7 +223,7 @@ export function BespokeGenerationStudio({
                   value={heroImage}
                   onChange={(e) => setHeroImage(e.target.value)}
                   className="mt-1 h-8 text-xs bg-[#f9f9ff]"
-                  placeholder="https://.../jim-headshot.jpeg"
+                  placeholder="https://.../owner-headshot.jpeg"
                 />
               </div>
 
@@ -211,12 +234,12 @@ export function BespokeGenerationStudio({
                   value={logoUrl}
                   onChange={(e) => setLogoUrl(e.target.value)}
                   className="mt-1 h-8 text-xs bg-[#f9f9ff]"
-                  placeholder="https://.../hcg-logo.png"
+                  placeholder="https://.../logo.png"
                 />
               </div>
 
               <div className="sm:col-span-2 lg:col-span-3">
-                <Label htmlFor="gen-services" className="text-xs font-bold">6 Core Services (1 per line)</Label>
+                <Label htmlFor="gen-services" className="text-xs font-bold">Core Services / Products (1 per line)</Label>
                 <Textarea
                   id="gen-services"
                   rows={4}

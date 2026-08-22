@@ -211,11 +211,11 @@ export function AssetSlottingManager({ lead, artifact }: AssetSlottingManagerPro
                 </div>
 
                 <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight uppercase">
-                  #1 RATED {lead.industry?.toUpperCase() || "SERVICES"} IN {lead.source_url.split(".")[0]?.toUpperCase() || "YOUR CITY"}
+                  #1 RATED {businessName.toUpperCase()}
                 </h1>
 
                 <p className="text-xs text-white/80 max-w-md leading-relaxed">
-                  Protecting what matters most. From emergency repairs to full upgrades, choose the trusted local experts.
+                  Dedicated {lead.industry || "professional"} solutions engineered for measurable growth, maximum reliability, and seamless client experience.
                 </p>
 
                 {/* Proof Pills */}

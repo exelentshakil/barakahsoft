@@ -2,10 +2,10 @@ import { inngest } from "@/inngest/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { scrapeBusiness } from "@/lib/scrape";
 
-// scrape.run — RedesignEngine stage 1 (plan §5): ScrapeBusiness molecule ->
-// one scrape_results row, then hands off to enrich.generate via the
-// "scrape/completed" event. build_jobs.updated_at is what BuildProgress.tsx
-// subscribes to over Realtime — no polling.
+// scrape.run — Stage 1: Ingests Firecrawl facts, Google Places ratings, real photos,
+// and PageSpeed metrics. Does NOT blindly build the website automatically — instead,
+// it saves the verified brief data and leaves the lead ready for operator curation
+// and on-demand high-value generation in the Admin Studio.
 export const scrapeRun = inngest.createFunction(
   { id: "scrape-run" },
   { event: "lead/intake.submitted" },
@@ -29,11 +29,10 @@ export const scrapeRun = inngest.createFunction(
     });
 
     await step.run("mark-scrape-complete", async () => {
+      await admin.from("leads").update({ status: "ready" }).eq("id", lead_id);
       await admin.from("build_jobs").update({ status: "complete", pages_done: 1 }).eq("lead_id", lead_id).eq("stage", "scrape");
     });
 
-    await step.sendEvent("emit-scrape-completed", { name: "scrape/completed", data: { lead_id } });
-
-    return { lead_id };
+    return { lead_id, status: "ready_for_operator_studio" };
   }
 );
