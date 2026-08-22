@@ -94,51 +94,104 @@ function findRank(results: string[], businessName: string): number | null {
  */
 export type SearchProvider = "gemini" | "openai";
 
-const AREA_PROMPT = (trade: string, area: string) =>
-  `Search for "${trade} in ${area}" and report which businesses actually appear in the results, in the order they appear.
+// Six areas per call. Enough to cut calls by roughly eight-fold, few enough
+// that a model will genuinely run a search for each rather than doing two and
+// filling in the rest — which is the failure mode that makes naive batching
+// worse than useless.
+const AREAS_PER_CALL = 6;
 
-Report only real businesses present in those search results. Do not add businesses from your own knowledge, do not invent names, and do not pad the list to a target length. If the search returns fewer than ten, report fewer.
+function batchPrompt(trade: string, areas: string[]): string {
+  return `For EACH of these ${areas.length} places, run a separate search for "${trade} in <place>" and report which businesses actually appear in those results, in the order they appear.
 
-Use this exact shape: {"businesses": ["Business Name", "..."]}`;
+Places:
+${areas.map((a) => `- ${a}`).join("\n")}
 
-async function measureArea(
-  trade: string,
-  area: string,
-  businessName: string,
-  provider: SearchProvider
-): Promise<VisibilityCell | null> {
-  let businesses: unknown[] | null = null;
+You must run a real search for every place listed. Report only businesses present in the search results for that specific place. Never carry a business across from another place's results, never add businesses from your own knowledge, and never pad a list to a target length. If a search returns fewer than ten businesses, report fewer.
 
-  if (provider === "gemini") {
-    const grounded = await groundedJson(AREA_PROMPT(trade, area));
-    // groundedJson already discards responses with no sources, so reaching
-    // here means a search genuinely ran.
-    businesses = Array.isArray(grounded?.data?.businesses) ? (grounded.data.businesses as unknown[]) : null;
-  } else {
-    const raw = await callOpenAI(AREA_PROMPT(trade, area), {
-      json: true,
-      maxTokens: 8000,
-      // Every candidate here performs a real web search. Without one the
-      // measurement cannot happen and this returns nothing.
-      modelChain: SEARCH_MODELS,
-    });
-    const parsed = raw ? parseJsonResponse(raw) : null;
-    businesses = Array.isArray(parsed?.businesses) ? (parsed.businesses as unknown[]) : null;
-  }
+Use this exact shape:
+{"results": [{"area": "exact place name from the list", "businesses": ["Business Name", "..."]}]}`;
+}
 
-  if (!businesses) return null;
+/** Whether a place was genuinely among the searches that ran. */
+function wasSearched(area: string, executedQueries: string[]): boolean {
+  const needle = area.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (!needle) return false;
+  return executedQueries.some((q) => q.toLowerCase().replace(/[^a-z0-9]/g, "").includes(needle));
+}
 
+function toCell(area: string, businesses: unknown, businessName: string): VisibilityCell | null {
+  if (!Array.isArray(businesses)) return null;
   const results = businesses.filter((b): b is string => typeof b === "string" && b.trim().length > 1);
   if (results.length === 0) return null;
 
   const rank = findRank(results, businessName);
-
   return {
     area,
     rank,
     topCompetitor: results[0] ?? null,
     ahead: (rank ? results.slice(0, rank - 1) : results).slice(0, 3),
   };
+}
+
+/**
+ * Measure a batch of areas in one grounded call.
+ *
+ * Every returned cell is checked against the searches Gemini actually ran.
+ * An area the model answered without searching for is dropped, because that
+ * answer came from memory and a remembered ranking is an invented one. This
+ * verification is the only reason batching is safe to do at all.
+ */
+async function measureBatchGemini(
+  trade: string,
+  areas: string[],
+  businessName: string
+): Promise<VisibilityCell[]> {
+  const grounded = await groundedJson(batchPrompt(trade, areas));
+  if (!grounded) return [];
+
+  const rows = Array.isArray(grounded.data.results) ? (grounded.data.results as Record<string, unknown>[]) : [];
+  const cells: VisibilityCell[] = [];
+
+  for (const row of rows) {
+    const area = typeof row.area === "string" ? row.area.trim() : "";
+    if (!area) continue;
+
+    // Match back to a requested place, so a renamed or invented area cannot
+    // enter the report.
+    const requested = areas.find((a) => a.toLowerCase() === area.toLowerCase());
+    if (!requested) continue;
+
+    if (!wasSearched(requested, grounded.executedQueries)) {
+      console.warn(`[visibility] "${requested}" was answered without a search — dropping`);
+      continue;
+    }
+
+    const cell = toCell(requested, row.businesses, businessName);
+    if (cell) cells.push(cell);
+  }
+
+  return cells;
+}
+
+/**
+ * One area at a time, via OpenAI's search models.
+ *
+ * Not batched: these models return no equivalent of Gemini's executed-query
+ * list, so a batch could not be verified per area and would be trusting the
+ * model to have searched. One call per area keeps every cell attributable.
+ */
+async function measureAreaOpenAI(trade: string, area: string, businessName: string): Promise<VisibilityCell | null> {
+  const raw = await callOpenAI(
+    `Search the web for "${trade} in ${area}" and report which businesses actually appear in the results, in the order they appear.
+
+Report only real businesses present in those search results. Do not add businesses from your own knowledge, do not invent names, and do not pad the list to a target length.
+
+Return strict JSON only: {"businesses": ["Business Name", "..."]}`,
+    { json: true, maxTokens: 8000, modelChain: SEARCH_MODELS }
+  );
+
+  const parsed = raw ? parseJsonResponse(raw) : null;
+  return parsed ? toCell(area, parsed.businesses, businessName) : null;
 }
 
 /**
@@ -167,12 +220,28 @@ export async function measureSearchVisibility(
   if (areas.length === 0) return null;
 
   const cells: VisibilityCell[] = [];
-  const BATCH = 5;
 
-  for (let i = 0; i < areas.length; i += BATCH) {
-    const batch = areas.slice(i, i + BATCH);
-    const measured = await Promise.all(batch.map((area) => measureArea(trade, area, businessName, provider)));
-    for (const cell of measured) if (cell) cells.push(cell);
+  if (provider === "gemini") {
+    // Batched: 49 areas becomes about eight grounded calls rather than 49,
+    // and Gemini bills per grounded request.
+    const batches: string[][] = [];
+    for (let i = 0; i < areas.length; i += AREAS_PER_CALL) batches.push(areas.slice(i, i + AREAS_PER_CALL));
+
+    // Two batches at a time — enough to keep the run short without tripping
+    // rate limits, which would silently thin the report rather than fail it.
+    for (let i = 0; i < batches.length; i += 2) {
+      const measured = await Promise.all(
+        batches.slice(i, i + 2).map((batch) => measureBatchGemini(trade, batch, businessName))
+      );
+      for (const group of measured) cells.push(...group);
+    }
+  } else {
+    for (let i = 0; i < areas.length; i += 5) {
+      const measured = await Promise.all(
+        areas.slice(i, i + 5).map((area) => measureAreaOpenAI(trade, area, businessName))
+      );
+      for (const cell of measured) if (cell) cells.push(cell);
+    }
   }
 
   // A report built from a handful of successful searches would misrepresent

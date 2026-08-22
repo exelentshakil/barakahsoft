@@ -20,6 +20,16 @@ export interface GroundedResult {
   text: string;
   /** URLs the answer was actually grounded in. Empty means it was not. */
   sources: string[];
+  /**
+   * The searches Gemini actually ran.
+   *
+   * This is what makes batching safe. Asked about several places at once a
+   * model will run a few real searches and answer the rest from memory, and
+   * the text alone gives no way to tell which is which. These are the real
+   * queries, so a caller can verify per subject and discard whatever was not
+   * genuinely looked up.
+   */
+  executedQueries: string[];
 }
 
 /**
@@ -56,10 +66,13 @@ export async function groundedSearch(prompt: string): Promise<GroundedResult | n
     const text = candidate?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("").trim();
     if (!text) return null;
 
-    const chunks = candidate?.groundingMetadata?.groundingChunks ?? [];
+    const metadata = candidate?.groundingMetadata ?? {};
+    const chunks = metadata.groundingChunks ?? [];
     const sources = (chunks as { web?: { uri?: string } }[])
       .map((chunk) => chunk.web?.uri ?? "")
       .filter(Boolean);
+
+    const executedQueries = ((metadata.webSearchQueries ?? []) as string[]).filter(Boolean);
 
     // No sources means no search happened. Treating that as an answer is
     // exactly how invented rankings would get back into the report.
@@ -68,7 +81,7 @@ export async function groundedSearch(prompt: string): Promise<GroundedResult | n
       return null;
     }
 
-    return { text, sources };
+    return { text, sources, executedQueries };
   } catch (err) {
     console.error("[gemini-search] failed", err);
     return null;
@@ -76,12 +89,14 @@ export async function groundedSearch(prompt: string): Promise<GroundedResult | n
 }
 
 /** Grounded search that must return JSON. */
-export async function groundedJson(prompt: string): Promise<{ data: Record<string, unknown>; sources: string[] } | null> {
+export async function groundedJson(
+  prompt: string
+): Promise<{ data: Record<string, unknown>; sources: string[]; executedQueries: string[] } | null> {
   // Grounding and JSON response-format cannot be combined, so the shape is
   // requested in the prompt and parsed defensively here.
   const result = await groundedSearch(`${prompt}\n\nReply with strict JSON only. No markdown fences, no commentary.`);
   if (!result) return null;
 
   const parsed = parseJsonResponse(result.text);
-  return parsed ? { data: parsed, sources: result.sources } : null;
+  return parsed ? { data: parsed, sources: result.sources, executedQueries: result.executedQueries } : null;
 }
