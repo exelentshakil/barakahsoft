@@ -187,16 +187,26 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
                 {service.h2}
               </a>
             ))}
-            {areas.length > 0 && <span className="bs-nav-mobile-heading">Service areas</span>}
-            {areas.map((area) => (
-              <a
-                key={area.slug}
-                href={anchorOr(payload, `/areas/${area.slug}`, `#${area.slug}`)}
-                onClick={() => setMobileOpen(false)}
-              >
-                {area.h2}
-              </a>
-            ))}
+            {/* Area names are always derivable from the scrape, but the
+                /areas routes only exist once phase 2 has built them. The
+                spec is the single source of truth for whether they may be
+                linked -- listing them here unconditionally put dead links
+                in the mobile menu while the desktop menu correctly hid
+                them. */}
+            {nav.areasDropdown && areas.length > 0 && (
+              <>
+                <span className="bs-nav-mobile-heading">Service areas</span>
+                {areas.map((area) => (
+                  <a
+                    key={area.slug}
+                    href={anchorOr(payload, `/areas/${area.slug}`, `#${area.slug}`)}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {area.h2}
+                  </a>
+                ))}
+              </>
+            )}
             <span className="bs-nav-mobile-heading">More</span>
             <a href={anchorOr(payload, "/about", "#about")} onClick={() => setMobileOpen(false)}>
               About

@@ -373,9 +373,23 @@ async function runPhaseTwo(
   await buildPages(step, admin, leadId, ctx, requests, 0);
 
   await step.run("finish-phase-2", async () => {
+    // The chrome spec is recomputed now that area pages exist. Without
+    // this the nav and footer would keep hiding areas -- correct during
+    // phase 1, wrong the moment those routes were built.
+    const chrome = buildChromeSpec(ctx.dna, {
+      services: ctx.copy.services.map((s) => s.name),
+      areas,
+      hasPhone: !!ctx.brief.phone,
+      hasReviews: ctx.brief.reviews.length > 0,
+    });
+
     await admin
       .from("artifacts")
-      .update({ generation_phase: 2, full_site_built_at: new Date().toISOString() })
+      .update({
+        generation_phase: 2,
+        full_site_built_at: new Date().toISOString(),
+        chrome_spec: chrome,
+      })
       .eq("lead_id", leadId);
     await admin
       .from("build_jobs")
