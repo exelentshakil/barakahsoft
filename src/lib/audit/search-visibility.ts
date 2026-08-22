@@ -208,8 +208,8 @@ async function measureAreaOpenAI(trade: string, area: string, businessName: stri
 
 Report only real businesses present in those search results. Do not add businesses from your own knowledge, do not invent names, and do not pad the list to a target length.
 
-Return strict JSON only: {"businesses": ["Business Name", "..."]}`,
-    { json: true, maxTokens: 8000, modelChain: SEARCH_MODELS }
+Reply with strict JSON only, no markdown fences and no commentary: {"businesses": ["Business Name", "..."]}`,
+    { maxTokens: 8000, modelChain: SEARCH_MODELS }
   );
 
   const parsed = raw ? parseJsonResponse(raw) : null;

@@ -41,9 +41,11 @@ export async function GET() {
         callOpenAI("Reply with exactly: OK", { maxTokens: 4000 }),
         // Proves the search path end to end: a model that cannot search
         // would answer this from memory and get it wrong.
+        // No response_format: search models reject it, and asking for it here
+        // is what made this probe report failure while the models worked.
         callOpenAI(
-          "Search the web and reply with strict JSON only: {\"ok\": true, \"today\": \"the current date you found\"}",
-          { json: true, maxTokens: 6000, modelChain: SEARCH_MODELS }
+          "Search the web and reply with strict JSON only, no markdown fences: {\"ok\": true, \"today\": \"the current date you found\"}",
+          { maxTokens: 6000, modelChain: SEARCH_MODELS }
         ),
       ])
     : [null, null];

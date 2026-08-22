@@ -108,7 +108,8 @@ function buildMessages(prompt: string, options: CallOptions): ChatMessage[] {
 interface Attempt {
   model: string;
   useMaxCompletionTokens: boolean;
-  omitTemperature: boolean;
+  /** Parameters this model rejected, dropped on the retry. */
+  dropped: Set<string>;
 }
 
 function buildBody(prompt: string, options: CallOptions, attempt: Attempt): Record<string, unknown> {
@@ -125,26 +126,53 @@ function buildBody(prompt: string, options: CallOptions, attempt: Attempt): Reco
   if (attempt.useMaxCompletionTokens) body.max_completion_tokens = limit;
   else body.max_tokens = limit;
 
-  if (!attempt.omitTemperature && options.temperature !== undefined) {
+  if (options.temperature !== undefined && !attempt.dropped.has("temperature")) {
     body.temperature = options.temperature;
   }
 
-  if (options.json) body.response_format = { type: "json_object" };
+  // Search-capable models reject response_format outright. Callers that need
+  // JSON also ask for it in the prompt and parse defensively, so dropping it
+  // costs nothing.
+  if (options.json && !attempt.dropped.has("response_format")) {
+    body.response_format = { type: "json_object" };
+  }
 
   return body;
 }
 
-/** Real 400 bodies name the offending parameter — read it rather than guessing per model. */
-function diagnoseParamError(status: number, body: string): Partial<Attempt> | null {
+/**
+ * Read which parameter a model rejected, rather than guessing per model.
+ *
+ * OpenAI's 400 bodies name the offending parameter in a `param` field, so
+ * the correction is derived rather than hardcoded — which matters because
+ * every model family supports a slightly different set. Hardcoding three
+ * known cases meant search-capable models, which reject response_format,
+ * failed with no retry at all: they were available on the key, the
+ * diagnostic reported them, and every call to them returned nothing.
+ */
+function diagnoseParamError(status: number, body: string, attempt: Attempt): Partial<Attempt> | null {
   if (status !== 400) return null;
   const lower = body.toLowerCase();
-  if (lower.includes("max_tokens") && lower.includes("max_completion_tokens")) {
+
+  // max_tokens is a rename rather than an unsupported parameter, so it has
+  // its own correction.
+  if (lower.includes("max_tokens") && lower.includes("max_completion_tokens") && !attempt.useMaxCompletionTokens) {
     return { useMaxCompletionTokens: true };
   }
-  if (lower.includes("temperature")) {
-    return { omitTemperature: true };
-  }
-  return null;
+
+  const named = body.match(/"param"\s*:\s*"([^"]+)"/)?.[1];
+  const guessed =
+    named ??
+    (lower.includes("response_format")
+      ? "response_format"
+      : lower.includes("temperature")
+        ? "temperature"
+        : null);
+
+  if (!guessed || attempt.dropped.has(guessed)) return null;
+
+  console.warn(`[openai] ${attempt.model} rejected "${guessed}" — retrying without it`);
+  return { dropped: new Set([...attempt.dropped, guessed]) };
 }
 
 function isModelUnavailable(status: number, body: string): boolean {
@@ -161,11 +189,12 @@ export async function callOpenAI(prompt: string, options: CallOptions = {}): Pro
   }
 
   for (const model of modelCandidates(options.modelChain)) {
-    let attempt: Attempt = { model, useMaxCompletionTokens: false, omitTemperature: false };
+    let attempt: Attempt = { model, useMaxCompletionTokens: false, dropped: new Set() };
 
-    // At most three tries per model: the initial call plus one retry for
-    // each of the two known parameter-shape corrections.
-    for (let tries = 0; tries < 3; tries++) {
+    // Enough tries to drop several unsupported parameters in turn. Each
+    // retry removes exactly one, and a repeat rejection of the same
+    // parameter ends the loop rather than spinning.
+    for (let tries = 0; tries < 5; tries++) {
       let res: Response;
       try {
         res = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -221,7 +250,7 @@ export async function callOpenAI(prompt: string, options: CallOptions = {}): Pro
         break; // move to the next model in the chain
       }
 
-      const correction = diagnoseParamError(res.status, body);
+      const correction = diagnoseParamError(res.status, body, attempt);
       if (correction) {
         attempt = { ...attempt, ...correction };
         continue; // same model, corrected parameter shape
