@@ -203,6 +203,15 @@ export function AdminLeadWorkspace({
       ? `$${setupPrice} + $${monthlyPrice}/mo`
       : `$${setupPrice}`;
 
+  // Dynamic real-time revenue metrics from actual database leads
+  const collectedThisWeek = otherLeads
+    .filter((l) => Boolean(l.paid_at) || l.status === "paid" || l.status === "live")
+    .reduce((acc) => acc + 797, 0);
+
+  const pendingCloseAmount = otherLeads
+    .filter((l) => !l.paid_at && !["paid", "live", "lost"].includes(l.status))
+    .reduce((acc) => acc + 797, 0);
+
   async function handleRescrape() {
     setRescraping(true);
     try {
@@ -326,11 +335,15 @@ export function AdminLeadWorkspace({
           <span className="font-bold uppercase tracking-wider text-[#777588] text-[10px]">WEEKLY PULSE</span>
           <div className="flex justify-between items-center">
             <span className="text-[#777588]">Collected This Week:</span>
-            <span className="font-bold text-sm text-[#0d1738]">$3,188.00</span>
+            <span className="font-bold text-sm text-[#0b8f5b]">
+              ${collectedThisWeek.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-[#777588]">Pending Close:</span>
-            <span className="font-bold text-sm text-[#533afd]">$2,391.00</span>
+            <span className="font-bold text-sm text-[#533afd]">
+              ${pendingCloseAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
           </div>
         </div>
       </aside>
