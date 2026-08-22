@@ -41,6 +41,9 @@ export interface SitePayload {
     address: string | null;
   };
   socialUrls: string[];
+  // Deep link to this business's real Google reviews. Null when no Places
+  // match exists -- never fabricated, and the link simply does not render.
+  googleReviewsUrl: string | null;
   brandColorHsl: string | null;
   logoUrl: string | null;
   fontFamily: string | null;

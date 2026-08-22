@@ -1,4 +1,4 @@
-import { Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin, Phone, Star } from "lucide-react";
 import type { ChromeSpec } from "@/lib/chrome-spec";
 import type { SitePayload } from "@/components/site-shell/types";
 
@@ -13,6 +13,20 @@ import type { SitePayload } from "@/components/site-shell/types";
 function href(payload: SitePayload, path: string): string {
   return `/s/${payload.leadSlug}${path}`;
 }
+
+// Real profiles the business already runs. A delivered site that does not
+// link them throws away trust the client has already earned elsewhere.
+// Named rather than iconified: this icon set carries no brand marks, and a
+// generic glyph per platform communicates less than the platform's name.
+const SOCIAL_PLATFORMS: { pattern: RegExp; label: string }[] = [
+  { pattern: /facebook\.com/i, label: "Facebook" },
+  { pattern: /instagram\.com/i, label: "Instagram" },
+  { pattern: /linkedin\.com/i, label: "LinkedIn" },
+  { pattern: /youtube\.com/i, label: "YouTube" },
+  { pattern: /(twitter|x)\.com/i, label: "X" },
+  { pattern: /tiktok\.com/i, label: "TikTok" },
+  { pattern: /yelp\.com/i, label: "Yelp" },
+];
 
 export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: ChromeSpec }) {
   const { footer } = spec;
@@ -37,7 +51,10 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
                   Call {payload.nap.phone}
                 </a>
               )}
-              <a href={href(payload, "/contact")} className="bs-btn bs-btn-ghost bs-btn-lg">
+              <a
+                href={payload.innerPagesBuilt ? href(payload, "/contact") : "#contact"}
+                className="bs-btn bs-btn-ghost bs-btn-lg"
+              >
                 Send a message
               </a>
             </div>
@@ -69,7 +86,28 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
                     {payload.nap.address}
                   </span>
                 )}
+                {payload.googleReviewsUrl && payload.proof.rating && (
+                  <a href={payload.googleReviewsUrl} target="_blank" rel="noopener noreferrer">
+                    <Star className="mr-2 inline h-4 w-4" aria-hidden />
+                    {payload.proof.rating.toFixed(1)} on Google
+                    {payload.proof.reviewCount ? ` · ${payload.proof.reviewCount} reviews` : ""}
+                  </a>
+                )}
               </div>
+
+              {payload.socialUrls.length > 0 && (
+                <div className="bs-row" style={{ marginTop: "1rem" }}>
+                  {payload.socialUrls.map((url) => {
+                    const match = SOCIAL_PLATFORMS.find((s) => s.pattern.test(url));
+                    if (!match) return null;
+                    return (
+                      <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="bs-pill">
+                        {match.label}
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {showServices && (
@@ -107,9 +145,9 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
             <div>
               <p className="bs-footer-heading">Company</p>
               <div className="bs-footer-list">
-                <a href={href(payload, "/about")}>About</a>
-                <a href={href(payload, "/faq")}>FAQ</a>
-                <a href={href(payload, "/contact")}>Contact</a>
+                <a href={payload.innerPagesBuilt ? href(payload, "/about") : "#about"}>About</a>
+                <a href={payload.innerPagesBuilt ? href(payload, "/faq") : "#faq"}>FAQ</a>
+                <a href={payload.innerPagesBuilt ? href(payload, "/contact") : "#contact"}>Contact</a>
                 {payload.fullSiteBuilt && <a href={href(payload, "/blog")}>Advice</a>}
               </div>
             </div>
@@ -121,7 +159,7 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
             &copy; {year} {payload.businessName}. All rights reserved.
           </p>
           <nav>
-            {isCompact && <a href={href(payload, "/contact")}>Contact</a>}
+            {isCompact && <a href={payload.innerPagesBuilt ? href(payload, "/contact") : "#contact"}>Contact</a>}
             <a href={href(payload, "/privacy")}>Privacy Policy</a>
             <a href={href(payload, "/terms")}>Terms of Service</a>
           </nav>

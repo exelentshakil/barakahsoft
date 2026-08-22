@@ -126,6 +126,9 @@ export function renderShell(
       address: (facts.nap as { address?: string })?.address ?? null,
     },
     socialUrls: (facts.social_urls as string[]) ?? [],
+    googleReviewsUrl: lead.place_id
+      ? `https://search.google.com/local/reviews?placeid=${lead.place_id}`
+      : null,
     brandColorHsl: (facts.brand_color_hsl as string) ?? null,
     logoUrl: (facts.logo_url as string) ?? null,
     // Keep the delivered system visually consistent. Client fonts are useful

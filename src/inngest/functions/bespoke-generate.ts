@@ -84,11 +84,14 @@ export const bespokeGenerate = inngest.createFunction(
     const services = brief.services.slice(0, MAX_SERVICE_PAGES);
     const areas = brief.areas.slice(0, MAX_AREAS);
 
-    const knownPaths = buildKnownPaths(
-      services,
-      phase === 2 ? areas : [],
-      phase === 2 ? { blog: true, locationServices: buildLocationPairs(services, areas) } : {}
-    );
+    // Phase 1 knows about no routes but the homepage. Anything the
+    // generator links is rewritten to an on-page anchor, so during the
+    // sales window every nav target lands somewhere real instead of on a
+    // page that has not been built.
+    const knownPaths =
+      phase === 2
+        ? buildKnownPaths(services, areas, { blog: true, locationServices: buildLocationPairs(services, areas) })
+        : ["/"];
 
     // ---- Phase 2 reuses everything the client already approved ----------
     if (phase === 2) {
@@ -108,9 +111,12 @@ export const bespokeGenerate = inngest.createFunction(
       return { lead_id, phase: 2 };
     }
 
-    // ---- Phase 1 --------------------------------------------------------
-    const innerPages = services.length + 3; // services + about/faq/contact
-    const totalSteps = 3 + 1 + innerPages; // media, copy, chrome + homepage + inner
+    // ---- Phase 1: the homepage, and nothing else -------------------------
+    // The homepage is what sells the job. Building service, about, FAQ and
+    // contact pages before the client has said yes spends generation on a
+    // lead that may never reply, and splits refinement effort across pages
+    // nobody has looked at yet.
+    const totalSteps = 4; // media, copy, chrome, homepage
 
     await step.run("start-job", async () => {
       await admin.from("build_jobs").delete().eq("lead_id", lead_id).eq("stage", "bespoke");
@@ -221,23 +227,13 @@ export const bespokeGenerate = inngest.createFunction(
 
     await bumpProgress(admin, lead_id, 4);
 
-    const requests: InnerPageRequest[] = [
-      ...copy.services.slice(0, MAX_SERVICE_PAGES).map((s) => ({
-        kind: "service" as const,
-        title: s.name,
-        subject: s.name,
-      })),
-      { kind: "about", title: `About ${brief.businessName}` },
-      { kind: "faq", title: "Frequently asked questions" },
-      { kind: "contact", title: `Contact ${brief.businessName}` },
-    ];
-
-    await buildPages(step, admin, lead_id, { lead: loaded.lead, brief, dna, copy, media, knownPaths }, requests, 4);
-
     await step.run("finish-phase-1", async () => {
+      // inner_pages_built stays false: those routes genuinely do not exist
+      // yet, and it is the flag the nav reads to decide between a real link
+      // and an anchor.
       await admin
         .from("artifacts")
-        .update({ inner_pages_built: true, generation_phase: 1, full_site_status: "complete" })
+        .update({ generation_phase: 1, full_site_status: "complete" })
         .eq("lead_id", lead_id);
       await admin
         .from("build_jobs")
@@ -333,6 +329,14 @@ async function runPhaseTwo(
   const articles = ctx.copy.faq.slice(0, 6).map((f) => f.question);
 
   const requests: InnerPageRequest[] = [
+    ...ctx.copy.services.map((service) => ({
+      kind: "service" as const,
+      title: service.name,
+      subject: service.name,
+    })),
+    { kind: "about" as const, title: `About ${ctx.brief.businessName}` },
+    { kind: "faq" as const, title: "Frequently asked questions" },
+    { kind: "contact" as const, title: `Contact ${ctx.brief.businessName}` },
     ...areas.map((area) => ({ kind: "area" as const, title: area, area })),
     ...pairs.map((p) => ({
       kind: "location-service" as const,
@@ -378,6 +382,9 @@ async function runPhaseTwo(
         generation_phase: 2,
         full_site_built_at: new Date().toISOString(),
         chrome_spec: chrome,
+        // Every route now exists, so the nav switches from anchors to
+        // real links.
+        inner_pages_built: true,
       })
       .eq("lead_id", leadId);
     await admin

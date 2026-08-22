@@ -62,7 +62,13 @@ function rewriteInternalLinks(html: string, brief: SiteBrief, knownPaths: Set<st
     const clean = normalised.replace(/\/+$/, "") || "/";
     if (clean === "/") return `href="${base}"`;
     if (knownPaths.has(clean)) return `href="${base}${clean}"`;
-    return `href="${base}/contact"`;
+
+    // A route that has not been built yet becomes an anchor to the matching
+    // homepage section rather than a link to a 404 or a catch-all redirect.
+    // During the sales window the homepage IS the site, so every nav target
+    // has to resolve to something real on the page in front of the client.
+    const slug = clean.split("/").filter(Boolean).pop();
+    return slug ? `href="#${slug}"` : `href="${base}"`;
   });
 }
 
@@ -188,6 +194,8 @@ ${brief.phone ? `Phone links must be tel:${brief.phone.replace(/[^\d+]/g, "")}` 
 ${VOCABULARY}
 
 ${ANCHORS}
+
+SERVICE ANCHORS — the service pages are not built yet, so each service links to its own section on THIS page. Give every service block an id of its slug (lowercase, hyphenated, e.g. id="panel-upgrades") and link to it with href="#panel-upgrades". The client must be able to click any nav item and land somewhere real.
 
 Do NOT output a <header>, nav, logo or <footer>. Those are separate real components rendered around your output, and anything you write there is deleted. Begin at the hero, end at the closing call to action.
 
