@@ -49,7 +49,9 @@ export default async function LeadSitePage({
 
   // If viewing the direct website preview
   if (sParams.view === "preview") {
-    if (!operator && lead.status !== "paid" && lead.status !== "live") return notFound();
+    if (!operator && !authorized && lead.status !== "paid" && lead.status !== "live" && lead.status !== "qa_approved" && lead.status !== "delivered") {
+      return notFound();
+    }
     const localBusinessSchema = {
       "@context": "https://schema.org",
       "@type": "LocalBusiness",

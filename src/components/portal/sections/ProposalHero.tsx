@@ -40,7 +40,7 @@ export function ProposalHero({
 
       <div className="pt-2 flex flex-wrap gap-4">
         <a
-          href={`/s/${leadSlug}`}
+          href={`/s/${leadSlug}?view=preview`}
           target="_blank"
           rel="noreferrer"
           className="inline-flex items-center gap-2 rounded-md bg-[#533afd] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#432bd9]"
