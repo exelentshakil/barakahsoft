@@ -2,9 +2,9 @@ import { ArrowRight, CheckCircle2, ExternalLink } from "lucide-react";
 
 interface ProposalHeroProps {
   businessName: string;
-  address: string;
-  rating: string;
-  reviewCount: string;
+  address: string | null;
+  rating: string | null;
+  reviewCount: string | null;
   leadSlug: string;
   isPaid: boolean;
   priceFormattedLabel: string;
@@ -35,7 +35,15 @@ export function ProposalHero({
       </h1>
 
       <p className="max-w-3xl text-base leading-relaxed text-[#42506a] sm:text-lg">
-        We performed a deep X-Ray of your website, local Google search rankings in {address}, and competitor positioning. Your business has real proof ({reviewCount} reviews · {rating} ★ rating) — but the current customer journey is hiding that authority and leaking calls. Here is the verified breakdown of the lead machine we would put in its place.
+        {/* Written from what is actually known. The previous copy asserted a
+            rating, a review count and a city unconditionally, so a business
+            with none of them was told about its "real proof" of undefined
+            reviews. */}
+        We went through your website in detail{address ? ` and how you show up around ${address}` : ""}.
+        {rating && reviewCount
+          ? ` You have genuine proof behind you — ${reviewCount} reviews at ${rating} stars — and your current site is hiding it.`
+          : " Below is exactly what we found, and what your rebuilt site does about it."}
+        {" "}Here is the verified breakdown of the lead machine we would put in its place.
       </p>
 
       <div className="pt-2 flex flex-wrap gap-4">

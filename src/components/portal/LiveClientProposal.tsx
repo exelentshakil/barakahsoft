@@ -6,106 +6,14 @@ import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 import { ProposalHeader } from "@/components/portal/sections/ProposalHeader";
 import { ProposalProcessingSkeleton } from "@/components/portal/sections/ProposalProcessingSkeleton";
 import { ProposalHero } from "@/components/portal/sections/ProposalHero";
-import { ProposalFrictionGrid } from "@/components/portal/sections/ProposalFrictionGrid";
-import { ProposalGeoSnippets } from "@/components/portal/sections/ProposalGeoSnippets";
-import { ProposalSpeedScorecard } from "@/components/portal/sections/ProposalSpeedScorecard";
-import { ProposalMapMatrix } from "@/components/portal/sections/ProposalMapMatrix";
-import { ProposalCompetitorRadar } from "@/components/portal/sections/ProposalCompetitorRadar";
+import { ReportAudit } from "@/components/portal/sections/ReportAudit";
+import { ReportVisibility } from "@/components/portal/sections/ReportVisibility";
+import { ReportCompetitors } from "@/components/portal/sections/ReportCompetitors";
+import { buildReportModules } from "@/lib/report-modules";
 import { ProposalPricingSection } from "@/components/portal/sections/ProposalPricingSection";
 import { ProposalDecisionBox } from "@/components/portal/sections/ProposalDecisionBox";
 import { ProposalCheckoutModal } from "@/components/portal/sections/ProposalCheckoutModal";
 import { ProposalFooter } from "@/components/portal/sections/ProposalFooter";
-
-const GOOGLE_PAA_QUESTIONS = [
-  {
-    q: "Do I need a city permit for high-value installation and upgrade work?",
-    a: "Yes. Major residential and commercial work requires municipal permits & utility coordination. Your rebuilt site provides clear permit guidance and direct quote capture.",
-    article: "Launch Article #1",
-  },
-  {
-    q: "How fast can emergency repair dispatch be scheduled?",
-    a: "Your team provides 24/7 priority emergency dispatch with a persistent 1-tap mobile call bar so customers never bounce to competitors.",
-    article: "Launch Article #2",
-  },
-  {
-    q: "How much does a commercial installation cost on average?",
-    a: "Commercial installations vary based on project scale and capacity. Dedicated landing routes provide clear cost estimation forms.",
-    article: "Launch Article #3",
-  },
-  {
-    q: "What is the ROI of upgrading to high-efficiency equipment?",
-    a: "Modern high-efficiency systems reduce utility costs by up to 65% while ensuring complete code compliance and warranty protection.",
-    article: "Launch Article #4",
-  },
-];
-
-const MAP_POINTS = [
-  { id: 1, name: "Astoria North", rank: 14, competitor: "Local Competitor A", status: "missing" },
-  { id: 2, name: "Astoria Ditmars", rank: 12, competitor: "Local Competitor A", status: "missing" },
-  { id: 3, name: "Long Island City", rank: 18, competitor: "Citywide Power", status: "missing" },
-  { id: 4, name: "Sunnyside", rank: 11, competitor: "Brightline Power", status: "missing" },
-  { id: 5, name: "Woodside", rank: 8, competitor: "Brightline Power", status: "outside" },
-  { id: 6, name: "Jackson Heights", rank: 3, competitor: "Your Business", status: "visible" },
-  { id: 7, name: "East Elmhurst", rank: 15, competitor: "Metro Sparks", status: "missing" },
-  { id: 8, name: "Corona Plaza", rank: 2, competitor: "Your Business", status: "visible" },
-  { id: 9, name: "Flushing Main", rank: 1, competitor: "Your Business", status: "visible" },
-  { id: 10, name: "Flushing Chinatown", rank: 2, competitor: "Your Business", status: "visible" },
-  { id: 11, name: "Murray Hill", rank: 1, competitor: "Your Business", status: "visible" },
-  { id: 12, name: "Broadway Station", rank: 1, competitor: "Your Business", status: "visible" },
-  { id: 13, name: "Auburndale", rank: 1, competitor: "Your Business", status: "visible" },
-  { id: 14, name: "Bayside West", rank: 1, competitor: "Your Business", status: "visible" },
-  { id: 15, name: "Bayside Bell Blvd", rank: 1, competitor: "Your Business", status: "visible" },
-  { id: 16, name: "Bay Terrace", rank: 2, competitor: "Your Business", status: "visible" },
-  { id: 17, name: "Whitestone", rank: 1, competitor: "Your Business", status: "visible" },
-  { id: 18, name: "Malba", rank: 5, competitor: "North Shore Pro", status: "outside" },
-  { id: 19, name: "College Point", rank: 9, competitor: "Queens Light Co", status: "outside" },
-  { id: 20, name: "Rego Park", rank: 16, competitor: "Citywide Power", status: "missing" },
-  { id: 21, name: "Forest Hills 71st", rank: 14, competitor: "Citywide Power", status: "missing" },
-  { id: 22, name: "Kew Gardens", rank: 19, competitor: "Metro Sparks", status: "missing" },
-  { id: 23, name: "Richmond Hill", rank: 22, competitor: "South Queens Pro", status: "missing" },
-  { id: 24, name: "Woodhaven", rank: 17, competitor: "South Queens Pro", status: "missing" },
-  { id: 25, name: "Ozone Park", rank: 24, competitor: "Crossbay Electric", status: "missing" },
-  { id: 26, name: "Howard Beach", rank: 15, competitor: "Crossbay Electric", status: "missing" },
-  { id: 27, name: "Middle Village", rank: 11, competitor: "Apex Sparks", status: "missing" },
-  { id: 28, name: "Glendale", rank: 13, competitor: "Apex Sparks", status: "missing" },
-  { id: 29, name: "Ridgewood", rank: 20, competitor: "Border Pro", status: "missing" },
-  { id: 30, name: "Maspeth", rank: 14, competitor: "Industrial Power", status: "missing" },
-  { id: 31, name: "Fresh Meadows", rank: 4, competitor: "Northeast Pro", status: "outside" },
-  { id: 32, name: "Oakland Gardens", rank: 6, competitor: "Northeast Pro", status: "outside" },
-  { id: 33, name: "Little Neck", rank: 7, competitor: "Nassau Border Pro", status: "outside" },
-  { id: 34, name: "Douglaston", rank: 5, competitor: "Nassau Border Pro", status: "outside" },
-  { id: 35, name: "Floral Park", rank: 12, competitor: "Long Island Pro", status: "missing" },
-  { id: 36, name: "Bellerose", rank: 14, competitor: "Long Island Pro", status: "missing" },
-  { id: 37, name: "Queens Village", rank: 19, competitor: "East Queens Tech", status: "missing" },
-  { id: 38, name: "Hollis Hills", rank: 9, competitor: "East Queens Tech", status: "outside" },
-  { id: 39, name: "Jamaica Estates", rank: 13, competitor: "Mid-Island Pro", status: "missing" },
-  { id: 40, name: "Jamaica Center", rank: 21, competitor: "Metro Sparks", status: "missing" },
-  { id: 41, name: "St. Albans", rank: 25, competitor: "Southeast Power", status: "missing" },
-  { id: 42, name: "Cambria Heights", rank: 23, competitor: "Southeast Power", status: "missing" },
-  { id: 43, name: "Rosedale", rank: 27, competitor: "South Shore Pro", status: "missing" },
-  { id: 44, name: "Laurelton", rank: 24, competitor: "South Shore Pro", status: "missing" },
-  { id: 45, name: "Springfield Gardens", rank: 26, competitor: "JFK Corridor Pro", status: "missing" },
-  { id: 46, name: "Rockaway Beach", rank: 18, competitor: "Seaside Pro", status: "missing" },
-  { id: 47, name: "Belle Harbor", rank: 12, competitor: "Seaside Pro", status: "missing" },
-  { id: 48, name: "Arverne", rank: 20, competitor: "Seaside Pro", status: "missing" },
-  { id: 49, name: "Far Rockaway", rank: 22, competitor: "Atlantic Coast Pro", status: "missing" },
-];
-
-const COMPETITOR_BARS = [
-  { name: "Your Site (Rebuilt)", speed: 98, pages: 28 },
-  { name: "Top Competitor A", speed: 48, pages: 6 },
-  { name: "Top Competitor B", speed: 65, pages: 4 },
-  { name: "Top Competitor C", speed: 40, pages: 8 },
-];
-
-const RADAR_DATA = [
-  { subject: "Search Coverage", Client: 90, Competitors: 45, fullMark: 100 },
-  { subject: "Mobile Speed", Client: 98, Competitors: 35, fullMark: 100 },
-  { subject: "Conversion UX", Client: 95, Competitors: 40, fullMark: 100 },
-  { subject: "Service Depth", Client: 92, Competitors: 30, fullMark: 100 },
-  { subject: "Trust & Proof", Client: 96, Competitors: 60, fullMark: 100 },
-  { subject: "Structured Schema", Client: 100, Competitors: 25, fullMark: 100 },
-];
 
 interface LiveClientProposalProps {
   lead: Lead;
@@ -122,18 +30,19 @@ export function LiveClientProposal({
 }: LiveClientProposalProps) {
   const [showCheckout, setShowCheckout] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [selectedPoint, setSelectedPoint] = useState(MAP_POINTS[8]);
 
   const businessName = lead.business_name || payload.businessName || "Your Business";
-  const phone = payload.nap.phone || lead.phone || "(307) 533-6678";
-  const address = payload.nap.address || "United States";
-  const rating = payload.proof.rating ? String(payload.proof.rating) : "5.0";
-  const reviewCount = payload.proof.reviewCount ? `${payload.proof.reviewCount}+` : "450+";
+  // No invented fallbacks. A placeholder phone number or rating shown to a
+  // client as their own is worse than showing nothing — the previous
+  // defaults put a stranger's phone number and a made-up review count on
+  // every proposal where the real ones were missing.
+  const phone = payload.nap.phone || lead.phone || null;
+  const address = payload.nap.address || null;
+  const rating = payload.proof.rating ? String(payload.proof.rating) : null;
+  const reviewCount = payload.proof.reviewCount ? `${payload.proof.reviewCount}` : null;
 
-  const facts = (scrapeResults?.facts ?? {}) as Record<string, unknown>;
-  const pagespeed = (facts.pagespeed as { score?: number; lcp?: string }) ?? {};
-  const beforeScore = pagespeed.score || 29;
-  const beforeLcp = pagespeed.lcp || "8.4s";
+  // Modules render only where real measurements exist.
+  const report = buildReportModules(lead, scrapeResults);
 
   const isPaid = Boolean(lead.paid_at) || lead.status === "paid" || lead.status === "live";
   const isApproved =
@@ -205,30 +114,26 @@ export function LiveClientProposal({
           onOpenCheckout={() => setShowCheckout(true)}
         />
 
-        <ProposalFrictionGrid
-          businessName={businessName}
-          phone={phone}
-          reviewCount={reviewCount}
-          rating={rating}
-          beforeLcp={beforeLcp}
-        />
+        {/* Modules render only when there is measured data behind them AND
+            they apply to this kind of business. A national agency does not
+            see a local search grid, and an empty panel is never shown — the
+            report is shorter for some businesses because less applies, not
+            because it is thin. */}
+        {report.audit && <ReportAudit audit={report.audit} businessName={businessName} />}
 
-        <ProposalGeoSnippets questions={GOOGLE_PAA_QUESTIONS} />
+        {report.visibility && (
+          <ReportVisibility
+            cells={report.visibility.cells}
+            visible={report.visibility.visible}
+            missing={report.visibility.missing}
+            dominant={report.visibility.dominant}
+            businessName={businessName}
+          />
+        )}
 
-        <ProposalSpeedScorecard beforeScore={beforeScore} beforeLcp={beforeLcp} />
-
-        <ProposalMapMatrix
-          mapPoints={MAP_POINTS}
-          selectedPoint={selectedPoint}
-          industry={lead.industry}
-          onSelectPoint={setSelectedPoint}
-        />
-
-        <ProposalCompetitorRadar
-          businessName={businessName}
-          competitorBars={COMPETITOR_BARS}
-          radarData={RADAR_DATA}
-        />
+        {report.competitors && (
+          <ReportCompetitors rows={report.competitors.rows} query={report.competitors.query} />
+        )}
 
         <ProposalPricingSection
           businessName={businessName}
