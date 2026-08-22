@@ -60,7 +60,6 @@ import {
 import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 import { AssetSlottingManager } from "@/components/admin/AssetSlottingManager";
 import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStudio";
-import { SectionContentEditor } from "@/components/admin/SectionContentEditor";
 import { PricingManager } from "@/components/admin/PricingManager";
 import { EditLeadDialog } from "@/components/admin/EditLeadDialog";
 import { DeleteLeadButton } from "@/components/admin/DeleteLeadButton";
@@ -103,7 +102,7 @@ export function AdminLeadWorkspace({
   const colors = (facts.colors as { primary?: string; accent?: string } | undefined) || {};
   const primaryColor = colors.primary || (artifact?.extracted_assets as any)?.branding?.colors?.primary || "#533AFD";
   const accentColor = colors.accent || (artifact?.extracted_assets as any)?.branding?.colors?.accent || "#FFD12D";
-  const logoName = (artifact?.extracted_assets as any)?.branding?.logo || facts.logo_url ? "Logo Extracted" : "Pending / Default";
+  const logoName = (artifact?.extracted_assets as any)?.branding?.logo || facts.logo_url ? "Logo Active" : "Pending";
 
   const proof = (facts.proof as { rating?: number; reviewCount?: number } | undefined) || {};
   const rating = proof.rating || 5.0;
@@ -134,23 +133,7 @@ export function AdminLeadWorkspace({
       ]
     : [];
 
-  // 3. Real AI Q&A Snippets from Artifact (Zero Fake Fallbacks)
-  const faqs = artifact?.funnel_pages?.filter((s) => s.kind === "faq") || [];
-  const services = artifact?.funnel_pages?.filter((s) => s.kind === "service") || [];
-  const qas = faqs.map((f, i) => ({
-    q: f.h2,
-    a: f.body_content,
-    article: `Article #${i + 1}`,
-  }));
-
-  const radarData = [
-    { subject: "Search Coverage", Client: 90, Competitors: 45, fullMark: 100 },
-    { subject: "Mobile Speed", Client: 98, Competitors: 35, fullMark: 100 },
-    { subject: "Conversion UX", Client: 95, Competitors: 40, fullMark: 100 },
-    { subject: "Service Depth", Client: 92, Competitors: 30, fullMark: 100 },
-    { subject: "Trust & Proof", Client: 96, Competitors: 60, fullMark: 100 },
-    { subject: "Structured Schema", Client: 100, Competitors: 25, fullMark: 100 },
-  ];
+  const services = artifact?.funnel_pages.filter((s) => s.kind === "service") || [];
 
   // Editable Delivery Email State
   const [emailSubject, setEmailSubject] = useState(
@@ -426,7 +409,7 @@ export function AdminLeadWorkspace({
               <p className="font-bold text-[#0d1738]">
                 • Location: {city || "Global / Digital"}
               </p>
-              <p className="font-bold text-[#0d1738]">• Licensed / Operating Entity</p>
+              <p className="font-bold text-[#0d1738]">• Operating Business Entity</p>
             </div>
 
             <div className="rounded-xl bg-[#f9f9ff] p-4 border border-[#e5e7f2] space-y-1">
@@ -452,7 +435,7 @@ export function AdminLeadWorkspace({
           onGenerated={() => setReloadKey((k) => k + 1)}
         />
 
-        {/* LINEAR STEP 3: COMPETITOR BENCHMARK & MARKET POSITIONING (Zero Fake Data) */}
+        {/* LINEAR STEP 3: COMPETITOR BENCHMARK & MARKET POSITIONING (Only Real Competitors) */}
         {competitorsList.length > 0 && (
           <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-6">
             <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
@@ -494,41 +477,13 @@ export function AdminLeadWorkspace({
                 </tbody>
               </table>
             </div>
-
-            <div className="grid gap-6 sm:grid-cols-[1fr_1fr] sm:items-center pt-2 border-t border-[#e5e7f2]">
-              <div className="h-56 w-full">
-                <p className="text-xs font-bold uppercase tracking-wider text-[#777588] mb-2">Market Positioning Radar</p>
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart cx="50%" cy="50%" outerRadius="75%" data={radarData}>
-                    <PolarGrid stroke="#e5e7f2" />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: "#777588", fontSize: 9 }} />
-                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                    <Radar name={`${businessName} (Rebuilt)`} dataKey="Client" stroke="#533afd" fill="#533afd" fillOpacity={0.4} />
-                    <Radar name="Competitor Avg" dataKey="Competitors" stroke="#777588" fill="#777588" fillOpacity={0.15} />
-                    <Tooltip contentStyle={{ backgroundColor: "#ffffff", borderColor: "#e5e7f2", borderRadius: 8, fontSize: 11 }} />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {qas.length > 0 && (
-                <div className="space-y-2 text-xs">
-                  <p className="text-xs font-bold uppercase tracking-wider text-[#777588]">Generated Entity Q&A</p>
-                  {qas.slice(0, 3).map((item) => (
-                    <div key={item.q} className="rounded-lg bg-[#f9f9ff] border border-[#e5e7f2] p-2.5">
-                      <p className="font-bold text-[#0d1738] truncate">"{item.q}"</p>
-                      <p className="text-[#0b8f5b] text-[11px] mt-0.5">✓ {item.article}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
         )}
 
-        {/* LINEAR STEP 4: VISUAL ASSET ENGINE, LIVE PREVIEW & SECTION EDITOR */}
+        {/* LINEAR STEP 4: VISUAL ASSET ENGINE & LIVE PREVIEW STUDIO */}
         {artifact && <AssetSlottingManager lead={lead} artifact={artifact} />}
 
-        {/* LIVE IFRAME PREVIEW INSPECTOR (HOMEPAGE RENDERS ?view=preview SO IT SHOWS THE ACTUAL WEBSITE) */}
+        {/* LIVE IFRAME PREVIEW INSPECTOR */}
         <div className="overflow-hidden rounded-2xl border border-border shadow-sm bg-white">
           <div className="flex items-center justify-between gap-3 border-b border-border bg-muted/40 px-4 py-2.5">
             <div className="flex items-center gap-2">
@@ -568,15 +523,6 @@ export function AdminLeadWorkspace({
             title="Generated site preview"
           />
         </div>
-
-        {/* LIVE SECTION CONTENT & BESPOKE PROMPT EDITOR */}
-        {artifact && (
-          <SectionContentEditor
-            leadId={lead.id}
-            sections={artifact.funnel_pages}
-            onSaved={() => setReloadKey((k) => k + 1)}
-          />
-        )}
 
         {/* LINEAR STEP 5: AUTOMATED BREVO DELIVERY & LIVE PROPOSAL LINK */}
         <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-5">

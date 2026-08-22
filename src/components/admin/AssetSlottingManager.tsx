@@ -44,27 +44,22 @@ export function AssetSlottingManager({ lead, artifact }: AssetSlottingManagerPro
   const [archivedMsg, setArchivedMsg] = useState<string | null>(null);
   const [uploadingSlot, setUploadingSlot] = useState<string | null>(null);
 
-  // Asset slot state
-  const [heroCutout, setHeroCutout] = useState<string>(
-    (artifact.extracted_assets as any)?.hero_cutout ||
-      "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80"
-  );
-  const [logoUrl, setLogoUrl] = useState<string>(
-    (artifact.extracted_assets as any)?.branding?.logo ||
-      "https://barakahsoft.com/wp-content/uploads/2026/01/Logo1.png"
-  );
+  // Asset slot state - only real extracted assets, zero fake fallbacks
+  const extracted = (artifact.extracted_assets as any) || {};
+  const [heroCutout, setHeroCutout] = useState<string>(extracted?.hero_cutout || "");
+  const [logoUrl, setLogoUrl] = useState<string>(extracted?.branding?.logo || "");
   const [serviceImages, setServiceImages] = useState<{ [key: string]: string }>({
-    "service-1": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
-    "service-2": "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80",
-    "service-3": "https://images.unsplash.com/photo-1541888946425-d0fbb186c5f8?auto=format&fit=crop&w=600&q=80",
-    "service-4": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80",
-    "service-5": "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=600&q=80",
-    "service-6": "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80",
+    "service-1": "",
+    "service-2": "",
+    "service-3": "",
+    "service-4": "",
+    "service-5": "",
+    "service-6": "",
   });
 
   const services = artifact.funnel_pages.filter((s) => s.kind === "service");
-  const businessName = lead.business_name || "Your Business";
-  const phone = lead.phone || "(718) 353-7227";
+  const businessName = lead.business_name || lead.contact_name || lead.source_url;
+  const phone = lead.phone || "No phone on file";
 
   async function handleFileUpload(slot: string, file: File) {
     setUploadingSlot(slot);
@@ -129,19 +124,19 @@ export function AssetSlottingManager({ lead, artifact }: AssetSlottingManagerPro
   }
 
   return (
-    <Card className="border-border shadow-sm overflow-hidden">
-      <CardContent className="p-6 space-y-8">
+    <Card className="border-border shadow-sm overflow-hidden bg-white">
+      <CardContent className="p-6 space-y-6">
         {/* HEADER */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
           <div>
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
-              <h3 className="font-bold text-lg text-foreground">
-                High-Value Website Studio & Asset Engine
+              <h3 className="font-bold text-base text-foreground">
+                Media Asset Slotting & Standalone Export
               </h3>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Images are the heart of conversion. Hotlink for instant previews, 1-click archive to permanent Supabase Storage, and export clean standalone code.
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Upload custom owner headshots, logos, and service photos to Supabase Storage, or export standalone Next.js code.
             </p>
           </div>
 
@@ -154,7 +149,7 @@ export function AssetSlottingManager({ lead, artifact }: AssetSlottingManagerPro
               className="gap-1.5 text-xs font-semibold border-primary text-primary hover:bg-primary/10"
             >
               <CloudDownload className="h-4 w-4" />
-              {archiving ? "Downloading & Optimizing..." : "Migrate Hotlinks to Supabase Storage"}
+              {archiving ? "Archiving..." : "Migrate Hotlinks to Supabase Storage"}
             </Button>
 
             <Button
@@ -170,227 +165,106 @@ export function AssetSlottingManager({ lead, artifact }: AssetSlottingManagerPro
         </div>
 
         {archivedMsg && (
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-xs font-semibold text-emerald-700">
+          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs font-semibold text-emerald-700">
             {archivedMsg}
           </div>
         )}
 
-        {/* 1. VISUAL LIVE HERO COMPOSER (Spennato / BlueBuilt / Roofworx Caliber) */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-xs uppercase tracking-wider text-primary">
-              Live Hero Composition Mockup
-            </span>
-            <span className="text-[11px] rounded-full bg-emerald-500/10 px-2.5 py-0.5 font-bold text-emerald-600">
-              High-Conversion Standard
-            </span>
-          </div>
-
-          {/* Rendered Live Hero Box */}
-          <div className="relative overflow-hidden rounded-2xl border-2 border-[#07284d] bg-[#07284d] text-white shadow-2xl">
-            {/* Top Utility Strip */}
-            <div className="flex items-center justify-between border-b border-white/10 bg-slate-950/80 px-4 py-2 text-[11px]">
-              <div className="flex items-center gap-2 font-semibold">
-                <Phone className="h-3 w-3 text-[#ffd12d]" />
-                <span>Emergency Help? Call {phone}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="hidden sm:inline text-white/70">Google 5.0 ★ (450+ Reviews)</span>
-                <span className="rounded bg-[#ff1744] px-2 py-0.5 font-bold text-white uppercase text-[9px]">
-                  Get a Free Quote
-                </span>
-              </div>
+        {/* ASSET SLOTTING CONTROLS */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Slot: Hero Owner Cutout */}
+          <div className="rounded-xl border border-border bg-[#f9f9ff] p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-xs text-foreground">Hero Owner Cutout</span>
+              <span className="text-[10px] rounded bg-primary/10 px-2 py-0.5 font-bold text-primary">
+                Slot: Hero
+              </span>
             </div>
-
-            {/* Main Hero Container */}
-            <div className="p-6 sm:p-8 grid gap-8 lg:grid-cols-[1.2fr_0.8fr] items-center">
-              {/* Left Column: Big Bold Copy + Badges */}
-              <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#ffd12d]">
-                  <ShieldCheck className="h-3.5 w-3.5" /> Licensed & Insured Master Team
-                </div>
-
-                <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight uppercase">
-                  #1 RATED {businessName.toUpperCase()}
-                </h1>
-
-                <p className="text-xs text-white/80 max-w-md leading-relaxed">
-                  Dedicated {lead.industry || "professional"} solutions engineered for measurable growth, maximum reliability, and seamless client experience.
-                </p>
-
-                {/* Proof Pills */}
-                <div className="flex flex-wrap gap-2 pt-1 text-[10px] font-bold">
-                  <span className="rounded-md bg-white/10 px-2.5 py-1 text-white border border-white/10">
-                    ⭐ 4.9 on Google (200+ Reviews)
-                  </span>
-                  <span className="rounded-md bg-white/10 px-2.5 py-1 text-white border border-white/10">
-                    🛡️ 100% Satisfaction Guarantee
-                  </span>
-                  <span className="rounded-md bg-white/10 px-2.5 py-1 text-white border border-white/10">
-                    ⚡ Same-Day Estimates
-                  </span>
-                </div>
-              </div>
-
-              {/* Right Column: Owner Cutout + Instant Quote Box */}
-              <div className="relative flex flex-col items-center justify-center">
-                {/* Transparent Owner Cutout */}
-                <div className="relative h-44 sm:h-52 w-full flex items-center justify-center overflow-hidden">
-                  <img
-                    src={heroCutout}
-                    alt="Owner Cutout"
-                    className="h-full w-auto object-contain drop-shadow-2xl"
-                  />
-                  <span className="absolute bottom-1 rounded bg-black/70 px-2 py-0.5 text-[9px] font-bold text-white backdrop-blur">
-                    {lead.contact_name || "Owner & Founder"}
-                  </span>
-                </div>
-
-                {/* Instant Quote Form Strip */}
-                <div className="w-full mt-2 rounded-xl bg-white p-3 text-[#0d1738] shadow-lg space-y-2">
-                  <span className="block text-center font-black text-[11px] uppercase tracking-wider text-[#07284d]">
-                    Get Your Fast Free Quote
-                  </span>
-                  <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                    <div className="rounded border bg-muted/40 p-1.5 text-muted-foreground">Your Name</div>
-                    <div className="rounded border bg-muted/40 p-1.5 text-muted-foreground">Phone Number</div>
-                  </div>
-                  <div className="rounded bg-[#ff1744] py-1.5 text-center text-[10px] font-bold text-white">
-                    Submit Request →
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 2. ASSET SLOTTING CONTROLS (Upload to Supabase Storage) */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-border pb-3">
-            <div className="flex items-center gap-2">
-              <Upload className="h-4 w-4 text-primary" />
-              <h4 className="font-bold text-sm text-foreground">
-                Media Asset Slotting & File Uploads (Supabase Storage)
-              </h4>
-            </div>
-            <span className="text-xs text-muted-foreground">Direct storage bucket upload</span>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Slot: Hero Owner Cutout */}
-            <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-xs text-foreground">Hero Owner Cutout</span>
-                <span className="text-[10px] rounded bg-primary/10 px-2 py-0.5 font-bold text-primary">
-                  Slot: Hero
-                </span>
-              </div>
-              <div className="relative aspect-[16/10] rounded-lg bg-slate-900 overflow-hidden flex items-center justify-center p-2">
+            <div className="relative aspect-[16/10] rounded-lg bg-slate-900 overflow-hidden flex items-center justify-center p-2">
+              {heroCutout ? (
                 <img src={heroCutout} alt="Hero Cutout" className="h-full w-auto object-contain" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="upload-cutout" className="text-[11px] font-semibold cursor-pointer">
-                  {uploadingSlot === "hero_cutout" ? "Uploading to Supabase..." : "Upload New Cutout (PNG/JPG)"}
-                </Label>
-                <input
-                  id="upload-cutout"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) handleFileUpload("hero_cutout", f);
-                  }}
-                  className="block w-full text-[11px] text-muted-foreground file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-primary file:text-primary-foreground hover:file:opacity-90"
-                />
-              </div>
+              ) : (
+                <span className="text-[11px] text-slate-400">No Custom Cutout (Using Scraped Brand)</span>
+              )}
             </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="upload-cutout" className="text-[11px] font-semibold cursor-pointer">
+                {uploadingSlot === "hero_cutout" ? "Uploading to Supabase..." : "Upload Cutout PNG"}
+              </Label>
+              <input
+                id="upload-cutout"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleFileUpload("hero_cutout", f);
+                }}
+                className="block w-full text-[11px] text-muted-foreground file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-primary file:text-primary-foreground hover:file:opacity-90"
+              />
+            </div>
+          </div>
 
-            {/* Slot: Brand Logo Vector */}
-            <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-xs text-foreground">Brand Logo / Cap Icon</span>
-                <span className="text-[10px] rounded bg-primary/10 px-2 py-0.5 font-bold text-primary">
-                  Slot: Logo
-                </span>
-              </div>
-              <div className="relative aspect-[16/10] rounded-lg bg-muted/40 overflow-hidden flex items-center justify-center p-4">
+          {/* Slot: Brand Logo Vector */}
+          <div className="rounded-xl border border-border bg-[#f9f9ff] p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-xs text-foreground">Brand Logo / Vector</span>
+              <span className="text-[10px] rounded bg-primary/10 px-2 py-0.5 font-bold text-primary">
+                Slot: Logo
+              </span>
+            </div>
+            <div className="relative aspect-[16/10] rounded-lg bg-white overflow-hidden flex items-center justify-center p-4 border border-border">
+              {logoUrl ? (
                 <img src={logoUrl} alt="Logo" className="max-h-12 w-auto object-contain" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="upload-logo" className="text-[11px] font-semibold cursor-pointer">
-                  {uploadingSlot === "logo" ? "Uploading to Supabase..." : "Upload Logo Vector (SVG/PNG)"}
-                </Label>
-                <input
-                  id="upload-logo"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) handleFileUpload("logo", f);
-                  }}
-                  className="block w-full text-[11px] text-muted-foreground file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-primary file:text-primary-foreground hover:file:opacity-90"
-                />
-              </div>
+              ) : (
+                <span className="text-[11px] text-muted-foreground">Scraped Logo Active</span>
+              )}
             </div>
-
-            {/* Slot: 6 Core Services Route Visuals */}
-            <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-xs text-foreground">6 Service Route Cards</span>
-                <span className="text-[10px] rounded bg-emerald-500/10 px-2 py-0.5 font-bold text-emerald-600">
-                  {services.length} Routes
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-1.5 aspect-[16/10]">
-                {Object.values(serviceImages).slice(0, 6).map((img, i) => (
-                  <div key={i} className="relative rounded overflow-hidden bg-slate-100">
-                    <img src={img} alt="Service" className="h-full w-full object-cover" />
-                  </div>
-                ))}
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="upload-service" className="text-[11px] font-semibold cursor-pointer">
-                  Upload Service Card Image
-                </Label>
-                <input
-                  id="upload-service"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) handleFileUpload("service-1", f);
-                  }}
-                  className="block w-full text-[11px] text-muted-foreground file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-primary file:text-primary-foreground hover:file:opacity-90"
-                />
-              </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="upload-logo" className="text-[11px] font-semibold cursor-pointer">
+                {uploadingSlot === "logo" ? "Uploading to Supabase..." : "Upload Logo Vector (SVG/PNG)"}
+              </Label>
+              <input
+                id="upload-logo"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleFileUpload("logo", f);
+                }}
+                className="block w-full text-[11px] text-muted-foreground file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-primary file:text-primary-foreground hover:file:opacity-90"
+              />
             </div>
           </div>
-        </div>
 
-        {/* 3. SITEMAP ARCHITECTURE COMPARISON */}
-        <div className="rounded-xl border border-border bg-muted/20 p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-xs uppercase tracking-wider text-foreground">
-              Sitemap Architecture Expansion
-            </span>
-            <span className="text-xs font-bold text-emerald-600">
-              3 Old Pages → 28 High-Ticket Routes Generated
-            </span>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2 text-xs">
-            <div className="rounded-lg border border-border bg-card p-3 space-y-1">
-              <span className="text-[10px] font-bold uppercase text-red-500">Client Old Sitemap (Thin)</span>
-              <p className="text-muted-foreground font-mono text-[11px]">• / (Slow generic homepage)</p>
-              <p className="text-muted-foreground font-mono text-[11px]">• /services (1 bulleted paragraph)</p>
-              <p className="text-muted-foreground font-mono text-[11px]">• /contact (Generic form)</p>
+          {/* Slot: 6 Core Services Route Visuals */}
+          <div className="rounded-xl border border-border bg-[#f9f9ff] p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-xs text-foreground">Service Route Visuals</span>
+              <span className="text-[10px] rounded bg-emerald-500/10 px-2 py-0.5 font-bold text-emerald-600">
+                {services.length} Routes Active
+              </span>
             </div>
-
-            <div className="rounded-lg border border-[#c7d0fb] bg-[#f0f3ff] p-3 space-y-1">
-              <span className="text-[10px] font-bold uppercase text-primary">Rebuilt 28-Route Architecture</span>
-              <p className="font-bold text-foreground font-mono text-[11px]">✓ /services/high-margin-1 (Dedicated quote path)</p>
-              <p className="font-bold text-foreground font-mono text-[11px]">✓ /services/high-margin-2 (Permit & pricing guidance)</p>
-              <p className="font-bold text-foreground font-mono text-[11px]">✓ /blog/8-launch-articles (Google AI Overview FAQ)</p>
+            <div className="grid grid-cols-3 gap-1.5 aspect-[16/10]">
+              {services.slice(0, 6).map((s, i) => (
+                <div key={i} className="relative rounded overflow-hidden bg-slate-200 border border-border flex items-center justify-center">
+                  <span className="text-[9px] font-bold text-[#07284d] truncate px-1">#{i + 1} {s.h2.slice(0, 10)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="upload-service" className="text-[11px] font-semibold cursor-pointer">
+                Upload Service Card Photo
+              </Label>
+              <input
+                id="upload-service"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleFileUpload("service-1", f);
+                }}
+                className="block w-full text-[11px] text-muted-foreground file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-primary file:text-primary-foreground hover:file:opacity-90"
+              />
             </div>
           </div>
         </div>
