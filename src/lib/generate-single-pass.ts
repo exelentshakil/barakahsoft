@@ -1,4 +1,4 @@
-import { callOpenAI } from "@/lib/openai-client";
+import { callOpenAI, bestModelChain } from "@/lib/openai-client";
 import { sanitizeBespokeHtml } from "@/lib/sanitize-generated-html";
 import { VOCABULARY_REFERENCE, type SiteBrief } from "@/lib/generate-bespoke-site";
 import type { DesignDna } from "@/lib/design-dna";
@@ -84,7 +84,15 @@ export async function generateSinglePass(
   brief: SiteBrief,
   dna: DesignDna,
   media: MediaPlan,
-  knownPaths: string[]
+  knownPaths: string[],
+  /**
+   * Failures from a previous attempt.
+   *
+   * Passed as constraints on a FRESH build, never as edits to the page that
+   * failed. Patching a page repeatedly converges on safe — a rebuild that
+   * knows what went wrong does not.
+   */
+  previousFailures?: string
 ): Promise<SinglePassResult | null> {
   const prompt = `You are a senior web designer AND the copywriter. Build the complete homepage for a real ${brief.industry} business in ${brief.city}.
 
@@ -151,6 +159,11 @@ Section anchors the real navigation links to: id="services" id="about" id="revie
 
 Do NOT output a <header>, nav, logo or <footer> — those are separate real components rendered around your output, and anything you write there is deleted. Begin at the hero, end at the closing call to action.
 
+${
+  previousFailures
+    ? `═══ A PREVIOUS ATTEMPT WAS REJECTED ═══\nIt failed these checks. This is a fresh build, not a repair — do not try to reproduce that page. Just make sure none of these are true of yours:\n${previousFailures}\n`
+    : ""
+}
 Reply with EXACTLY this format:
 RATIONALE: one sentence on the decisions you committed to
 ---PAGE---
@@ -160,6 +173,10 @@ RATIONALE: one sentence on the decisions you committed to
     // One large budget spent once, rather than five smaller ones spent
     // sequentially. On a reasoning model this covers reasoning and output.
     maxTokens: 60000,
+    // The strongest model available. This is the one call where output
+    // quality is the entire product; everything else runs on the standard
+    // chain where a pro model buys nothing and costs real time.
+    modelChain: bestModelChain(),
     temperature: 0.85,
     system:
       "You are a senior web designer and conversion copywriter. You write production HTML using only the class vocabulary you are given, and you never invent facts about a business.",

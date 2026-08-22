@@ -13,7 +13,7 @@ import { ingestRealPhotos, buildSlots, planMedia, type MediaPlan } from "@/lib/m
 import { buildChromeSpec } from "@/lib/chrome-spec";
 import { writeLivePage, HOME_KEY } from "@/lib/page-versions";
 import { splitIntoSections } from "@/lib/page-sections";
-import { criticiseDesign, issuesAsInstructions } from "@/lib/audit/design-critic";
+import { verifyHomepage } from "@/lib/audit/quality-gate";
 import { slugifyText } from "@/lib/slug";
 import type { FunnelPageSection, Lead, ScrapeResults, Artifact } from "@/types/database";
 
@@ -120,7 +120,9 @@ export const bespokeGenerate = inngest.createFunction(
     // contact pages before the client has said yes spends generation on a
     // lead that may never reply, and splits refinement effort across pages
     // nobody has looked at yet.
-    const totalSteps = 4; // media, copy, chrome, homepage
+    // Media, chrome, homepage. The copy pass is gone; the homepage step
+    // may run up to three times if the quality gate rejects it.
+    const totalSteps = 3;
 
     await step.run("start-job", async () => {
       await admin.from("build_jobs").delete().eq("lead_id", lead_id).eq("stage", "bespoke");
@@ -202,39 +204,60 @@ export const bespokeGenerate = inngest.createFunction(
         .eq("lead_id", lead_id);
     });
 
-    // One pass: copy and layout decided together, once.
+    // Generate, verify, and rebuild if it fails.
     //
-    // This replaced draft, composition-critique, revise, design-critic and
-    // repair — five sequential calls that took seven and a half minutes and
-    // produced pages where some sections read well and none read
-    // exceptional. Splitting copy from layout removed the layout model's
-    // ability to write, and three sequential repair passes converge on safe.
-    const homepage = await step.run("generate-homepage", async () => {
-      const result = await generateSinglePass(brief, dna, media, knownPaths);
-      if (!result) {
-        throw new Error(
-          "Homepage generation returned nothing. The [openai] log line reports whether the model returned empty content, or output that was empty once sanitized."
-        );
-      }
-      return result;
+    // The retry is a FRESH build informed by what failed, never a patch of
+    // the page that failed. Patching converges on safe — that is why the
+    // old draft/revise/repair chain produced pages where nothing was wrong
+    // and nothing was good. A rebuild that knows the failures does not have
+    // that problem.
+    //
+    // The gate measures rather than judges: no model is asked whether the
+    // page is good. Its blockers are the things that make a page unfit to
+    // show a client, so the operator should only ever see warnings.
+    const MAX_ATTEMPTS = 3;
+    let accepted: { html: string; rationale: string } | null = null;
+    let lastReport: ReturnType<typeof verifyHomepage> | null = null;
+    let failures: string | undefined;
+
+    const gateTokens = compileDesignTokens(dna, {
+      colourSource: loaded.artifact?.colour_source,
+      clientBrandHex: (loaded.scrapeResults.facts as Record<string, unknown>)?.brand_color_hex as string | null,
     });
 
-    const homepageHtml = homepage.html;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS && !accepted; attempt++) {
+      const result = await step.run(`generate-homepage-${attempt}`, async () => {
+        const page = await generateSinglePass(brief, dna, media, knownPaths, failures);
+        if (!page) {
+          throw new Error(
+            "Homepage generation returned nothing. The [openai] log line reports whether the model returned empty content or output that was empty once sanitized."
+          );
+        }
+        const report = verifyHomepage(page.html, brief, gateTokens);
+        return { page, report };
+      });
 
-    // The critic still runs, but it REPORTS rather than triggering another
-    // rewrite. Its measurements are worth having; a fourth automated pass
-    // over the same page is not.
-    const verdict = await step.run("design-critic", async () =>
-      criticiseDesign(
-        homepageHtml,
-        compileDesignTokens(dna, {
-          colourSource: loaded.artifact?.colour_source,
-          clientBrandHex: (loaded.scrapeResults.facts as Record<string, unknown>)?.brand_color_hex as string | null,
-        }),
-        brief.intent,
-        !!brief.phone
-      )
-    );
+      lastReport = result.report;
+
+      if (result.report.passes) {
+        accepted = result.page;
+        break;
+      }
+
+      failures = result.report.constraints;
+      console.warn(
+        `[generate] attempt ${attempt} rejected by the quality gate:\n${result.report.constraints}`
+      );
+
+      // The last attempt is kept even if it failed. A page with known
+      // problems the operator can see and fix beats no page at all, and the
+      // findings are stored so they know exactly what to look at.
+      if (attempt === MAX_ATTEMPTS) accepted = result.page;
+    }
+
+    const homepage = accepted!;
+    const homepageHtml = homepage.html;
+    const verdict = lastReport!;
 
     await step.run("save-homepage", async () => {
       await writeLivePage(lead_id, HOME_KEY, homepageHtml, "generated", homepage.rationale);
@@ -247,7 +270,11 @@ export const bespokeGenerate = inngest.createFunction(
           bespoke_rationale: homepage.rationale,
           // Kept so the operator can see what the critic caught, rather than
           // trusting that it ran.
-          qa_notes: verdict.issues.length > 0 ? issuesAsInstructions(verdict.issues) : null,
+          // Stored so the operator sees exactly what the gate found rather
+          // than trusting that it ran.
+          qa_notes: verdict.findings.length > 0
+            ? verdict.findings.map((f) => `[${f.severity}] ${f.check}: ${f.detail}`).join("\n")
+            : null,
           bespoke_sections: splitIntoSections(homepageHtml),
         })
         .eq("lead_id", lead_id);

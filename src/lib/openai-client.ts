@@ -31,6 +31,17 @@ export type OpenAIImagePart = { mimeType: string; data: string } | { url: string
 // against /v1/models (see the admin diagnostic) rather than assumed.
 const MODEL_CHAIN = ["gpt-5.5", "gpt-5.4", "gpt-5.2", "gpt-5.1", "gpt-5", "gpt-4.1"];
 
+// The strongest models on the account, for the one call where output quality
+// IS the product. Everything else — classification, captioning, judging —
+// runs on the standard chain, where a pro model buys nothing and costs real
+// time. Overridable with OPENAI_MODEL_BEST.
+const BEST_CHAIN = ["gpt-5.5-pro", "gpt-5.5", "gpt-5.4-pro", "gpt-5.4"];
+
+export function bestModelChain(): string[] {
+  const pinned = process.env.OPENAI_MODEL_BEST?.trim();
+  return pinned ? [pinned, ...BEST_CHAIN] : BEST_CHAIN;
+}
+
 // Cached across invocations within a warm lambda so we pay the model probe
 // at most once per container, not once per generation.
 let resolvedModel: string | null = null;
