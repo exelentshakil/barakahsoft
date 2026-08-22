@@ -43,7 +43,10 @@ export function configuredModel(): string | null {
   return envOverride() ?? resolvedModel;
 }
 
-function modelCandidates(): string[] {
+function modelCandidates(override?: string[]): string[] {
+  // An explicit chain is a capability requirement, not a preference, so it
+  // is never widened by the env pin or the cached model.
+  if (override?.length) return override;
   const pinned = envOverride();
   if (pinned) return [pinned];
   if (resolvedModel) return [resolvedModel, ...MODEL_CHAIN.filter((m) => m !== resolvedModel)];
@@ -60,6 +63,15 @@ interface CallOptions {
   temperature?: number;
   /** Ask the API for a JSON object back instead of prose. */
   json?: boolean;
+  /**
+   * Override the model chain for this call.
+   *
+   * Used by measurements that REQUIRE a search-capable model: a normal model
+   * would answer the same prompt confidently from memory, which is exactly
+   * the fabricated data this codebase is trying to eliminate. Restricting
+   * the chain means the call fails rather than silently inventing.
+   */
+  modelChain?: string[];
 }
 
 type ChatMessage = { role: "system" | "user"; content: unknown };
@@ -137,7 +149,7 @@ export async function callOpenAI(prompt: string, options: CallOptions = {}): Pro
     return null;
   }
 
-  for (const model of modelCandidates()) {
+  for (const model of modelCandidates(options.modelChain)) {
     let attempt: Attempt = { model, useMaxCompletionTokens: false, omitTemperature: false };
 
     // At most three tries per model: the initial call plus one retry for
@@ -163,7 +175,7 @@ export async function callOpenAI(prompt: string, options: CallOptions = {}): Pro
         const choice = data.choices?.[0];
         const text = choice?.message?.content;
         const usage = data.usage ?? {};
-        if (!envOverride()) resolvedModel = model;
+        if (!envOverride() && !options.modelChain) resolvedModel = model;
 
         // Reasoning models spend max_completion_tokens on reasoning BEFORE
         // writing any output, so an under-sized budget returns a perfectly

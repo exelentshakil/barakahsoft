@@ -82,6 +82,17 @@ export interface ScrapeResults {
   pagespeed_mobile: Record<string, unknown> | null;
   pagespeed_desktop: Record<string, unknown> | null;
   places_raw: Record<string, unknown> | null;
+  // Measured local search visibility. Every cell comes from a real search
+  // that was actually performed; nothing here is inferred.
+  search_visibility: {
+    query: string;
+    cells: { area: string; rank: number | null; topCompetitor: string | null; ahead: string[] }[];
+    visible: number;
+    missing: number;
+    dominant: number;
+    measuredAt: string;
+  } | null;
+  search_visibility_at: string | null;
   scraped_at: string;
 }
 
