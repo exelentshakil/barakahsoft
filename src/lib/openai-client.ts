@@ -24,18 +24,25 @@
 
 export type OpenAIImagePart = { mimeType: string; data: string };
 
-const MODEL_CHAIN = ["gpt-5.1", "gpt-5", "gpt-4.1", "gpt-4o"];
+// Ordered newest-first by actual release date, not by name: model families
+// do not sort sensibly by version string, so this ordering is checked
+// against /v1/models (see the admin diagnostic) rather than assumed.
+const MODEL_CHAIN = ["gpt-5.5", "gpt-5.4", "gpt-5.2", "gpt-5.1", "gpt-5", "gpt-4.1"];
 
 // Cached across invocations within a warm lambda so we pay the model probe
 // at most once per container, not once per generation.
 let resolvedModel: string | null = null;
 
+function envOverride(): string | undefined {
+  return process.env.OPENAI_MODEL?.trim() || undefined;
+}
+
 export function configuredModel(): string | null {
-  return process.env.OPENAI_MODEL || resolvedModel;
+  return envOverride() ?? resolvedModel;
 }
 
 function modelCandidates(): string[] {
-  const pinned = process.env.OPENAI_MODEL?.trim();
+  const pinned = envOverride();
   if (pinned) return [pinned];
   if (resolvedModel) return [resolvedModel, ...MODEL_CHAIN.filter((m) => m !== resolvedModel)];
   return MODEL_CHAIN;
@@ -148,7 +155,7 @@ export async function callOpenAI(prompt: string, options: CallOptions = {}): Pro
       if (res.ok) {
         const data = await res.json();
         const text = data.choices?.[0]?.message?.content;
-        if (!process.env.OPENAI_MODEL) resolvedModel = model;
+        if (!envOverride()) resolvedModel = model;
         return typeof text === "string" && text.trim() ? text.trim() : null;
       }
 
@@ -174,8 +181,15 @@ export async function callOpenAI(prompt: string, options: CallOptions = {}): Pro
   return null;
 }
 
-/** Model ids the live key can actually see. Used by the admin diagnostic route. */
-export async function listAvailableModels(): Promise<string[] | null> {
+/**
+ * Model ids the live key can see, each with its release timestamp.
+ *
+ * The timestamp is the point: model families do not sort sensibly by name
+ * (a codenamed release can be newer than a higher version number), so
+ * picking the strongest available model is an evidence question, not a
+ * naming-convention guess.
+ */
+export async function listAvailableModels(): Promise<{ id: string; created: number }[] | null> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
 
@@ -185,7 +199,7 @@ export async function listAvailableModels(): Promise<string[] | null> {
     });
     if (!res.ok) return null;
     const data = await res.json();
-    return (data.data ?? []).map((m: { id: string }) => m.id).sort();
+    return (data.data ?? []).map((m: { id: string; created: number }) => ({ id: m.id, created: m.created }));
   } catch {
     return null;
   }
