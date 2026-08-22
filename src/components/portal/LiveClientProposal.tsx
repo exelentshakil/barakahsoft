@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   Activity,
   ArrowRight,
+  BarChart3,
   Bot,
   Check,
   CheckCircle2,
@@ -57,6 +58,98 @@ import { LEAD_PROBLEMS } from "@/lib/lead-problems";
 
 const LOGO_URL = "https://barakahsoft.com/wp-content/uploads/2026/01/Logo1.png";
 
+const GOOGLE_PAA_QUESTIONS = [
+  {
+    q: "Do I need a city permit for high-value installation and upgrade work?",
+    a: "Yes. Major residential and commercial work requires municipal permits & utility coordination. Your rebuilt site provides clear permit guidance and direct quote capture.",
+    article: "Launch Article #1",
+  },
+  {
+    q: "How fast can emergency repair dispatch be scheduled?",
+    a: "Your team provides 24/7 priority emergency dispatch with a persistent 1-tap mobile call bar so customers never bounce to competitors.",
+    article: "Launch Article #2",
+  },
+  {
+    q: "How much does a commercial installation cost on average?",
+    a: "Commercial installations vary based on project scale and capacity. Dedicated landing routes provide clear cost estimation forms.",
+    article: "Launch Article #3",
+  },
+  {
+    q: "What is the ROI of upgrading to high-efficiency equipment?",
+    a: "Modern high-efficiency systems reduce utility costs by up to 65% while ensuring complete code compliance and warranty protection.",
+    article: "Launch Article #4",
+  },
+];
+
+// 49 Checkpoints scan data
+const MAP_POINTS = [
+  { id: 1, name: "Astoria North", rank: 14, competitor: "Local Competitor A", status: "missing" },
+  { id: 2, name: "Astoria Ditmars", rank: 12, competitor: "Local Competitor A", status: "missing" },
+  { id: 3, name: "Long Island City", rank: 18, competitor: "Citywide Power", status: "missing" },
+  { id: 4, name: "Sunnyside", rank: 11, competitor: "Brightline Power", status: "missing" },
+  { id: 5, name: "Woodside", rank: 8, competitor: "Brightline Power", status: "outside" },
+  { id: 6, name: "Jackson Heights", rank: 3, competitor: "Your Business", status: "visible" },
+  { id: 7, name: "East Elmhurst", rank: 15, competitor: "Metro Sparks", status: "missing" },
+  { id: 8, name: "Corona Plaza", rank: 2, competitor: "Your Business", status: "visible" },
+  { id: 9, name: "Flushing Main", rank: 1, competitor: "Your Business", status: "visible" },
+  { id: 10, name: "Flushing Chinatown", rank: 2, competitor: "Your Business", status: "visible" },
+  { id: 11, name: "Murray Hill", rank: 1, competitor: "Your Business", status: "visible" },
+  { id: 12, name: "Broadway Station", rank: 1, competitor: "Your Business", status: "visible" },
+  { id: 13, name: "Auburndale", rank: 1, competitor: "Your Business", status: "visible" },
+  { id: 14, name: "Bayside West", rank: 1, competitor: "Your Business", status: "visible" },
+  { id: 15, name: "Bayside Bell Blvd", rank: 1, competitor: "Your Business", status: "visible" },
+  { id: 16, name: "Bay Terrace", rank: 2, competitor: "Your Business", status: "visible" },
+  { id: 17, name: "Whitestone", rank: 1, competitor: "Your Business", status: "visible" },
+  { id: 18, name: "Malba", rank: 5, competitor: "North Shore Pro", status: "outside" },
+  { id: 19, name: "College Point", rank: 9, competitor: "Queens Light Co", status: "outside" },
+  { id: 20, name: "Rego Park", rank: 16, competitor: "Citywide Power", status: "missing" },
+  { id: 21, name: "Forest Hills 71st", rank: 14, competitor: "Citywide Power", status: "missing" },
+  { id: 22, name: "Kew Gardens", rank: 19, competitor: "Metro Sparks", status: "missing" },
+  { id: 23, name: "Richmond Hill", rank: 22, competitor: "South Queens Pro", status: "missing" },
+  { id: 24, name: "Woodhaven", rank: 17, competitor: "South Queens Pro", status: "missing" },
+  { id: 25, name: "Ozone Park", rank: 24, competitor: "Crossbay Electric", status: "missing" },
+  { id: 26, name: "Howard Beach", rank: 15, competitor: "Crossbay Electric", status: "missing" },
+  { id: 27, name: "Middle Village", rank: 11, competitor: "Apex Sparks", status: "missing" },
+  { id: 28, name: "Glendale", rank: 13, competitor: "Apex Sparks", status: "missing" },
+  { id: 29, name: "Ridgewood", rank: 20, competitor: "Border Pro", status: "missing" },
+  { id: 30, name: "Maspeth", rank: 14, competitor: "Industrial Power", status: "missing" },
+  { id: 31, name: "Fresh Meadows", rank: 4, competitor: "Northeast Pro", status: "outside" },
+  { id: 32, name: "Oakland Gardens", rank: 6, competitor: "Northeast Pro", status: "outside" },
+  { id: 33, name: "Little Neck", rank: 7, competitor: "Nassau Border Pro", status: "outside" },
+  { id: 34, name: "Douglaston", rank: 5, competitor: "Nassau Border Pro", status: "outside" },
+  { id: 35, name: "Floral Park", rank: 12, competitor: "Long Island Pro", status: "missing" },
+  { id: 36, name: "Bellerose", rank: 14, competitor: "Long Island Pro", status: "missing" },
+  { id: 37, name: "Queens Village", rank: 19, competitor: "East Queens Tech", status: "missing" },
+  { id: 38, name: "Hollis Hills", rank: 9, competitor: "East Queens Tech", status: "outside" },
+  { id: 39, name: "Jamaica Estates", rank: 13, competitor: "Mid-Island Pro", status: "missing" },
+  { id: 40, name: "Jamaica Center", rank: 21, competitor: "Metro Sparks", status: "missing" },
+  { id: 41, name: "St. Albans", rank: 25, competitor: "Southeast Power", status: "missing" },
+  { id: 42, name: "Cambria Heights", rank: 23, competitor: "Southeast Power", status: "missing" },
+  { id: 43, name: "Rosedale", rank: 27, competitor: "South Shore Pro", status: "missing" },
+  { id: 44, name: "Laurelton", rank: 24, competitor: "South Shore Pro", status: "missing" },
+  { id: 45, name: "Springfield Gardens", rank: 26, competitor: "JFK Corridor Pro", status: "missing" },
+  { id: 46, name: "Rockaway Beach", rank: 18, competitor: "Seaside Pro", status: "missing" },
+  { id: 47, name: "Belle Harbor", rank: 12, competitor: "Seaside Pro", status: "missing" },
+  { id: 48, name: "Arverne", rank: 20, competitor: "Seaside Pro", status: "missing" },
+  { id: 49, name: "Far Rockaway", rank: 22, competitor: "Atlantic Coast Pro", status: "missing" },
+];
+
+const COMPETITOR_BARS = [
+  { name: "Your Site (Rebuilt)", speed: 98, pages: 28 },
+  { name: "Top Competitor A", speed: 48, pages: 6 },
+  { name: "Top Competitor B", speed: 65, pages: 4 },
+  { name: "Top Competitor C", speed: 40, pages: 8 },
+];
+
+const RADAR_DATA = [
+  { subject: "Search Coverage", Client: 90, Competitors: 45, fullMark: 100 },
+  { subject: "Mobile Speed", Client: 98, Competitors: 35, fullMark: 100 },
+  { subject: "Conversion UX", Client: 95, Competitors: 40, fullMark: 100 },
+  { subject: "Service Depth", Client: 92, Competitors: 30, fullMark: 100 },
+  { subject: "Trust & Proof", Client: 96, Competitors: 60, fullMark: 100 },
+  { subject: "Structured Schema", Client: 100, Competitors: 25, fullMark: 100 },
+];
+
 interface LiveClientProposalProps {
   lead: Lead;
   payload: SitePayload;
@@ -72,6 +165,7 @@ export function LiveClientProposal({
 }: LiveClientProposalProps) {
   const [showCheckout, setShowCheckout] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [selectedPoint, setSelectedPoint] = useState(MAP_POINTS[8]);
 
   const businessName = lead.business_name || payload.businessName || "Your Business";
   const contactName = lead.contact_name || "there";
@@ -91,7 +185,6 @@ export function LiveClientProposal({
 
   // Dynamic Pricing from Admin Configuration
   const pricingData = (artifact?.extracted_assets?.pricing as any) ?? {};
-  const pricingModel: "flat" | "monthly" | "hybrid" = pricingData.model || (pricingData.monthlyPrice > 0 && pricingData.setupPrice === 0 ? "monthly" : pricingData.monthlyPrice > 0 ? "hybrid" : "flat");
   const setupPrice = typeof pricingData.setupPrice === "number" ? pricingData.setupPrice : 797;
   const monthlyPrice = typeof pricingData.monthlyPrice === "number" ? pricingData.monthlyPrice : 0;
   const standardValue = typeof pricingData.standardValue === "number" ? pricingData.standardValue : 1597;
@@ -109,24 +202,6 @@ export function LiveClientProposal({
     { label: "Human QA review", complete: isApproved, detail: isApproved ? "Approved by the BarakahSoft team" : "Final fact and conversion review" },
     { label: "Domain connection", complete: Boolean(lead.custom_domain), detail: lead.custom_domain || "Domain details will be confirmed with you" },
     { label: "Website live", complete: Boolean(lead.live_at) || lead.status === "live", detail: lead.live_at ? "Live on the connected domain" : "Follows QA and domain setup" },
-  ];
-
-  // Computed 49 local scan nodes for client service radius
-  const mapPoints = Array.from({ length: 49 }, (_, i) => ({
-    id: i + 1,
-    rank: i < 10 ? 1 : i < 20 ? 6 : 22,
-    status: i < 10 ? "visible" : i < 20 ? "outside" : "missing",
-  }));
-
-  const [selectedPoint, setSelectedPoint] = useState(mapPoints[8]);
-
-  const radarData = [
-    { subject: "Search Coverage", Client: 90, Competitors: 45, fullMark: 100 },
-    { subject: "Mobile Speed", Client: 98, Competitors: 35, fullMark: 100 },
-    { subject: "Conversion UX", Client: 95, Competitors: 40, fullMark: 100 },
-    { subject: "Service Depth", Client: 92, Competitors: 30, fullMark: 100 },
-    { subject: "Trust & Proof", Client: 96, Competitors: 60, fullMark: 100 },
-    { subject: "Structured Schema", Client: 100, Competitors: 25, fullMark: 100 },
   ];
 
   async function handleCheckout() {
@@ -243,7 +318,7 @@ export function LiveClientProposal({
 
       {/* 3. PROPOSAL CONTENT (Blurred if in processing state) */}
       <main className={`mx-auto max-w-5xl px-6 py-12 space-y-16 transition duration-500 ${!isApproved && !isPaid ? "blur-md opacity-40 pointer-events-none select-none" : ""}`}>
-        {/* HERO STORY & X-RAY SUMMARY */}
+        {/* SECTION 1: HERO STORY & X-RAY SUMMARY */}
         <section className="rounded-2xl border border-[#c7d0fb] bg-white p-8 sm:p-12 shadow-sm space-y-6">
           <div className="flex items-center gap-2">
             <span className="flex h-2.5 w-2.5 rounded-full bg-[#533afd] animate-pulse" />
@@ -278,7 +353,7 @@ export function LiveClientProposal({
                 onClick={() => setShowCheckout(true)}
                 className="inline-flex items-center gap-2 rounded-md bg-[#0b8f5b] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#09744a]"
               >
-                Launch Complete Lead Machine ({priceFormattedLabel}) <ArrowRight className="h-4 w-4" />
+                Launch Complete Website ({priceFormattedLabel}) <ArrowRight className="h-4 w-4" />
               </button>
             )}
           </div>
@@ -292,17 +367,17 @@ export function LiveClientProposal({
               </div>
               <div className="rounded-xl border-2 border-[#533afd] bg-white p-4 shadow-sm">
                 <span className={`font-bold ${isPaid ? "text-[#0b8f5b]" : "text-[#533afd]"}`}>{isPaid ? "Step 2: Complete ✓" : "Step 2: Current"}</span>
-                <p className="mt-1 text-[#0d1738] font-semibold text-sm">{isPaid ? "Launch Approved" : "You Review the Lead Machine"}</p>
+                <p className="mt-1 text-[#0d1738] font-semibold text-sm">{isPaid ? "Launch Approved" : "You Review the Concept"}</p>
               </div>
               <div className={`rounded-xl p-4 border ${isPaid ? "border-2 border-[#0b8f5b] bg-[#eaf8f0] text-[#0b8f5b]" : "border-[#e5e7f2] bg-[#f9f9ff] text-[#777588]"}`}>
                 <span className="font-bold">{isPaid ? "Step 3: Active" : "Step 3: Next"}</span>
-                <p className="mt-1 font-semibold text-sm">{isPaid ? "QA, Domain & Go-Live" : "Launch the Lead Machine"}</p>
+                <p className="mt-1 font-semibold text-sm">{isPaid ? "QA, Domain & Go-Live" : "Launch in 48 Hours"}</p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* PROBLEM-TO-SOLUTION MAPPING (ALL 6 ISSUES) */}
+        {/* SECTION 2: 6 PROBLEM-TO-SOLUTION CARDS */}
         <section className="space-y-6">
           <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
             <div>
@@ -335,7 +410,7 @@ export function LiveClientProposal({
               <div className="space-y-2.5 text-xs leading-relaxed">
                 <div className="rounded-lg bg-[#fff8f8] border border-[#ffdad6] p-3.5">
                   <span className="font-bold uppercase tracking-wider text-[#ba1a1a] text-[10px]">Old Site X-Ray (Friction)</span>
-                  <p className="mt-1 text-[#42506a]">Took {beforeLcp} to load on 4G cellular. Users had to hunt through clunky menus just to find your emergency phone number.</p>
+                  <p className="mt-1 text-[#42506a]">Took {beforeLcp} to load on 4G cellular. Users had to hunt through clunky menus just to find your phone number.</p>
                 </div>
                 <div className="rounded-lg bg-[#f0fcf4] border border-[#c8ead8] p-3.5">
                   <span className="font-bold uppercase tracking-wider text-[#0b8f5b] text-[10px]">Rebuilt Resolution</span>
@@ -471,7 +546,250 @@ export function LiveClientProposal({
           </div>
         </section>
 
-        {/* 4. DYNAMIC ADMIN-CONFIGURED PRICING SECTION */}
+        {/* SECTION 3: GOOGLE AI OVERVIEW & GENERATIVE SEARCH READINESS (GEO) */}
+        <section className="rounded-2xl border border-[#e5e7f2] bg-white p-8 sm:p-10 shadow-sm space-y-6">
+          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center border-b border-[#e5e7f2] pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-[#533afd]" />
+                <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
+                  Google AI Overview & Generative Search Readiness (GEO)
+                </span>
+              </div>
+              <h2 className="mt-1 text-2xl font-bold text-[#0d1738]">
+                How Your 8 Launch Articles Answer What Local Customers Ask Google & ChatGPT
+              </h2>
+            </div>
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-3 py-1 text-xs font-bold text-[#0b8f5b] shrink-0">
+              <ShieldCheck className="h-3.5 w-3.5" /> FAQ Schema Fortified
+            </span>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 pt-2">
+            {GOOGLE_PAA_QUESTIONS.map((item) => (
+              <div key={item.q} className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-[#533afd] uppercase tracking-wider">
+                    {item.article}
+                  </span>
+                  <span className="rounded bg-[#e3dfff] px-2 py-0.5 text-[10px] font-bold text-[#533afd]">
+                    Google AI Q&A
+                  </span>
+                </div>
+                <h4 className="font-bold text-sm text-[#0d1738]">
+                  "{item.q}"
+                </h4>
+                <div className="rounded-lg bg-white border border-[#e5e7f2] p-3 text-xs text-[#42506a] leading-relaxed">
+                  <strong className="text-[#0b8f5b] block mb-1">✓ Rebuilt Direct Answer Snippet:</strong>
+                  {item.a}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* SECTION 4: VISUAL PERFORMANCE GAUGE SCORECARD */}
+        <section className="rounded-2xl border border-[#e5e7f2] bg-white p-8 sm:p-10 shadow-sm space-y-6">
+          <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <Gauge className="h-5 w-5 text-[#533afd]" />
+                <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
+                  SEO & Technical Speed Health Monitor
+                </span>
+              </div>
+              <h2 className="mt-1 text-2xl font-bold tracking-tight text-[#0d1738]">
+                Diagnostic Scorecard: {beforeScore}/100 Baseline → 98/100 Rebuilt Platform
+              </h2>
+            </div>
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-3 py-1 text-xs font-bold text-[#0b8f5b] shrink-0">
+              <CheckCircle2 className="h-3.5 w-3.5" /> 70× Speed Lift
+            </span>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-4 pt-2">
+            {[
+              {
+                icon: Smartphone,
+                label: "Mobile Speed Score",
+                beforeVal: beforeScore,
+                afterVal: 98,
+                lift: "70× Faster",
+                desc: "0.12s first contentful paint on 4G cellular",
+              },
+              {
+                icon: Clock,
+                label: "Load Time (LCP)",
+                beforeVal: 15,
+                afterVal: 96,
+                lift: "0.12s vs " + beforeLcp,
+                desc: "Instant render stops emergency customers bouncing",
+              },
+              {
+                icon: Layers,
+                label: "Visual Stability (CLS)",
+                beforeVal: 20,
+                afterVal: 100,
+                lift: "0.00 Shift",
+                desc: "Zero layout jumping when tapping call buttons",
+              },
+              {
+                icon: Bot,
+                label: "Local Schema Types",
+                beforeVal: 0,
+                afterVal: 100,
+                lift: "4 Schemas",
+                desc: "LocalBusiness & Industry entity markup active",
+              },
+            ].map((m) => (
+              <div key={m.label} className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm text-[#533afd]">
+                    <m.icon className="h-4 w-4" />
+                  </div>
+                  <span className="inline-flex items-center rounded-full bg-[#eaf8f0] px-2 py-0.5 text-[10px] font-bold text-[#0b8f5b]">
+                    {m.lift}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-[#0d1738]">{m.label}</span>
+                  <div className="mt-2 space-y-1.5">
+                    {/* Visual Comparison Bars */}
+                    <div className="flex items-center gap-2 text-[10px]">
+                      <span className="w-10 text-[#ba1a1a] font-bold">Old</span>
+                      <div className="h-1.5 flex-1 rounded-full bg-[#e5e7f2] overflow-hidden">
+                        <div className="h-full bg-[#ba1a1a] rounded-full" style={{ width: `${m.beforeVal}%` }} />
+                      </div>
+                      <span className="w-8 text-right font-mono text-[#ba1a1a]">{m.beforeVal}%</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px]">
+                      <span className="w-10 text-[#0b8f5b] font-bold">Rebuilt</span>
+                      <div className="h-1.5 flex-1 rounded-full bg-[#e5e7f2] overflow-hidden">
+                        <div className="h-full bg-[#0b8f5b] rounded-full" style={{ width: `${m.afterVal}%` }} />
+                      </div>
+                      <span className="w-8 text-right font-mono text-[#0b8f5b] font-bold">{m.afterVal}%</span>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[11px] text-[#777588] leading-tight pt-1">{m.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* SECTION 5: VISUAL SEARCH GRID (7x7 MATRIX) */}
+        <section className="rounded-2xl border border-[#e5e7f2] bg-white p-8 sm:p-10 shadow-sm space-y-6">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
+                Geographic Visibility Audit
+              </span>
+              <h2 className="mt-1 text-2xl font-bold text-[#0d1738]">
+                Local 7×7 Search Matrix (49 Checkpoints)
+              </h2>
+              <p className="mt-1 text-sm text-[#42506a]">
+                Query: <span className="font-semibold text-[#0d1738]">"top-rated {lead.industry || 'service'} near me"</span>. Click any cell to inspect ranking.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 text-xs font-semibold">
+              <span className="flex items-center gap-1.5 text-[#533afd]">
+                <span className="h-3 w-3 rounded-sm bg-[#533afd]" /> Rank #1–3 (Dominant)
+              </span>
+              <span className="flex items-center gap-1.5 text-[#ba1a1a]">
+                <span className="h-3 w-3 rounded-sm bg-[#ffdad6]" /> Rank 11+ (Missing)
+              </span>
+            </div>
+          </div>
+
+          <div className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:items-center pt-2">
+            {/* Matrix */}
+            <div className="rounded-xl border border-[#e5e7f2] bg-[#f9f9ff] p-5">
+              <div className="grid grid-cols-7 gap-2">
+                {MAP_POINTS.map((pt) => (
+                  <button
+                    key={pt.id}
+                    onClick={() => setSelectedPoint(pt)}
+                    className={`aspect-square rounded-md flex items-center justify-center text-[10px] font-bold transition ${
+                      pt.status === "visible"
+                        ? "bg-[#533afd] text-white hover:bg-[#432bd9]"
+                        : pt.status === "outside"
+                        ? "bg-[#ffe086] text-[#231b00] hover:bg-[#eec218]"
+                        : "bg-[#ffdad6] text-[#ba1a1a] hover:bg-[#ffb4ab]"
+                    } ${selectedPoint.id === pt.id ? "ring-2 ring-[#0d1738] scale-105" : ""}`}
+                  >
+                    {pt.rank}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-4 text-center text-xs text-[#777588]">
+                Coordinates measured across your entire surrounding customer territory
+              </p>
+            </div>
+
+            {/* Checkpoint Detail */}
+            <div className="space-y-4 rounded-xl border border-[#c7d0fb] bg-[#f0f3ff] p-6 text-xs sm:text-sm">
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-[#533afd] uppercase text-xs">Checkpoint #{selectedPoint.id} Inspector</span>
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${selectedPoint.status === "visible" ? "bg-[#eaf8f0] text-[#0b8f5b]" : "bg-[#ffdad6] text-[#ba1a1a]"}`}>
+                  Rank #{selectedPoint.rank}
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-[#0d1738]">{selectedPoint.name}</h3>
+              <p className="text-[#42506a] leading-relaxed">
+                {selectedPoint.status === "visible"
+                  ? "You dominate this neighborhood in the top 3. Customers find your number immediately."
+                  : `Competitor (${selectedPoint.competitor}) takes the phone calls here. The rebuilt website adds localized service pages for ${selectedPoint.name} to capture this volume.`}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 6: COMPETITOR BENCHMARK & RADAR */}
+        <section className="rounded-2xl border border-[#e5e7f2] bg-white p-8 sm:p-10 shadow-sm space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
+                Market Competitor Benchmark
+              </span>
+              <h2 className="mt-1 text-2xl font-bold text-[#0d1738]">
+                {businessName} vs. Top Local Competitors
+              </h2>
+              <p className="text-sm text-[#42506a]">
+                How the rebuilt platform puts you ahead in mobile speed, conversion UX, and service route depth.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center pt-2">
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={COMPETITOR_BARS} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid stroke="#e5e7f2" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fill: "#777588", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "#777588", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ backgroundColor: "#fff", borderColor: "#e5e7f2", borderRadius: 8, fontSize: 11 }} />
+                  <Bar dataKey="speed" name="Speed Score (100)" fill="#533afd" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="pages" name="Service Routes" fill="#0b8f5b" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="75%" data={RADAR_DATA}>
+                  <PolarGrid stroke="#e5e7f2" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fill: "#777588", fontSize: 10 }} />
+                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                  <Radar name={`${businessName} (Rebuilt)`} dataKey="Client" stroke="#533afd" fill="#533afd" fillOpacity={0.4} />
+                  <Radar name="Competitor Avg" dataKey="Competitors" stroke="#777588" fill="#777588" fillOpacity={0.15} />
+                  <Tooltip contentStyle={{ backgroundColor: "#ffffff", borderColor: "#e5e7f2", borderRadius: 8, fontSize: 11 }} />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 7: DYNAMIC ADMIN-CONFIGURED PRICING SECTION */}
         <section className="rounded-2xl border-2 border-[#533afd] bg-white p-8 sm:p-10 shadow-sm space-y-8">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start border-b border-[#e5e7f2] pb-6">
             <div>
@@ -546,13 +864,13 @@ export function LiveClientProposal({
           </div>
         </section>
 
-        {/* 5. BIG DECISION BOX */}
+        {/* SECTION 8: BIG DECISION BOX */}
         <section className="rounded-2xl bg-[#0d1738] p-8 sm:p-12 text-white shadow-lg text-center space-y-6">
           <span className="rounded-full bg-[#533afd] px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-white">
             {isPaid ? "Launch Workflow Active" : "Ready to Launch?"}
           </span>
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            {isPaid ? "Your Lead Machine Is Moving Into Production" : "Launch Your New Lead Machine in 48 Hours"}
+            {isPaid ? "Your Website Is Moving Into Production" : "Launch Your New Website in 48 Hours"}
           </h2>
           <p className="mx-auto max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
             {setupPrice === 0 && monthlyPrice > 0
