@@ -57,9 +57,17 @@ export const scrapeRun = inngest.createFunction(
       if (!identity) return;
 
       const updates: Record<string, unknown> = {};
-      // Never overwrite something a human typed.
       if (identity.industry && !lead.industry) updates.industry = identity.industry;
-      if (identity.businessName && !lead.business_name) updates.business_name = identity.businessName;
+
+      // Only a value a HUMAN set is protected. Guarding on "is it empty"
+      // treated the previous scrape's own guess as sacred, so a name lifted
+      // from a title tag — "Take the BUSY Out of BUSYness" — survived a
+      // re-analysis that had correctly identified the business as HeartCore
+      // Growth. A stored name that matches what the last scrape derived is
+      // machine output, and is safe to improve.
+      const previousDerived = (scrape.facts.business_name as string | undefined) ?? null;
+      const nameIsMachineDerived = !lead.business_name || lead.business_name === previousDerived;
+      if (identity.businessName && nameIsMachineDerived) updates.business_name = identity.businessName;
       if (Object.keys(updates).length > 0) {
         await admin.from("leads").update(updates).eq("id", lead_id);
       }
@@ -103,12 +111,20 @@ export const scrapeRun = inngest.createFunction(
 
       const { data: artifact } = await admin
         .from("artifacts")
-        .select("id, inspiration_branding")
+        .select("id, inspiration_branding, inspiration_url")
         .eq("lead_id", lead_id)
-        .maybeSingle<{ id: string; inspiration_branding: unknown }>();
+        .maybeSingle<{ id: string; inspiration_branding: unknown; inspiration_url: string | null }>();
 
-      // Never overwrite a direction the operator already chose.
-      if (artifact?.inspiration_branding) return;
+      // Protect a direction that was actually chosen — by the operator, or
+      // by research that found a real reference site. The house default is
+      // neither: it is what gets used when nothing better was available, and
+      // treating it as a choice meant re-analysing could never upgrade it.
+      // The first run of this lead had no industry, so it fell back to the
+      // house default and then refused every later attempt to improve on it.
+      const existingSource = (artifact?.inspiration_branding as { sourceName?: string } | null)?.sourceName;
+      const alreadyChosen =
+        !!artifact?.inspiration_url || (!!existingSource && !existingSource.startsWith("House "));
+      if (alreadyChosen) return;
 
       const patch = {
         inspiration_branding: dna,
