@@ -36,7 +36,7 @@ export default async function AboutPage({ params }: { params: Promise<{ leadSlug
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <BespokeNav payload={payload} spec={payload.chromeSpec} />
       {payload.bespokePages["about"] ? (
-        <BespokePageBody html={payload.bespokePages["about"]} />
+        <BespokePageBody html={payload.bespokePages["about"]} css={payload.bespokeCss} />
       ) : (
         <AboutTemplate payload={payload} />
       )}

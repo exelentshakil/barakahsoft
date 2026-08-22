@@ -175,6 +175,8 @@ export interface Artifact {
   // the existing catalog-based shell.
   bespoke_homepage_html: string | null;
   bespoke_rationale: string | null;
+  // The page's own stylesheet. Selectors are scoped before storage.
+  bespoke_css: string | null;
   // v9 -- inspiration design DNA. The reference site the operator chose,
   // and the design spec distilled from it. Contributes visual direction
   // only; the lead's own scrape stays the sole source of facts.

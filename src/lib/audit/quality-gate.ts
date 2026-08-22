@@ -118,7 +118,14 @@ export function verifyHomepage(
   if (!/<h1\b/i.test(hero)) {
     add("blocker", "fold", "The first section has no <h1>. A visitor cannot tell what this business does.");
   }
-  if (!/bs-btn/.test(hero) && !/href="tel:/i.test(hero)) {
+  const heroHasAction =
+    /href="tel:/i.test(hero) ||
+    [...hero.matchAll(/<(a|button)\b[^>]*>([\s\S]*?)<\/\1>/gi)].some(([, , inner]) =>
+      /\b(call|quote|book|schedule|contact|get|start|request|shop|buy|enquir|estimate|consult)\b/i.test(
+        inner.replace(/<[^>]+>/g, " ")
+      )
+    );
+  if (!heroHasAction) {
     add("blocker", "fold", "There is no call to action above the fold. The first screen must offer exactly one thing to do.");
   }
   const heroText = textOf(hero).toLowerCase();
@@ -133,7 +140,14 @@ export function verifyHomepage(
   }
 
   // ---- Conversion ------------------------------------------------------
-  const ctas = html.match(/bs-btn\b/g)?.length ?? 0;
+  // Any real call to action is a link or button that either dials, or points
+  // at contact, or carries an action word. Counting a framework class no
+  // longer works now that pages name their own.
+  const ACTION_WORDS = /\b(call|quote|book|schedule|contact|get|start|request|shop|buy|enquir|estimate|consult|talk|speak)\b/i;
+  const ctas = [...html.matchAll(/<(a|button)\b[^>]*>([\s\S]*?)<\/\1>/gi)].filter(([, , inner], _i, _a) => {
+    const text = inner.replace(/<[^>]+>/g, " ").trim();
+    return text.length > 0 && text.length < 60 && ACTION_WORDS.test(text);
+  }).length;
   if (ctas === 0) add("blocker", "cta", "The page has no call-to-action button at all.");
   else if (ctas < 3) add("blocker", "cta", `Only ${ctas} call(s) to action across the whole page. A visitor should never scroll back to act.`);
 
@@ -151,7 +165,7 @@ export function verifyHomepage(
   if (!brief.licensedInsured && /\b(licensed|insured|bonded|certified)\b/i.test(body)) {
     add("blocker", "truth", "The page claims licensing or insurance, which this business does not claim on its own site.");
   }
-  if (brief.reviews.length === 0 && /<blockquote|bs-quote/i.test(html)) {
+  if (brief.reviews.length === 0 && /<blockquote/i.test(html)) {
     add("blocker", "truth", "The page shows a testimonial and no real review text was available.");
   }
 
@@ -184,14 +198,22 @@ export function verifyHomepage(
   }
 
   // ---- Composition -----------------------------------------------------
-  const bands = new Set((html.match(/bs-band-(alt|primary|gradient|invert)/gi) ?? []).map((b) => b.toLowerCase()));
-  if (sections.length >= 5 && bands.size < 2) {
-    add("blocker", "composition", `${sections.length} sections sharing ${bands.size} background treatment(s) — the page reads as one flat wall.`);
-  }
-
-  const grids = new Set((html.match(/bs-(grid-\d|split|rows|bento)/gi) ?? []).map((g) => g.toLowerCase()));
-  if (sections.length >= 5 && grids.size < 2) {
-    add("warning", "composition", "Every section uses the same layout primitive; consecutive sections will rhyme.");
+  // Pages now carry their own stylesheet, so section variety cannot be read
+  // from a fixed set of band classes. Distinct class names on the sections
+  // themselves are the available signal: a page whose bands all share one
+  // class is one that will render as a flat wall.
+  const sectionClasses = new Set(
+    sections
+      .map((section) => section.match(/^<\w+[^>]*\bclass="([^"]*)"/i)?.[1] ?? "")
+      .map((c) => c.trim().split(/\s+/)[0])
+      .filter(Boolean)
+  );
+  if (sections.length >= 5 && sectionClasses.size < Math.ceil(sections.length / 2)) {
+    add(
+      "warning",
+      "composition",
+      `${sections.length} sections share only ${sectionClasses.size} distinct block class(es) — they are likely to look alike.`
+    );
   }
 
   // An image used twice reads as a stock page.

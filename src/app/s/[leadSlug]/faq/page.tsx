@@ -35,7 +35,7 @@ export default async function FaqPage({ params }: { params: Promise<{ leadSlug: 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <BespokeNav payload={payload} spec={payload.chromeSpec} />
       {payload.bespokePages["faq"] ? (
-        <BespokePageBody html={payload.bespokePages["faq"]} />
+        <BespokePageBody html={payload.bespokePages["faq"]} css={payload.bespokeCss} />
       ) : (
         <FaqTemplate payload={payload} />
       )}

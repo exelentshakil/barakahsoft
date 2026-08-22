@@ -15,16 +15,33 @@ import sanitizeHtml from "sanitize-html";
 // the database, so AI-authored utility classes silently produced nothing).
 
 const ALLOWED_TAGS = [
-  "div", "section", "main", "article", "aside",
+  "div", "section", "main", "article", "aside", "header", "footer", "nav",
   "h1", "h2", "h3", "h4", "h5", "h6", "p", "span", "a", "img", "svg", "path",
   "ul", "ol", "li", "button", "strong", "em", "br", "hr", "figure", "figcaption",
   "blockquote", "cite", "time", "small", "dl", "dt", "dd",
 ];
 
+// Interaction hooks. The generator asks for behaviour with these and a
+// reviewed script in the application implements it; model-authored <script>
+// is stripped entirely, so this is the only route to interactivity.
+const INTERACTION_ATTRS = [
+  "data-reveal",
+  "data-reveal-delay",
+  "data-count-to",
+  "data-count-suffix",
+  "data-accordion",
+  "data-accordion-item",
+  "data-accordion-trigger",
+  "data-bar",
+  "data-bar-max",
+  "data-bar-fill",
+];
+
 const ALLOWED_ATTRIBUTES = {
-  "*": ["class", "id", "style"],
-  a: ["href", "target", "rel"],
-  img: ["src", "alt", "loading", "width", "height"],
+  "*": ["class", "id", "style", ...INTERACTION_ATTRS],
+  a: ["href", "target", "rel", "aria-label", "aria-expanded", "aria-controls"],
+  button: ["type", "aria-label", "aria-expanded", "aria-controls"],
+  img: ["src", "alt", "loading", "width", "height", "fetchpriority", "decoding", "sizes", "srcset"],
   svg: ["viewBox", "fill", "stroke", "xmlns", "width", "height", "stroke-width", "stroke-linecap", "stroke-linejoin"],
   path: ["d", "fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin"],
   time: ["datetime"],
@@ -106,54 +123,45 @@ function filterStyle(style: string): string {
     .join("; ");
 }
 
-// The single source of truth for what a bespoke page may reference. Kept in
-// sync with src/app/bespoke.css by the `bs-` prefix rule rather than an
-// exhaustive list: any bs-* class that does not exist in the stylesheet
-// simply has no effect, which is inert, while a NON-bs class is the actual
-// risk (it could be a Tailwind color utility, and those do resolve).
-const BESPOKE_CLASS = /^bs-[a-z0-9-]+$/;
-
-function filterClasses(className: string): string {
-  return className
-    .split(/\s+/)
-    .filter((c) => BESPOKE_CLASS.test(c))
-    .join(" ");
-}
-
 /**
- * Sanitize markup generated against the bespoke design-token vocabulary.
- * Same safety guarantees as sanitizeGeneratedHtml, plus class and inline-
- * style filtering so the page is structurally incapable of rendering
- * off-brand or referencing CSS that does not exist.
+ * Sanitize a generated page body.
+ *
+ * Safety is unchanged: no script, no event handlers, no dangerous URL
+ * schemes, no credential-bearing asset URLs, and inline style restricted to
+ * layout properties that cannot express colour.
+ *
+ * Class names are NOT filtered any more. Pages ship their own stylesheet, so
+ * a class the model invents is a class the model also writes a rule for —
+ * which removes the reason the old bs-* allowlist existed.
  */
 export function sanitizeBespokeHtml(rawHtml: string): string {
   const options = baseOptions();
 
   return sanitizeHtml(rawHtml, {
     ...options,
+    // header/footer/nav are legal INSIDE the generated body — a page may have
+    // a section header — because the site's real chrome is rendered around
+    // this markup, not inside it, and the class scoping keeps generated rules
+    // off it.
+    nonTextTags: ["script", "style", "textarea", "option", "form", "input", "iframe"],
     transformTags: {
       "*": (tagName, attribs) => {
         const next: Record<string, string> = { ...attribs };
 
-        if (next.class) {
-          const kept = filterClasses(next.class);
-          if (kept) next.class = kept;
-          else delete next.class;
-        }
-
+        // Class names are no longer filtered. Pages ship their own
+        // stylesheet now, so the names are the model's to choose — the old
+        // bs-* allowlist existed because a class either matched a pre-built
+        // rule or rendered as nothing, and that is no longer true.
         if (next.style) {
           const kept = filterStyle(next.style);
           if (kept) next.style = kept;
           else delete next.style;
         }
 
-        // Every outbound link opens safely; internal anchors are untouched.
         if (tagName === "a" && next.href && /^https?:/i.test(next.href)) {
           next.rel = "noopener noreferrer";
         }
 
-        // Drop, rather than publish, any asset URL carrying a credential.
-        // A missing image is a cosmetic problem; a leaked API key is not.
         for (const attr of ["src", "href"]) {
           if (next[attr] && urlLeaksCredential(next[attr])) {
             if (tagName === "img") return { tagName, attribs: {} };
@@ -161,11 +169,7 @@ export function sanitizeBespokeHtml(rawHtml: string): string {
           }
         }
 
-        // A generated page can reference dozens of photos. Anything below
-        // the fold should not block first paint.
-        if (tagName === "img" && !next.loading) {
-          next.loading = "lazy";
-        }
+        if (tagName === "img" && !next.loading) next.loading = "lazy";
 
         return { tagName, attribs: next };
       },

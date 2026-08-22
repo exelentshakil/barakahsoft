@@ -6,13 +6,15 @@ import {
   type InnerPageRequest,
   type SiteBrief,
 } from "@/lib/generate-bespoke-site";
-import { generateSinglePass } from "@/lib/generate-single-pass";
+import { generateStructure } from "@/lib/generate/structure";
+import { generateStylesheet } from "@/lib/generate/stylesheet";
 import { DEFAULT_DESIGN_DNA, DesignDnaSchema, type DesignDna } from "@/lib/design-dna";
 import { compileDesignTokens } from "@/lib/design-tokens";
 import { ingestRealPhotos, buildSlots, planMedia, type MediaPlan } from "@/lib/media/plan-media";
 import { buildChromeSpec } from "@/lib/chrome-spec";
 import { writeLivePage, HOME_KEY } from "@/lib/page-versions";
 import { splitIntoSections } from "@/lib/page-sections";
+import { sanitizeBespokeHtml } from "@/lib/sanitize-generated-html";
 import { verifyHomepage } from "@/lib/audit/quality-gate";
 import { slugifyText } from "@/lib/slug";
 import type { FunnelPageSection, Lead, ScrapeResults, Artifact } from "@/types/database";
@@ -120,9 +122,9 @@ export const bespokeGenerate = inngest.createFunction(
     // contact pages before the client has said yes spends generation on a
     // lead that may never reply, and splits refinement effort across pages
     // nobody has looked at yet.
-    // Media, chrome, homepage. The copy pass is gone; the homepage step
-    // may run up to three times if the quality gate rejects it.
-    const totalSteps = 3;
+    // Media, chrome, structure, stylesheet. The generation passes may run
+    // twice if the quality gate rejects the first attempt.
+    const totalSteps = 4;
 
     await step.run("start-job", async () => {
       await admin.from("build_jobs").delete().eq("lead_id", lead_id).eq("stage", "bespoke");
@@ -204,19 +206,22 @@ export const bespokeGenerate = inngest.createFunction(
         .eq("lead_id", lead_id);
     });
 
-    // Generate, verify, and rebuild if it fails.
+    // Three passes: structure and words, then a stylesheet written for
+    // exactly that markup, then verification.
     //
-    // The retry is a FRESH build informed by what failed, never a patch of
-    // the page that failed. Patching converges on safe — that is why the
-    // old draft/revise/repair chain produced pages where nothing was wrong
-    // and nothing was good. A rebuild that knows the failures does not have
-    // that problem.
+    // The stylesheet is the change that lifts the ceiling. Composing from a
+    // fixed class vocabulary capped layout at whatever had been pre-built —
+    // content came out strong and the arrangement did not. A model that
+    // names its own classes and then writes their rules has no such limit,
+    // and the old failure of a class resolving to nothing cannot happen
+    // when the same run produces both.
     //
-    // The gate measures rather than judges: no model is asked whether the
-    // page is good. Its blockers are the things that make a page unfit to
-    // show a client, so the operator should only ever see warnings.
-    const MAX_ATTEMPTS = 3;
-    let accepted: { html: string; rationale: string } | null = null;
+    // Interactions are NOT generated. They come from a reviewed runtime in
+    // the application, requested through data attributes, because arbitrary
+    // script on a client's public domain is not a risk worth taking for
+    // motion.
+    const MAX_ATTEMPTS = 2;
+    let accepted: { html: string; css: string; rationale: string } | null = null;
     let lastReport: ReturnType<typeof verifyHomepage> | null = null;
     let failures: string | undefined;
 
@@ -226,33 +231,47 @@ export const bespokeGenerate = inngest.createFunction(
     });
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS && !accepted; attempt++) {
-      const result = await step.run(`generate-homepage-${attempt}`, async () => {
-        const page = await generateSinglePass(brief, dna, media, knownPaths, failures);
-        if (!page) {
+      const structure = await step.run(`structure-${attempt}`, async () => {
+        const result = await generateStructure(brief, dna, media, knownPaths, failures);
+        if (!result) {
           throw new Error(
-            "Homepage generation returned nothing. The [openai] log line reports whether the model returned empty content or output that was empty once sanitized."
+            "Structure generation returned nothing. The [openai] log line reports whether the model returned empty content or output that was empty once sanitized."
           );
         }
-        const report = verifyHomepage(page.html, brief, gateTokens);
-        return { page, report };
+        return result;
       });
 
-      lastReport = result.report;
+      const stylesheet = await step.run(`stylesheet-${attempt}`, async () => {
+        const result = await generateStylesheet(structure.html, structure.designNotes, dna, gateTokens, failures);
+        if (!result) {
+          throw new Error(
+            "Stylesheet generation returned nothing usable. An unstyled page is not shippable, so this fails rather than falling back."
+          );
+        }
+        return result;
+      });
 
-      if (result.report.passes) {
-        accepted = result.page;
+      const checked = await step.run(`verify-${attempt}`, async () => {
+        const html = sanitizeBespokeHtml(structure.html);
+        return { html, report: verifyHomepage(html, brief, gateTokens) };
+      });
+
+      lastReport = checked.report;
+
+      if (checked.report.passes) {
+        accepted = { html: checked.html, css: stylesheet.css, rationale: structure.designNotes };
         break;
       }
 
-      failures = result.report.constraints;
-      console.warn(
-        `[generate] attempt ${attempt} rejected by the quality gate:\n${result.report.constraints}`
-      );
+      failures = checked.report.constraints;
+      console.warn(`[generate] attempt ${attempt} rejected by the quality gate:\n${checked.report.constraints}`);
 
-      // The last attempt is kept even if it failed. A page with known
-      // problems the operator can see and fix beats no page at all, and the
-      // findings are stored so they know exactly what to look at.
-      if (attempt === MAX_ATTEMPTS) accepted = result.page;
+      // The last attempt is kept even when it fails. A page whose problems
+      // are named beats no page, and the findings are stored so the operator
+      // knows exactly where to look.
+      if (attempt === MAX_ATTEMPTS) {
+        accepted = { html: checked.html, css: stylesheet.css, rationale: structure.designNotes };
+      }
     }
 
     const homepage = accepted!;
@@ -275,6 +294,7 @@ export const bespokeGenerate = inngest.createFunction(
           qa_notes: verdict.findings.length > 0
             ? verdict.findings.map((f) => `[${f.severity}] ${f.check}: ${f.detail}`).join("\n")
             : null,
+          bespoke_css: homepage.css,
           bespoke_sections: splitIntoSections(homepageHtml),
         })
         .eq("lead_id", lead_id);
