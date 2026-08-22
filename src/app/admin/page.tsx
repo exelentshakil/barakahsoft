@@ -1,47 +1,51 @@
+import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AddUrlDialog } from "@/components/admin/AddUrlDialog";
-import { LeadsTable } from "@/components/admin/LeadsTable";
-import { Card, CardContent } from "@/components/ui/card";
+import { AdminLeadWorkspace } from "@/components/admin/AdminLeadWorkspace";
+import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 
 export default async function AdminLeadsPage() {
-  // Service-role client — `leads` has RLS enabled with zero policies, so the
-  // session-bound client (which respects RLS) silently returns nothing here.
   const supabase = createAdminClient();
   const { data: leads } = await supabase
     .from("leads")
-    .select("id, business_name, contact_name, source_url, source, help_needed, status, created_at, slug, paid_at, delivered_at")
-    .order("created_at", { ascending: false });
+    .select("*")
+    .order("created_at", { ascending: false })
+    .returns<Lead[]>();
 
   const rows = leads ?? [];
-  const active = rows.filter((lead) => !["lost", "live"].includes(lead.status)).length;
-  const ready = rows.filter((lead) => ["ready", "qa_approved", "delivered"].includes(lead.status)).length;
-  const paid = rows.filter((lead) => !!lead.paid_at).length;
 
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-semibold">Leads</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Review research, open client portals, and move qualified leads toward payment.</p>
+  if (rows.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-2xl font-semibold">Leads Workspace</h1>
+            <p className="mt-1 text-sm text-muted-foreground">No leads submitted yet. Submit a URL on the landing page or add one manually below.</p>
+          </div>
+          <AddUrlDialog />
         </div>
-        <AddUrlDialog />
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Card><CardContent className="p-4"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Active leads</p><p className="mt-1 text-2xl font-semibold">{active}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Ready for review</p><p className="mt-1 text-2xl font-semibold">{ready}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Paid</p><p className="mt-1 text-2xl font-semibold">{paid}</p></CardContent></Card>
-      </div>
-
-      {rows.length === 0 ? (
         <EmptyState
           title="No leads yet"
-          body="Leads land here the moment someone submits the landing page intake form, or you add a URL manually."
+          body="Leads land here the moment someone submits the intake form."
         />
-      ) : (
-        <LeadsTable leads={rows} />
-      )}
-    </div>
+      </div>
+    );
+  }
+
+  // Load active first lead's artifacts & scrape facts for the linear studio
+  const activeLead = rows[0];
+  const [{ data: artifact }, { data: scrapeResults }] = await Promise.all([
+    supabase.from("artifacts").select("*").eq("lead_id", activeLead.id).maybeSingle<Artifact>(),
+    supabase.from("scrape_results").select("*").eq("lead_id", activeLead.id).maybeSingle<ScrapeResults>(),
+  ]);
+
+  return (
+    <AdminLeadWorkspace
+      lead={activeLead}
+      artifact={artifact ?? null}
+      scrapeResults={scrapeResults ?? null}
+      otherLeads={rows}
+    />
   );
 }
