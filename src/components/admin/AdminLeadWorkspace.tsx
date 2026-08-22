@@ -62,6 +62,7 @@ import { AssetSlottingManager } from "@/components/admin/AssetSlottingManager";
 import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStudio";
 import { RefinePanel } from "@/components/admin/RefinePanel";
 import { SectionEditor } from "@/components/admin/SectionEditor";
+import { VisibilityPanel } from "@/components/admin/VisibilityPanel";
 import { useLeadLive } from "@/hooks/use-lead-live";
 import { PricingManager } from "@/components/admin/PricingManager";
 import { EditLeadDialog } from "@/components/admin/EditLeadDialog";
@@ -452,6 +453,11 @@ export function AdminLeadWorkspace({
             <RefinePanel key={`slots-${reloadKey}`} leadId={lead.id} />
           </>
         )}
+
+        {/* Measured on demand, at a size the operator chooses — every cell
+            is a paid search and the measurement is worth far more to a
+            metro-wide roofer than to a painter working three postcodes. */}
+        {scrapeResults && <VisibilityPanel leadId={lead.id} industry={lead.industry} />}
 
         {/* LINEAR STEP 3: COMPETITOR BENCHMARK & MARKET POSITIONING (Only Real Competitors) */}
         {competitorsList.length > 0 && (
