@@ -106,6 +106,7 @@ export function BespokeGenerationStudio({
       if (!res.ok) throw new Error("Generation failed");
       router.refresh();
       onGenerated?.();
+      setTimeout(() => window.location.reload(), 400);
     } catch (err) {
       alert("Failed to generate website. Check input fields.");
     } finally {

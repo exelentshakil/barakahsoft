@@ -483,46 +483,60 @@ export function AdminLeadWorkspace({
         {/* LINEAR STEP 4: VISUAL ASSET ENGINE & LIVE PREVIEW STUDIO */}
         {artifact && <AssetSlottingManager lead={lead} artifact={artifact} />}
 
-        {/* LIVE IFRAME PREVIEW INSPECTOR */}
-        <div className="overflow-hidden rounded-2xl border border-border shadow-sm bg-white">
-          <div className="flex items-center justify-between gap-3 border-b border-border bg-muted/40 px-4 py-2.5">
-            <div className="flex items-center gap-2">
-              <Eye className="h-4 w-4 text-primary" />
-              <span className="font-bold text-xs">Live Generated Website Preview</span>
+        {/* LIVE IFRAME PREVIEW INSPECTOR OR GENERATION PROMPT */}
+        {!artifact ? (
+          <div className="rounded-2xl border-2 border-dashed border-[#c7d0fb] bg-[#f0f3ff] p-12 text-center space-y-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm text-[#533afd] mx-auto border border-[#c7d0fb]">
+              <Sparkles className="h-7 w-7" />
             </div>
-            <div className="flex items-center gap-3">
-              <select
-                value={previewPath}
-                onChange={(e) => setPreviewPath(e.target.value)}
-                className="rounded-md border border-input bg-background px-2.5 py-1 text-xs"
-              >
-                <option value="">Homepage (0.12s Paint)</option>
-                <option value="/about">About Us</option>
-                <option value="/contact">Contact</option>
-                <option value="/faq">FAQ</option>
-                {services.map((s) => (
-                  <option key={s.slug} value={`/services/${s.slug}`}>
-                    Service: {s.h2}
-                  </option>
-                ))}
-              </select>
-              <a
-                href={previewUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1 text-xs font-bold text-primary hover:underline"
-              >
-                Open Full Window <ExternalLink className="h-3 w-3" />
-              </a>
+            <div className="space-y-1.5">
+              <h4 className="font-bold text-lg text-[#0d1738]">Website Generation Ready</h4>
+              <p className="text-xs text-[#60778d] max-w-lg mx-auto leading-relaxed">
+                Firecrawl has extracted the brand tokens, location, and services in Step 2 above. Review or customize the brief, then click <strong className="text-[#533afd]">Generate High-Value Bespoke Website</strong> to build and render the live website preview.
+              </p>
             </div>
           </div>
-          <iframe
-            key={`${previewPath}-${reloadKey}`}
-            src={previewUrl}
-            className="h-[750px] w-full"
-            title="Generated site preview"
-          />
-        </div>
+        ) : (
+          <div className="overflow-hidden rounded-2xl border border-border shadow-sm bg-white">
+            <div className="flex items-center justify-between gap-3 border-b border-border bg-muted/40 px-4 py-2.5">
+              <div className="flex items-center gap-2">
+                <Eye className="h-4 w-4 text-primary" />
+                <span className="font-bold text-xs">Live Generated Website Preview</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <select
+                  value={previewPath}
+                  onChange={(e) => setPreviewPath(e.target.value)}
+                  className="rounded-md border border-input bg-background px-2.5 py-1 text-xs"
+                >
+                  <option value="">Homepage (0.12s Paint)</option>
+                  <option value="/about">About Us</option>
+                  <option value="/contact">Contact</option>
+                  <option value="/faq">FAQ</option>
+                  {services.map((s) => (
+                    <option key={s.slug} value={`/services/${s.slug}`}>
+                      Service: {s.h2}
+                    </option>
+                  ))}
+                </select>
+                <a
+                  href={previewUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                >
+                  Open Full Window <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+            </div>
+            <iframe
+              key={`${previewPath}-${reloadKey}`}
+              src={previewUrl}
+              className="h-[750px] w-full"
+              title="Generated site preview"
+            />
+          </div>
+        )}
 
         {/* LINEAR STEP 5: AUTOMATED BREVO DELIVERY & LIVE PROPOSAL LINK */}
         <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-5">
