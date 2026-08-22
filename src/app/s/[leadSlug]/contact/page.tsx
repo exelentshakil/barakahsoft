@@ -6,6 +6,7 @@ import { MegaMenu } from "@/components/site-shell/MegaMenu";
 import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
 import { BookingForm } from "@/components/site-shell/BookingForm";
 import { getShellStyle } from "@/components/site-shell/shell-style";
+import { BespokePageBody } from "@/components/site-shell/BespokePage";
 import { breadcrumbSchema } from "@/lib/seo/breadcrumb-schema";
 import { isAdminSession } from "@/lib/is-admin-session";
 
@@ -34,6 +35,15 @@ export default async function ContactPage({ params }: { params: Promise<{ leadSl
     <div style={getShellStyle(payload)}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <MegaMenu payload={payload} />
+
+      {/* Generated contact content renders ABOVE the booking form rather
+          than replacing it: <form> is stripped from generated markup by the
+          sanitizer (correctly -- a model-authored form posts nowhere), so
+          replacing this section would cost the page its only working
+          conversion path. */}
+      {payload.bespokePages["contact"] && (
+        <BespokePageBody payload={payload} html={payload.bespokePages["contact"]} />
+      )}
 
       <section className="py-16">
         <div className="mx-auto grid max-w-5xl gap-10 px-6 lg:grid-cols-2">

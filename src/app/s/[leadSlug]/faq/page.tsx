@@ -5,6 +5,7 @@ import { MegaMenu } from "@/components/site-shell/MegaMenu";
 import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
 import { FaqTemplate } from "@/components/site-shell/pages/FaqTemplate";
 import { getShellStyle } from "@/components/site-shell/shell-style";
+import { BespokePageBody } from "@/components/site-shell/BespokePage";
 import { breadcrumbSchema } from "@/lib/seo/breadcrumb-schema";
 import { isAdminSession } from "@/lib/is-admin-session";
 
@@ -33,7 +34,11 @@ export default async function FaqPage({ params }: { params: Promise<{ leadSlug: 
     <div style={getShellStyle(payload)}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <MegaMenu payload={payload} />
-      <FaqTemplate payload={payload} />
+      {payload.bespokePages["faq"] ? (
+        <BespokePageBody payload={payload} html={payload.bespokePages["faq"]} />
+      ) : (
+        <FaqTemplate payload={payload} />
+      )}
       <PremiumFooter payload={payload} />
     </div>
   );

@@ -1,4 +1,5 @@
 import Script from "next/script";
+import "@/app/bespoke.css";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSiteData } from "@/lib/get-site-data";
 import { QuoteModalProvider } from "@/components/site-shell/QuoteModalProvider";

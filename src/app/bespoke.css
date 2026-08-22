@@ -1,0 +1,347 @@
+/*
+ * Bespoke page vocabulary.
+ *
+ * Every class the generator is allowed to emit is defined here, and every
+ * visual value resolves through a --bs-* token compiled from the lead's
+ * design DNA (src/lib/design-tokens.ts). Two guarantees follow:
+ *
+ *   - A generated page can never reference a class that produces no CSS.
+ *     Tailwind's content scanner cannot see markup that lives in the
+ *     database, so AI-authored utility classes silently rendered as
+ *     nothing unless they happened to appear elsewhere in the repo. That
+ *     was the real reason generated pages looked broken and generic
+ *     regardless of prompt quality.
+ *
+ *   - A generated page can never render off-brand, because there is no
+ *     class here through which a literal color could be expressed.
+ *
+ * These are compositional primitives (layout, surface, emphasis), never
+ * finished blocks. `bs-hero` sets up a hero's structure; it does not decide
+ * what a hero contains. That distinction is what keeps two sites built from
+ * the same vocabulary from looking like the same template.
+ */
+
+.bespoke-page {
+  font-family: var(--bs-font-body);
+  font-size: var(--bs-text-body);
+  line-height: 1.65;
+  color: var(--bs-ink);
+  background: var(--bs-surface);
+  overflow-x: hidden;
+}
+
+.bespoke-page *,
+.bespoke-page *::before,
+.bespoke-page *::after {
+  box-sizing: border-box;
+}
+
+.bespoke-page h1,
+.bespoke-page h2,
+.bespoke-page h3,
+.bespoke-page h4 {
+  font-family: var(--bs-font-display);
+  font-weight: var(--bs-display-weight);
+  letter-spacing: var(--bs-heading-tracking);
+  line-height: 1.08;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.bespoke-page h1 { font-size: var(--bs-text-display); text-transform: var(--bs-heading-transform); }
+.bespoke-page h2 { font-size: var(--bs-text-h2); text-transform: var(--bs-heading-transform); }
+.bespoke-page h3 { font-size: var(--bs-text-h3); }
+.bespoke-page h4 { font-size: 1.0625rem; }
+.bespoke-page p  { margin: 0; text-wrap: pretty; }
+.bespoke-page ul, .bespoke-page ol { margin: 0; padding: 0; list-style: none; }
+.bespoke-page img { display: block; max-width: 100%; height: auto; }
+.bespoke-page a { color: inherit; text-decoration: none; }
+
+/* ---------------------------------------------------------------- layout */
+
+.bs-section {
+  padding-block: var(--bs-section-y);
+  padding-inline: 1.25rem;
+  position: relative;
+}
+.bs-section-tight { padding-block: calc(var(--bs-section-y) * 0.55); }
+.bs-wrap { width: 100%; max-width: 1200px; margin-inline: auto; }
+.bs-wrap-narrow { width: 100%; max-width: 760px; margin-inline: auto; }
+
+.bs-stack { display: flex; flex-direction: column; gap: var(--bs-gap); }
+.bs-stack-sm { display: flex; flex-direction: column; gap: 0.75rem; }
+.bs-stack-lg { display: flex; flex-direction: column; gap: calc(var(--bs-gap) * 2); }
+.bs-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+.bs-row-between { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
+.bs-center { text-align: center; }
+.bs-center .bs-row { justify-content: center; }
+
+.bs-grid-2, .bs-grid-3, .bs-grid-4 { display: grid; gap: var(--bs-gap); }
+.bs-grid-2 { grid-template-columns: 1fr; }
+.bs-grid-3 { grid-template-columns: 1fr; }
+.bs-grid-4 { grid-template-columns: repeat(2, 1fr); }
+
+/* Asymmetric split — the single most useful editorial layout, and one the
+   old fixed card grid had no way to express. */
+.bs-split { display: grid; gap: calc(var(--bs-gap) * 1.5); align-items: center; grid-template-columns: 1fr; }
+
+@media (min-width: 640px) {
+  .bs-section { padding-inline: 2rem; }
+  .bs-grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .bs-grid-3 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 960px) {
+  .bs-section { padding-inline: 2.5rem; }
+  .bs-grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .bs-grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .bs-split { grid-template-columns: 1.05fr 0.95fr; }
+  .bs-split-wide { grid-template-columns: 1.35fr 0.65fr; }
+  .bs-split-reverse > :first-child { order: 2; }
+}
+
+/* ------------------------------------------------------------- surfaces */
+
+.bs-band-alt { background: var(--bs-surface-alt); }
+.bs-band-primary { background: var(--bs-primary); color: var(--bs-on-primary); }
+.bs-band-primary h1, .bs-band-primary h2, .bs-band-primary h3 { color: var(--bs-on-primary); }
+.bs-band-invert { background: var(--bs-invert-surface); color: var(--bs-invert-ink); }
+.bs-band-invert h1, .bs-band-invert h2, .bs-band-invert h3 { color: var(--bs-invert-ink); }
+.bs-band-gradient {
+  background: linear-gradient(135deg, var(--bs-primary), rgb(var(--bs-primary-rgb) / 0.72) 55%, var(--bs-accent));
+  color: var(--bs-on-primary);
+}
+.bs-band-gradient h1, .bs-band-gradient h2, .bs-band-gradient h3 { color: var(--bs-on-primary); }
+
+.bs-card {
+  background: var(--bs-surface);
+  border: var(--bs-border-width) solid var(--bs-border-color);
+  border-radius: var(--bs-radius-lg);
+  box-shadow: var(--bs-shadow-card);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.bs-card:hover { transform: translateY(-4px); box-shadow: var(--bs-shadow-lift); }
+.bs-card-flush { padding: 0; overflow: hidden; }
+.bs-card-flush .bs-card-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; }
+.bs-card-invert { background: var(--bs-invert-surface); color: var(--bs-invert-ink); border-color: rgb(255 255 255 / 0.14); }
+.bs-card-primary { background: var(--bs-primary); color: var(--bs-on-primary); border-color: transparent; }
+.bs-card-primary h3 { color: var(--bs-on-primary); }
+
+/* --------------------------------------------------------------- accents */
+
+.bs-eyebrow {
+  font-family: var(--bs-font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bs-primary);
+}
+.bs-band-primary .bs-eyebrow,
+.bs-band-gradient .bs-eyebrow { color: var(--bs-on-primary); opacity: 0.85; }
+.bs-band-invert .bs-eyebrow { color: var(--bs-accent); }
+
+.bs-lead { font-size: 1.15em; color: var(--bs-ink-muted); max-width: 62ch; }
+.bs-band-primary .bs-lead, .bs-band-gradient .bs-lead { color: rgb(255 255 255 / 0.88); }
+.bs-band-invert .bs-lead { color: rgb(255 255 255 / 0.72); }
+.bs-muted { color: var(--bs-ink-muted); }
+.bs-highlight { color: var(--bs-primary); }
+.bs-accent-text { color: var(--bs-accent); }
+
+.bs-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--bs-radius-pill);
+  background: rgb(var(--bs-primary-rgb) / 0.1);
+  color: var(--bs-primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border: var(--bs-border-width) solid rgb(var(--bs-primary-rgb) / 0.2);
+}
+.bs-band-invert .bs-pill,
+.bs-band-primary .bs-pill,
+.bs-band-gradient .bs-pill {
+  background: rgb(255 255 255 / 0.12);
+  color: inherit;
+  border-color: rgb(255 255 255 / 0.22);
+}
+
+.bs-numeral {
+  font-family: var(--bs-font-display);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: var(--bs-display-weight);
+  line-height: 1;
+  color: rgb(var(--bs-primary-rgb) / 0.22);
+}
+
+.bs-divider { height: var(--bs-border-width); background: var(--bs-border-color); border: 0; }
+.bs-rule-accent { width: 3.5rem; height: 4px; border-radius: var(--bs-radius-pill); background: var(--bs-accent); }
+
+/* --------------------------------------------------------------- buttons */
+
+.bs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1.6rem;
+  border-radius: var(--bs-radius-md);
+  font-family: var(--bs-font-display);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  border: var(--bs-border-width) solid transparent;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.bs-btn:hover { transform: translateY(-2px); box-shadow: var(--bs-shadow-lift); }
+.bs-btn-primary { background: var(--bs-primary); color: var(--bs-on-primary); }
+.bs-btn-accent { background: var(--bs-accent); color: var(--bs-on-accent); }
+.bs-btn-ghost { background: transparent; border-color: currentColor; color: inherit; }
+.bs-btn-lg { padding: 1.1rem 2.1rem; font-size: 1.0625rem; }
+.bs-btn-block { width: 100%; }
+
+/* ------------------------------------------------------------------ hero */
+
+.bs-hero { padding-block: calc(var(--bs-section-y) * 1.15); position: relative; overflow: hidden; }
+.bs-hero h1 { max-width: 18ch; }
+.bs-hero-center h1 { max-width: 22ch; margin-inline: auto; }
+
+/* Full-bleed image hero: the image is a real layer behind a scrim, so
+   headline contrast holds regardless of what photo the lead actually has. */
+.bs-hero-media { position: absolute; inset: 0; z-index: 0; }
+.bs-hero-media img { width: 100%; height: 100%; object-fit: cover; }
+.bs-hero-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(100deg, rgb(var(--bs-ink-rgb) / 0.88) 12%, rgb(var(--bs-ink-rgb) / 0.55) 58%, rgb(var(--bs-ink-rgb) / 0.25));
+}
+.bs-hero-content { position: relative; z-index: 2; }
+.bs-hero-over { color: #fff; }
+.bs-hero-over h1, .bs-hero-over h2 { color: #fff; }
+.bs-hero-over .bs-lead { color: rgb(255 255 255 / 0.85); }
+.bs-hero-over .bs-eyebrow { color: var(--bs-accent); }
+
+/* ------------------------------------------------------------- media/img */
+
+.bs-media { border-radius: var(--bs-radius-lg); overflow: hidden; box-shadow: var(--bs-shadow-card); }
+.bs-media img { width: 100%; height: 100%; object-fit: cover; }
+.bs-ratio-square { aspect-ratio: 1 / 1; }
+.bs-ratio-photo { aspect-ratio: 4 / 3; }
+.bs-ratio-wide { aspect-ratio: 16 / 9; }
+.bs-ratio-portrait { aspect-ratio: 3 / 4; }
+
+/* ------------------------------------------------------------ proof/stat */
+
+.bs-stat { display: flex; flex-direction: column; gap: 0.25rem; }
+.bs-stat-value {
+  font-family: var(--bs-font-display);
+  font-size: clamp(2rem, 4.5vw, 3.25rem);
+  font-weight: var(--bs-display-weight);
+  line-height: 1;
+  color: var(--bs-primary);
+}
+.bs-band-invert .bs-stat-value,
+.bs-band-primary .bs-stat-value,
+.bs-band-gradient .bs-stat-value { color: var(--bs-accent); }
+.bs-stat-label { font-size: 0.875rem; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.72; }
+
+.bs-quote {
+  border-left: 3px solid var(--bs-accent);
+  padding-left: 1.25rem;
+  font-size: 1.0625em;
+  line-height: 1.6;
+}
+.bs-stars { color: var(--bs-accent); letter-spacing: 0.1em; font-size: 1rem; }
+
+/* --------------------------------------------------------------- listing */
+
+.bs-list { display: flex; flex-direction: column; gap: 0.7rem; }
+.bs-list li { display: flex; align-items: flex-start; gap: 0.65rem; }
+.bs-list li::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-top: 0.5rem;
+  border-radius: var(--bs-radius-pill);
+  background: var(--bs-accent);
+}
+.bs-list-plain li::before { display: none; }
+
+/* Editorial numbered rows — an alternative to card walls for services. */
+.bs-rows { display: flex; flex-direction: column; }
+.bs-rows > * {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+  padding-block: 1.75rem;
+  border-top: var(--bs-border-width) solid var(--bs-border-color);
+}
+.bs-rows > *:last-child { border-bottom: var(--bs-border-width) solid var(--bs-border-color); }
+@media (min-width: 860px) {
+  .bs-rows > * { grid-template-columns: 5rem 1fr 1.2fr auto; align-items: center; }
+}
+
+/* Bento — deliberately irregular, for designs whose DNA calls for it. */
+.bs-bento { display: grid; gap: var(--bs-gap); grid-template-columns: 1fr; }
+@media (min-width: 860px) {
+  .bs-bento { grid-template-columns: repeat(3, 1fr); }
+  .bs-bento > *:nth-child(1) { grid-column: span 2; grid-row: span 2; }
+  .bs-bento > *:nth-child(4) { grid-column: span 2; }
+}
+
+/* ------------------------------------------------------------------ misc */
+
+.bs-icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  flex: 0 0 auto;
+  border-radius: var(--bs-radius-md);
+  background: rgb(var(--bs-primary-rgb) / 0.12);
+  color: var(--bs-primary);
+}
+.bs-icon-badge svg { width: 1.5rem; height: 1.5rem; }
+.bs-band-invert .bs-icon-badge,
+.bs-band-primary .bs-icon-badge,
+.bs-band-gradient .bs-icon-badge { background: rgb(255 255 255 / 0.14); color: inherit; }
+
+.bs-faq-item {
+  border-bottom: var(--bs-border-width) solid var(--bs-border-color);
+  padding-block: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Diagonal edge — a real motif the DNA can call for, impossible to express
+   through the old card vocabulary. */
+.bs-edge-diagonal { clip-path: polygon(0 3vw, 100% 0, 100% 100%, 0 100%); }
+.bs-edge-diagonal-bottom { clip-path: polygon(0 0, 100% 0, 100% calc(100% - 3vw), 0 100%); }
+
+.bs-decor-orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(80px);
+  opacity: 0.35;
+  background: var(--bs-primary);
+  pointer-events: none;
+  z-index: 0;
+}
+.bs-decor-orb-tr { width: 26rem; height: 26rem; top: -8rem; right: -8rem; }
+.bs-decor-orb-bl { width: 22rem; height: 22rem; bottom: -8rem; left: -6rem; background: var(--bs-accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .bespoke-page * { transition: none !important; animation: none !important; }
+  .bs-card:hover, .bs-btn:hover { transform: none; }
+}

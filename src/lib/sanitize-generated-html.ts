@@ -1,70 +1,160 @@
 import sanitizeHtml from "sanitize-html";
 
-// v8 -- the real safety net now that homepage generation produces actual
-// HTML/Tailwind markup from Gemini instead of an enum pick from a vetted
-// component catalog. Nothing generated is ever stored or rendered before
-// passing through this: strips <script>, every event-handler attribute
-// (onclick, onload, ...), javascript:/data: URLs, and any tag/attribute
-// not on the explicit allowlist below. This is the boundary that makes
-// "the AI can write arbitrary HTML" survivable -- it can never inject a
-// script or an event handler, only markup and classes.
+// The safety boundary for markup that a model wrote and a real client's
+// site renders. Nothing generated is stored or displayed before passing
+// through here: <script>, every event-handler attribute, and every URL
+// scheme except http/https/tel/mailto/# are removed.
+//
+// v9 adds a second, separate guarantee on top of safety: BRAND INTEGRITY.
+// Generated pages are now authored against the closed `bs-*` vocabulary in
+// src/app/bespoke.css, so sanitizeBespokeHtml drops any class outside that
+// vocabulary. A page therefore cannot express a literal color, an
+// arbitrary font, or a class that resolves to no CSS at all — which is
+// what previously made generated pages look broken regardless of how good
+// the prompt was (Tailwind's content scanner cannot see markup stored in
+// the database, so AI-authored utility classes silently produced nothing).
+
 const ALLOWED_TAGS = [
   "div", "section", "main", "article", "aside",
   "h1", "h2", "h3", "h4", "h5", "h6", "p", "span", "a", "img", "svg", "path",
   "ul", "ol", "li", "button", "strong", "em", "br", "hr", "figure", "figcaption",
-  "blockquote", "cite", "time",
+  "blockquote", "cite", "time", "small", "dl", "dt", "dd",
 ];
 
 const ALLOWED_ATTRIBUTES = {
-  "*": ["class", "id"],
+  "*": ["class", "id", "style"],
   a: ["href", "target", "rel"],
   img: ["src", "alt", "loading", "width", "height"],
-  svg: ["viewBox", "fill", "stroke", "xmlns", "width", "height"],
+  svg: ["viewBox", "fill", "stroke", "xmlns", "width", "height", "stroke-width", "stroke-linecap", "stroke-linejoin"],
   path: ["d", "fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin"],
   time: ["datetime"],
 };
 
-// Only these real, harmless URL schemes survive on href/src -- blocks
-// javascript:, data: (except real inline images, still risky, excluded),
-// vbscript:, and anything else.
 const ALLOWED_SCHEMES = ["http", "https", "tel", "mailto", "#"];
 
-export function sanitizeGeneratedHtml(rawHtml: string): string {
-  return sanitizeHtml(rawHtml, {
+// header/footer/nav are removed WITH their content, not unwrapped. The real
+// MegaMenu and PremiumFooter are rendered around this markup by
+// BespokeHomepage; a model-authored nav produced a visible double header
+// whose links pointed at pages that may not exist.
+const STRIPPED_WITH_CONTENT = ["script", "style", "textarea", "option", "header", "footer", "nav", "form", "input", "iframe"];
+
+function baseOptions(): sanitizeHtml.IOptions {
+  return {
     allowedTags: ALLOWED_TAGS,
     allowedAttributes: ALLOWED_ATTRIBUTES,
     allowedSchemes: ALLOWED_SCHEMES,
     allowProtocolRelative: false,
-    // Anchors like href="#services" don't have a scheme sanitize-html
-    // recognizes by default -- allow bare "#..." explicitly rather than
-    // loosening the real scheme allowlist.
     allowedSchemesByTag: { a: [...ALLOWED_SCHEMES] },
     disallowedTagsMode: "discard",
-    // v8 -- real bug found on first live test: the AI included its own
-    // <header>/nav despite an explicit prompt instruction not to (the real
-    // MegaMenu already renders one), producing a visible double-header.
-    // header/footer/nav aren't in allowedTags above, but sanitize-html's
-    // default "discard" mode only unwraps a disallowed tag -- it keeps the
-    // children rendered in place, which would still duplicate the nav
-    // links/logo text. nonTextTags removes the tag AND its full content.
-    nonTextTags: ["script", "style", "textarea", "option", "header", "footer", "nav"],
-    exclusiveFilter: (frame) => frame.attribs && Object.keys(frame.attribs).some((a) => a.toLowerCase().startsWith("on")),
+    nonTextTags: STRIPPED_WITH_CONTENT,
+    exclusiveFilter: (frame) => !!frame.attribs && Object.keys(frame.attribs).some((a) => a.toLowerCase().startsWith("on")),
+  };
+}
+
+export function sanitizeGeneratedHtml(rawHtml: string): string {
+  return sanitizeHtml(rawHtml, baseOptions());
+}
+
+// Layout-only inline styles. Deliberately excludes every color-bearing
+// property (color, background, border-color, fill, box-shadow) so inline
+// style cannot become a back door around the token palette, and excludes
+// position/z-index so generated markup cannot escape its section or cover
+// the real nav. Grid/flex sizing is genuinely useful for bespoke
+// composition and carries no such risk.
+const SAFE_STYLE_PROPS = new Set([
+  "grid-template-columns", "grid-template-rows", "grid-column", "grid-row",
+  "gap", "row-gap", "column-gap",
+  "aspect-ratio", "max-width", "min-width", "max-height", "min-height",
+  "order", "flex", "flex-basis", "align-self", "justify-self",
+  "text-align", "letter-spacing", "line-height", "text-transform",
+  "margin-top", "margin-bottom", "margin-inline", "padding-block", "padding-inline",
+  "object-position", "opacity",
+]);
+
+// url(), expression(), and CSS escapes are the classic vectors for smuggling
+// a request or a script through a style attribute.
+const UNSAFE_STYLE_VALUE = /url\s*\(|expression\s*\(|javascript:|@import|\\/i;
+
+function filterStyle(style: string): string {
+  return style
+    .split(";")
+    .map((decl) => decl.trim())
+    .filter(Boolean)
+    .filter((decl) => {
+      const idx = decl.indexOf(":");
+      if (idx < 1) return false;
+      const prop = decl.slice(0, idx).trim().toLowerCase();
+      const value = decl.slice(idx + 1).trim();
+      if (!SAFE_STYLE_PROPS.has(prop)) return false;
+      if (UNSAFE_STYLE_VALUE.test(value)) return false;
+      return value.length > 0 && value.length < 120;
+    })
+    .join("; ");
+}
+
+// The single source of truth for what a bespoke page may reference. Kept in
+// sync with src/app/bespoke.css by the `bs-` prefix rule rather than an
+// exhaustive list: any bs-* class that does not exist in the stylesheet
+// simply has no effect, which is inert, while a NON-bs class is the actual
+// risk (it could be a Tailwind color utility, and those do resolve).
+const BESPOKE_CLASS = /^bs-[a-z0-9-]+$/;
+
+function filterClasses(className: string): string {
+  return className
+    .split(/\s+/)
+    .filter((c) => BESPOKE_CLASS.test(c))
+    .join(" ");
+}
+
+/**
+ * Sanitize markup generated against the bespoke design-token vocabulary.
+ * Same safety guarantees as sanitizeGeneratedHtml, plus class and inline-
+ * style filtering so the page is structurally incapable of rendering
+ * off-brand or referencing CSS that does not exist.
+ */
+export function sanitizeBespokeHtml(rawHtml: string): string {
+  const options = baseOptions();
+
+  return sanitizeHtml(rawHtml, {
+    ...options,
+    transformTags: {
+      "*": (tagName, attribs) => {
+        const next: Record<string, string> = { ...attribs };
+
+        if (next.class) {
+          const kept = filterClasses(next.class);
+          if (kept) next.class = kept;
+          else delete next.class;
+        }
+
+        if (next.style) {
+          const kept = filterStyle(next.style);
+          if (kept) next.style = kept;
+          else delete next.style;
+        }
+
+        // Every outbound link opens safely; internal anchors are untouched.
+        if (tagName === "a" && next.href && /^https?:/i.test(next.href)) {
+          next.rel = "noopener noreferrer";
+        }
+
+        // A generated page can reference dozens of photos. Anything below
+        // the fold should not block first paint.
+        if (tagName === "img" && !next.loading) {
+          next.loading = "lazy";
+        }
+
+        return { tagName, attribs: next };
+      },
+    },
   });
 }
 
-// v8 -- real bug found on first live test: despite an explicit prompt
-// instruction to use only the brand-aware utility classes (bg-primary,
-// text-primary, bg-gradient-primary, ...), the model used zero of them and
-// instead picked its own fixed accent palette (amber/slate) throughout --
-// meaning every lead would render with the same generic colors regardless
-// of their own real brand color. Prompt compliance on a single abstract
-// instruction across a long generation isn't reliable enough to trust
-// alone, so this is a deterministic backstop: every non-neutral Tailwind
-// color utility (any accent family -- amber, blue, emerald, etc.) gets
-// rewritten to the equivalent brand-aware primary utility. Neutral
-// grayscale classes (slate/gray/zinc/neutral/stone/white/black) are left
-// alone -- real premium sites need real neutral text/border/background
-// colors, only the *accent* color needs to be this lead's real brand color.
+// Retained for the legacy Tailwind-authored generation path (pre-v9 leads
+// whose stored markup uses bg-primary/text-primary utilities). New
+// generation goes through sanitizeBespokeHtml and does not need it: the
+// token vocabulary has no channel through which an off-brand color could
+// be written in the first place.
 const ACCENT_COLOR_CLASS = /\b(bg|text|border|from|to|via|ring|fill|stroke|decoration|divide|outline|accent|caret)-(red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d{2,3}\b/g;
 
 const PROPERTY_TO_PRIMARY_CLASS: Record<string, string> = {

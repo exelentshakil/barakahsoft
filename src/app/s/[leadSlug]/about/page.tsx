@@ -5,6 +5,7 @@ import { MegaMenu } from "@/components/site-shell/MegaMenu";
 import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
 import { AboutTemplate } from "@/components/site-shell/pages/AboutTemplate";
 import { getShellStyle } from "@/components/site-shell/shell-style";
+import { BespokePageBody } from "@/components/site-shell/BespokePage";
 import { breadcrumbSchema } from "@/lib/seo/breadcrumb-schema";
 import { isAdminSession } from "@/lib/is-admin-session";
 
@@ -34,7 +35,11 @@ export default async function AboutPage({ params }: { params: Promise<{ leadSlug
     <div style={getShellStyle(payload)}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <MegaMenu payload={payload} />
-      <AboutTemplate payload={payload} />
+      {payload.bespokePages["about"] ? (
+        <BespokePageBody payload={payload} html={payload.bespokePages["about"]} />
+      ) : (
+        <AboutTemplate payload={payload} />
+      )}
       <PremiumFooter payload={payload} />
     </div>
   );

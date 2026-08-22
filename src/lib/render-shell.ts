@@ -138,6 +138,8 @@ export function renderShell(
     sectionVariants,
     bespokeDesignPlan,
     bespokeHomepageHtml: artifact.bespoke_homepage_html,
+    designTokens: artifact.design_tokens ?? null,
+    bespokePages: artifact.bespoke_pages ?? {},
     bespokeRationale: artifact.bespoke_rationale,
   };
 }

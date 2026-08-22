@@ -1,0 +1,155 @@
+import { slugifyText } from "@/lib/slug";
+import { buildRichContext, findRelevantPage } from "@/lib/facts-context";
+import { extractServiceAreas } from "@/lib/scrape/extract-service-areas";
+import { findLicenseInsuranceMention } from "@/lib/trust-signals";
+import type { SiteBrief } from "@/lib/generate-bespoke-site";
+import type { PageInventory } from "@/lib/scrape/extract-text";
+import type { Lead, ScrapeResults } from "@/types/database";
+
+// Assembles the single source of truth a generation runs against.
+//
+// The operator can override any field from the Studio, but every default
+// here is a REAL value pulled from this lead's own scrape. Nothing in this
+// module invents a fallback: a missing phone stays null and the generator
+// is told there is no phone, rather than being handed a placeholder that
+// would ship to a client as if it were theirs. (The route this replaced
+// defaulted to a hardcoded phone number and a hardcoded electrician
+// service list, which is precisely how unrelated businesses ended up with
+// the same "bespoke" page.)
+
+export interface BriefOverrides {
+  businessName?: string;
+  industry?: string;
+  city?: string;
+  founder?: string;
+  phone?: string;
+  email?: string;
+  services?: string[];
+  areas?: string[];
+  heroImage?: string;
+}
+
+/** Routes that exist for a lead, so generated links always resolve. */
+export function buildKnownPaths(services: string[], areas: string[]): string[] {
+  return [
+    "/",
+    ...services.map((s) => `/services/${slugifyText(s)}`),
+    ...areas.map((a) => `/areas/${slugifyText(a)}`),
+    "/about",
+    "/faq",
+    "/contact",
+    "/privacy",
+    "/terms",
+  ];
+}
+
+function realPhotos(facts: Record<string, unknown>): string[] {
+  const sitePhotos = (facts.site_photos as { url: string }[] | undefined) ?? [];
+  const gbpPhotos = (facts.gbp_photo_urls as string[] | undefined) ?? [];
+  const all = [...sitePhotos.map((p) => p.url), ...gbpPhotos].filter(
+    (u): u is string => typeof u === "string" && /^https?:\/\//i.test(u)
+  );
+  return Array.from(new Set(all)).slice(0, 24);
+}
+
+/**
+ * Nav links are the most reliable real signal for a business's own service
+ * names, but they also carry the boilerplate every site has. Filtering that
+ * out here keeps "Privacy Policy" from being generated as a service page.
+ */
+const NAV_BOILERPLATE = /^(home|blog|contact|about|about us|privacy|privacy policy|terms|terms of service|sitemap|careers|login|search|reviews|gallery|faq|faqs|news)$/i;
+
+function servicesFromFacts(facts: Record<string, unknown>): string[] {
+  const pages = (facts.pages as PageInventory[] | undefined) ?? [];
+  const fromNav = pages.flatMap((p) => p.navLinks.map((l) => l.text.trim()));
+  const fromLists = pages.flatMap((p) => p.listItemCandidates ?? []);
+
+  const candidates = [...fromNav, ...fromLists]
+    .map((s) => s.replace(/\s+/g, " ").trim())
+    .filter((s) => s.length > 3 && s.length < 48 && !NAV_BOILERPLATE.test(s))
+    // A real service name is a noun phrase, not a sentence or a CTA.
+    .filter((s) => !/[.!?]$/.test(s) && s.split(" ").length <= 6);
+
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const c of candidates) {
+    const key = c.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(c);
+  }
+  return unique.slice(0, 8);
+}
+
+function cityFromFacts(facts: Record<string, unknown>): string | null {
+  if (typeof facts.town === "string" && facts.town.trim()) return facts.town.trim();
+  const address = (facts.nap as { address?: string } | undefined)?.address;
+  if (!address) return null;
+  // "123 Main St, Brooklyn, NY 11201" -> "Brooklyn, NY"
+  const parts = address.split(",").map((p) => p.trim()).filter(Boolean);
+  if (parts.length >= 3) return `${parts[parts.length - 3]}, ${parts[parts.length - 2].split(" ")[0]}`;
+  return parts[parts.length - 2] ?? null;
+}
+
+export function buildSiteBrief(
+  lead: Lead,
+  scrapeResults: ScrapeResults,
+  overrides: BriefOverrides = {}
+): SiteBrief {
+  const facts = (scrapeResults.facts ?? {}) as Record<string, unknown>;
+  const pages = (facts.pages as PageInventory[] | undefined) ?? [];
+  const nap = (facts.nap as { phones?: string[]; emails?: string[] } | undefined) ?? {};
+
+  const services = overrides.services?.filter(Boolean).length
+    ? overrides.services.filter(Boolean)
+    : servicesFromFacts(facts);
+
+  const areas = overrides.areas?.filter(Boolean).length
+    ? overrides.areas.filter(Boolean)
+    : extractServiceAreas(pages).slice(0, 12);
+
+  const photos = realPhotos(facts);
+  const heroImage = overrides.heroImage || photos[0] || null;
+
+  const rating = typeof facts.rating === "number" ? facts.rating : null;
+  const reviewCount = typeof facts.review_count === "number" ? facts.review_count : null;
+
+  const reviews = ((facts.reviews as { author_name: string; rating: number; text: string }[] | undefined) ?? [])
+    .filter((r) => r?.text && r.text.trim().length > 20)
+    .slice(0, 6)
+    .map((r) => ({ author: r.author_name, rating: r.rating, text: r.text.trim() }));
+
+  return {
+    businessName:
+      overrides.businessName?.trim() ||
+      (typeof facts.business_name === "string" ? facts.business_name : "") ||
+      lead.business_name ||
+      new URL(lead.source_url).hostname.replace(/^www\./, ""),
+    industry: overrides.industry?.trim() || lead.industry || "Local Services",
+    city: overrides.city?.trim() || cityFromFacts(facts) || "the local area",
+    founder: overrides.founder?.trim() || lead.contact_name || null,
+    phone: overrides.phone?.trim() || nap.phones?.find((p) => /\d{7,}/.test(p.replace(/\D/g, ""))) || lead.phone || null,
+    email: overrides.email?.trim() || nap.emails?.[0] || lead.email || null,
+    services,
+    areas,
+    rating,
+    reviewCount,
+    reviews,
+    photos,
+    heroImage,
+    factsDigest: buildRichContext(facts, { relevantPage: findRelevantPage(facts), maxChars: 5000 }),
+    licensedInsured: findLicenseInsuranceMention(facts),
+    leadSlug: lead.slug,
+  };
+}
+
+/** Blocking problems that would make a generation produce a thin, generic page. */
+export function briefReadiness(brief: SiteBrief): { ready: boolean; warnings: string[] } {
+  const warnings: string[] = [];
+  if (brief.services.length < 3) warnings.push(`Only ${brief.services.length} real services found — add more in the brief or the page will be thin.`);
+  if (!brief.phone) warnings.push("No real phone number found — call-to-action buttons will have nothing to dial.");
+  if (brief.photos.length === 0) warnings.push("No real photos found — the page will be built from type and color only.");
+  if (brief.factsDigest.length < 800) warnings.push("Very little real content was scraped — consider re-scraping before generating.");
+  if (brief.city === "the local area") warnings.push("No real city detected — set one in the brief for local headlines.");
+  return { ready: brief.services.length >= 2, warnings };
+}

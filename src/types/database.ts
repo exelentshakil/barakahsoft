@@ -163,6 +163,17 @@ export interface Artifact {
   // the existing catalog-based shell.
   bespoke_homepage_html: string | null;
   bespoke_rationale: string | null;
+  // v9 -- inspiration design DNA. The reference site the operator chose,
+  // and the design spec distilled from it. Contributes visual direction
+  // only; the lead's own scrape stays the sole source of facts.
+  inspiration_url: string | null;
+  inspiration_branding: unknown | null;
+  // CSS custom properties compiled from inspiration_branding, stored so a
+  // generated page always renders with the tokens it was generated against.
+  design_tokens: { vars: Record<string, string>; fontHref: string | null; mood: string } | null;
+  // Generated markup for inner pages, keyed by route ("about", "faq",
+  // "services/panel-upgrades", ...).
+  bespoke_pages: Record<string, string>;
 }
 
 export type BuildJobStage =
@@ -173,7 +184,8 @@ export type BuildJobStage =
   | "qa"
   | "deliver"
   | "rebuild_inner_pages"
-  | "go_live";
+  | "go_live"
+  | "bespoke";
 
 export interface BuildJob {
   id: string;

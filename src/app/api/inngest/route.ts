@@ -8,8 +8,9 @@ import { enrichExpand } from "@/inngest/functions/enrich-expand";
 import { rebuildInnerPages } from "@/inngest/functions/rebuild-inner-pages";
 import { goLive } from "@/inngest/functions/go-live";
 import { revalidateHotlinks } from "@/inngest/functions/revalidate-hotlinks";
+import { bespokeGenerate } from "@/inngest/functions/bespoke-generate";
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [scrapeRun, enrichGenerate, renderBuild, deliverSend, enrichExpand, rebuildInnerPages, goLive, revalidateHotlinks],
+  functions: [scrapeRun, enrichGenerate, renderBuild, deliverSend, enrichExpand, rebuildInnerPages, goLive, revalidateHotlinks, bespokeGenerate],
 });

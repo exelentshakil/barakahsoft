@@ -58,6 +58,12 @@ export interface SitePayload {
   // real reference screenshots, sanitized before storage). Null falls back
   // to the catalog-based shell.
   bespokeHomepageHtml: string | null;
+  // v9 -- CSS custom properties compiled from the lead's inspiration design
+  // DNA. Applied to the wrapper element so every bs-* class in generated
+  // markup resolves to this lead's own palette, type and rhythm.
+  designTokens: { vars: Record<string, string>; fontHref: string | null; mood: string } | null;
+  // v9 -- generated markup for inner pages, keyed by route.
+  bespokePages: Record<string, string>;
   bespokeRationale: string | null;
 }
 
