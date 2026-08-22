@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { MapPin, ArrowRight } from "lucide-react";
 import { getSiteData } from "@/lib/get-site-data";
-import { MegaMenu } from "@/components/site-shell/MegaMenu";
-import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
+import { BespokeNav } from "@/components/site-shell/BespokeNav";
+import { BespokeFooter } from "@/components/site-shell/BespokeFooter";
 import { PageHeroBand } from "@/components/site-shell/pages/PageHeroBand";
-import { getShellStyle } from "@/components/site-shell/shell-style";
+import { siteRootStyle } from "@/components/site-shell/shell-style";
 import { breadcrumbSchema } from "@/lib/seo/breadcrumb-schema";
 import { isAdminSession } from "@/lib/is-admin-session";
 
@@ -47,9 +47,9 @@ export default async function AreaPage({ params }: { params: Promise<{ leadSlug:
   const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: area.h2, path: `/areas/${slug}` }]);
 
   return (
-    <div style={getShellStyle(payload)}>
+    <div style={siteRootStyle(payload)}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
-      <MegaMenu payload={payload} />
+      <BespokeNav payload={payload} spec={payload.chromeSpec} />
       <PageHeroBand
         eyebrow="Service area"
         title={`Serving ${area.h2}`}
@@ -78,7 +78,7 @@ export default async function AreaPage({ params }: { params: Promise<{ leadSlug:
           </p>
         )}
       </section>
-      <PremiumFooter payload={payload} />
+      <BespokeFooter payload={payload} spec={payload.chromeSpec} />
     </div>
   );
 }

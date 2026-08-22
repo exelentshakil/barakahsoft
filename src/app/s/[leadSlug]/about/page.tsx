@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getSiteData } from "@/lib/get-site-data";
-import { MegaMenu } from "@/components/site-shell/MegaMenu";
-import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
+import { BespokeNav } from "@/components/site-shell/BespokeNav";
+import { BespokeFooter } from "@/components/site-shell/BespokeFooter";
 import { AboutTemplate } from "@/components/site-shell/pages/AboutTemplate";
-import { getShellStyle } from "@/components/site-shell/shell-style";
+import { siteRootStyle } from "@/components/site-shell/shell-style";
 import { BespokePageBody } from "@/components/site-shell/BespokePage";
 import { breadcrumbSchema } from "@/lib/seo/breadcrumb-schema";
 import { isAdminSession } from "@/lib/is-admin-session";
@@ -32,15 +32,15 @@ export default async function AboutPage({ params }: { params: Promise<{ leadSlug
   const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: "About", path: "/about" }]);
 
   return (
-    <div style={getShellStyle(payload)}>
+    <div style={siteRootStyle(payload)}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
-      <MegaMenu payload={payload} />
+      <BespokeNav payload={payload} spec={payload.chromeSpec} />
       {payload.bespokePages["about"] ? (
-        <BespokePageBody payload={payload} html={payload.bespokePages["about"]} />
+        <BespokePageBody html={payload.bespokePages["about"]} />
       ) : (
         <AboutTemplate payload={payload} />
       )}
-      <PremiumFooter payload={payload} />
+      <BespokeFooter payload={payload} spec={payload.chromeSpec} />
     </div>
   );
 }

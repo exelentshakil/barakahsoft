@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getSiteData } from "@/lib/get-site-data";
-import { MegaMenu } from "@/components/site-shell/MegaMenu";
-import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
+import { BespokeNav } from "@/components/site-shell/BespokeNav";
+import { BespokeFooter } from "@/components/site-shell/BespokeFooter";
 import { FaqTemplate } from "@/components/site-shell/pages/FaqTemplate";
-import { getShellStyle } from "@/components/site-shell/shell-style";
+import { siteRootStyle } from "@/components/site-shell/shell-style";
 import { BespokePageBody } from "@/components/site-shell/BespokePage";
 import { breadcrumbSchema } from "@/lib/seo/breadcrumb-schema";
 import { isAdminSession } from "@/lib/is-admin-session";
@@ -31,15 +31,15 @@ export default async function FaqPage({ params }: { params: Promise<{ leadSlug: 
   const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: "FAQ", path: "/faq" }]);
 
   return (
-    <div style={getShellStyle(payload)}>
+    <div style={siteRootStyle(payload)}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
-      <MegaMenu payload={payload} />
+      <BespokeNav payload={payload} spec={payload.chromeSpec} />
       {payload.bespokePages["faq"] ? (
-        <BespokePageBody payload={payload} html={payload.bespokePages["faq"]} />
+        <BespokePageBody html={payload.bespokePages["faq"]} />
       ) : (
         <FaqTemplate payload={payload} />
       )}
-      <PremiumFooter payload={payload} />
+      <BespokeFooter payload={payload} spec={payload.chromeSpec} />
     </div>
   );
 }

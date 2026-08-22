@@ -33,8 +33,13 @@ export default async function LeadSiteLayout({
   const pixelId = lead?.facebook_pixel_id;
   const gscToken = lead?.google_site_verification;
 
+  // The display/body faces come from this lead's design DNA, so the
+  // stylesheet is per-lead and belongs here rather than in the root layout.
+  const fontHref = siteData?.payload.designTokens?.fontHref ?? null;
+
   const body = (
     <>
+      {fontHref && <link rel="stylesheet" href={fontHref} precedence="default" />}
       {gscToken && <meta name="google-site-verification" content={gscToken} />}
       {pixelId && (
         <Script id="client-facebook-pixel" strategy="afterInteractive">

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getSiteData } from "@/lib/get-site-data";
-import { MegaMenu } from "@/components/site-shell/MegaMenu";
-import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
+import { BespokeNav } from "@/components/site-shell/BespokeNav";
+import { BespokeFooter } from "@/components/site-shell/BespokeFooter";
 import { LegalPageTemplate } from "@/components/site-shell/pages/LegalPageTemplate";
-import { getShellStyle } from "@/components/site-shell/shell-style";
+import { siteRootStyle } from "@/components/site-shell/shell-style";
 import { isAdminSession } from "@/lib/is-admin-session";
 
 // Same §6 gate as every other inner page -- see privacy/page.tsx and
@@ -28,10 +28,10 @@ export default async function TermsPage({ params }: { params: Promise<{ leadSlug
   const { payload } = result;
 
   return (
-    <div style={getShellStyle(payload)}>
-      <MegaMenu payload={payload} />
+    <div style={siteRootStyle(payload)}>
+      <BespokeNav payload={payload} spec={payload.chromeSpec} />
       <LegalPageTemplate payload={payload} kind="terms" />
-      <PremiumFooter payload={payload} />
+      <BespokeFooter payload={payload} spec={payload.chromeSpec} />
     </div>
   );
 }

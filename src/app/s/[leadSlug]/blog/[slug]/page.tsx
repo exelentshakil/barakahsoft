@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSiteData } from "@/lib/get-site-data";
-import { MegaMenu } from "@/components/site-shell/MegaMenu";
-import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
-import { getShellStyle } from "@/components/site-shell/shell-style";
+import { BespokeNav } from "@/components/site-shell/BespokeNav";
+import { BespokeFooter } from "@/components/site-shell/BespokeFooter";
+import { siteRootStyle } from "@/components/site-shell/shell-style";
 import { ArrowLeft, ArrowRight, CheckCircle2, Clock, Phone, ShieldCheck, Sparkles, User } from "lucide-react";
 
 interface ArticleContent {
@@ -152,11 +152,11 @@ export default async function ArticleDetailPage({
   };
 
   return (
-    <div style={getShellStyle(payload)}>
+    <div style={siteRootStyle(payload)}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
-      <MegaMenu payload={payload} />
+      <BespokeNav payload={payload} spec={payload.chromeSpec} />
 
       <main className="mx-auto max-w-4xl px-6 py-16 space-y-10">
         <Link
@@ -239,7 +239,7 @@ export default async function ArticleDetailPage({
         </div>
       </main>
 
-      <PremiumFooter payload={payload} />
+      <BespokeFooter payload={payload} spec={payload.chromeSpec} />
     </div>
   );
 }

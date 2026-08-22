@@ -2,6 +2,7 @@ import type { Artifact, Lead, ScrapeResults, MediaAsset } from "@/types/database
 import type { SitePayload, ResolvedSection } from "@/components/site-shell/types";
 import { extractServiceAreas } from "@/lib/scrape/extract-service-areas";
 import { slugifyText } from "@/lib/slug";
+import { DEFAULT_CHROME, type ChromeSpec } from "@/lib/chrome-spec";
 import type { PageInventory } from "@/lib/scrape/extract-text";
 
 // render_shell atom — resolves an artifact + its lead/scrape context into
@@ -140,6 +141,9 @@ export function renderShell(
     bespokeHomepageHtml: artifact.bespoke_homepage_html,
     designTokens: artifact.design_tokens ?? null,
     bespokePages: artifact.bespoke_pages ?? {},
+    // Leads generated before chrome was part of the design system fall back
+    // to the house archetype rather than rendering no header at all.
+    chromeSpec: (artifact.chrome_spec as ChromeSpec | null) ?? DEFAULT_CHROME,
     bespokeRationale: artifact.bespoke_rationale,
   };
 }

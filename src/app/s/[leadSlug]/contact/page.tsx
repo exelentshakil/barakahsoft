@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { Phone, Mail, MapPin } from "lucide-react";
 import { getSiteData } from "@/lib/get-site-data";
-import { MegaMenu } from "@/components/site-shell/MegaMenu";
-import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
+import { BespokeNav } from "@/components/site-shell/BespokeNav";
+import { BespokeFooter } from "@/components/site-shell/BespokeFooter";
 import { BookingForm } from "@/components/site-shell/BookingForm";
-import { getShellStyle } from "@/components/site-shell/shell-style";
+import { siteRootStyle } from "@/components/site-shell/shell-style";
 import { BespokePageBody } from "@/components/site-shell/BespokePage";
 import { breadcrumbSchema } from "@/lib/seo/breadcrumb-schema";
 import { isAdminSession } from "@/lib/is-admin-session";
@@ -32,9 +32,9 @@ export default async function ContactPage({ params }: { params: Promise<{ leadSl
   const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: "Contact", path: "/contact" }]);
 
   return (
-    <div style={getShellStyle(payload)}>
+    <div style={siteRootStyle(payload)}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
-      <MegaMenu payload={payload} />
+      <BespokeNav payload={payload} spec={payload.chromeSpec} />
 
       {/* Generated contact content renders ABOVE the booking form rather
           than replacing it: <form> is stripped from generated markup by the
@@ -42,7 +42,7 @@ export default async function ContactPage({ params }: { params: Promise<{ leadSl
           replacing this section would cost the page its only working
           conversion path. */}
       {payload.bespokePages["contact"] && (
-        <BespokePageBody payload={payload} html={payload.bespokePages["contact"]} />
+        <BespokePageBody html={payload.bespokePages["contact"]} />
       )}
 
       <section className="py-16">
@@ -74,7 +74,7 @@ export default async function ContactPage({ params }: { params: Promise<{ leadSl
         </div>
       </section>
 
-      <PremiumFooter payload={payload} />
+      <BespokeFooter payload={payload} spec={payload.chromeSpec} />
     </div>
   );
 }

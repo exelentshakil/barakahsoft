@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSiteData } from "@/lib/get-site-data";
-import { MegaMenu } from "@/components/site-shell/MegaMenu";
-import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
-import { getShellStyle } from "@/components/site-shell/shell-style";
+import { BespokeNav } from "@/components/site-shell/BespokeNav";
+import { BespokeFooter } from "@/components/site-shell/BespokeFooter";
+import { siteRootStyle } from "@/components/site-shell/shell-style";
 import { ArrowRight, BookOpen, Calendar, Clock, Sparkles } from "lucide-react";
 
 export async function generateMetadata({ params }: { params: Promise<{ leadSlug: string }> }): Promise<Metadata> {
@@ -62,8 +62,8 @@ export default async function BlogIndexPage({ params }: { params: Promise<{ lead
   const { payload } = result;
 
   return (
-    <div style={getShellStyle(payload)}>
-      <MegaMenu payload={payload} />
+    <div style={siteRootStyle(payload)}>
+      <BespokeNav payload={payload} spec={payload.chromeSpec} />
 
       <main className="mx-auto max-w-5xl px-6 py-16 space-y-12">
         <div className="space-y-3">
@@ -114,7 +114,7 @@ export default async function BlogIndexPage({ params }: { params: Promise<{ lead
         </div>
       </main>
 
-      <PremiumFooter payload={payload} />
+      <BespokeFooter payload={payload} spec={payload.chromeSpec} />
     </div>
   );
 }

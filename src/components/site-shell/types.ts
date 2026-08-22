@@ -64,6 +64,8 @@ export interface SitePayload {
   designTokens: { vars: Record<string, string>; fontHref: string | null; mood: string } | null;
   // v9 -- generated markup for inner pages, keyed by route.
   bespokePages: Record<string, string>;
+  // v9 -- per-lead header/footer design, chosen from the design DNA.
+  chromeSpec: import("@/lib/chrome-spec").ChromeSpec;
   bespokeRationale: string | null;
 }
 

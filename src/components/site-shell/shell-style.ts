@@ -1,3 +1,4 @@
+import { compileDesignTokens } from "@/lib/design-tokens";
 import type { SitePayload } from "@/components/site-shell/types";
 
 // globals.css's hardcoded default --primary -- used as the channel fallback
@@ -39,4 +40,20 @@ export function getShellStyle(payload: Pick<SitePayload, "brandColorHsl" | "font
   cssVars["--primary-l"] = channels.l;
 
   return cssVars as React.CSSProperties;
+}
+
+
+/**
+ * The style for a delivered page's ROOT element.
+ *
+ * The design tokens have to live here rather than on the generated body,
+ * because the header and footer are styled from the same tokens. Scoping
+ * them to the body meant the chrome fell back to unresolved variables and
+ * rendered as a different design from the page it framed.
+ */
+export function siteRootStyle(
+  payload: Pick<SitePayload, "brandColorHsl" | "fontFamily" | "designTokens">
+): React.CSSProperties {
+  const tokens = payload.designTokens ?? compileDesignTokens(null);
+  return { ...getShellStyle(payload), ...tokens.vars } as React.CSSProperties;
 }

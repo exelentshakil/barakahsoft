@@ -3,9 +3,9 @@ import { notFound, redirect } from "next/navigation";
 import { getSiteData } from "@/lib/get-site-data";
 import { ServiceDetailTemplate } from "@/components/site-shell/pages/ServiceDetailTemplate";
 import { BespokePageBody } from "@/components/site-shell/BespokePage";
-import { MegaMenu } from "@/components/site-shell/MegaMenu";
-import { PremiumFooter } from "@/components/site-shell/PremiumFooter";
-import { getShellStyle } from "@/components/site-shell/shell-style";
+import { BespokeNav } from "@/components/site-shell/BespokeNav";
+import { BespokeFooter } from "@/components/site-shell/BespokeFooter";
+import { siteRootStyle } from "@/components/site-shell/shell-style";
 import { breadcrumbSchema, serviceSchema } from "@/lib/seo/breadcrumb-schema";
 import { isAdminSession } from "@/lib/is-admin-session";
 
@@ -48,16 +48,16 @@ export default async function ServicePage({ params }: { params: Promise<{ leadSl
   });
 
   return (
-    <div style={getShellStyle(payload)}>
+    <div style={siteRootStyle(payload)}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service_schema) }} />
-      <MegaMenu payload={payload} />
+      <BespokeNav payload={payload} spec={payload.chromeSpec} />
       {payload.bespokePages[`services/${slug}`] ? (
-        <BespokePageBody payload={payload} html={payload.bespokePages[`services/${slug}`]} />
+        <BespokePageBody html={payload.bespokePages[`services/${slug}`]} />
       ) : (
         <ServiceDetailTemplate payload={payload} service={service} />
       )}
-      <PremiumFooter payload={payload} />
+      <BespokeFooter payload={payload} spec={payload.chromeSpec} />
     </div>
   );
 }
