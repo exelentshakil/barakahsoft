@@ -16,27 +16,80 @@ function getTwilioClient() {
   return twilio(sid, token);
 }
 
-const fromEmail = () => process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+const fromEmail = () => process.env.BREVO_SENDER_EMAIL || process.env.RESEND_FROM_EMAIL || "hello@barakahsoft.com";
+const senderName = () => process.env.SENDER_NAME || "BarakahSoft";
 const siteUrl = () => process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
-// Fires synchronously from /api/intake, NOT from an Inngest function — the
-// call must happen within minutes, decoupled from the 48h build (PRD §1d).
+// Universal transactional email dispatcher: Native Brevo API with Resend fallback
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  replyTo,
+}: {
+  to: string;
+  subject: string;
+  html: string;
+  replyTo?: string;
+}): Promise<boolean> {
+  const brevoKey = process.env.BREVO_API_KEY;
+  if (brevoKey) {
+    try {
+      const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "api-key": brevoKey,
+        },
+        body: JSON.stringify({
+          sender: { name: senderName(), email: fromEmail() },
+          to: [{ email: to }],
+          subject,
+          htmlContent: html,
+          replyTo: replyTo ? { email: replyTo } : undefined,
+        }),
+      });
+      if (res.ok) return true;
+      const errData = await res.json().catch(() => ({}));
+      console.error("[notifications] Brevo API error", errData);
+    } catch (err) {
+      console.error("[notifications] Brevo dispatch exception", err);
+    }
+  }
+
+  const resend = getResend();
+  if (resend) {
+    try {
+      await resend.emails.send({
+        from: fromEmail(),
+        to,
+        subject,
+        html,
+        replyTo,
+      });
+      return true;
+    } catch (err) {
+      console.error("[notifications] Resend dispatch exception", err);
+    }
+  }
+
+  console.log(`[notifications] (stub) would send email to ${to} | ${subject}`);
+  return false;
+}
+
+// Fires synchronously from /api/intake, NOT from an Inngest function
 export async function sendInstantLeadAlert(lead: Lead) {
   const operatorEmail = process.env.OPERATOR_ALERT_EMAIL;
   const operatorPhone = process.env.OPERATOR_ALERT_PHONE;
   const leadUrl = `${siteUrl()}/admin/leads/${lead.id}`;
   const summary = `${lead.business_name || lead.source_url} — ${lead.phone || "no phone"} — ${lead.email || "no email"}`;
 
-  const resend = getResend();
-  if (resend && operatorEmail) {
-    await resend.emails
-      .send({
-        from: fromEmail(),
-        to: operatorEmail,
-        subject: `New lead: ${lead.business_name || lead.source_url}`,
-        html: `<p>New lead just submitted the intake form.</p><p>${summary}</p><p><a href="${leadUrl}">Open in admin</a></p>`,
-      })
-      .catch((err) => console.error("[notifications] instant alert email failed", err));
+  if (operatorEmail) {
+    await sendEmail({
+      to: operatorEmail,
+      subject: `New lead: ${lead.business_name || lead.source_url}`,
+      html: `<p>New lead just submitted the intake form.</p><p>${summary}</p><p><a href="${leadUrl}">Open in admin</a></p>`,
+    });
   } else {
     console.log("[notifications] (stub) would email operator instant alert —", summary);
   }
@@ -52,10 +105,10 @@ export async function sendInstantLeadAlert(lead: Lead) {
   }
 }
 
+// Email #1 (Instant Auto-Confirmation)
 export async function sendInstantLeadConfirmationEmail(lead: Lead) {
-  const resend = getResend();
   if (!lead.email) return;
-  const portalSubdomain = process.env.NEXT_PUBLIC_PORTAL_URL || "https://portal.barakahsoft.com";
+  const portalSubdomain = process.env.NEXT_PUBLIC_PORTAL_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://portal.barakahsoft.com";
   const trackingUrl = `${portalSubdomain}/s/${lead.slug}?auth=${createPortalToken(lead.id)}`;
   const businessName = lead.business_name || lead.source_url;
 
@@ -89,55 +142,42 @@ export async function sendInstantLeadConfirmationEmail(lead: Lead) {
     </div>
   `;
 
-  if (resend) {
-    await resend.emails
-      .send({
-        from: fromEmail(),
-        to: lead.email,
-        subject: `We received your website — follow your redesign live (${businessName})`,
-        html,
-      })
-      .catch((err) => console.error("[notifications] confirmation email failed", err));
-  } else {
-    console.log("[notifications] (stub) would send confirmation email to", lead.email, trackingUrl);
-  }
+  await sendEmail({
+    to: lead.email,
+    subject: `We received your website — follow your redesign live (${businessName})`,
+    html,
+  });
 }
 
+// Email #2 (Concept Delivery)
 export async function sendPreviewReadyEmail(lead: Lead, magicLink: string) {
-  const resend = getResend();
-  if (!resend || !lead.email) {
-    console.log("[notifications] (stub) would email preview-ready link to", lead.email, magicLink);
-    return;
-  }
-  await resend.emails
-    .send({
-      from: fromEmail(),
-      to: lead.email,
-      subject: `Your free redesign for ${lead.business_name || "your website"} is ready`,
-      html: `<p>Hi — we built a free homepage redesign for ${lead.business_name || "your business"}, no strings attached.</p>
-        <p><a href="${magicLink}">View your new homepage</a></p>`,
-    })
-    .catch((err) => console.error("[notifications] preview-ready email failed", err));
-}
+  if (!lead.email) return;
+  const businessName = lead.business_name || lead.source_url;
 
-// The 2 auto-sent closing-sequence emails (PRD §1c) — from hello@ the
-// client's own verified domain in production; falls back to RESEND_FROM_EMAIL
-// until a per-client sending domain is verified in Resend.
-export async function sendClosingSequenceEmail(lead: Lead, step: 1 | 2, magicLink: string) {
-  const resend = getResend();
-  if (!resend || !lead.email) {
-    console.log(`[notifications] (stub) would send closing-sequence email #${step} to`, lead.email);
-    return;
-  }
-  const subject =
-    step === 1
-      ? `Any thoughts on your new homepage, ${lead.business_name || "there"}?`
-      : `Last check-in — your homepage preview for ${lead.business_name || "your business"}`;
-  const html =
-    step === 1
-      ? `<p>Just checking you saw the free redesign we built — <a href="${magicLink}">take another look here</a>.</p><p>Happy to jump on a quick call if useful.</p>`
-      : `<p>Following up one more time on the free homepage we built for you — <a href="${magicLink}">it's still live here</a>.</p><p>Let us know if you'd like to go live with it.</p>`;
-  await resend.emails
-    .send({ from: fromEmail(), to: lead.email, subject, html })
-    .catch((err) => console.error(`[notifications] closing-sequence email #${step} failed`, err));
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #0d1738; background-color: #ffffff; border: 1px solid #e5e7f2; border-radius: 12px;">
+      <div style="margin-bottom: 24px; border-bottom: 1px solid #e5e7f2; padding-bottom: 16px;">
+        <span style="font-size: 18px; font-weight: bold; color: #07284d;">Barakah<span style="color: #533afd;">Soft</span></span>
+        <span style="font-size: 12px; color: #777588; margin-left: 8px;">· Executive Delivery</span>
+      </div>
+      <h2 style="font-size: 22px; font-weight: 700; color: #0d1738; margin-top: 0;">Your Rebuilt Homepage & Speed Audit are Ready!</h2>
+      <p style="font-size: 14px; line-height: 24px; color: #42506a;">
+        Hi ${lead.contact_name || "there"}, we finished your free 48-hour homepage redesign for <strong>${businessName}</strong>.
+      </p>
+      <div style="margin: 28px 0;">
+        <a href="${magicLink}" style="background-color: #533afd; color: #ffffff; font-size: 14px; font-weight: 700; text-decoration: none; padding: 14px 28px; border-radius: 6px; display: inline-block;">
+          Open Your Private Live Proposal & X-Ray →
+        </a>
+      </div>
+      <p style="font-size: 12px; color: #777588; margin-top: 28px; border-top: 1px solid #e5e7f2; padding-top: 16px;">
+        BarakahSoft LLC · Direct Line: +1 (307) 533-6678 · hello@barakahsoft.com
+      </p>
+    </div>
+  `;
+
+  await sendEmail({
+    to: lead.email,
+    subject: `Your free redesign for ${businessName} is ready`,
+    html,
+  });
 }

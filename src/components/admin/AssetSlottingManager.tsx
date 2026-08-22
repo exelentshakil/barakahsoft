@@ -124,12 +124,8 @@ export function AssetSlottingManager({ lead, artifact }: AssetSlottingManagerPro
 
   function handleExportZip() {
     setExporting(true);
-    setTimeout(() => {
-      setExporting(false);
-      alert(
-        `Standalone Next.js Project for ${businessName} generated!\n\n✓ Isolated package.json & Next 15 App Router\n✓ 100% self-contained Tailwind styles & schema\n✓ Ready to 1-click import into Vercel Free Tier or AWS with custom domain SSL.`
-      );
-    }, 1200);
+    window.location.href = `/api/leads/${lead.id}/export`;
+    setTimeout(() => setExporting(false), 2500);
   }
 
   return (
