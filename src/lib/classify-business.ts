@@ -14,6 +14,14 @@ import { parseJsonResponse } from "@/lib/parse-json-response";
 // out named "Take the BUSY Out of BUSYness", and that string would have gone
 // on the rebuilt homepage and into the delivery email as the company's name.
 //
+// It also reads the SERVICES, which is why this replaced the URL and
+// navigation heuristics as the primary source. Those produced "Page
+// Sitemap.Xml" on one real site and "About Us ▾", "Career›" and "Tool
+// Reviews" on another — navigation labels and machine files presented to a
+// client as things their business sells. A model reading the actual page
+// content knows the difference between a menu item and a job someone pays
+// for; a regular expression over URLs never will.
+//
 // This runs once during analysis, on content already paid for, so it costs
 // one model call and no extra scraping.
 
@@ -26,6 +34,10 @@ export interface BusinessIdentity {
   city: string | null;
   /** Whether this business serves a local area at all. */
   isLocal: boolean;
+  /** The services they actually sell, read from their own content. */
+  services: string[];
+  /** Real places they say they serve. */
+  areas: string[];
 }
 
 export async function classifyBusiness(facts: Record<string, unknown>): Promise<BusinessIdentity | null> {
@@ -61,8 +73,16 @@ city — the primary city or town they serve. Use the address if there is one. N
 
 isLocal — true if customers come from a geographic area around them, false for a business that serves clients anywhere.
 
+services — the things this business actually SELLS, in their own words, up to 8. Read the content, not the menu labels.
+  A service is a job a customer pays for: "Flat roof coating", "Emergency roof repair", "Panel upgrades".
+  NOT navigation labels ("About Us", "Careers", "Tool Reviews"), NOT article titles, NOT page names like
+  "Service Areas", and NOT anything with a menu arrow in it. If a menu item names a real service, keep it
+  and drop the decoration. Return an empty array rather than padding it with things that are not services.
+
+areas — real towns, cities or neighbourhoods they say they serve, up to 12. Empty if they do not name any.
+
 Return strict JSON only:
-{"businessName": "...", "industry": "...", "city": "...", "isLocal": true}`,
+{"businessName": "...", "industry": "...", "city": "...", "isLocal": true, "services": ["..."], "areas": ["..."]}`,
     {
       json: true,
       maxTokens: 8000,
@@ -83,10 +103,19 @@ Return strict JSON only:
     return trimmed;
   };
 
+  // Menu decoration survives scraping and reads as part of the name.
+  const cleanList = (v: unknown): string[] =>
+    (Array.isArray(v) ? v : [])
+      .map((x) => (typeof x === "string" ? x.replace(/[\u2039\u203A\u25B8\u25BE\u25BC\u276F>›»▸▾▼]/g, "").trim() : ""))
+      .filter((x) => x.length > 2 && x.length < 60)
+      .slice(0, 12);
+
   return {
     businessName: str(parsed.businessName),
     industry: str(parsed.industry),
     city: str(parsed.city),
     isLocal: parsed.isLocal !== false,
+    services: cleanList(parsed.services).slice(0, 8),
+    areas: cleanList(parsed.areas),
   };
 }

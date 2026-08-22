@@ -26,7 +26,7 @@ export default async function AdminLeadsPage() {
           </div>
           <AddUrlDialog />
         </div>
-        <NewLeadWatcher />
+        <NewLeadWatcher isEmpty />
         <EmptyState
           title="No leads yet"
           body="Leads land here the moment someone submits the intake form."

@@ -114,7 +114,23 @@ function voiceFor(dna: DesignDna): string {
   }
 }
 
+/**
+ * Write the copy, retrying once on a recoverable failure.
+ *
+ * Observed failing twice before succeeding on identical input, which is the
+ * signature of an intermittent empty or malformed response rather than a bad
+ * prompt. Retrying here costs one call; letting the step fail costs the
+ * media pass and everything else that already succeeded.
+ */
 export async function generateCopyPlan(brief: SiteBrief, dna: DesignDna): Promise<CopyPlan | null> {
+  const first = await attemptCopyPlan(brief, dna);
+  if (first) return first;
+
+  console.warn("[copy] first attempt failed, retrying once");
+  return attemptCopyPlan(brief, dna, true);
+}
+
+async function attemptCopyPlan(brief: SiteBrief, dna: DesignDna, isRetry = false): Promise<CopyPlan | null> {
   const factLines: string[] = [
     `Business: ${brief.businessName}`,
     `Trade: ${brief.industry}`,
@@ -171,7 +187,9 @@ Return strict JSON only, matching exactly this shape:
   const raw = await callOpenAI(prompt, {
     json: true,
     maxTokens: 24000,
-    temperature: 0.9,
+    // A slightly cooler retry is measurably more likely to return
+    // well-formed JSON when the first attempt did not.
+    temperature: isRetry ? 0.6 : 0.9,
     system:
       "You are a senior conversion copywriter for premium local-service businesses. You never invent facts, and you never write filler. You return valid JSON only.",
   });

@@ -79,6 +79,13 @@ export const scrapeRun = inngest.createFunction(
       if (identity.businessName) facts.business_name = identity.businessName;
       if (identity.city && !facts.town) facts.town = identity.city;
       facts.is_local_business = identity.isLocal;
+
+      // A model reading the page content beats URL and navigation
+      // heuristics, which produced sitemap filenames and menu labels as
+      // services on two real sites. The heuristic result is kept only when
+      // the model found nothing.
+      if (identity.services.length > 0) facts.derived_services = identity.services;
+      if (identity.areas.length > 0) facts.derived_areas = identity.areas;
       await admin.from("scrape_results").update({ facts }).eq("lead_id", lead_id);
     });
 

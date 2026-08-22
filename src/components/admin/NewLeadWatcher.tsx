@@ -13,10 +13,14 @@ import { subscribeAsOperator } from "@/lib/supabase/realtime";
 // person deciding whether a lead is real, the list is exactly where "new
 // thing arrived" needs to be obvious.
 //
-// A banner rather than a silent refresh: replacing the page under someone
-// mid-click is worse than telling them there is something new and letting
-// them take it.
-export function NewLeadWatcher() {
+// Behaviour depends on whether the operator is in the middle of something.
+//
+// On an empty workspace there is nothing to interrupt, so the lead is loaded
+// straight in — a banner asking permission to show the only thing on screen
+// is pure friction. With leads already on screen the operator may be
+// mid-task, so the list refreshes to include the new one and a small marker
+// says how many arrived, rather than the page changing under their hands.
+export function NewLeadWatcher({ isEmpty = false }: { isEmpty?: boolean }) {
   const router = useRouter();
   const [arrived, setArrived] = useState(0);
   const arrivedRef = useRef(0);
@@ -32,7 +36,15 @@ export function NewLeadWatcher() {
       client
         .channel("admin-new-leads")
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "leads" }, () => {
+          // Nothing on screen to interrupt: show it immediately.
+          if (isEmpty) {
+            router.refresh();
+            return;
+          }
           setArrived((n) => n + 1);
+          // Bring it into the list straight away. The marker below reports
+          // that it happened rather than gating it behind a click.
+          router.refresh();
         })
         // A status change is the pipeline reporting progress on a lead already
         // in the list, so it refreshes quietly rather than raising a banner.
@@ -52,21 +64,18 @@ export function NewLeadWatcher() {
       cancelled = true;
       cleanup?.();
     };
-  }, [router]);
+  }, [router, isEmpty]);
 
   if (arrived === 0) return null;
 
   return (
     <button
       type="button"
-      onClick={() => {
-        setArrived(0);
-        router.refresh();
-      }}
-      className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#533afd]/30 bg-[#f0f3ff] px-4 py-2.5 text-xs font-bold text-[#533afd] transition hover:bg-[#e6ebff]"
+      onClick={() => setArrived(0)}
+      className="flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-800 transition hover:bg-emerald-100"
     >
       <Bell className="h-3.5 w-3.5" />
-      {arrived === 1 ? "1 new lead just landed" : `${arrived} new leads just landed`} — click to show
+      {arrived === 1 ? "1 new lead added to the list" : `${arrived} new leads added to the list`}
     </button>
   );
 }
