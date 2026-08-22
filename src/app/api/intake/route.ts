@@ -46,7 +46,10 @@ export async function POST(req: Request) {
     const results = await Promise.allSettled([
       sendInstantLeadAlert(lead),
       sendInstantLeadConfirmationEmail(lead),
-      inngest.send({ name: "lead/intake.submitted", data: { lead_id: lead.id } }),
+      // Deliberately NOT starting the scrape. Intake is public, so anything
+      // it triggers is something a spam submission can spend: Firecrawl
+      // credits, Places calls, PageSpeed runs. Analysis begins when an
+      // operator looks at the lead and chooses to start it.
       fireMetaCapiEvent({
         eventName: "Lead",
         eventId: body.event_id ?? crypto.randomUUID(),

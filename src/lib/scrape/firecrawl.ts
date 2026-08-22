@@ -79,6 +79,42 @@ export async function scrapeWithFirecrawl(url: string): Promise<FirecrawlResult 
 }
 
 /**
+ * List every URL on a site.
+ *
+ * One credit, and it returns the whole URL structure — which carries most of
+ * what the brief needs. A path like /services/panel-upgrades names a real
+ * service as reliably as crawling that page would, at a thirtieth of the
+ * cost. Crawling stays available for leads worth the spend, but it stops
+ * being what every lead pays by default.
+ */
+export async function mapWithFirecrawl(url: string, limit = 200): Promise<string[]> {
+  const apiKey = process.env.FIRECRAWL_API_KEY;
+  if (!apiKey) return [];
+
+  try {
+    const res = await fetch("https://api.firecrawl.dev/v1/map", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({ url: normaliseUrl(url), limit, includeSubdomains: false }),
+    });
+
+    if (!res.ok) {
+      console.error("[firecrawl] map returned", res.status);
+      return [];
+    }
+
+    const data = await res.json();
+    const links = (data.links ?? data.data ?? []) as (string | { url?: string })[];
+    return links
+      .map((entry) => (typeof entry === "string" ? entry : entry.url ?? ""))
+      .filter((u) => /^https?:\/\//i.test(u));
+  } catch (err) {
+    console.error("[firecrawl] map error:", err);
+    return [];
+  }
+}
+
+/**
  * Crawl a whole site.
  *
  * This replaced a plain fetch-and-parse pass over raw HTML, which was the

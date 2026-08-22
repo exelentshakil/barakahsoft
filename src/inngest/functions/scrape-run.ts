@@ -1,18 +1,28 @@
 import { inngest } from "@/inngest/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { scrapeBusiness } from "@/lib/scrape";
-import { autoSelectOrResearch } from "@/lib/inspiration-library";
+import { autoSelectDna, autoSelectOrResearch } from "@/lib/inspiration-library";
 import { compileDesignTokens } from "@/lib/design-tokens";
 
-// scrape.run — Stage 1: Ingests Firecrawl facts, Google Places ratings, real photos,
-// and PageSpeed metrics. Does NOT blindly build the website automatically — instead,
-// it saves the verified brief data and leaves the lead ready for operator curation
-// and on-demand high-value generation in the Admin Studio.
+// lead/analyse.requested — step 1 of the operator flow.
+//
+// Triggered by a person, never by intake. Everything in here costs money —
+// Firecrawl credits, Places calls, PageSpeed runs — and intake is a public
+// form, so a pipeline that started itself was a pipeline a spam submission
+// could bill.
+//
+// Light depth reads the site's URL map plus its homepage: two credits, and
+// the sitemap names the real services. Deep crawls real pages and is an
+// explicit choice for a lead worth the spend.
 export const scrapeRun = inngest.createFunction(
   { id: "scrape-run" },
-  { event: "lead/intake.submitted" },
+  { event: "lead/analyse.requested" },
   async ({ event, step }) => {
-    const { lead_id } = event.data as { lead_id: string };
+    const { lead_id, depth, researchDesign } = event.data as {
+      lead_id: string;
+      depth?: "light" | "deep";
+      researchDesign?: boolean;
+    };
     const admin = createAdminClient();
 
     const lead = await step.run("load-lead", async () => {
@@ -27,7 +37,7 @@ export const scrapeRun = inngest.createFunction(
     });
 
     await step.run("scrape-business", async () => {
-      await scrapeBusiness(lead_id, lead.source_url, lead.business_name ?? undefined);
+      await scrapeBusiness(lead_id, lead.source_url, lead.business_name ?? undefined, depth ?? "light");
     });
 
     // A design direction is chosen automatically the moment the facts land,
@@ -42,7 +52,15 @@ export const scrapeRun = inngest.createFunction(
         .eq("id", lead_id)
         .single<{ industry: string | null; persona: string | null }>();
 
-      const { dna, label, sourceUrl, from } = await autoSelectOrResearch(fresh?.industry ?? fresh?.persona ?? lead.industry);
+      const industry = fresh?.industry ?? fresh?.persona ?? lead.industry;
+
+      // Researching a new trade costs a search plus three page reads. It is
+      // worth it once per industry and never worth it on a lead nobody has
+      // qualified, so it is opt-in; without it this falls back to the
+      // library or a house direction, both of which are free.
+      const { dna, label, sourceUrl, from } = researchDesign
+        ? await autoSelectOrResearch(industry)
+        : await autoSelectDna(industry);
 
       const { data: artifact } = await admin
         .from("artifacts")

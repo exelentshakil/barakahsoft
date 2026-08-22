@@ -11,26 +11,49 @@ import { captionUnlabeledPhotos } from "@/lib/scrape/caption-photos";
 import { callPlacesApi, resolvePlacesPhotoUrl } from "@/lib/google/places";
 import { callPagespeedApi } from "@/lib/google/pagespeed";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { scrapeWithFirecrawl, crawlWithFirecrawl } from "@/lib/scrape/firecrawl";
+import { scrapeWithFirecrawl, crawlWithFirecrawl, mapWithFirecrawl } from "@/lib/scrape/firecrawl";
+import { deriveBriefFromUrls } from "@/lib/scrape/services-from-urls";
 
-export async function scrapeBusiness(leadId: string, sourceUrl: string, businessNameHint?: string) {
+export type ScrapeDepth = "light" | "deep";
+
+/**
+ * @param depth "light" maps the site's URLs and reads the homepage — two
+ * Firecrawl credits, and enough to name the real services from the sitemap.
+ * "deep" crawls real pages and costs one credit each; it is an explicit
+ * operator choice for a lead worth the spend, never the default. Paying
+ * thirty credits per lead before anyone has looked at it is how a spam lead
+ * costs money.
+ */
+export async function scrapeBusiness(
+  leadId: string,
+  sourceUrl: string,
+  businessNameHint?: string,
+  depth: ScrapeDepth = "light"
+) {
   // Firecrawl executes JavaScript; a plain fetch does not. Most small
   // business sites render their navigation and service content client-side,
   // so raw HTML is an empty shell -- the York lead came back with one page
   // and zero nav links, which left the brief with no services and the
   // generated site with nothing real to say. Crawling is also what the page
   // budget is for: thirty real pages instead of one shell.
-  const [crawled, firecrawlData] = await Promise.all([
-    crawlWithFirecrawl(sourceUrl, { limit: 30 }),
+  const [siteUrls, crawled, firecrawlData] = await Promise.all([
+    mapWithFirecrawl(sourceUrl),
+    depth === "deep" ? crawlWithFirecrawl(sourceUrl, { limit: 25 }) : Promise.resolve([]),
     scrapeWithFirecrawl(sourceUrl),
   ]);
 
-  // Fall back to direct fetching only when Firecrawl is unavailable or the
-  // crawl came back empty, so a missing key degrades rather than breaks.
+  // The URL structure carries most of what the brief needs. A path like
+  // /services/panel-upgrades names a real service as reliably as crawling
+  // that page would, for one credit instead of thirty.
+  const urlBrief = deriveBriefFromUrls(siteUrls);
+
+  // Direct fetching is the fallback when Firecrawl is unavailable, so a
+  // missing key degrades rather than breaks. It does not execute JavaScript,
+  // which is why it is no longer the primary path.
   const pages: FetchedPage[] =
     crawled.length > 0
       ? crawled.map((page) => ({ url: page.url, html: page.html }))
-      : await fetchSiteHtml(sourceUrl);
+      : await fetchSiteHtml(sourceUrl, depth === "deep" ? 15 : 1);
 
   const homepage = pages[0];
   const photoCandidates = pages.flatMap(extractPhotos);
@@ -65,6 +88,13 @@ export async function scrapeBusiness(leadId: string, sourceUrl: string, business
     business_name: places?.name ?? siteName ?? businessNameHint ?? null,
     source_url: sourceUrl,
     pages: pageInventory,
+    // Read off the sitemap rather than crawled page content, so the brief is
+    // populated even on a light scrape.
+    sitemap_urls: siteUrls.slice(0, 200),
+    derived_services: urlBrief.services,
+    derived_areas: urlBrief.areas,
+    notable_pages: urlBrief.notablePages,
+    scrape_depth: depth,
     nap: {
       phones: Array.from(new Set([...contactInfo.phones, ...(places?.phone ? [places.phone] : [])])),
       emails: contactInfo.emails,

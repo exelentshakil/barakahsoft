@@ -72,6 +72,12 @@ function realPhotos(facts: Record<string, unknown>): string[] {
 const NAV_BOILERPLATE = /^(home|blog|contact|about|about us|privacy|privacy policy|terms|terms of service|sitemap|careers|login|search|reviews|gallery|faq|faqs|news)$/i;
 
 function servicesFromFacts(facts: Record<string, unknown>): string[] {
+  // Sitemap-derived names come from the site's own URL structure and are the
+  // most reliable signal available — and on a light scrape they are the only
+  // one, since only the homepage was read.
+  const derived = (facts.derived_services as string[] | undefined) ?? [];
+  if (derived.length >= 3) return derived.slice(0, 8);
+
   const pages = (facts.pages as PageInventory[] | undefined) ?? [];
   const fromNav = pages.flatMap((p) => p.navLinks.map((l) => l.text.trim()));
   const fromLists = pages.flatMap((p) => p.listItemCandidates ?? []);
@@ -116,9 +122,12 @@ export function buildSiteBrief(
     ? overrides.services.filter(Boolean)
     : servicesFromFacts(facts);
 
+  const derivedAreas = (facts.derived_areas as string[] | undefined) ?? [];
   const areas = overrides.areas?.filter(Boolean).length
     ? overrides.areas.filter(Boolean)
-    : extractServiceAreas(pages).slice(0, 12);
+    : derivedAreas.length > 0
+      ? derivedAreas.slice(0, 12)
+      : extractServiceAreas(pages).slice(0, 12);
 
   const photos = realPhotos(facts);
   const heroImage = overrides.heroImage || photos[0] || null;
