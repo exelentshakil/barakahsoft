@@ -230,7 +230,7 @@ Rules:
   const raw = await callOpenAI(prompt, {
     json: true,
     temperature: 0.4,
-    maxTokens: 2000,
+    maxTokens: 12000,
     system: "You are a precise design systems analyst. You return valid JSON only.",
   });
 

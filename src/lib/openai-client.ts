@@ -50,6 +50,8 @@ function modelCandidates(): string[] {
   return MODEL_CHAIN;
 }
 
+const DEFAULT_MAX_TOKENS = 32000;
+
 interface CallOptions {
   images?: OpenAIImagePart[];
   system?: string;
@@ -92,7 +94,11 @@ function buildBody(prompt: string, options: CallOptions, attempt: Attempt): Reco
     messages: buildMessages(prompt, options),
   };
 
-  const limit = options.maxTokens ?? 16000;
+  // Generous by default. On a reasoning model this budget covers reasoning
+  // AND output, and running out mid-reasoning yields empty content rather
+  // than an error, so erring small fails silently while erring large only
+  // costs what is actually generated.
+  const limit = options.maxTokens ?? DEFAULT_MAX_TOKENS;
   if (attempt.useMaxCompletionTokens) body.max_completion_tokens = limit;
   else body.max_tokens = limit;
 
@@ -154,9 +160,35 @@ export async function callOpenAI(prompt: string, options: CallOptions = {}): Pro
 
       if (res.ok) {
         const data = await res.json();
-        const text = data.choices?.[0]?.message?.content;
+        const choice = data.choices?.[0];
+        const text = choice?.message?.content;
+        const usage = data.usage ?? {};
         if (!envOverride()) resolvedModel = model;
-        return typeof text === "string" && text.trim() ? text.trim() : null;
+
+        // Reasoning models spend max_completion_tokens on reasoning BEFORE
+        // writing any output, so an under-sized budget returns a perfectly
+        // successful response with empty content. That produced a bare
+        // "generation returned nothing" that pointed at the API key, which
+        // was never the problem. Log enough to tell the difference.
+        if (typeof text !== "string" || !text.trim()) {
+          console.error(
+            `[openai] empty content from ${model} — finish_reason=${choice?.finish_reason}` +
+              ` prompt=${usage.prompt_tokens} completion=${usage.completion_tokens}` +
+              ` reasoning=${usage.completion_tokens_details?.reasoning_tokens ?? 0} limit=${options.maxTokens ?? DEFAULT_MAX_TOKENS}`
+          );
+          return null;
+        }
+
+        if (choice?.finish_reason === "length") {
+          console.warn(`[openai] ${model} hit the token limit — output is truncated and may not parse`);
+        }
+
+        console.log(
+          `[openai] ${model} ok — prompt=${usage.prompt_tokens} completion=${usage.completion_tokens}` +
+            ` reasoning=${usage.completion_tokens_details?.reasoning_tokens ?? 0}`
+        );
+
+        return text.trim();
       }
 
       const body = await res.text().catch(() => "<unreadable body>");

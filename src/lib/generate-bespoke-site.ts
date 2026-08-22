@@ -249,7 +249,7 @@ ${media.map((m) => `  ${m.url} shows: ${m.caption}`).join("\n") || "  none"}
 
 PAGE:
 ${html.slice(0, 70000)}`,
-    { maxTokens: 1500, temperature: 0.2 }
+    { maxTokens: 12000, temperature: 0.2 }
   );
 
   if (!critique || critique.trim().toUpperCase().startsWith("APPROVED")) return html;
@@ -264,7 +264,7 @@ CURRENT PAGE:
 ${html}
 
 Reply with the corrected HTML body fragment only — no rationale line, no markdown fences.`,
-    { maxTokens: 24000, temperature: 0.5 }
+    { maxTokens: 40000, temperature: 0.5 }
   );
 
   if (!revised) return html;
@@ -294,7 +294,7 @@ export async function generateBespokeHomepage(
   knownPaths: string[]
 ): Promise<BespokeResult | null> {
   const raw = await callOpenAI(homepagePrompt(brief, copy, dna, media, knownPaths), {
-    maxTokens: 28000,
+    maxTokens: 48000,
     temperature: 0.8,
     system:
       "You are a senior web designer who writes production HTML. You lay out copy exactly as given without rewriting it, and you use only the class vocabulary you are handed.",
@@ -382,7 +382,7 @@ Write real copy — never narrate the business's data, never count things in a h
 
 No <header>, no nav, no <footer>. Reply with the HTML body fragment only — no markdown fences.`,
     {
-      maxTokens: 14000,
+      maxTokens: 28000,
       temperature: 0.8,
       system: "You are a senior web designer and copywriter. You never invent facts and you never write filler.",
     }

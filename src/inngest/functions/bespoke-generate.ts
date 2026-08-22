@@ -145,7 +145,12 @@ export const bespokeGenerate = inngest.createFunction(
 
     const copy = await step.run("write-copy", async () => {
       const draft = await generateCopyPlan(brief, dna);
-      if (!draft) throw new Error("Copy generation returned nothing — check OPENAI_API_KEY and model access");
+      if (!draft) {
+        throw new Error(
+          "Copy generation returned nothing. The [copy] and [openai] lines in the logs say whether the model " +
+            "returned empty content (token budget exhausted by reasoning), invalid JSON, or a plan that failed validation."
+        );
+      }
       // The editor pass is allowed to fail without failing the run; a good
       // draft beats no page.
       const edited = (await critiqueCopyPlan(draft, brief)) ?? draft;

@@ -21,39 +21,65 @@ import type { DesignDna } from "@/lib/design-dna";
 // because the hours say 24/7; it may not say "trusted since 1994" unless
 // something says 1994.
 
+// Length limits TRUNCATE rather than reject.
+//
+// A strict max meant one over-long heading threw away the entire copy plan
+// and failed the whole build, which is an absurd trade: the other nineteen
+// fields were fine. Creative output overshoots limits routinely, so limits
+// here shape the result instead of gating it.
+const capped = (max: number) =>
+  z.preprocess(
+    (v) => (typeof v === "string" ? v.trim().slice(0, max) : v),
+    z.string().min(1)
+  ) as z.ZodType<string>;
+
+// The section id is normalised rather than enumerated. A model asked for
+// "services" will sometimes answer "our-services" or "what we do", and
+// rejecting the whole plan over a synonym is not a useful standard.
+const SECTION_IDS = ["services", "about", "reviews", "areas", "faq", "contact", "proof", "process"] as const;
+type SectionId = (typeof SECTION_IDS)[number];
+
+const SectionIdSchema = z.preprocess((v) => {
+  const raw = String(v ?? "").toLowerCase().replace(/[^a-z]/g, "");
+  const exact = SECTION_IDS.find((id) => raw === id);
+  if (exact) return exact;
+  const partial = SECTION_IDS.find((id) => raw.includes(id) || id.includes(raw));
+  if (partial) return partial;
+  if (/testimonial|review|proof|rating/.test(raw)) return "reviews";
+  if (/area|location|serve|coverage/.test(raw)) return "areas";
+  if (/why|story|team|history/.test(raw)) return "about";
+  if (/question|answer/.test(raw)) return "faq";
+  if (/step|how|work/.test(raw)) return "process";
+  return "about";
+}, z.enum(SECTION_IDS)) as z.ZodType<SectionId>;
+
 const SectionSchema = z.object({
-  id: z.enum(["services", "about", "reviews", "areas", "faq", "contact", "proof", "process"]),
-  eyebrow: z.string().max(40),
-  heading: z.string().max(90),
-  body: z.string().max(600),
-  bullets: z.array(z.string().max(160)).max(6).default([]),
+  id: SectionIdSchema,
+  eyebrow: capped(60),
+  heading: capped(140),
+  body: capped(900),
+  bullets: z.array(capped(220)).max(8).default([]),
 });
 
 export const CopyPlanSchema = z.object({
   /** The promise, in the customer's language. Never the legal entity name. */
-  headline: z.string().max(90),
-  subhead: z.string().max(260),
-  heroCta: z.string().max(30),
+  headline: capped(140),
+  subhead: capped(400),
+  heroCta: capped(48),
   /** Short, meaningful trust chips. Each must be a real, verifiable fact. */
-  trustChips: z.array(z.string().max(48)).max(4).default([]),
-  sections: z.array(SectionSchema).min(3).max(7),
+  trustChips: z.array(capped(70)).max(6).default([]),
+  // A plan with fewer sections is still a usable page; failing the build over
+  // it is not.
+  sections: z.array(SectionSchema).min(1).max(9),
   services: z
-    .array(
-      z.object({
-        name: z.string().max(80),
-        blurb: z.string().max(220),
-      })
-    )
-    .max(8)
+    .array(z.object({ name: capped(120), blurb: capped(320) }))
+    .max(10)
     .default([]),
-  faq: z
-    .array(z.object({ question: z.string().max(140), answer: z.string().max(600) }))
-    .max(8)
-    .default([]),
+  faq: z.array(z.object({ question: capped(200), answer: capped(900) })).max(10).default([]),
   closing: z.object({
-    heading: z.string().max(90),
-    body: z.string().max(320),
-    cta: z.string().max(30),
+    heading: capped(140),
+    body: capped(500),
+    cta: capped(48),
   }),
 });
 
@@ -144,15 +170,33 @@ Return strict JSON only, matching exactly this shape:
 
   const raw = await callOpenAI(prompt, {
     json: true,
-    maxTokens: 6000,
+    maxTokens: 24000,
     temperature: 0.9,
     system:
       "You are a senior conversion copywriter for premium local-service businesses. You never invent facts, and you never write filler. You return valid JSON only.",
   });
 
-  const parsed = raw ? parseJsonResponse(raw) : null;
-  const result = parsed ? CopyPlanSchema.safeParse(parsed) : null;
-  if (!result?.success) return null;
+  if (!raw) {
+    console.error("[copy] model returned no content — see the [openai] line above for finish_reason and token usage");
+    return null;
+  }
+
+  const parsed = parseJsonResponse(raw);
+  if (!parsed) {
+    console.error(`[copy] response was not valid JSON. First 300 chars: ${raw.slice(0, 300)}`);
+    return null;
+  }
+
+  const result = CopyPlanSchema.safeParse(parsed);
+  if (!result.success) {
+    console.error(
+      `[copy] plan failed validation: ${result.error.issues
+        .slice(0, 6)
+        .map((i) => `${i.path.join(".")}: ${i.message}`)
+        .join("; ")}`
+    );
+    return null;
+  }
 
   return result.data;
 }
@@ -187,7 +231,7 @@ ${JSON.stringify(plan, null, 2)}
 Return the improved plan as strict JSON in the identical shape. Keep what genuinely works; rewrite what does not.`,
     {
       json: true,
-      maxTokens: 6000,
+      maxTokens: 24000,
       temperature: 0.7,
       system: "You are a ruthless copy editor. You return valid JSON only.",
     }

@@ -26,7 +26,7 @@ export async function GET() {
     .slice(0, 25)
     .map((m) => ({ id: m.id, released: new Date(m.created * 1000).toISOString().slice(0, 10) }));
 
-  const probe = keyPresent ? await callOpenAI("Reply with exactly: OK", { maxTokens: 16 }) : null;
+  const probe = keyPresent ? await callOpenAI("Reply with exactly: OK", { maxTokens: 4000 }) : null;
 
   return NextResponse.json({
     keyPresent,

@@ -172,7 +172,7 @@ subject meanings:
     {
       images: batch.map((img) => ({ url: img.url })),
       json: true,
-      maxTokens: 2500,
+      maxTokens: 12000,
       temperature: 0.2,
       system: "You are a precise photo editor. You describe only what is visibly present, and you return valid JSON only.",
     }
