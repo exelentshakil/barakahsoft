@@ -131,9 +131,35 @@ function googleFontHref(display: string, body: string): string | null {
   return `https://fonts.googleapis.com/css2?${params}&display=swap`;
 }
 
-export function compileDesignTokens(input: DesignDna | null | undefined): DesignTokens {
+/**
+ * Whose colours the rebuilt site uses.
+ *
+ * The default is the reference palette, because a redesign is what is being
+ * sold — a rebuild in the client's existing colours often does not read as a
+ * redesign at all, particularly when their colours were part of the problem.
+ * "client" keeps their real brand colour for owners who are attached to it,
+ * and "hybrid" keeps their colour as the accent over the reference's
+ * structure and surfaces.
+ */
+export type ColourSource = "reference" | "client" | "hybrid";
+
+export function compileDesignTokens(
+  input: DesignDna | null | undefined,
+  options: { colourSource?: ColourSource; clientBrandHex?: string | null } = {}
+): DesignTokens {
   const dna = input ?? DEFAULT_DESIGN_DNA;
-  const p = dna.palette;
+
+  const source = options.colourSource ?? "reference";
+  const clientHex = options.clientBrandHex && /^#[0-9a-fA-F]{6}$/.test(options.clientBrandHex)
+    ? options.clientBrandHex.toUpperCase()
+    : null;
+
+  const p =
+    source === "client" && clientHex
+      ? { ...dna.palette, primary: clientHex, accent: dna.palette.accent }
+      : source === "hybrid" && clientHex
+        ? { ...dna.palette, accent: clientHex }
+        : dna.palette;
   const radius = RADIUS_SCALE[dna.geometry.radius];
   const elevation = ELEVATION[dna.geometry.elevation];
   const rhythm = RHYTHM[dna.layout.sectionRhythm];

@@ -186,6 +186,9 @@ export interface Artifact {
   // these, so a page can be repaired one section at a time instead of
   // regenerated whole.
   bespoke_sections: { id: string; kind: string; label: string; html: string; locked: boolean }[];
+  // Whose colours the rebuilt site uses. Defaults to the reference palette,
+  // because a redesign is what is being sold.
+  colour_source: "reference" | "client" | "hybrid";
 }
 
 export type BuildJobStage =

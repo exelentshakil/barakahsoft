@@ -209,7 +209,10 @@ export const bespokeGenerate = inngest.createFunction(
         .from("artifacts")
         .update({
           funnel_pages: funnelPages,
-          design_tokens: compileDesignTokens(dna),
+          design_tokens: compileDesignTokens(dna, {
+            colourSource: loaded.artifact?.colour_source,
+            clientBrandHex: (loaded.scrapeResults.facts as Record<string, unknown>)?.brand_color_hex as string | null,
+          }),
           inspiration_branding: dna,
         })
         .eq("lead_id", lead_id);

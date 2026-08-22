@@ -6,6 +6,7 @@ import { rebuildInnerPages } from "@/inngest/functions/rebuild-inner-pages";
 import { goLive } from "@/inngest/functions/go-live";
 import { revalidateHotlinks } from "@/inngest/functions/revalidate-hotlinks";
 import { bespokeGenerate } from "@/inngest/functions/bespoke-generate";
+import { rescrapeLead } from "@/inngest/functions/rescrape";
 
 // Bespoke generation steps are long: the homepage step alone is a large
 // draft call plus a critique pass plus a revise pass. Each Inngest step
@@ -16,5 +17,5 @@ export const maxDuration = 300;
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [scrapeRun, bespokeGenerate, deliverSend, rebuildInnerPages, goLive, revalidateHotlinks],
+  functions: [scrapeRun, bespokeGenerate, rescrapeLead, deliverSend, rebuildInnerPages, goLive, revalidateHotlinks],
 });
