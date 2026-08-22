@@ -1,4 +1,5 @@
 import { callOpenAI } from "@/lib/openai-client";
+import { groundedJson } from "@/lib/gemini-search";
 import { parseJsonResponse } from "@/lib/parse-json-response";
 
 // Local search visibility, measured with a search-capable model.
@@ -19,6 +20,12 @@ import { parseJsonResponse } from "@/lib/parse-json-response";
 // position at a coordinate. Those are different things, and the report says
 // so, because a claim a client can disprove is worse than a smaller claim
 // they can verify.
+//
+// Two providers, and the default is Gemini for a substantive reason rather
+// than a cost one: its grounding queries Google's own index, and Google's
+// index is what local ranking means to a business owner. OpenAI's search
+// models are the fallback. Either way the rule is identical — a response
+// that was not actually grounded in a search is discarded, never used.
 
 export interface VisibilityCell {
   area: string;
@@ -32,6 +39,8 @@ export interface VisibilityCell {
 
 export interface VisibilityReport {
   query: string;
+  /** Which search index the measurement came from. Shown in the report. */
+  provider: SearchProvider;
   cells: VisibilityCell[];
   visible: number;
   missing: number;
@@ -41,7 +50,7 @@ export interface VisibilityReport {
 
 // Search-capable models only. Without one of these the searches do not
 // happen and the report must not be produced at all.
-const SEARCH_MODELS = ["gpt-5-search-api", "gpt-4o-search-preview", "gpt-4o-mini-search-preview"];
+export const SEARCH_MODELS = ["gpt-5-search-api", "gpt-4o-search-preview", "gpt-4o-mini-search-preview"];
 
 /** Real neighbourhoods around a city, for the areas to measure. */
 export async function deriveAreas(city: string, count: number): Promise<string[]> {
@@ -83,24 +92,40 @@ function findRank(results: string[], businessName: string): number | null {
  * Returns null rather than a guess when the search does not come back
  * usable — a blank cell is honest, an invented one is not.
  */
-async function measureArea(trade: string, area: string, businessName: string): Promise<VisibilityCell | null> {
-  const raw = await callOpenAI(
-    `Search the web for "${trade} in ${area}" and report which businesses actually appear in the results, in the order they appear.
+export type SearchProvider = "gemini" | "openai";
 
-Report only real businesses you find in the search results. Do not add businesses from your own knowledge, do not invent names, and do not fill the list to a target length. If the search returns fewer than ten, report fewer.
+const AREA_PROMPT = (trade: string, area: string) =>
+  `Search for "${trade} in ${area}" and report which businesses actually appear in the results, in the order they appear.
 
-Return strict JSON only: {"businesses": ["Business Name", "..."]}`,
-    {
+Report only real businesses present in those search results. Do not add businesses from your own knowledge, do not invent names, and do not pad the list to a target length. If the search returns fewer than ten, report fewer.
+
+Use this exact shape: {"businesses": ["Business Name", "..."]}`;
+
+async function measureArea(
+  trade: string,
+  area: string,
+  businessName: string,
+  provider: SearchProvider
+): Promise<VisibilityCell | null> {
+  let businesses: unknown[] | null = null;
+
+  if (provider === "gemini") {
+    const grounded = await groundedJson(AREA_PROMPT(trade, area));
+    // groundedJson already discards responses with no sources, so reaching
+    // here means a search genuinely ran.
+    businesses = Array.isArray(grounded?.data?.businesses) ? (grounded.data.businesses as unknown[]) : null;
+  } else {
+    const raw = await callOpenAI(AREA_PROMPT(trade, area), {
       json: true,
       maxTokens: 8000,
       // Every candidate here performs a real web search. Without one the
       // measurement cannot happen and this returns nothing.
       modelChain: SEARCH_MODELS,
-    }
-  );
+    });
+    const parsed = raw ? parseJsonResponse(raw) : null;
+    businesses = Array.isArray(parsed?.businesses) ? (parsed.businesses as unknown[]) : null;
+  }
 
-  const parsed = raw ? parseJsonResponse(raw) : null;
-  const businesses = Array.isArray(parsed?.businesses) ? (parsed.businesses as unknown[]) : null;
   if (!businesses) return null;
 
   const results = businesses.filter((b): b is string => typeof b === "string" && b.trim().length > 1);
@@ -127,9 +152,12 @@ export async function measureSearchVisibility(
   businessName: string,
   trade: string,
   city: string,
-  options: { areas?: string[]; cellCount?: number } = {}
+  options: { areas?: string[]; cellCount?: number; provider?: SearchProvider } = {}
 ): Promise<VisibilityReport | null> {
   const cellCount = Math.min(options.cellCount ?? 25, 49);
+  // Gemini grounding reads Google's own index, which is the index the client
+  // is actually judged by, so it leads unless a key is missing.
+  const provider: SearchProvider = options.provider ?? (process.env.GEMINI_API_KEY ? "gemini" : "openai");
 
   const areas =
     options.areas && options.areas.length >= 5
@@ -143,7 +171,7 @@ export async function measureSearchVisibility(
 
   for (let i = 0; i < areas.length; i += BATCH) {
     const batch = areas.slice(i, i + BATCH);
-    const measured = await Promise.all(batch.map((area) => measureArea(trade, area, businessName)));
+    const measured = await Promise.all(batch.map((area) => measureArea(trade, area, businessName, provider)));
     for (const cell of measured) if (cell) cells.push(cell);
   }
 
@@ -156,6 +184,7 @@ export async function measureSearchVisibility(
 
   return {
     query: `${trade} in {area}`,
+    provider,
     cells,
     visible: cells.filter((c) => c.rank !== null).length,
     missing: cells.filter((c) => c.rank === null).length,

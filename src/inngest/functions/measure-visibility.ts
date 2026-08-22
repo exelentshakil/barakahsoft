@@ -12,7 +12,11 @@ export const measureVisibility = inngest.createFunction(
   { id: "measure-visibility", retries: 1 },
   { event: "lead/visibility.requested" },
   async ({ event, step }) => {
-    const { lead_id, cellCount } = event.data as { lead_id: string; cellCount: number };
+    const { lead_id, cellCount, provider } = event.data as {
+      lead_id: string;
+      cellCount: number;
+      provider?: "gemini" | "openai";
+    };
     const admin = createAdminClient();
 
     const context = await step.run("load", async () => {
@@ -44,10 +48,11 @@ export const measureVisibility = inngest.createFunction(
       const result = await measureSearchVisibility(businessName, trade, town, {
         areas: ownAreas,
         cellCount,
+        provider,
       });
       if (!result) {
         throw new Error(
-          "Measurement failed — too few areas returned usable search results. Check that a search-capable model is available on the key."
+          "Measurement failed — too few areas returned usable search results. Either the search provider returned nothing grounded, or no search-capable model is available. Check /api/diag/openai."
         );
       }
       return result;

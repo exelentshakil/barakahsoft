@@ -86,6 +86,7 @@ export interface ScrapeResults {
   // that was actually performed; nothing here is inferred.
   search_visibility: {
     query: string;
+    provider: "gemini" | "openai";
     cells: { area: string; rank: number | null; topCompetitor: string | null; ahead: string[] }[];
     visible: number;
     missing: number;

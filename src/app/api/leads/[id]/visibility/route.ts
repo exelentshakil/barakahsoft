@@ -15,6 +15,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const body = await req.json().catch(() => ({}));
   const cellCount = Math.min(Math.max(Number(body.cells) || 25, 9), 49);
+  const provider = body.provider === "openai" ? "openai" : undefined;
 
   const admin = createAdminClient();
   const [{ data: lead }, { data: scrape }] = await Promise.all([
@@ -29,7 +30,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   await inngest.send({
     name: "lead/visibility.requested",
-    data: { lead_id: leadId, cellCount },
+    data: { lead_id: leadId, cellCount, provider },
   });
 
   return NextResponse.json({ ok: true, started: true, cells: cellCount });
