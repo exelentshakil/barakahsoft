@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AddUrlDialog } from "@/components/admin/AddUrlDialog";
+import { NewLeadWatcher } from "@/components/admin/NewLeadWatcher";
 import { AdminLeadWorkspace } from "@/components/admin/AdminLeadWorkspace";
 import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 
@@ -25,6 +26,7 @@ export default async function AdminLeadsPage() {
           </div>
           <AddUrlDialog />
         </div>
+        <NewLeadWatcher />
         <EmptyState
           title="No leads yet"
           body="Leads land here the moment someone submits the intake form."
@@ -41,11 +43,14 @@ export default async function AdminLeadsPage() {
   ]);
 
   return (
-    <AdminLeadWorkspace
-      lead={activeLead}
-      artifact={artifact ?? null}
-      scrapeResults={scrapeResults ?? null}
-      otherLeads={rows}
-    />
+    <>
+      <NewLeadWatcher />
+      <AdminLeadWorkspace
+        lead={activeLead}
+        artifact={artifact ?? null}
+        scrapeResults={scrapeResults ?? null}
+        otherLeads={rows}
+      />
+    </>
   );
 }

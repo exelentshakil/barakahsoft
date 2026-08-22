@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { inngest } from "@/inngest/client";
 import { generateUniqueDomainSlug } from "@/lib/domain-slug";
 
 export async function POST(req: Request) {
@@ -30,11 +29,10 @@ export async function POST(req: Request) {
 
   if (error || !lead) return NextResponse.json({ error: error?.message ?? "Could not create lead" }, { status: 500 });
 
-  try {
-    await inngest.send({ name: "lead/intake.submitted", data: { lead_id: lead.id } });
-  } catch (err) {
-    console.error("[leads/add-url] Inngest trigger failed", err);
-  }
-
+  // A manually added URL behaves exactly like an inbound lead: it is created
+  // and nothing else happens. It previously fired "lead/intake.submitted",
+  // which no function has listened to since analysis became operator-
+  // triggered, so it was a silent no-op — and had it worked, it would have
+  // reintroduced the automatic spend that intake was changed to avoid.
   return NextResponse.json({ lead });
 }

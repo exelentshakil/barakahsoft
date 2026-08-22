@@ -171,15 +171,38 @@ export function AdminLeadWorkspace({
     .filter((l) => !l.paid_at && !["paid", "live", "lost"].includes(l.status))
     .reduce((acc) => acc + 797, 0);
 
-  async function handleRescrape() {
+  // Step 1. This is the first point at which a lead costs anything: intake
+  // deliberately spends nothing, so a spam submission sits in the list for
+  // free until someone decides it is real.
+  async function handleAnalyse(depth: "light" | "deep") {
     setRescraping(true);
     try {
-      const res = await fetch(`/api/leads/${lead.id}/rescrape`, { method: "POST" });
+      const res = await fetch(`/api/leads/${lead.id}/analyse`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ depth, researchDesign: true }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Could not start analysis");
+      // The workspace follows the job live, so there is nothing to wait for
+      // here — panels fill in as each step lands.
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Could not start analysis");
+      setRescraping(false);
+    }
+  }
+
+  async function handleRescrape(mode: "light" | "full") {
+    setRescraping(true);
+    try {
+      const res = await fetch(`/api/leads/${lead.id}/rescrape`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode }),
+      });
       if (!res.ok) throw new Error("Scrape failed");
-      router.refresh();
     } catch {
-      alert("Failed to re-scrape with Firecrawl. Check your API key.");
-    } finally {
+      alert("Could not start the re-scrape. Check the Firecrawl key.");
       setRescraping(false);
     }
   }
@@ -386,17 +409,41 @@ export function AdminLeadWorkspace({
               <h3 className="font-bold text-base text-[#0d1738]">Inbound Lead & Verified Facts</h3>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={handleRescrape}
-                disabled={rescraping}
-                className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-semibold text-[#0d1738] hover:bg-[#f0f3ff]"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 text-[#533afd] ${rescraping ? "animate-spin" : ""}`} />
-                {rescraping ? "Scraping with Firecrawl..." : "Re-Scrape with Firecrawl"}
-              </button>
-              <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b] shrink-0">
-                <ShieldCheck className="h-3 w-3" /> Verified
-              </span>
+              {!scrapeResults ? (
+                <button
+                  onClick={() => handleAnalyse("light")}
+                  disabled={rescraping}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-[#533afd] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#432bd9] disabled:opacity-60"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${rescraping ? "animate-spin" : ""}`} />
+                  {rescraping ? "Analysing..." : "Analyse this lead · 2 pages"}
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => handleRescrape("light")}
+                    disabled={rescraping}
+                    title="Refresh brand colours, logo, rating and reviews. One page."
+                    className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-semibold text-[#0d1738] hover:bg-[#f0f3ff]"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 text-[#533afd] ${rescraping ? "animate-spin" : ""}`} />
+                    Refresh · 1 page
+                  </button>
+                  <button
+                    onClick={() => handleAnalyse("deep")}
+                    disabled={rescraping}
+                    title="Crawl the client's real pages. Costs a Firecrawl page each."
+                    className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-semibold text-[#0d1738] hover:bg-[#f0f3ff]"
+                  >
+                    Deep crawl · up to 25
+                  </button>
+                </>
+              )}
+              {scrapeResults && (
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b] shrink-0">
+                  <ShieldCheck className="h-3 w-3" /> Verified
+                </span>
+              )}
             </div>
           </div>
 
