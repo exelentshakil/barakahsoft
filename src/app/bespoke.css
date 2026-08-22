@@ -233,17 +233,43 @@
    headline contrast holds regardless of what photo the lead actually has. */
 .bs-hero-media { position: absolute; inset: 0; z-index: 0; }
 .bs-hero-media img { width: 100%; height: 100%; object-fit: cover; }
+/* The scrim is ALWAYS dark, and deliberately not derived from --bs-ink.
+ *
+ * It exists for one job: make light text readable over a photograph. Tying
+ * it to ink meant that on a dark-mode palette — where ink is white — it
+ * painted a white wash over the photo and then dark text was placed on top,
+ * which is exactly what happened on the first real dark-premium lead. A
+ * scrim's colour is a function of what sits on it, not of the page's text
+ * colour. */
 .bs-hero-scrim {
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(100deg, rgb(var(--bs-ink-rgb) / 0.88) 12%, rgb(var(--bs-ink-rgb) / 0.55) 58%, rgb(var(--bs-ink-rgb) / 0.25));
+  background: linear-gradient(100deg, rgb(6 8 14 / 0.9) 12%, rgb(6 8 14 / 0.62) 58%, rgb(6 8 14 / 0.3));
 }
 .bs-hero-content { position: relative; z-index: 2; }
 .bs-hero-over { color: #fff; }
 .bs-hero-over h1, .bs-hero-over h2 { color: #fff; }
 .bs-hero-over .bs-lead { color: rgb(255 255 255 / 0.85); }
 .bs-hero-over .bs-eyebrow { color: var(--bs-accent); }
+
+/* A hero with a photo behind it is light-on-dark, whatever band class was
+ * also applied. The generator paired bs-hero-media with bs-band-invert,
+ * whose computed text colour on a dark palette is near-black — dark text on
+ * a dark photograph. Deriving this from the presence of the image removes
+ * the possibility of that combination rather than asking the model to avoid
+ * it. */
+.bs-hero:has(.bs-hero-media) .bs-hero-content,
+.bs-hero:has(.bs-hero-media) .bs-hero-content h1,
+.bs-hero:has(.bs-hero-media) .bs-hero-content h2,
+.bs-hero:has(.bs-hero-media) .bs-hero-content h3 {
+  color: #fff;
+}
+.bs-hero:has(.bs-hero-media) .bs-hero-content .bs-lead { color: rgb(255 255 255 / 0.88); }
+.bs-hero:has(.bs-hero-media) .bs-hero-content .bs-eyebrow { color: var(--bs-accent); }
+.bs-hero:has(.bs-hero-media) .bs-hero-content .bs-muted { color: rgb(255 255 255 / 0.72); }
+/* The band's own background must not paint over the photograph. */
+.bs-hero:has(.bs-hero-media) { background: transparent; }
 
 /* ------------------------------------------------------------- media/img */
 
