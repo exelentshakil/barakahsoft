@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { subscribeAsOperator } from "@/lib/supabase/realtime";
 
 // Live leads list.
 //
@@ -23,22 +23,34 @@ export function NewLeadWatcher() {
   arrivedRef.current = arrived;
 
   useEffect(() => {
-    const supabase = createClient();
+    let cleanup: (() => void) | undefined;
+    let cancelled = false;
 
-    const channel = supabase
-      .channel("admin-new-leads")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "leads" }, () => {
-        setArrived((n) => n + 1);
-      })
-      // A status change is the pipeline reporting progress on a lead already
-      // in the list, so it refreshes quietly rather than raising a banner.
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "leads" }, () => {
-        if (arrivedRef.current === 0) router.refresh();
-      })
-      .subscribe();
+    // Authenticated before subscribing: the socket must carry the operator's
+    // token or the RLS policies reject it and nothing is ever delivered.
+    subscribeAsOperator((client) =>
+      client
+        .channel("admin-new-leads")
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "leads" }, () => {
+          setArrived((n) => n + 1);
+        })
+        // A status change is the pipeline reporting progress on a lead already
+        // in the list, so it refreshes quietly rather than raising a banner.
+        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "leads" }, () => {
+          if (arrivedRef.current === 0) router.refresh();
+        })
+    ).then((result) => {
+      if (!result) return;
+      if (cancelled) {
+        result.client.removeChannel(result.channel);
+        return;
+      }
+      cleanup = () => result.client.removeChannel(result.channel);
+    });
 
     return () => {
-      supabase.removeChannel(channel);
+      cancelled = true;
+      cleanup?.();
     };
   }, [router]);
 

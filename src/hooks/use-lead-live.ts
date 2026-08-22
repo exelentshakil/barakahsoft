@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { subscribeAsOperator } from "@/lib/supabase/realtime";
 
 // Keeps the lead workspace in step with the pipeline without anyone
 // reloading.
@@ -20,7 +20,8 @@ export function useLeadLive(leadId: string, onChange?: () => void) {
   onChangeRef.current = onChange;
 
   useEffect(() => {
-    const supabase = createClient();
+    let cleanup: (() => void) | undefined;
+    let cancelled = false;
 
     // Coalesce bursts: one generation step can touch build_jobs and
     // artifacts within the same second, and refreshing per event would make
@@ -34,17 +35,29 @@ export function useLeadLive(leadId: string, onChange?: () => void) {
       }, 600);
     };
 
-    const channel = supabase
-      .channel(`lead-live-${leadId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "leads", filter: `id=eq.${leadId}` }, schedule)
-      .on("postgres_changes", { event: "*", schema: "public", table: "artifacts", filter: `lead_id=eq.${leadId}` }, schedule)
-      .on("postgres_changes", { event: "*", schema: "public", table: "scrape_results", filter: `lead_id=eq.${leadId}` }, schedule)
-      .on("postgres_changes", { event: "*", schema: "public", table: "build_jobs", filter: `lead_id=eq.${leadId}` }, schedule)
-      .subscribe();
+    // Authenticated before subscribing: with cookie-based SSR sessions the
+    // socket otherwise connects as anon, every operator RLS policy rejects
+    // it, and the subscription silently delivers nothing.
+    subscribeAsOperator((client) =>
+      client
+        .channel(`lead-live-${leadId}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "leads", filter: `id=eq.${leadId}` }, schedule)
+        .on("postgres_changes", { event: "*", schema: "public", table: "artifacts", filter: `lead_id=eq.${leadId}` }, schedule)
+        .on("postgres_changes", { event: "*", schema: "public", table: "scrape_results", filter: `lead_id=eq.${leadId}` }, schedule)
+        .on("postgres_changes", { event: "*", schema: "public", table: "build_jobs", filter: `lead_id=eq.${leadId}` }, schedule)
+    ).then((result) => {
+      if (!result) return;
+      if (cancelled) {
+        result.client.removeChannel(result.channel);
+        return;
+      }
+      cleanup = () => result.client.removeChannel(result.channel);
+    });
 
     return () => {
+      cancelled = true;
       if (timer) clearTimeout(timer);
-      supabase.removeChannel(channel);
+      cleanup?.();
     };
   }, [leadId, router]);
 }
