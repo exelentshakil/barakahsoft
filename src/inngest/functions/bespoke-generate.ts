@@ -2,7 +2,10 @@ import { inngest } from "@/inngest/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildSiteBrief, buildKnownPaths, type BriefOverrides } from "@/lib/build-site-brief";
 import {
-  generateBespokeHomepage,
+  draftBespokeHomepage,
+  critiqueComposition,
+  reviseComposition,
+  finaliseHomepage,
   generateBespokePage,
   type InnerPageRequest,
   type SiteBrief,
@@ -218,14 +221,34 @@ export const bespokeGenerate = inngest.createFunction(
         .eq("lead_id", lead_id);
     });
 
-    const homepage = await step.run("generate-homepage", async () => {
-      const result = await generateBespokeHomepage(brief, copy, dna, media, knownPaths);
-      if (!result) throw new Error("Homepage generation returned nothing");
+    // Draft, critique and revise each get their own step. Run together they
+    // are three large reasoning calls sharing one duration budget, and on a
+    // real lead that exceeded it — losing a finished draft because the
+    // critique that followed ran long.
+    const draft = await step.run("homepage-draft", async () => {
+      const result = await draftBespokeHomepage(brief, copy, dna, media, knownPaths);
+      if (!result) throw new Error("Homepage draft returned nothing — see the [openai] log line for why");
       return result;
     });
 
+    const critique = await step.run("homepage-critique", async () =>
+      critiqueComposition(draft.html, dna, media)
+    );
+
+    const revised = critique
+      ? await step.run("homepage-revise", async () => reviseComposition(draft.html, critique))
+      : draft.html;
+
+    const homepage = {
+      html: finaliseHomepage(revised, brief, media, knownPaths),
+      rationale: draft.rationale,
+    };
+
+    const homepageHtml = homepage.html;
+    if (!homepageHtml) throw new Error("Homepage was empty once sanitized");
+
     await step.run("save-homepage", async () => {
-      await writeLivePage(lead_id, HOME_KEY, homepage.html, "generated", homepage.rationale);
+      await writeLivePage(lead_id, HOME_KEY, homepageHtml, "generated", homepage.rationale);
       // Split immediately so section-level repair is available the moment
       // the operator first looks at the page, rather than after some later
       // action happens to trigger it.
@@ -233,7 +256,7 @@ export const bespokeGenerate = inngest.createFunction(
         .from("artifacts")
         .update({
           bespoke_rationale: homepage.rationale,
-          bespoke_sections: splitIntoSections(homepage.html),
+          bespoke_sections: splitIntoSections(homepageHtml),
         })
         .eq("lead_id", lead_id);
       // Reviewable from here. Everything after is depth, not a blocker.

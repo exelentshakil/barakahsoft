@@ -231,7 +231,7 @@ function splitRationale(raw: string): { rationale: string; html: string } {
  * caught nothing. This pass looks at layout, surface variety, image
  * placement and whether the design direction was actually executed.
  */
-async function critiqueComposition(html: string, dna: DesignDna, media: MediaPlan): Promise<string> {
+export async function critiqueComposition(html: string, dna: DesignDna, media: MediaPlan): Promise<string | null> {
   const critique = await callOpenAI(
     `Review this generated homepage as a design director. Reply with exactly "APPROVED" if it passes, otherwise list only the concrete problems, briefly.
 
@@ -252,8 +252,12 @@ ${html.slice(0, 70000)}`,
     { maxTokens: 12000, temperature: 0.2 }
   );
 
-  if (!critique || critique.trim().toUpperCase().startsWith("APPROVED")) return html;
+  if (!critique || critique.trim().toUpperCase().startsWith("APPROVED")) return null;
+  return critique;
+}
 
+/** Apply a critique to a page. Separate so it can own its own step budget. */
+export async function reviseComposition(html: string, critique: string): Promise<string> {
   const revised = await callOpenAI(
     `Fix these composition problems. This is a targeted revision, not a rewrite — keep everything that already works, and do not change any of the wording.
 
@@ -276,17 +280,15 @@ export interface BespokeResult {
   rationale: string;
 }
 
-function finalise(html: string, brief: SiteBrief, media: MediaPlan, knownPaths: string[]): string {
-  return sanitizeBespokeHtml(
-    rewriteInternalLinks(
-      stripUnplannedImages(html, media.map((m) => m.url)),
-      brief,
-      new Set(knownPaths)
-    )
-  );
-}
-
-export async function generateBespokeHomepage(
+/**
+ * The draft pass, on its own.
+ *
+ * Draft, critique and revise used to run inside a single background step,
+ * which meant one step had to fit three large reasoning calls inside one
+ * duration budget — and on a real lead it did not. Each pass now owns its
+ * own step, so the slow one cannot kill the work the others already did.
+ */
+export async function draftBespokeHomepage(
   brief: SiteBrief,
   copy: CopyPlan,
   dna: DesignDna,
@@ -304,13 +306,31 @@ export async function generateBespokeHomepage(
   const { rationale, html } = splitRationale(raw);
   if (!html) return null;
 
-  const finalHtml = finalise(await critiqueComposition(html, dna, media), brief, media, knownPaths);
-  if (finalHtml.replace(/<[^>]+>/g, "").trim().length < 400) return null;
-
   return {
-    html: finalHtml,
+    html,
     rationale: rationale || `Composed to a ${dna.mood} direction drawn from ${dna.sourceName}.`,
   };
+}
+
+/** Sanitize, resolve links and images, and reject an empty result. */
+export function finaliseHomepage(
+  html: string,
+  brief: SiteBrief,
+  media: MediaPlan,
+  knownPaths: string[]
+): string | null {
+  const finalHtml = finalise(html, brief, media, knownPaths);
+  return finalHtml.replace(/<[^>]+>/g, "").trim().length < 400 ? null : finalHtml;
+}
+
+function finalise(html: string, brief: SiteBrief, media: MediaPlan, knownPaths: string[]): string {
+  return sanitizeBespokeHtml(
+    rewriteInternalLinks(
+      stripUnplannedImages(html, media.map((m) => m.url)),
+      brief,
+      new Set(knownPaths)
+    )
+  );
 }
 
 export type InnerPageKind = "service" | "area" | "location-service" | "about" | "faq" | "contact" | "blog-index" | "blog-post";

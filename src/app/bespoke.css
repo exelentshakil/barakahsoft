@@ -59,14 +59,30 @@
 
 /* ---------------------------------------------------------------- layout */
 
+/* The horizontal gutter lives on the CONTAINER, never on the band.
+ *
+ * It used to sit on .bs-section, which meant a band written without that
+ * class had none — and the generator reasonably wrote
+ * `<section class="bs-hero bs-band-invert">`, putting the headline flush
+ * against the viewport edge. Requiring a class pairing the model has to
+ * remember is a design flaw in the vocabulary, not a prompting problem.
+ *
+ * Owning the gutter here means content clears the edge wherever a wrap is
+ * used, and it can never double up. */
 .bs-section {
   padding-block: var(--bs-section-y);
-  padding-inline: 1.25rem;
   position: relative;
 }
 .bs-section-tight { padding-block: calc(var(--bs-section-y) * 0.55); }
-.bs-wrap { width: 100%; max-width: 1200px; margin-inline: auto; }
-.bs-wrap-narrow { width: 100%; max-width: 760px; margin-inline: auto; }
+.bs-wrap { width: 100%; max-width: 1200px; margin-inline: auto; padding-inline: 1.25rem; }
+.bs-wrap-narrow { width: 100%; max-width: 760px; margin-inline: auto; padding-inline: 1.25rem; }
+
+/* Content dropped straight into a band with no wrap around it still clears
+   the edge. Decorative layers are excluded — they are meant to bleed. */
+.bespoke-page > section > :not(.bs-wrap):not(.bs-wrap-narrow):not(.bs-hero-media):not(.bs-hero-scrim):not(.bs-decor-orb),
+.bs-hero-content > :not(.bs-wrap):not(.bs-wrap-narrow) {
+  padding-inline: 1.25rem;
+}
 
 .bs-stack { display: flex; flex-direction: column; gap: var(--bs-gap); }
 .bs-stack-sm { display: flex; flex-direction: column; gap: 0.75rem; }
@@ -86,12 +102,12 @@
 .bs-split { display: grid; gap: calc(var(--bs-gap) * 1.5); align-items: center; grid-template-columns: 1fr; }
 
 @media (min-width: 640px) {
-  .bs-section { padding-inline: 2rem; }
+  .bs-wrap, .bs-wrap-narrow { padding-inline: 2rem; }
   .bs-grid-2 { grid-template-columns: repeat(2, 1fr); }
   .bs-grid-3 { grid-template-columns: repeat(2, 1fr); }
 }
 @media (min-width: 960px) {
-  .bs-section { padding-inline: 2.5rem; }
+  .bs-wrap, .bs-wrap-narrow { padding-inline: 2.5rem; }
   .bs-grid-3 { grid-template-columns: repeat(3, 1fr); }
   .bs-grid-4 { grid-template-columns: repeat(4, 1fr); }
   .bs-split { grid-template-columns: 1.05fr 0.95fr; }
