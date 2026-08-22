@@ -531,6 +531,14 @@
   cursor: pointer;
 }
 
+/* Declared after .bs-nav-toggle deliberately. The earlier media query that
+   hid it lost to the toggle's own later rule at equal specificity, so the
+   hamburger rendered on desktop next to the full navigation. */
+@media (min-width: 1024px) {
+  .bs-nav-toggle { display: none; }
+  .bs-nav-mobile { display: none; }
+}
+
 .bs-nav-mobile {
   border-top: var(--bs-border-width) solid var(--bs-border-color);
   padding: 0.75rem 1.25rem 1.25rem;

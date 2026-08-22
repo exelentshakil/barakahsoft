@@ -44,10 +44,12 @@ export function BespokeGenerationStudio({
   const sitePhotos = Array.isArray(facts.site_photos) ? (facts.site_photos as any[]) : [];
   const primaryScrapedPhoto = sitePhotos.find((p) => p.kind === "img" && p.url && (p.url.includes("headshot") || p.url.includes("photo")))?.url || sitePhotos[0]?.url;
 
-  // Extract detected services from scraped pages navigation & headings
-  const pages = Array.isArray(facts.pages) ? (facts.pages as any[]) : [];
-  const extractedNavServices = pages.flatMap((p) => (Array.isArray(p.navLinks) ? p.navLinks.map((n: any) => n.text) : []));
-  const uniqueServices = Array.from(new Set(extractedNavServices)).filter((s) => s && s.length < 35 && !["Home", "Blog", "Contact", "About", "Privacy Policy", "Terms"].includes(s));
+  // Services come from the classification pass, which reads the page
+  // content. Navigation text was the previous source and it put the
+  // business's phone number and email address into this box as services —
+  // and because whatever is in here overrides the classified list at
+  // generation time, those went straight onto the client's homepage.
+  const classifiedServices = Array.isArray(facts.derived_services) ? (facts.derived_services as string[]) : [];
 
   // Extract previously saved generated assets from Supabase
   const extracted = (artifact?.extracted_assets as any) || {};
@@ -63,9 +65,11 @@ export function BespokeGenerationStudio({
   // electrician service list, which meant a roofer or a salon whose scrape
   // was thin silently received an electrician's services -- one of the two
   // root causes of "bespoke" sites that looked identical.
+  // An operator edit wins, then the classified list. Nothing else — a guess
+  // in this box becomes a claim on the client's homepage.
   const defaultServices = Array.isArray(extracted.services_list) && extracted.services_list.length > 0
     ? extracted.services_list.join("\n")
-    : uniqueServices.slice(0, 8).join("\n");
+    : classifiedServices.join("\n");
 
   const [businessName, setBusinessName] = useState(defaultBusinessName);
   const [founder, setFounder] = useState(defaultFounder);
@@ -75,6 +79,28 @@ export function BespokeGenerationStudio({
   const [industry, setIndustry] = useState(defaultIndustry);
   const [servicesText, setServicesText] = useState(defaultServices);
   const [primaryColor, setPrimaryColor] = useState(extracted.branding?.colors?.primary || (facts.colors as any)?.primary || "#533AFD");
+  // useState initialisers run once. Analysis finishes minutes later and
+  // refreshes these props, but the fields kept their original empty values —
+  // so the brief looked unpopulated until the operator reloaded by hand.
+  // Fields the operator has actually typed in are never overwritten.
+  const dataSignature = `${defaultBusinessName}|${defaultCity}|${defaultIndustry}|${defaultServices}`;
+  const lastSignature = useRef(dataSignature);
+  const touched = useRef(false);
+
+  useEffect(() => {
+    if (dataSignature === lastSignature.current) return;
+    lastSignature.current = dataSignature;
+    if (touched.current) return;
+
+    setBusinessName(defaultBusinessName);
+    setCity(defaultCity);
+    setIndustry(defaultIndustry);
+    setServicesText(defaultServices);
+    setFounder(defaultFounder);
+    setHeroImage(defaultHero);
+    setLogoUrl(defaultLogo);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataSignature]);
   const [accentColor, setAccentColor] = useState(extracted.branding?.colors?.accent || (facts.colors as any)?.accent || "#FFD12D");
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
@@ -138,6 +164,10 @@ export function BespokeGenerationStudio({
   briefRef.current = { businessName, founder, city, industry, servicesText, heroImage };
 
   const [briefSaved, setBriefSaved] = useState<"idle" | "saving" | "saved">("idle");
+
+  const markTouched = () => {
+    touched.current = true;
+  };
 
   const saveBrief = useCallback(async () => {
     const b = briefRef.current;
@@ -297,7 +327,7 @@ export function BespokeGenerationStudio({
                 <Input
                   id="gen-business-name"
                   value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
+                  onChange={(e) => { markTouched(); setBusinessName(e.target.value); }}
                   className="mt-1 h-8 text-xs bg-[#f9f9ff]"
                   placeholder="e.g. York Electrical Contractors"
                   required
@@ -309,7 +339,7 @@ export function BespokeGenerationStudio({
                 <Input
                   id="gen-founder"
                   value={founder}
-                  onChange={(e) => setFounder(e.target.value)}
+                  onChange={(e) => { markTouched(); setFounder(e.target.value); }}
                   className="mt-1 h-8 text-xs bg-[#f9f9ff]"
                   placeholder="e.g. David Karagounis"
                 />
@@ -320,7 +350,7 @@ export function BespokeGenerationStudio({
                 <Input
                   id="gen-city"
                   value={city}
-                  onChange={(e) => setCity(e.target.value)}
+                  onChange={(e) => { markTouched(); setCity(e.target.value); }}
                   className="mt-1 h-8 text-xs bg-[#f9f9ff]"
                   placeholder="e.g. Flushing, NY"
                 />
@@ -331,7 +361,7 @@ export function BespokeGenerationStudio({
                 <Input
                   id="gen-industry"
                   value={industry}
-                  onChange={(e) => setIndustry(e.target.value)}
+                  onChange={(e) => { markTouched(); setIndustry(e.target.value); }}
                   className="mt-1 h-8 text-xs bg-[#f9f9ff]"
                   placeholder="e.g. Electrical & Solar Contractors"
                 />
@@ -342,7 +372,7 @@ export function BespokeGenerationStudio({
                 <Input
                   id="gen-hero"
                   value={heroImage}
-                  onChange={(e) => setHeroImage(e.target.value)}
+                  onChange={(e) => { markTouched(); setHeroImage(e.target.value); }}
                   className="mt-1 h-8 text-xs bg-[#f9f9ff]"
                   placeholder="https://.../owner-headshot.png"
                 />
@@ -353,7 +383,7 @@ export function BespokeGenerationStudio({
                 <Input
                   id="gen-logo"
                   value={logoUrl}
-                  onChange={(e) => setLogoUrl(e.target.value)}
+                  onChange={(e) => { markTouched(); setLogoUrl(e.target.value); }}
                   className="mt-1 h-8 text-xs bg-[#f9f9ff]"
                   placeholder="https://.../logo.png"
                 />
@@ -365,7 +395,7 @@ export function BespokeGenerationStudio({
                   id="gen-services"
                   rows={5}
                   value={servicesText}
-                  onChange={(e) => setServicesText(e.target.value)}
+                  onChange={(e) => { markTouched(); setServicesText(e.target.value); }}
                   className="mt-1 text-xs bg-[#f9f9ff] font-sans"
                   placeholder="One real service per line, taken from the client&apos;s own site"
                 />

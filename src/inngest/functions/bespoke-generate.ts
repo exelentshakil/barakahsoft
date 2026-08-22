@@ -253,7 +253,9 @@ export const bespokeGenerate = inngest.createFunction(
 
       const checked = await step.run(`verify-${attempt}`, async () => {
         const html = sanitizeBespokeHtml(structure.html);
-        return { html, report: verifyHomepage(html, brief, gateTokens) };
+        // The stylesheet is verified alongside the markup: most of what makes
+        // a page read as expensive lives in the CSS, not the HTML.
+        return { html, report: verifyHomepage(html, brief, gateTokens, stylesheet.css) };
       });
 
       lastReport = checked.report;

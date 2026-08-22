@@ -82,10 +82,84 @@ function contrast(a: string, b: string): number {
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
+/**
+ * The premium standard, checked against the stylesheet.
+ *
+ * These are the things that separate an expensive site from an adequate one,
+ * and every one of them is visible in the CSS: whether the page breathes,
+ * whether the type has a real scale, whether interactive elements respond,
+ * whether a keyboard user can see where they are. A model asked "is this
+ * premium?" says yes; the stylesheet cannot lie about whether it declared a
+ * focus-visible state.
+ */
+function verifyStylesheet(css: string): QualityFinding[] {
+  const findings: QualityFinding[] = [];
+  const add = (severity: QualityFinding["severity"], check: string, detail: string) =>
+    findings.push({ severity, check, detail });
+
+  if (css.trim().length < 1500) {
+    add("blocker", "stylesheet", `Only ${css.trim().length} characters of CSS. A page this size cannot be properly styled by it.`);
+  }
+
+  // Whitespace: generous, and scaling with the viewport rather than jumping
+  // at breakpoints. clamp() is the signature of a considered spacing scale.
+  if (!/clamp\s*\(/i.test(css)) {
+    add("warning", "whitespace", "No clamp() anywhere — spacing and type will jump at breakpoints instead of scaling.");
+  }
+  const paddingRules = css.match(/padding(-block|-inline|-top|-bottom)?\s*:/gi)?.length ?? 0;
+  if (paddingRules < 12) {
+    add("warning", "whitespace", `Only ${paddingRules} padding declarations. The page is unlikely to breathe.`);
+  }
+
+  // Typography: a real scale, and a readable measure.
+  if (!/font-family/i.test(css)) {
+    add("warning", "typography", "The stylesheet sets no font-family, so the page falls back to system defaults.");
+  }
+  if (!/line-height/i.test(css)) {
+    add("warning", "typography", "No line-height is set anywhere; body copy will use browser defaults.");
+  }
+  if (!/max-width\s*:\s*\d+(ch|ex)/i.test(css) && !/max-width\s*:\s*6\dch/i.test(css)) {
+    add("warning", "typography", "No measure constraint (max-width in ch) on body text — long lines are hard to read.");
+  }
+
+  // Micro-interaction and accessibility.
+  if (!/:hover/i.test(css)) {
+    add("blocker", "interaction", "No hover states at all. Nothing on the page will feel responsive.");
+  }
+  if (!/:focus-visible/i.test(css)) {
+    add("blocker", "accessibility", "No :focus-visible styles. A keyboard user cannot see where they are.");
+  }
+  if (!/transition|animation/i.test(css)) {
+    add("warning", "interaction", "No transitions anywhere; every state change will snap.");
+  }
+  if (/transition|animation/i.test(css) && !/prefers-reduced-motion/i.test(css)) {
+    add("warning", "accessibility", "Motion is used without a prefers-reduced-motion guard.");
+  }
+
+  // Mobile polish.
+  if (!/@media[^{]*max-width|@media[^{]*min-width/i.test(css)) {
+    add("blocker", "mobile", "No media queries. The layout cannot be responsive.");
+  }
+
+  // The reveal contract: elements must be visible without script.
+  if (/data-reveal-armed/.test(css) && !/data-revealed/.test(css)) {
+    add("blocker", "interaction", "Reveal start state is styled but the revealed state is not — content will stay hidden.");
+  }
+
+  // Colour discipline. Literal colours bypass the contrast-checked palette.
+  const literals = css.match(/#[0-9a-f]{3,8}\b|rgba?\(\s*\d/gi)?.length ?? 0;
+  if (literals > 6) {
+    add("blocker", "colour", `${literals} literal colour values in the stylesheet. Colour must come from the design tokens.`);
+  }
+
+  return findings;
+}
+
 export function verifyHomepage(
   html: string,
   brief: SiteBrief,
-  tokens: DesignTokens
+  tokens: DesignTokens,
+  css?: string | null
 ): QualityReport {
   const findings: QualityFinding[] = [];
   const add = (severity: QualityFinding["severity"], check: string, detail: string) =>
@@ -245,6 +319,8 @@ export function verifyHomepage(
   if (/\b(lorem ipsum|todo|tbd|placeholder|\[insert|your business name|xxx)\b/i.test(body)) {
     add("blocker", "placeholder", "The page contains placeholder text.");
   }
+
+  if (css) findings.push(...verifyStylesheet(css));
 
   const blockers = findings.filter((f) => f.severity === "blocker");
 

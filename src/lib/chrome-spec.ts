@@ -96,9 +96,11 @@ export function buildChromeSpec(dna: DesignDna, inputs: ChromeInputs): ChromeSpe
   return {
     nav: {
       archetype,
-      // A utility bar is a trade convention that reads as credible for
-      // urgent services, and as clutter for considered, editorial brands.
-      utilityBar: inputs.hasPhone && (dna.mood === "bold-utility" || dna.mood === "dark-premium"),
+      // Always off. A thin bar above the navigation carrying a phone number
+      // is a convention from cheap contractor templates, and with nothing to
+      // announce it is pure clutter above the one screen that has to sell.
+      // The phone already appears in the navigation and in the hero.
+      utilityBar: false,
       sticky: true,
       ctaStyle: dna.mood === "bold-utility" ? "accent" : "solid",
       showPhone: inputs.hasPhone,
