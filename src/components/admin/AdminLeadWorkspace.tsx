@@ -24,6 +24,7 @@ import {
   Mail,
   MapPin,
   MessageCircle,
+  Pencil,
   Phone,
   PhoneCall,
   Plus,
@@ -57,6 +58,7 @@ import {
 } from "recharts";
 import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 import { AssetSlottingManager } from "@/components/admin/AssetSlottingManager";
+import { SectionContentEditor } from "@/components/admin/SectionContentEditor";
 import { PricingManager } from "@/components/admin/PricingManager";
 import { EditLeadDialog } from "@/components/admin/EditLeadDialog";
 import { DeleteLeadButton } from "@/components/admin/DeleteLeadButton";
@@ -83,6 +85,7 @@ export function AdminLeadWorkspace({
   const [generatingStripe, setGeneratingStripe] = useState(false);
   const [rescaping, setRescraping] = useState(false);
   const [previewPath, setPreviewPath] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   const businessName = lead.business_name || lead.contact_name || lead.source_url;
   const phone = lead.phone || "(718) 353-7227";
@@ -90,7 +93,9 @@ export function AdminLeadWorkspace({
   const facts = (scrapeResults?.facts ?? {}) as Record<string, unknown>;
   const pricing = (artifact?.extracted_assets?.pricing as any) ?? null;
   const portalUrl = `https://portal.barakahsoft.com/s/${lead.slug}`;
-  const previewUrl = `/s/${lead.slug}${previewPath}`;
+  
+  // Clean preview URL: homepage renders ?view=preview so it shows the actual website, not the proposal portal
+  const previewUrl = previewPath ? `/s/${lead.slug}${previewPath}` : `/s/${lead.slug}?view=preview`;
 
   // 1. Real Extracted Brand & Proof Facts
   const colors = (facts.colors as { primary?: string; accent?: string } | undefined) || {};
@@ -335,13 +340,12 @@ export function AdminLeadWorkspace({
         <div className="rounded-2xl border border-[#c7d0fb] bg-white p-7 shadow-sm flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
           <div>
             <div className="flex items-center gap-2">
-              <span className="flex h-2.5 w-2.5 rounded-full bg-[#533afd] animate-ping" />
-              <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
-                ACTIVE PIPELINE LEAD
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#f0f3ff] px-2.5 py-1 text-xs font-bold text-[#533afd] shrink-0">
+                <Zap className="h-3 w-3" /> Active Pipeline
               </span>
               <span className="text-xs font-mono text-[#777588]">#{lead.id.slice(0, 8)}</span>
             </div>
-            <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-[#0d1738] sm:text-3xl">
+            <h1 className="mt-2 text-2xl font-bold tracking-tight text-[#0d1738] sm:text-3xl">
               {businessName}
             </h1>
             <p className="text-xs text-[#777588] mt-0.5">
@@ -602,10 +606,10 @@ export function AdminLeadWorkspace({
           </div>
         </div>
 
-        {/* LINEAR STEP 4: VISUAL ASSET ENGINE & LIVE PREVIEW STUDIO */}
+        {/* LINEAR STEP 4: VISUAL ASSET ENGINE, LIVE PREVIEW & SECTION EDITOR */}
         {artifact && <AssetSlottingManager lead={lead} artifact={artifact} />}
 
-        {/* LIVE IFRAME PREVIEW INSPECTOR */}
+        {/* LIVE IFRAME PREVIEW INSPECTOR (HOMEPAGE RENDERS ?view=preview SO IT SHOWS THE ACTUAL WEBSITE) */}
         <div className="overflow-hidden rounded-2xl border border-border shadow-sm bg-white">
           <div className="flex items-center justify-between gap-3 border-b border-border bg-muted/40 px-4 py-2.5">
             <div className="flex items-center gap-2">
@@ -639,11 +643,21 @@ export function AdminLeadWorkspace({
             </div>
           </div>
           <iframe
+            key={`${previewPath}-${reloadKey}`}
             src={previewUrl}
             className="h-[750px] w-full"
             title="Generated site preview"
           />
         </div>
+
+        {/* LIVE SECTION CONTENT & BESPOKE PROMPT EDITOR */}
+        {artifact && (
+          <SectionContentEditor
+            leadId={lead.id}
+            sections={artifact.funnel_pages}
+            onSaved={() => setReloadKey((k) => k + 1)}
+          />
+        )}
 
         {/* LINEAR STEP 5: AUTOMATED BREVO DELIVERY & LIVE PROPOSAL LINK */}
         <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-5">
