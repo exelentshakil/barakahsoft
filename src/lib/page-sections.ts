@@ -63,23 +63,22 @@ export function labelFor(kind: string): string {
  * splitting on top-level tags is reliable without asking the model to emit a
  * bespoke envelope format it would sometimes get wrong.
  */
-export function splitIntoSections(html: string): PageSection[] {
+/**
+ * Balanced top-level blocks.
+ *
+ * Walks element boundaries rather than regex-matching whole blocks, because
+ * sections legitimately nest and a non-greedy match cuts them at the first
+ * inner closing tag.
+ */
+function splitTopLevel(html: string): string[] {
   const parts: string[] = [];
-
   let depth = 0;
   let start = -1;
   let cursor = 0;
 
-  // Walk top-level element boundaries rather than regex-matching whole
-  // blocks: sections legitimately nest, and a non-greedy match would cut
-  // them at the first inner closing tag.
-  const tokens = [...html.matchAll(/<(\/?)(section|div|article|aside|main)\b[^>]*?(\/?)>/gi)];
-  for (const token of tokens) {
-    const isClosing = token[1] === "/";
-    const isSelfClosing = token[3] === "/";
-    if (isSelfClosing) continue;
-
-    if (!isClosing) {
+  for (const token of html.matchAll(/<(\/?)(section|div|article|aside|main|header|footer)\b[^>]*?(\/?)>/gi)) {
+    if (token[3] === "/") continue;
+    if (token[1] !== "/") {
       if (depth === 0) start = token.index!;
       depth += 1;
     } else {
@@ -93,12 +92,32 @@ export function splitIntoSections(html: string): PageSection[] {
     }
   }
 
-  // Anything after the last balanced block (rare, but real when a model
-  // leaves a trailing fragment) is kept rather than silently dropped.
+  // A trailing fragment after the last balanced block is kept rather than
+  // silently dropped.
   const tail = html.slice(cursor).trim();
   if (tail && tail.replace(/<[^>]+>/g, "").trim().length > 0) parts.push(tail);
 
-  const blocks = parts.filter((p) => p.replace(/<[^>]+>/g, "").trim().length > 0);
+  return parts;
+}
+
+export function splitIntoSections(html: string): PageSection[] {
+  const parts = splitTopLevel(html);
+
+  let blocks = parts.filter((p) => p.replace(/<[^>]+>/g, "").trim().length > 0);
+
+  // A page wrapped in a single <main> or container div splits into one block,
+  // which made the whole homepage a single unfixable "section" — the refine
+  // panel showed "Hero, 915 words, 9 images" and nothing could be edited
+  // independently. Descend through wrappers until real bands appear.
+  let guard = 0;
+  while (blocks.length === 1 && guard < 3) {
+    const inner = blocks[0].replace(/^<\w+[^>]*>/, "").replace(/<\/\w+>\s*$/, "");
+    const nested = splitTopLevel(inner).filter((p) => p.replace(/<[^>]+>/g, "").trim().length > 0);
+    if (nested.length < 2) break;
+    blocks = nested;
+    guard++;
+  }
+
   if (blocks.length === 0) {
     return [{ id: "section-1", kind: "hero", label: "Full page", html, locked: false }];
   }

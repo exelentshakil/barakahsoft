@@ -58,11 +58,11 @@ import {
   YAxis,
 } from "recharts";
 import type { Lead, Artifact, ScrapeResults } from "@/types/database";
-import { AssetSlottingManager } from "@/components/admin/AssetSlottingManager";
 import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStudio";
 import { RefinePanel } from "@/components/admin/RefinePanel";
 import { SectionEditor } from "@/components/admin/SectionEditor";
 import { VisibilityPanel } from "@/components/admin/VisibilityPanel";
+import { AuditPanel } from "@/components/admin/AuditPanel";
 import { ApprovalGate } from "@/components/admin/ApprovalGate";
 import { useLeadLive } from "@/hooks/use-lead-live";
 import { PricingManager } from "@/components/admin/PricingManager";
@@ -517,6 +517,11 @@ export function AdminLeadWorkspace({
         {/* Measured on demand, at a size the operator chooses — every cell
             is a paid search and the measurement is worth far more to a
             metro-wide roofer than to a painter working three postcodes. */}
+        {/* The sales conversation: what is wrong with their current site,
+            and who is beating them. Both derived from data already paid for
+            during analysis. */}
+        {scrapeResults && <AuditPanel key={`audit-${reloadKey}`} leadId={lead.id} />}
+
         {scrapeResults && <VisibilityPanel leadId={lead.id} industry={lead.industry} />}
 
         {/* LINEAR STEP 3: COMPETITOR BENCHMARK & MARKET POSITIONING (Only Real Competitors) */}
@@ -564,8 +569,11 @@ export function AdminLeadWorkspace({
           </div>
         )}
 
-        {/* LINEAR STEP 4: VISUAL ASSET ENGINE & LIVE PREVIEW STUDIO */}
-        {artifact && <AssetSlottingManager lead={lead} artifact={artifact} />}
+        {/* The old asset panel is gone. It presented uploads that did not
+            reach generation, a "migrate hotlinks" action the media pipeline
+            already does at ingest, and a service-visual grid that listed the
+            business's phone number as a route. The Refine panel above is the
+            working version. */}
 
         {/* LIVE IFRAME PREVIEW INSPECTOR OR GENERATION PROMPT */}
         {!artifact ? (

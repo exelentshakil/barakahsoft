@@ -40,14 +40,13 @@ export interface BriefOverrides {
 export function buildKnownPaths(
   services: string[],
   areas: string[],
-  extras: { blog?: boolean; locationServices?: { service: string; area: string }[] } = {}
+  extras: { locationServices?: { service: string; area: string }[] } = {}
 ): string[] {
   return [
     "/",
     ...services.map((s) => `/services/${slugifyText(s)}`),
     ...areas.map((a) => `/areas/${slugifyText(a)}`),
     ...(extras.locationServices ?? []).map((p) => `/locations/${slugifyText(`${p.service}-${p.area}`)}`),
-    ...(extras.blog ? ["/blog"] : []),
     "/about",
     "/faq",
     "/contact",

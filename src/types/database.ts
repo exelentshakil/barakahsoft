@@ -94,6 +94,8 @@ export interface ScrapeResults {
     measuredAt: string;
   } | null;
   search_visibility_at: string | null;
+  // Real competitors with measured review counts and speed scores.
+  competitors: unknown | null;
   scraped_at: string;
 }
 

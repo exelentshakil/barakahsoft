@@ -98,7 +98,10 @@ export type SearchProvider = "gemini" | "openai";
 // that a model will genuinely run a search for each rather than doing two and
 // filling in the rest — which is the failure mode that makes naive batching
 // worse than useless.
-const AREAS_PER_CALL = 6;
+// Three, not six. At six the model reliably searched fewer places than it
+// answered for, and every unsearched area was correctly dropped — leaving
+// too few cells to report and failing the whole measurement.
+const AREAS_PER_CALL = 3;
 
 function batchPrompt(trade: string, areas: string[]): string {
   return `For EACH of these ${areas.length} places, run a separate search for "${trade} in <place>" and report which businesses actually appear in those results, in the order they appear.
@@ -112,11 +115,27 @@ Use this exact shape:
 {"results": [{"area": "exact place name from the list", "businesses": ["Business Name", "..."]}]}`;
 }
 
-/** Whether a place was genuinely among the searches that ran. */
+/**
+ * Whether a place was genuinely among the searches that ran.
+ *
+ * Matched on distinctive words rather than the whole string. Requiring the
+ * full name to appear verbatim dropped almost every cell: asked about
+ * "Northeast Philadelphia" the model searches "roofers northeast philly",
+ * and asked about "Bucks County" it searches "roofing bucks county pa". Both
+ * are genuine searches for that place, and both failed a substring test.
+ */
 function wasSearched(area: string, executedQueries: string[]): boolean {
-  const needle = area.toLowerCase().replace(/[^a-z0-9]/g, "");
-  if (!needle) return false;
-  return executedQueries.some((q) => q.toLowerCase().replace(/[^a-z0-9]/g, "").includes(needle));
+  const words = area
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((w) => w.length > 3 && !["county", "area", "north", "south", "east", "west", "city", "town"].includes(w));
+
+  // A name made entirely of common words gives nothing to match on, so any
+  // executed search counts rather than dropping the cell outright.
+  if (words.length === 0) return executedQueries.length > 0;
+
+  const haystack = executedQueries.join(" ").toLowerCase();
+  return words.some((w) => haystack.includes(w));
 }
 
 function toCell(area: string, businesses: unknown, businessName: string): VisibilityCell | null {
@@ -162,7 +181,10 @@ async function measureBatchGemini(
     if (!requested) continue;
 
     if (!wasSearched(requested, grounded.executedQueries)) {
-      console.warn(`[visibility] "${requested}" was answered without a search — dropping`);
+      console.warn(
+        `[visibility] "${requested}" was answered without a matching search — dropping. ` +
+          `Searches actually run: ${grounded.executedQueries.join(" | ") || "(none reported)"}`
+      );
       continue;
     }
 
@@ -244,10 +266,28 @@ export async function measureSearchVisibility(
     }
   }
 
-  // A report built from a handful of successful searches would misrepresent
-  // the service area, so it is refused rather than shipped thin.
-  if (cells.length < Math.min(5, areas.length)) {
-    console.error(`[visibility] only ${cells.length} of ${areas.length} areas measured — not enough for a report`);
+  // Batching is an optimisation, not a requirement. When it under-delivers,
+  // fall back to one call per remaining area rather than failing the whole
+  // measurement — those calls cost more but they reliably search.
+  const minimum = Math.max(3, Math.ceil(areas.length * 0.6));
+  if (cells.length < minimum) {
+    const measured = new Set(cells.map((c) => c.area));
+    const missing = areas.filter((a) => !measured.has(a));
+    console.warn(`[visibility] batching produced ${cells.length}/${areas.length}; retrying ${missing.length} individually`);
+
+    for (let i = 0; i < missing.length; i += 4) {
+      const retried = await Promise.all(
+        missing.slice(i, i + 4).map((area) => measureAreaOpenAI(trade, area, businessName))
+      );
+      for (const cell of retried) if (cell) cells.push(cell);
+      if (cells.length >= minimum) break;
+    }
+  }
+
+  if (cells.length < 3) {
+    console.error(
+      `[visibility] only ${cells.length} of ${areas.length} areas produced usable results after retrying`
+    );
     return null;
   }
 

@@ -25,9 +25,10 @@ import type { FunnelPageSection, Lead, ScrapeResults, Artifact } from "@/types/d
 // FAQ, contact. That is what the client is sent, and it is the only spend a
 // lead incurs before it responds.
 //
-// Phase 2 builds the rest — location×service pages, service areas, the blog
-// — and is triggered explicitly after the client approves, so deep spend
-// only happens on leads that convert.
+// Phase 2 builds the rest — location×service pages and service areas — and
+// is triggered explicitly after the client approves, so deep spend only
+// happens on leads that convert. There is no blog: articles were depth the
+// homepage does not need and effort spent away from the page that sells.
 //
 // Every step is an Inngest step: a failure late in a run does not discard
 // the homepage that already succeeded, progress is visible rather than a
@@ -94,7 +95,7 @@ export const bespokeGenerate = inngest.createFunction(
     // page that has not been built.
     const knownPaths =
       phase === 2
-        ? buildKnownPaths(services, areas, { blog: true, locationServices: buildLocationPairs(services, areas) })
+        ? buildKnownPaths(services, areas, { locationServices: buildLocationPairs(services, areas) })
         : ["/"];
 
     // ---- Phase 2 reuses everything the client already approved ----------
@@ -386,10 +387,6 @@ function pageKey(request: InnerPageRequest): string {
       return `areas/${slugifyText(request.area ?? request.title)}`;
     case "location-service":
       return `locations/${slugifyText(`${request.subject}-${request.area}`)}`;
-    case "blog-post":
-      return `blog/${slugifyText(request.title)}`;
-    case "blog-index":
-      return "blog";
     default:
       return request.kind;
   }
@@ -404,10 +401,6 @@ async function runPhaseTwo(
 ): Promise<void> {
   const leadId = ctx.lead.id;
   const pairs = buildLocationPairs(services, areas);
-
-  // Articles come from the FAQ the homepage already answers, so phase 2
-  // deepens what the client approved rather than inventing new topics.
-  const articles = ctx.brief.services.slice(0, 6).map((s) => `${s} in ${ctx.brief.city}: what to expect`);
 
   const requests: InnerPageRequest[] = [
     ...ctx.brief.services.map((name) => ({
@@ -425,12 +418,6 @@ async function runPhaseTwo(
       subject: p.service,
       area: p.area,
     })),
-    ...(articles.length > 0
-      ? [
-          { kind: "blog-index" as const, title: `${ctx.brief.industry} advice` },
-          ...articles.map((title) => ({ kind: "blog-post" as const, title })),
-        ]
-      : []),
   ];
 
   await step.run("start-phase-2", async () => {

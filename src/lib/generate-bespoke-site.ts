@@ -161,7 +161,7 @@ inline style="" is allowed for LAYOUT ONLY (grid-template-columns, gap, aspect-r
 const ANCHORS = `SECTION ANCHORS — the site's real navigation links to these ids, so they must appear on the section carrying that content or those links scroll nowhere:
   id="services"  id="about"  id="reviews"  id="faq"  id="contact"`;
 
-export type InnerPageKind = "service" | "area" | "location-service" | "about" | "faq" | "contact" | "blog-index" | "blog-post";
+export type InnerPageKind = "service" | "area" | "location-service" | "about" | "faq" | "contact";
 
 export interface InnerPageRequest {
   kind: InnerPageKind;
@@ -194,8 +194,6 @@ export async function generateBespokePage(
     about: `The About page. Tell this business's real story from the facts${brief.founder ? `, centred on ${brief.founder}` : ""}. If the facts are thin, write a short honest page rather than padding it with invented history.`,
     faq: `A full FAQ answering what real customers of this trade ask before calling. Answer from the facts; omit any question the facts cannot honestly answer.`,
     contact: `The Contact page. Make the real phone number and email unmissable and state the real service areas. Do not invent opening hours.`,
-    "blog-index": `An index of the articles listed below. A short intro, then the articles as cards linking to their own pages.`,
-    "blog-post": `An article titled "${page.title}". Genuinely useful, specific to this trade, written for a homeowner or business owner researching the problem. Never present a business claim as fact unless it is in the facts below.`,
   };
 
   const raw = await callOpenAI(

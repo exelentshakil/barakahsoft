@@ -148,7 +148,6 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
                 <a href={payload.innerPagesBuilt ? href(payload, "/about") : "#about"}>About</a>
                 <a href={payload.innerPagesBuilt ? href(payload, "/faq") : "#faq"}>FAQ</a>
                 <a href={payload.innerPagesBuilt ? href(payload, "/contact") : "#contact"}>Contact</a>
-                {payload.fullSiteBuilt && <a href={href(payload, "/blog")}>Advice</a>}
               </div>
             </div>
           </div>
