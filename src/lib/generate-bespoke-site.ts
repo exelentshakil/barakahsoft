@@ -1,7 +1,6 @@
 import { callOpenAI } from "@/lib/openai-client";
 import { sanitizeBespokeHtml } from "@/lib/sanitize-generated-html";
 import type { DesignDna } from "@/lib/design-dna";
-import type { CopyPlan } from "@/lib/generate-copy-plan";
 import type { MediaPlan } from "@/lib/media/plan-media";
 import type { ConversionIntent } from "@/lib/conversion-intent";
 
@@ -75,6 +74,17 @@ function rewriteInternalLinks(html: string, brief: SiteBrief, knownPaths: Set<st
     const slug = clean.split("/").filter(Boolean).pop();
     return slug ? `href="#${slug}"` : `href="${base}"`;
   });
+}
+
+/** Sanitize, restrict images to the planned set, and resolve internal links. */
+function finalise(html: string, brief: SiteBrief, media: MediaPlan, knownPaths: string[]): string {
+  return sanitizeBespokeHtml(
+    rewriteInternalLinks(
+      stripUnplannedImages(html, media.map((m) => m.url)),
+      brief,
+      new Set(knownPaths)
+    )
+  );
 }
 
 function dnaBlock(dna: DesignDna): string {
@@ -151,193 +161,6 @@ inline style="" is allowed for LAYOUT ONLY (grid-template-columns, gap, aspect-r
 const ANCHORS = `SECTION ANCHORS — the site's real navigation links to these ids, so they must appear on the section carrying that content or those links scroll nowhere:
   id="services"  id="about"  id="reviews"  id="faq"  id="contact"`;
 
-function copyBlock(copy: CopyPlan): string {
-  return `THE COPY — this is written and approved. Lay it out. You may not rewrite it, shorten it into fragments, or add new sentences of your own. Headings, body copy and button labels appear exactly as given.
-
-Headline: ${copy.headline}
-Subhead: ${copy.subhead}
-Hero button: ${copy.heroCta}
-${copy.trustChips.length > 0 ? `Trust chips: ${copy.trustChips.join(" | ")}` : "Trust chips: none — do not invent any"}
-
-Sections, in the order you judge best for this design direction:
-${copy.sections
-  .map(
-    (s) =>
-      `  [${s.id}]\n    eyebrow: ${s.eyebrow}\n    heading: ${s.heading}\n    body: ${s.body}${
-        s.bullets.length > 0 ? `\n    bullets:\n${s.bullets.map((b) => `      - ${b}`).join("\n")}` : ""
-      }`
-  )
-  .join("\n")}
-
-${
-  copy.services.length > 0
-    ? `Services, each linking to its own page:\n${copy.services.map((s) => `  - ${s.name}: ${s.blurb}`).join("\n")}`
-    : "No service list."
-}
-
-${copy.faq.length > 0 ? `FAQ:\n${copy.faq.map((f) => `  Q: ${f.question}\n  A: ${f.answer}`).join("\n")}` : "No FAQ."}
-
-Closing call to action:
-  heading: ${copy.closing.heading}
-  body: ${copy.closing.body}
-  button: ${copy.closing.cta}`;
-}
-
-function homepagePrompt(brief: SiteBrief, copy: CopyPlan, dna: DesignDna, media: MediaPlan, knownPaths: string[]): string {
-  return `You are a senior web designer building the homepage for a real ${brief.industry} business in ${brief.city}. The copy is already written and the photography is already chosen. Your job is composition: turn this into a page that looks unmistakably more expensive than whatever this business has now.
-
-${dnaBlock(dna)}
-
-${copyBlock(copy)}
-
-${mediaBlock(media)}
-
-INTERNAL LINKS — the only routes that exist. Write them exactly as listed:
-${knownPaths.map((p) => `  - ${p}`).join("\n")}
-${brief.phone ? `Phone links must be tel:${brief.phone.replace(/[^\d+]/g, "")}` : "There is no phone number — use the contact page for every call to action."}
-
-${VOCABULARY_REFERENCE}
-
-${ANCHORS}
-
-SERVICE ANCHORS — the service pages are not built yet, so each service links to its own section on THIS page. Give every service block an id of its slug (lowercase, hyphenated, e.g. id="panel-upgrades") and link to it with href="#panel-upgrades". The client must be able to click any nav item and land somewhere real.
-
-Do NOT output a <header>, nav, logo or <footer>. Those are separate real components rendered around your output, and anything you write there is deleted. Begin at the hero, end at the closing call to action.
-
-COMPOSITION BAR — this is what separates a premium page from a template:
-  - Vary section surfaces deliberately. A page where every section sits on the same background is the template look being replaced. Use bs-band-alt, bs-band-invert, bs-band-primary and bs-band-gradient with intent.
-  - Vary layout. Do not reach for bs-grid-3 every time. Splits, editorial rows and bento grids exist precisely so consecutive sections do not rhyme.
-  - Build the signature motifs named in the design direction.
-  - Give the hero real presence. It is the whole first impression.
-  - Place every image in the section its description actually matches.
-  - Whitespace is structural, not leftover. Sections should breathe according to the specified rhythm.
-
-Reply with EXACTLY this format:
-RATIONALE: one sentence on the composition decisions you committed to
----PAGE---
-<the HTML body fragment, nothing else, no markdown fences>`;
-}
-
-const RATIONALE_PREFIX = /^RATIONALE:\s*(.*?)\s*\n+---PAGE---\s*\n/i;
-
-function splitRationale(raw: string): { rationale: string; html: string } {
-  const trimmed = raw.replace(/^```(?:html)?\s*/i, "").replace(/```\s*$/i, "").trim();
-  const match = trimmed.match(RATIONALE_PREFIX);
-  if (!match) return { rationale: "", html: trimmed };
-  return { rationale: match[1].trim(), html: trimmed.slice(match[0].length).trim() };
-}
-
-/**
- * One critique/revise cycle on COMPOSITION only.
- *
- * The copy was already written and edited by a pass whose sole job was
- * voice, and the images were already matched by subject. Re-litigating
- * either here produced a reviewer that graded everything shallowly and
- * caught nothing. This pass looks at layout, surface variety, image
- * placement and whether the design direction was actually executed.
- */
-export async function critiqueComposition(html: string, dna: DesignDna, media: MediaPlan): Promise<string | null> {
-  const critique = await callOpenAI(
-    `Review this generated homepage as a design director. Reply with exactly "APPROVED" if it passes, otherwise list only the concrete problems, briefly.
-
-Check:
-1. MONOTONY — do consecutive sections use the same background and the same grid? Does the page rhyme with itself?
-2. DESIGN DIRECTION — were the specified hero treatment, service layout, proof style and signature motifs actually built, or only gestured at?
-3. IMAGE PLACEMENT — is any image in a section its description does not match? Is any image used twice?
-4. HERO — does it have real presence, or is it a headline on a plain background?
-5. STRUCTURE — empty sections, headings with no content beneath them, a section anchor id that is missing.
-
-${dnaBlock(dna)}
-
-IMAGE DESCRIPTIONS:
-${media.map((m) => `  ${m.url} shows: ${m.caption}`).join("\n") || "  none"}
-
-PAGE:
-${html.slice(0, 70000)}`,
-    { maxTokens: 12000, temperature: 0.2 }
-  );
-
-  if (!critique || critique.trim().toUpperCase().startsWith("APPROVED")) return null;
-  return critique;
-}
-
-/** Apply a critique to a page. Separate so it can own its own step budget. */
-export async function reviseComposition(html: string, critique: string): Promise<string> {
-  const revised = await callOpenAI(
-    `Fix these composition problems. This is a targeted revision, not a rewrite — keep everything that already works, and do not change any of the wording.
-
-PROBLEMS:
-${critique}
-
-CURRENT PAGE:
-${html}
-
-Reply with the corrected HTML body fragment only — no rationale line, no markdown fences.`,
-    { maxTokens: 40000, temperature: 0.5 }
-  );
-
-  if (!revised) return html;
-  return revised.replace(/^```(?:html)?\s*/i, "").replace(/```\s*$/i, "").trim();
-}
-
-export interface BespokeResult {
-  html: string;
-  rationale: string;
-}
-
-/**
- * The draft pass, on its own.
- *
- * Draft, critique and revise used to run inside a single background step,
- * which meant one step had to fit three large reasoning calls inside one
- * duration budget — and on a real lead it did not. Each pass now owns its
- * own step, so the slow one cannot kill the work the others already did.
- */
-export async function draftBespokeHomepage(
-  brief: SiteBrief,
-  copy: CopyPlan,
-  dna: DesignDna,
-  media: MediaPlan,
-  knownPaths: string[]
-): Promise<BespokeResult | null> {
-  const raw = await callOpenAI(homepagePrompt(brief, copy, dna, media, knownPaths), {
-    maxTokens: 48000,
-    temperature: 0.8,
-    system:
-      "You are a senior web designer who writes production HTML. You lay out copy exactly as given without rewriting it, and you use only the class vocabulary you are handed.",
-  });
-  if (!raw) return null;
-
-  const { rationale, html } = splitRationale(raw);
-  if (!html) return null;
-
-  return {
-    html,
-    rationale: rationale || `Composed to a ${dna.mood} direction drawn from ${dna.sourceName}.`,
-  };
-}
-
-/** Sanitize, resolve links and images, and reject an empty result. */
-export function finaliseHomepage(
-  html: string,
-  brief: SiteBrief,
-  media: MediaPlan,
-  knownPaths: string[]
-): string | null {
-  const finalHtml = finalise(html, brief, media, knownPaths);
-  return finalHtml.replace(/<[^>]+>/g, "").trim().length < 400 ? null : finalHtml;
-}
-
-function finalise(html: string, brief: SiteBrief, media: MediaPlan, knownPaths: string[]): string {
-  return sanitizeBespokeHtml(
-    rewriteInternalLinks(
-      stripUnplannedImages(html, media.map((m) => m.url)),
-      brief,
-      new Set(knownPaths)
-    )
-  );
-}
-
 export type InnerPageKind = "service" | "area" | "location-service" | "about" | "faq" | "contact" | "blog-index" | "blog-post";
 
 export interface InnerPageRequest {
@@ -357,7 +180,8 @@ export interface InnerPageRequest {
  */
 export async function generateBespokePage(
   brief: SiteBrief,
-  copy: CopyPlan,
+  /** The approved homepage, as a voice reference. Null before one exists. */
+  voiceSample: string | null,
   dna: DesignDna,
   media: MediaPlan,
   knownPaths: string[],
@@ -377,9 +201,11 @@ export async function generateBespokePage(
   const raw = await callOpenAI(
     `You are building the "${page.title}" page for a real ${brief.industry} business in ${brief.city}. It must feel like the same site as the homepage — same design system, same voice.
 
-VOICE REFERENCE — the homepage's approved copy, for tone only. Do not repeat it:
-  Headline: ${copy.headline}
-  Subhead: ${copy.subhead}
+${
+  voiceSample
+    ? `VOICE REFERENCE — the approved homepage this page must sound like. Match its tone; never repeat its sentences:\n${voiceSample.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").slice(0, 1200)}`
+    : "No homepage exists yet — write in the plain, specific voice described below."
+}
 
 ${dnaBlock(dna)}
 

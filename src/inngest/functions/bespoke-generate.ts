@@ -2,15 +2,11 @@ import { inngest } from "@/inngest/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildSiteBrief, buildKnownPaths, type BriefOverrides } from "@/lib/build-site-brief";
 import {
-  draftBespokeHomepage,
-  critiqueComposition,
-  reviseComposition,
-  finaliseHomepage,
   generateBespokePage,
   type InnerPageRequest,
   type SiteBrief,
 } from "@/lib/generate-bespoke-site";
-import { generateCopyPlan, critiqueCopyPlan, CopyPlanSchema, type CopyPlan } from "@/lib/generate-copy-plan";
+import { generateSinglePass } from "@/lib/generate-single-pass";
 import { DEFAULT_DESIGN_DNA, DesignDnaSchema, type DesignDna } from "@/lib/design-dna";
 import { compileDesignTokens } from "@/lib/design-tokens";
 import { ingestRealPhotos, buildSlots, planMedia, type MediaPlan } from "@/lib/media/plan-media";
@@ -50,7 +46,8 @@ interface GenerationContext {
   lead: Lead;
   brief: SiteBrief;
   dna: DesignDna;
-  copy: CopyPlan;
+  /** The approved homepage, used as the voice reference for inner pages. */
+  voiceSample: string | null;
   media: MediaPlan;
   knownPaths: string[];
 }
@@ -100,16 +97,18 @@ export const bespokeGenerate = inngest.createFunction(
 
     // ---- Phase 2 reuses everything the client already approved ----------
     if (phase === 2) {
-      const storedCopy = loaded.artifact?.copy_plan ? CopyPlanSchema.safeParse(loaded.artifact.copy_plan) : null;
-      if (!storedCopy?.success) {
-        throw new Error("bespoke-generate: phase 2 requires an approved phase 1 copy plan — run phase 1 first");
+      if (!loaded.artifact?.bespoke_homepage_html) {
+        throw new Error("bespoke-generate: phase 2 needs an approved homepage to match its voice — run phase 1 first");
       }
+      // The approved homepage is the voice reference. It is what the client
+      // said yes to, which a separately written copy plan never was.
+
       const media = (loaded.artifact?.media_plan as MediaPlan | null) ?? [];
       await runPhaseTwo(step, admin, {
         lead: loaded.lead,
         brief,
         dna,
-        copy: storedCopy.data,
+        voiceSample: loaded.artifact.bespoke_homepage_html,
         media,
         knownPaths,
       }, services, areas);
@@ -148,29 +147,15 @@ export const bespokeGenerate = inngest.createFunction(
 
     await bumpProgress(admin, lead_id, 1);
 
-    const copy = await step.run("write-copy", async () => {
-      const draft = await generateCopyPlan(brief, dna);
-      if (!draft) {
-        throw new Error(
-          "Copy generation returned nothing. The [copy] and [openai] lines in the logs say whether the model " +
-            "returned empty content (token budget exhausted by reasoning), invalid JSON, or a plan that failed validation."
-        );
-      }
-      // The editor pass is allowed to fail without failing the run; a good
-      // draft beats no page.
-      const edited = (await critiqueCopyPlan(draft, brief)) ?? draft;
-      await admin.from("artifacts").update({ copy_plan: edited }).eq("lead_id", lead_id);
-      return edited;
-    });
+    // No separate copy pass. It cost two minutes forty and wrote blind to
+    // layout; the single generation pass now writes the words and arranges
+    // them together. Navigation and footer come from the classified
+    // services, which are the business's real ones.
+    const serviceNames = brief.services.slice(0, MAX_SERVICE_PAGES);
 
-    await bumpProgress(admin, lead_id, 2);
-
-    // The nav and footer are per-lead designs too, derived from the same
-    // DNA — a generic header on a bespoke page is the loudest possible tell
-    // that the page came off a production line.
     await step.run("plan-chrome", async () => {
       const chrome = buildChromeSpec(dna, {
-        services: copy.services.map((s) => s.name),
+        services: serviceNames,
         areas: [],
         hasPhone: !!brief.phone,
         hasReviews: brief.reviews.length > 0,
@@ -178,31 +163,26 @@ export const bespokeGenerate = inngest.createFunction(
       await admin.from("artifacts").update({ chrome_spec: chrome }).eq("lead_id", lead_id);
     });
 
-    await bumpProgress(admin, lead_id, 3);
+    await bumpProgress(admin, lead_id, 2);
 
+    // funnel_pages drives the mega menu, the footer and sitemap.xml. It is
+    // structure, not prose, so it needs the real service names rather than a
+    // written plan.
     const funnelPages: FunnelPageSection[] = [
       {
         slug: "hero",
         kind: "hero",
-        h2: copy.headline,
-        body_content: copy.subhead,
+        h2: brief.businessName,
+        body_content: `${brief.industry} in ${brief.city}`,
         media_asset_ids: [],
-        cta: copy.heroCta,
+        cta: brief.intent.primaryLabel,
         variant_props: { phone: brief.phone, rating: brief.rating, review_count: brief.reviewCount },
       },
-      ...copy.services.slice(0, MAX_SERVICE_PAGES).map((service) => ({
-        slug: slugifyText(service.name),
+      ...serviceNames.map((name) => ({
+        slug: slugifyText(name),
         kind: "service" as const,
-        h2: service.name,
-        body_content: service.blurb,
-        media_asset_ids: [],
-        cta: null,
-      })),
-      ...copy.faq.map((f, index) => ({
-        slug: `faq-${index + 1}`,
-        kind: "faq" as const,
-        h2: f.question,
-        body_content: f.answer,
+        h2: name,
+        body_content: `${name} in ${brief.city}.`,
         media_asset_ids: [],
         cta: null,
       })),
@@ -222,49 +202,39 @@ export const bespokeGenerate = inngest.createFunction(
         .eq("lead_id", lead_id);
     });
 
-    // Draft, critique and revise each get their own step. Run together they
-    // are three large reasoning calls sharing one duration budget, and on a
-    // real lead that exceeded it — losing a finished draft because the
-    // critique that followed ran long.
-    const draft = await step.run("homepage-draft", async () => {
-      const result = await draftBespokeHomepage(brief, copy, dna, media, knownPaths);
-      if (!result) throw new Error("Homepage draft returned nothing — see the [openai] log line for why");
+    // One pass: copy and layout decided together, once.
+    //
+    // This replaced draft, composition-critique, revise, design-critic and
+    // repair — five sequential calls that took seven and a half minutes and
+    // produced pages where some sections read well and none read
+    // exceptional. Splitting copy from layout removed the layout model's
+    // ability to write, and three sequential repair passes converge on safe.
+    const homepage = await step.run("generate-homepage", async () => {
+      const result = await generateSinglePass(brief, dna, media, knownPaths);
+      if (!result) {
+        throw new Error(
+          "Homepage generation returned nothing. The [openai] log line reports whether the model returned empty content, or output that was empty once sanitized."
+        );
+      }
       return result;
     });
 
-    const critique = await step.run("homepage-critique", async () =>
-      critiqueComposition(draft.html, dna, media)
-    );
-
-    const composed = critique
-      ? await step.run("homepage-revise", async () => reviseComposition(draft.html, critique))
-      : draft.html;
-
-    // The design critic runs on the composed page and measures what can be
-    // measured — contrast ratios, heading structure, call-to-action coverage
-    // — before asking a model about the parts that are genuinely judgement.
-    // Asking a model whether contrast is acceptable produces agreement, which
-    // is how unreadable heroes reached production here twice.
-    const verdict = await step.run("design-critic", async () =>
-      criticiseDesign(composed, compileDesignTokens(dna, {
-        colourSource: loaded.artifact?.colour_source,
-        clientBrandHex: (loaded.scrapeResults.facts as Record<string, unknown>)?.brand_color_hex as string | null,
-      }), brief.intent, !!brief.phone)
-    );
-
-    const revised = verdict.issues.length > 0
-      ? await step.run("homepage-repair", async () =>
-          reviseComposition(composed, issuesAsInstructions(verdict.issues))
-        )
-      : composed;
-
-    const homepage = {
-      html: finaliseHomepage(revised, brief, media, knownPaths),
-      rationale: draft.rationale,
-    };
-
     const homepageHtml = homepage.html;
-    if (!homepageHtml) throw new Error("Homepage was empty once sanitized");
+
+    // The critic still runs, but it REPORTS rather than triggering another
+    // rewrite. Its measurements are worth having; a fourth automated pass
+    // over the same page is not.
+    const verdict = await step.run("design-critic", async () =>
+      criticiseDesign(
+        homepageHtml,
+        compileDesignTokens(dna, {
+          colourSource: loaded.artifact?.colour_source,
+          clientBrandHex: (loaded.scrapeResults.facts as Record<string, unknown>)?.brand_color_hex as string | null,
+        }),
+        brief.intent,
+        !!brief.phone
+      )
+    );
 
     await step.run("save-homepage", async () => {
       await writeLivePage(lead_id, HOME_KEY, homepageHtml, "generated", homepage.rationale);
@@ -343,7 +313,7 @@ async function buildPages(
     const stepId = key.replace(/[^a-z0-9]+/gi, "-");
 
     const html = (await step.run(`page-${stepId}`, async () =>
-      generateBespokePage(ctx.brief, ctx.copy, ctx.dna, ctx.media, ctx.knownPaths, request)
+      generateBespokePage(ctx.brief, ctx.voiceSample, ctx.dna, ctx.media, ctx.knownPaths, request)
     )) as string | null;
 
     done += 1;
@@ -386,13 +356,15 @@ async function runPhaseTwo(
   const leadId = ctx.lead.id;
   const pairs = buildLocationPairs(services, areas);
 
-  const articles = ctx.copy.faq.slice(0, 6).map((f) => f.question);
+  // Articles come from the FAQ the homepage already answers, so phase 2
+  // deepens what the client approved rather than inventing new topics.
+  const articles = ctx.brief.services.slice(0, 6).map((s) => `${s} in ${ctx.brief.city}: what to expect`);
 
   const requests: InnerPageRequest[] = [
-    ...ctx.copy.services.map((service) => ({
+    ...ctx.brief.services.map((name) => ({
       kind: "service" as const,
-      title: service.name,
-      subject: service.name,
+      title: name,
+      subject: name,
     })),
     { kind: "about" as const, title: `About ${ctx.brief.businessName}` },
     { kind: "faq" as const, title: "Frequently asked questions" },
@@ -430,7 +402,7 @@ async function runPhaseTwo(
     // this the nav and footer would keep hiding areas -- correct during
     // phase 1, wrong the moment those routes were built.
     const chrome = buildChromeSpec(ctx.dna, {
-      services: ctx.copy.services.map((s) => s.name),
+      services: ctx.brief.services,
       areas,
       hasPhone: !!ctx.brief.phone,
       hasReviews: ctx.brief.reviews.length > 0,
