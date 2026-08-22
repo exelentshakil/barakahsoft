@@ -3,6 +3,7 @@ import { sanitizeBespokeHtml } from "@/lib/sanitize-generated-html";
 import type { DesignDna } from "@/lib/design-dna";
 import type { CopyPlan } from "@/lib/generate-copy-plan";
 import type { MediaPlan } from "@/lib/media/plan-media";
+import type { ConversionIntent } from "@/lib/conversion-intent";
 
 // The markup pass.
 //
@@ -37,6 +38,10 @@ export interface SiteBrief {
   factsDigest: string;
   licensedInsured: boolean;
   leadSlug: string;
+  /** What the client ticked on the intake form, as build instructions. */
+  painInstructions: string[];
+  /** What this page is for, and how to build around it. */
+  intent: ConversionIntent;
 }
 
 /** Only Storage URLs planned for this page may appear in its markup. */

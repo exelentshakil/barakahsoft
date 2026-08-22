@@ -2,6 +2,7 @@ import { slugifyText } from "@/lib/slug";
 import { buildRichContext, findRelevantPage } from "@/lib/facts-context";
 import { extractServiceAreas } from "@/lib/scrape/extract-service-areas";
 import { findLicenseInsuranceMention } from "@/lib/trust-signals";
+import { conversionIntentFor, painPointInstructions } from "@/lib/conversion-intent";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
 import type { PageInventory } from "@/lib/scrape/extract-text";
 import type { Lead, ScrapeResults } from "@/types/database";
@@ -161,6 +162,14 @@ export function buildSiteBrief(
     factsDigest: buildRichContext(facts, { relevantPage: findRelevantPage(facts), maxChars: 5000 }),
     licensedInsured: findLicenseInsuranceMention(facts),
     leadSlug: lead.slug,
+    // The complaints the owner ticked on the intake form. These never
+    // reached generation before, so the rebuilt page had no idea what the
+    // client actually wanted fixed.
+    painInstructions: painPointInstructions(lead.pain_points),
+    intent: conversionIntentFor(
+      overrides.industry?.trim() || lead.industry,
+      !!(overrides.phone?.trim() || nap.phones?.[0] || lead.phone)
+    ),
   };
 }
 

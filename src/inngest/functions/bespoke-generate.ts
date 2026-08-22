@@ -17,6 +17,7 @@ import { ingestRealPhotos, buildSlots, planMedia, type MediaPlan } from "@/lib/m
 import { buildChromeSpec } from "@/lib/chrome-spec";
 import { writeLivePage, HOME_KEY } from "@/lib/page-versions";
 import { splitIntoSections } from "@/lib/page-sections";
+import { criticiseDesign, issuesAsInstructions } from "@/lib/audit/design-critic";
 import { slugifyText } from "@/lib/slug";
 import type { FunnelPageSection, Lead, ScrapeResults, Artifact } from "@/types/database";
 
@@ -235,9 +236,27 @@ export const bespokeGenerate = inngest.createFunction(
       critiqueComposition(draft.html, dna, media)
     );
 
-    const revised = critique
+    const composed = critique
       ? await step.run("homepage-revise", async () => reviseComposition(draft.html, critique))
       : draft.html;
+
+    // The design critic runs on the composed page and measures what can be
+    // measured — contrast ratios, heading structure, call-to-action coverage
+    // — before asking a model about the parts that are genuinely judgement.
+    // Asking a model whether contrast is acceptable produces agreement, which
+    // is how unreadable heroes reached production here twice.
+    const verdict = await step.run("design-critic", async () =>
+      criticiseDesign(composed, compileDesignTokens(dna, {
+        colourSource: loaded.artifact?.colour_source,
+        clientBrandHex: (loaded.scrapeResults.facts as Record<string, unknown>)?.brand_color_hex as string | null,
+      }), brief.intent, !!brief.phone)
+    );
+
+    const revised = verdict.issues.length > 0
+      ? await step.run("homepage-repair", async () =>
+          reviseComposition(composed, issuesAsInstructions(verdict.issues))
+        )
+      : composed;
 
     const homepage = {
       html: finaliseHomepage(revised, brief, media, knownPaths),
@@ -256,6 +275,9 @@ export const bespokeGenerate = inngest.createFunction(
         .from("artifacts")
         .update({
           bespoke_rationale: homepage.rationale,
+          // Kept so the operator can see what the critic caught, rather than
+          // trusting that it ran.
+          qa_notes: verdict.issues.length > 0 ? issuesAsInstructions(verdict.issues) : null,
           bespoke_sections: splitIntoSections(homepageHtml),
         })
         .eq("lead_id", lead_id);

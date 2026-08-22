@@ -82,6 +82,66 @@ const BORDER: Record<DesignDna["geometry"]["borderTreatment"], string> = {
   none: "0px",
 };
 
+/**
+ * Neutralise a colour, keeping only a trace of its hue.
+ *
+ * Surfaces and text are built from near-neutrals rather than the reference's
+ * raw values. Two reasons, and the second is the important one.
+ *
+ * A reference site's measured "surface" is frequently a saturated brand
+ * colour, and a page whose backgrounds and body text are both tinted reads
+ * as cheap however good the layout is — premium design is almost always
+ * neutral ground with colour used sparingly.
+ *
+ * It also makes the brand colour VISIBLE. When everything is tinted, an
+ * accent has nothing to stand against; when the page is neutral, a single
+ * saturated colour on the call to action is impossible to miss. That is the
+ * whole reason for spending it there.
+ */
+function neutralise(hex: string, keepHue = 0.06): string {
+  const clean = hex.replace("#", "");
+  const r = parseInt(clean.slice(0, 2), 16);
+  const g = parseInt(clean.slice(2, 4), 16);
+  const b = parseInt(clean.slice(4, 6), 16);
+
+  // Perceived brightness, so the neutral keeps the original's lightness.
+  const grey = Math.round(0.2126 * r + 0.7152 * g + 0.0722 * b);
+  const mix = (channel: number) => Math.round(grey + (channel - grey) * keepHue);
+
+  return `#${[mix(r), mix(g), mix(b)].map((c) => Math.max(0, Math.min(255, c)).toString(16).padStart(2, "0")).join("")}`.toUpperCase();
+}
+
+/**
+ * Force a foreground to clear a contrast threshold against its background.
+ *
+ * Body text at 4.5:1 and large text at 3:1 are the accessibility floor, but
+ * the reason to enforce them here is commercial: low-contrast text is the
+ * most common way a generated page looks amateur, and it cannot be caught by
+ * a prompt.
+ */
+function ensureContrast(foreground: string, background: string, minimum: number): string {
+  if (contrastRatio(foreground, background) >= minimum) return foreground;
+
+  const towardsWhite = relativeLuminance(background) < 0.5;
+  const clean = foreground.replace("#", "");
+  let r = parseInt(clean.slice(0, 2), 16);
+  let g = parseInt(clean.slice(2, 4), 16);
+  let b = parseInt(clean.slice(4, 6), 16);
+
+  // Walk the foreground away from the background until it passes, rather
+  // than snapping to black or white, so the hue survives where it can.
+  for (let step = 0; step < 24; step++) {
+    const shift = towardsWhite ? 10 : -10;
+    r = Math.max(0, Math.min(255, r + shift));
+    g = Math.max(0, Math.min(255, g + shift));
+    b = Math.max(0, Math.min(255, b + shift));
+    const candidate = `#${[r, g, b].map((c) => c.toString(16).padStart(2, "0")).join("")}`.toUpperCase();
+    if (contrastRatio(candidate, background) >= minimum) return candidate;
+  }
+
+  return towardsWhite ? "#FFFFFF" : "#0B0B0F";
+}
+
 /** #RRGGBB -> "r g b", so tokens can drive rgb(var(--x) / alpha) opacity. */
 function rgbChannels(hex: string): string {
   const clean = hex.replace("#", "");
@@ -165,8 +225,17 @@ export function compileDesignTokens(
   const rhythm = RHYTHM[dna.layout.sectionRhythm];
   const type = TYPE_SCALE[dna.typography.scale];
 
+  // Ground and text are neutral; the brand colour is reserved for accents.
+  // A saturated surface with tinted body text is what makes a generated page
+  // read as cheap, and it leaves the accent nothing to stand against.
+  const surface = neutralise(p.surface);
+  const surfaceAlt = neutralise(p.surfaceAlt);
   const onPrimary = readableOn(p.primary, p.onPrimary);
-  const ink = readableOn(p.surface, p.ink);
+
+  // Contrast is enforced rather than hoped for: body text at 4.5:1 and muted
+  // text at 4.5:1 against the ground it actually sits on.
+  const ink = ensureContrast(neutralise(p.ink), surface, 4.5);
+  const inkMuted = ensureContrast(neutralise(p.inkMuted, 0.1), surface, 4.5);
 
   const vars: Record<string, string> = {
     "--bs-primary": p.primary,
@@ -175,18 +244,18 @@ export function compileDesignTokens(
     "--bs-accent": p.accent,
     "--bs-accent-rgb": rgbChannels(p.accent),
     "--bs-on-accent": readableOn(p.accent, "#0B0B0F"),
-    "--bs-surface": p.surface,
-    "--bs-surface-alt": p.surfaceAlt,
-    "--bs-surface-rgb": rgbChannels(p.surface),
+    "--bs-surface": surface,
+    "--bs-surface-alt": surfaceAlt,
+    "--bs-surface-rgb": rgbChannels(surface),
     "--bs-ink": ink,
     "--bs-ink-rgb": rgbChannels(ink),
-    "--bs-ink-muted": p.inkMuted,
+    "--bs-ink-muted": inkMuted,
 
     // Inverted band — used by dark CTA/stat sections on a light page (and
     // the reverse on a dark one). Derived rather than authored so it always
     // has real contrast against the section it sits next to.
-    "--bs-invert-surface": relativeLuminance(p.surface) > 0.4 ? "#0B0F19" : "#FFFFFF",
-    "--bs-invert-ink": relativeLuminance(p.surface) > 0.4 ? "#FFFFFF" : "#0B0F19",
+    "--bs-invert-surface": relativeLuminance(surface) > 0.4 ? "#0B0F19" : "#FFFFFF",
+    "--bs-invert-ink": relativeLuminance(surface) > 0.4 ? "#FFFFFF" : "#0B0F19",
 
     "--bs-font-display": `"${dna.typography.displayFamily}", ui-sans-serif, system-ui, sans-serif`,
     "--bs-font-body": `"${dna.typography.bodyFamily}", ui-sans-serif, system-ui, sans-serif`,
@@ -207,7 +276,10 @@ export function compileDesignTokens(
     "--bs-shadow-card": elevation.card,
     "--bs-shadow-lift": elevation.lift,
     "--bs-border-width": BORDER[dna.geometry.borderTreatment],
-    "--bs-border-color": `rgb(${rgbChannels(ink)} / 0.12)`,
+    "--bs-border-color": `rgb(${rgbChannels(ink)} / 0.14)`,
+    // The accent, guaranteed readable as text on the page's own ground —
+    // a saturated brand colour is often unreadable at body size on white.
+    "--bs-primary-on-surface": ensureContrast(p.primary, surface, 4.5),
 
     "--bs-section-y": rhythm.section,
     "--bs-gap": rhythm.gap,

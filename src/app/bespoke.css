@@ -155,7 +155,9 @@
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--bs-primary);
+  /* Contrast-safe variant: a saturated brand colour at 12px is frequently
+     unreadable on white, and an eyebrow is real content. */
+  color: var(--bs-primary-on-surface);
 }
 .bs-band-primary .bs-eyebrow,
 .bs-band-gradient .bs-eyebrow { color: var(--bs-on-primary); opacity: 0.85; }
@@ -165,7 +167,7 @@
 .bs-band-primary .bs-lead, .bs-band-gradient .bs-lead { color: rgb(255 255 255 / 0.88); }
 .bs-band-invert .bs-lead { color: rgb(255 255 255 / 0.72); }
 .bs-muted { color: var(--bs-ink-muted); }
-.bs-highlight { color: var(--bs-primary); }
+.bs-highlight { color: var(--bs-primary-on-surface); }
 .bs-accent-text { color: var(--bs-accent); }
 
 .bs-pill {
@@ -175,7 +177,7 @@
   padding: 0.4rem 0.85rem;
   border-radius: var(--bs-radius-pill);
   background: rgb(var(--bs-primary-rgb) / 0.1);
-  color: var(--bs-primary);
+  color: var(--bs-primary-on-surface);
   font-size: 0.8125rem;
   font-weight: 600;
   border: var(--bs-border-width) solid rgb(var(--bs-primary-rgb) / 0.2);
@@ -288,7 +290,7 @@
   font-size: clamp(2rem, 4.5vw, 3.25rem);
   font-weight: var(--bs-display-weight);
   line-height: 1;
-  color: var(--bs-primary);
+  color: var(--bs-primary-on-surface);
 }
 .bs-band-invert .bs-stat-value,
 .bs-band-primary .bs-stat-value,
@@ -351,7 +353,7 @@
   flex: 0 0 auto;
   border-radius: var(--bs-radius-md);
   background: rgb(var(--bs-primary-rgb) / 0.12);
-  color: var(--bs-primary);
+  color: var(--bs-primary-on-surface);
 }
 .bs-icon-badge svg { width: 1.5rem; height: 1.5rem; }
 .bs-band-invert .bs-icon-badge,
