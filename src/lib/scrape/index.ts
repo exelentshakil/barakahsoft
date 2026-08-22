@@ -1,4 +1,4 @@
-import { fetchSiteHtml } from "@/lib/scrape/fetch-site";
+import { fetchSiteHtml, type FetchedPage } from "@/lib/scrape/fetch-site";
 import { extractPhotos } from "@/lib/scrape/extract-photos";
 import { extractSiteVideo } from "@/lib/scrape/extract-video";
 import { isHotlinkSafe } from "@/lib/scrape/check-hotlink-safety";
@@ -11,13 +11,26 @@ import { captionUnlabeledPhotos } from "@/lib/scrape/caption-photos";
 import { callPlacesApi, resolvePlacesPhotoUrl } from "@/lib/google/places";
 import { callPagespeedApi } from "@/lib/google/pagespeed";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { scrapeWithFirecrawl } from "@/lib/scrape/firecrawl";
+import { scrapeWithFirecrawl, crawlWithFirecrawl } from "@/lib/scrape/firecrawl";
 
 export async function scrapeBusiness(leadId: string, sourceUrl: string, businessNameHint?: string) {
-  const [pages, firecrawlData] = await Promise.all([
-    fetchSiteHtml(sourceUrl),
+  // Firecrawl executes JavaScript; a plain fetch does not. Most small
+  // business sites render their navigation and service content client-side,
+  // so raw HTML is an empty shell -- the York lead came back with one page
+  // and zero nav links, which left the brief with no services and the
+  // generated site with nothing real to say. Crawling is also what the page
+  // budget is for: thirty real pages instead of one shell.
+  const [crawled, firecrawlData] = await Promise.all([
+    crawlWithFirecrawl(sourceUrl, { limit: 30 }),
     scrapeWithFirecrawl(sourceUrl),
   ]);
+
+  // Fall back to direct fetching only when Firecrawl is unavailable or the
+  // crawl came back empty, so a missing key degrades rather than breaks.
+  const pages: FetchedPage[] =
+    crawled.length > 0
+      ? crawled.map((page) => ({ url: page.url, html: page.html }))
+      : await fetchSiteHtml(sourceUrl);
 
   const homepage = pages[0];
   const photoCandidates = pages.flatMap(extractPhotos);

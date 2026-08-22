@@ -26,16 +26,25 @@ export interface FirecrawlResult {
   ogImage?: string;
 }
 
+export interface CrawledPage {
+  url: string;
+  html: string;
+  markdown: string;
+  title: string | null;
+  description: string | null;
+}
+
+function normaliseUrl(url: string): string {
+  const trimmed = url.trim();
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
+/** Single page, for design-DNA extraction where one page is the whole job. */
 export async function scrapeWithFirecrawl(url: string): Promise<FirecrawlResult | null> {
   const apiKey = process.env.FIRECRAWL_API_KEY;
   if (!apiKey) return null;
 
   try {
-    let cleanUrl = url.trim();
-    if (!/^https?:\/\//i.test(cleanUrl)) {
-      cleanUrl = `https://${cleanUrl}`;
-    }
-
     const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
       method: "POST",
       headers: {
@@ -43,13 +52,13 @@ export async function scrapeWithFirecrawl(url: string): Promise<FirecrawlResult 
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        url: cleanUrl,
+        url: normaliseUrl(url),
         formats: ["markdown", "branding"],
       }),
     });
 
     if (!response.ok) {
-      console.error("[firecrawl] API response status:", response.status);
+      console.error("[firecrawl] scrape returned", response.status);
       return null;
     }
 
@@ -67,4 +76,112 @@ export async function scrapeWithFirecrawl(url: string): Promise<FirecrawlResult 
     console.error("[firecrawl] error scraping url:", err);
     return null;
   }
+}
+
+/**
+ * Crawl a whole site.
+ *
+ * This replaced a plain fetch-and-parse pass over raw HTML, which was the
+ * single biggest cause of thin generated sites. Most small business sites
+ * render their navigation and service content client-side, so raw HTML
+ * contains an empty shell: the York lead came back with ONE page and ZERO
+ * nav links, which meant no services could be derived, which meant the
+ * brief was empty and the generated page had nothing real to say.
+ *
+ * Firecrawl executes JavaScript, so what comes back is what a visitor
+ * actually sees. Crawling is also the right use of the page budget — the
+ * difference between one shell page and thirty real ones is the difference
+ * between guessing at a business and knowing it.
+ */
+export async function crawlWithFirecrawl(
+  url: string,
+  options: { limit?: number; timeoutMs?: number } = {}
+): Promise<CrawledPage[]> {
+  const apiKey = process.env.FIRECRAWL_API_KEY;
+  if (!apiKey) return [];
+
+  const limit = options.limit ?? 30;
+  const timeoutMs = options.timeoutMs ?? 120_000;
+
+  try {
+    const start = await fetch("https://api.firecrawl.dev/v1/crawl", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        url: normaliseUrl(url),
+        limit,
+        // Blogs and paginated archives burn the page budget without adding
+        // anything the brief needs; service and location pages are the point.
+        excludePaths: ["^/wp-admin", "^/cart", "^/checkout", "^/my-account", "\\?", "/tag/", "/author/"],
+        scrapeOptions: {
+          formats: ["markdown", "html"],
+          onlyMainContent: false,
+        },
+      }),
+    });
+
+    if (!start.ok) {
+      console.error("[firecrawl] crawl start returned", start.status, (await start.text().catch(() => "")).slice(0, 200));
+      return [];
+    }
+
+    const { id } = await start.json();
+    if (!id) return [];
+
+    // Poll rather than webhook: this runs inside an Inngest step that owns
+    // its own duration budget, and a webhook would need a public callback
+    // for something only this step cares about.
+    const deadline = Date.now() + timeoutMs;
+    let delay = 2000;
+
+    while (Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      delay = Math.min(delay * 1.4, 10_000);
+
+      const statusRes = await fetch(`https://api.firecrawl.dev/v1/crawl/${id}`, {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+      if (!statusRes.ok) continue;
+
+      const status = await statusRes.json();
+
+      if (status.status === "completed" || (status.status === "scraping" && Date.now() > deadline - 15_000)) {
+        return mapPages(status.data ?? []);
+      }
+      if (status.status === "failed") {
+        console.error("[firecrawl] crawl failed for", url);
+        return [];
+      }
+    }
+
+    // Timed out mid-crawl. Whatever completed is still worth far more than
+    // nothing, so make one last attempt to collect it.
+    const finalRes = await fetch(`https://api.firecrawl.dev/v1/crawl/${id}`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+    if (finalRes.ok) {
+      const status = await finalRes.json();
+      return mapPages(status.data ?? []);
+    }
+    return [];
+  } catch (err) {
+    console.error("[firecrawl] crawl error:", err);
+    return [];
+  }
+}
+
+function mapPages(data: unknown[]): CrawledPage[] {
+  return (data as Record<string, never>[])
+    .map((entry) => {
+      const metadata = (entry.metadata ?? {}) as Record<string, string | undefined>;
+      const url = metadata.sourceURL || metadata.url || "";
+      return {
+        url,
+        html: (entry.html as string | undefined) ?? "",
+        markdown: (entry.markdown as string | undefined) ?? "",
+        title: metadata.title ?? null,
+        description: metadata.description ?? null,
+      };
+    })
+    .filter((page) => page.url && (page.html || page.markdown));
 }

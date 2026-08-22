@@ -61,6 +61,7 @@ import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 import { AssetSlottingManager } from "@/components/admin/AssetSlottingManager";
 import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStudio";
 import { RefinePanel } from "@/components/admin/RefinePanel";
+import { useLeadLive } from "@/hooks/use-lead-live";
 import { PricingManager } from "@/components/admin/PricingManager";
 import { EditLeadDialog } from "@/components/admin/EditLeadDialog";
 import { DeleteLeadButton } from "@/components/admin/DeleteLeadButton";
@@ -88,6 +89,11 @@ export function AdminLeadWorkspace({
   const [rescraping, setRescraping] = useState(false);
   const [previewPath, setPreviewPath] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
+
+  // Scrape and generation both run in the background. This keeps every panel
+  // -- verified facts, brief defaults, preview, refine slots -- in step with
+  // the pipeline so nothing here needs a manual reload to become true.
+  useLeadLive(lead.id, () => setReloadKey((k) => k + 1));
 
   const businessName = lead.business_name || lead.contact_name || lead.source_url;
   const phone = lead.phone || "No phone on file";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
@@ -125,6 +125,44 @@ export function BespokeGenerationStudio({
       setGenerating(false);
     }
   }
+
+  // The brief autosaves. It was previously only sent alongside a generate
+  // request and never written back, so "Exact Industry" and "Core Services"
+  // came back empty on every reload -- typed, used once, lost.
+  const briefRef = useRef({ businessName, founder, city, industry, servicesText, heroImage });
+  briefRef.current = { businessName, founder, city, industry, servicesText, heroImage };
+
+  const [briefSaved, setBriefSaved] = useState<"idle" | "saving" | "saved">("idle");
+
+  const saveBrief = useCallback(async () => {
+    const b = briefRef.current;
+    setBriefSaved("saving");
+    try {
+      await fetch(`/api/leads/${lead.id}/brief`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          businessName: b.businessName,
+          founder: b.founder,
+          city: b.city,
+          industry: b.industry,
+          heroImage: b.heroImage,
+          services: b.servicesText.split("\n").map((x: string) => x.trim()).filter(Boolean),
+        }),
+      });
+      setBriefSaved("saved");
+    } catch {
+      setBriefSaved("idle");
+    }
+  }, [lead.id]);
+
+  // Debounced so typing does not fire a request per keystroke.
+  useEffect(() => {
+    if (briefSaved === "saving") return;
+    const timer = setTimeout(saveBrief, 1200);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [businessName, founder, city, industry, servicesText, heroImage]);
 
   // Generation is a multi-minute background job (several model calls plus a
   // critique pass), so the button reports real step progress rather than
@@ -349,7 +387,9 @@ export function BespokeGenerationStudio({
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-border pt-4">
             <span className="text-[11px] text-muted-foreground">
-              Builds the homepage plus every service, about, FAQ and contact page from this brief and the design DNA above.
+              Builds the homepage from this brief and the design DNA above. Inner pages are linked but built after approval.
+              {briefSaved === "saved" && <span className="ml-2 font-semibold text-emerald-600">Brief saved</span>}
+              {briefSaved === "saving" && <span className="ml-2 text-muted-foreground">Saving brief...</span>}
             </span>
 
             <Button
