@@ -30,6 +30,7 @@ import {
   ShieldCheck,
   Smartphone,
   Sparkles,
+  Star,
   Target,
   Upload,
   Users,
@@ -188,9 +189,9 @@ const VISUAL_JOURNEY = [
 
 function ConceptBrowserCard({ concept }: { concept: typeof ROW_1_CONCEPTS[0] }) {
   return (
-    <div className="group w-[360px] sm:w-[420px] overflow-hidden rounded-2xl border border-[#c8ddec] bg-white shadow-[0_10px_30px_rgba(7,40,77,0.07)] transition duration-300 hover:-translate-y-1.5 hover:border-[#0c68c8] hover:shadow-[0_20px_50px_rgba(7,40,77,0.15)]">
+    <div className="group w-[360px] sm:w-[420px] overflow-hidden rounded-2xl border border-[#c8ddec] bg-white/90 backdrop-blur-sm shadow-[0_12px_36px_rgba(7,40,77,0.08)] transition duration-300 hover:-translate-y-2 hover:border-[#0c68c8] hover:shadow-[0_24px_60px_rgba(7,40,77,0.16)]">
       {/* Browser Window Header */}
-      <div className="flex items-center justify-between border-b border-[#e5e7f2] bg-[#f4f7fb] px-4 py-2.5 text-[11px] text-[#777588]">
+      <div className="flex items-center justify-between border-b border-[#e5e7f2] bg-[#f4f7fb]/90 px-4 py-2.5 text-[11px] text-[#777588]">
         <div className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f56]" />
           <span className="h-2.5 w-2.5 rounded-full bg-[#ffbd2e]" />
@@ -222,26 +223,37 @@ function ConceptBrowserCard({ concept }: { concept: typeof ROW_1_CONCEPTS[0] }) 
 
 export function LeadEngineLanding() {
   return (
-    <main className="min-h-screen bg-white text-[#07284d] font-sans antialiased">
+    <main className="min-h-screen bg-white text-[#07284d] font-sans antialiased selection:bg-[#0c68c8] selection:text-white">
       {/* 1. TOP NAVBAR */}
       <Nav />
 
-      {/* 2. HERO SECTION */}
-      <section id="top" className="relative overflow-hidden border-b border-[#d9e8f4] bg-gradient-to-b from-[#f4f9fd] via-[#f8fbfe] to-white pt-16 pb-20 lg:pt-24 lg:pb-28">
-        {/* Subtle Brand Glows */}
-        <div className="pointer-events-none absolute -right-32 -top-40 h-[32rem] w-[32rem] rounded-full bg-[#e5f4ff] blur-3xl" />
-        <div className="pointer-events-none absolute -left-32 top-60 h-[32rem] w-[32rem] rounded-full bg-[#fff7c7]/50 blur-3xl" />
+      {/* 2. HERO SECTION (High-Tech SaaS Grid & Ambient Sparkles) */}
+      <section id="top" className="relative overflow-hidden border-b border-[#d9e8f4] bg-gradient-to-b from-[#f0f6fc] via-[#f8fbfe] to-white pt-16 pb-20 lg:pt-24 lg:pb-32">
+        {/* SaaS Background Grid Pattern */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-60 [background-image:linear-gradient(to_right,rgba(12,104,200,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(12,104,200,0.06)_1px,transparent_1px)] [background-size:40px_40px] [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000_70%,transparent_100%)]"
+          aria-hidden="true"
+        />
+
+        {/* Ambient Sparkles & Glowing Orbs */}
+        <div className="pointer-events-none absolute -right-24 -top-32 h-[34rem] w-[34rem] rounded-full bg-[#dff0ff] blur-3xl opacity-80" />
+        <div className="pointer-events-none absolute -left-24 top-48 h-[32rem] w-[32rem] rounded-full bg-[#fff5c0]/60 blur-3xl opacity-70" />
+        
+        {/* Floating Sparkle Micro-Accents */}
+        <div className="pointer-events-none absolute left-[12%] top-28 hidden h-2.5 w-2.5 rounded-full bg-[#ffd12d] shadow-[0_0_0_8px_rgba(255,209,45,0.18)] lg:block animate-pulse" />
+        <div className="pointer-events-none absolute right-[15%] top-40 hidden h-2 w-2 rounded-full bg-[#0c68c8] shadow-[0_0_0_8px_rgba(12,104,200,0.15)] lg:block" />
+        <div className="pointer-events-none absolute bottom-16 left-[20%] hidden h-2 w-2 rounded-full bg-[#07284d] shadow-[0_0_0_6px_rgba(7,40,77,0.12)] lg:block" />
 
         <div className="relative mx-auto max-w-4xl px-6 text-center space-y-6">
-          {/* Highlighted FREE Pill */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#f1c400] bg-[#fff7c7] px-5 py-2 text-xs font-black uppercase tracking-[0.16em] text-[#07284d] shadow-sm">
+          {/* Highlighted FREE Pill with Glow Ring */}
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#ffd12d] bg-[#fff7c7] px-5 py-2 text-xs font-black uppercase tracking-[0.16em] text-[#07284d] shadow-[0_4px_20px_rgba(255,209,45,0.25)]">
             <Sparkles className="h-4 w-4 text-[#07284d]" />
             Free 48-Hour Homepage Redesign & AI Audit
           </div>
 
-          <h1 className="font-sans text-5xl font-extrabold tracking-[-0.04em] text-[#07284d] sm:text-6xl lg:text-7xl leading-[1.05]">
+          <h1 className="font-sans text-5xl font-extrabold tracking-[-0.045em] text-[#07284d] sm:text-6xl lg:text-7xl leading-[1.04]">
             GET YOUR HOMEPAGE <br />
-            REDESIGNED <span className="bg-gradient-to-r from-[#0c68c8] to-[#07284d] bg-clip-text text-transparent underline decoration-[#ffd12d] decoration-4 underline-offset-8">FOR FREE</span>
+            REDESIGNED <span className="bg-gradient-to-r from-[#0c68c8] via-[#07284d] to-[#0c68c8] bg-clip-text text-transparent underline decoration-[#ffd12d] decoration-4 underline-offset-8">FOR FREE</span>
           </h1>
 
           <p className="mx-auto max-w-2xl text-base leading-relaxed text-[#5c7186] sm:text-lg">
@@ -252,7 +264,7 @@ export function LeadEngineLanding() {
             <RedesignIntakeFlow />
           </div>
 
-          <div className="pt-3 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-[#60778d]">
+          <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-[#60778d]">
             <span className="flex items-center gap-1.5 text-[#07284d] font-semibold">
               <CheckCircle2 className="h-4 w-4 text-[#0c68c8]" /> No payment · No obligation
             </span>
@@ -269,11 +281,17 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 3. 3-STEP EVIDENCE VALUE BANNER */}
-      <section className="border-b border-[#d9e8f4] bg-[#07284d] py-9 text-white">
-        <div className="mx-auto grid max-w-6xl gap-6 px-6 sm:grid-cols-3">
+      {/* 3. 3-STEP EVIDENCE VALUE BANNER (High-Contrast Navy & Gold) */}
+      <section className="relative overflow-hidden border-b border-[#d9e8f4] bg-[#07284d] py-10 text-white shadow-inner">
+        {/* Subtle grid on dark */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-15 [background-image:linear-gradient(to_right,rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.1)_1px,transparent_1px)] [background-size:32px_32px]"
+          aria-hidden="true"
+        />
+
+        <div className="relative mx-auto grid max-w-6xl gap-6 px-6 sm:grid-cols-3">
           <div className="flex items-start gap-4 sm:border-r sm:border-white/15 sm:pr-6">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-[#ffd12d]">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-[#ffd12d] shadow-sm">
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
@@ -287,7 +305,7 @@ export function LeadEngineLanding() {
           </div>
 
           <div className="flex items-start gap-4 sm:border-r sm:border-white/15 sm:pr-6">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-[#ffd12d]">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-[#ffd12d] shadow-sm">
               <BarChart3 className="h-5 w-5" />
             </div>
             <div>
@@ -301,7 +319,7 @@ export function LeadEngineLanding() {
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-[#ffd12d]">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-[#ffd12d] shadow-sm">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
@@ -316,9 +334,14 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 4. "SEE WHAT YOUR NEW WEBSITE COULD LOOK LIKE" (Smooth Multi-Row Marquee Showcase) */}
-      <section id="examples" className="border-b border-[#d9e8f4] bg-[#f8fbfe] py-20 lg:py-28 overflow-hidden space-y-10">
-        <div className="mx-auto max-w-4xl px-6 text-center space-y-3">
+      {/* 4. "SEE WHAT YOUR NEW WEBSITE COULD LOOK LIKE" (Smooth Multi-Row Marquee Showcase with Grid Backdrop) */}
+      <section id="examples" className="relative border-b border-[#d9e8f4] bg-[#f8fbfe] py-20 lg:py-28 overflow-hidden space-y-10">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(to_right,rgba(12,104,200,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(12,104,200,0.05)_1px,transparent_1px)] [background-size:48px_48px]"
+          aria-hidden="true"
+        />
+
+        <div className="relative mx-auto max-w-4xl px-6 text-center space-y-3">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Design Quality Bar</p>
           <h2 className="font-sans text-3xl font-extrabold tracking-tight text-[#07284d] sm:text-5xl">
             SEE WHAT YOUR NEW WEBSITE COULD LOOK LIKE
@@ -329,7 +352,7 @@ export function LeadEngineLanding() {
         </div>
 
         {/* Row 1: Scrolling Left */}
-        <div className="space-y-6">
+        <div className="relative space-y-6">
           <Marquee gap="gap-6" durationSeconds={35}>
             {ROW_1_CONCEPTS.map((concept) => (
               <ConceptBrowserCard key={concept.title} concept={concept} />
@@ -345,9 +368,14 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 5. VISUAL STEP 0 TO DELIVERY JOURNEY (Modern SaaS Visual Timeline) */}
-      <section id="how-it-works" className="border-b border-[#d9e8f4] bg-white py-20 lg:py-28">
-        <div className="mx-auto max-w-6xl px-6 space-y-16">
+      {/* 5. VISUAL STEP 0 TO DELIVERY JOURNEY (Modern SaaS Interactive Timeline) */}
+      <section id="how-it-works" className="relative border-b border-[#d9e8f4] bg-white py-20 lg:py-28">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-30 [background-image:linear-gradient(to_right,rgba(12,104,200,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(12,104,200,0.04)_1px,transparent_1px)] [background-size:36px_36px]"
+          aria-hidden="true"
+        />
+
+        <div className="relative mx-auto max-w-6xl px-6 space-y-16">
           <div className="text-center space-y-3">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">From First Touch to Live Launch</p>
             <h2 className="font-sans text-3xl font-extrabold tracking-tight text-[#07284d] sm:text-5xl">
@@ -364,14 +392,14 @@ export function LeadEngineLanding() {
               return (
                 <div
                   key={item.step}
-                  className="group relative flex flex-col justify-between rounded-2xl border border-[#c8ddec] bg-[#f8fbfe] p-6 shadow-[0_8px_24px_rgba(7,40,77,0.05)] transition duration-300 hover:-translate-y-1.5 hover:border-[#0c68c8] hover:bg-white hover:shadow-[0_18px_40px_rgba(7,40,77,0.12)]"
+                  className="group relative flex flex-col justify-between rounded-2xl border border-[#c8ddec] bg-white/90 backdrop-blur-sm p-6 shadow-[0_8px_24px_rgba(7,40,77,0.05)] transition duration-300 hover:-translate-y-2 hover:border-[#0c68c8] hover:shadow-[0_20px_45px_rgba(7,40,77,0.12)]"
                 >
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8f4ff] text-[#0c68c8]">
                         <Icon className="h-5 w-5" />
                       </div>
-                      <span className="rounded-full bg-white border border-[#c8ddec] px-2.5 py-0.5 text-[10px] font-bold text-[#0c68c8]">
+                      <span className="rounded-full bg-[#f8fbfe] border border-[#c8ddec] px-2.5 py-0.5 text-[10px] font-bold text-[#0c68c8]">
                         {item.badge}
                       </span>
                     </div>
@@ -406,7 +434,7 @@ export function LeadEngineLanding() {
           <div className="text-center pt-2">
             <a
               href="#top"
-              className="inline-flex items-center gap-2 rounded-lg bg-[#ffd12d] px-8 py-4 text-sm font-bold text-[#07284d] shadow-md transition hover:bg-[#f5c400] hover:scale-105"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#ffd12d] px-8 py-4 text-sm font-bold text-[#07284d] shadow-[0_6px_25px_rgba(255,209,45,0.3)] transition hover:bg-[#f5c400] hover:scale-105"
             >
               Get My Free Redesign <ArrowRight className="h-4 w-4" />
             </a>
@@ -414,9 +442,9 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 6. "EVERYTHING YOU GET, FREE" (Navy + Gold High Value Box) */}
-      <section id="what-you-get" className="border-b border-[#d9e8f4] bg-[#f8fbfe] py-20 lg:py-28">
-        <div className="mx-auto max-w-3xl px-6 space-y-10">
+      {/* 6. "EVERYTHING YOU GET, FREE" (Navy + Gold Luxury Card) */}
+      <section id="what-you-get" className="relative border-b border-[#d9e8f4] bg-[#f8fbfe] py-20 lg:py-28">
+        <div className="relative mx-auto max-w-3xl px-6 space-y-10">
           <div className="text-center space-y-3">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Full Free Deliverables</p>
             <h2 className="font-sans text-3xl font-extrabold tracking-tight text-[#07284d] sm:text-5xl">
@@ -427,15 +455,18 @@ export function LeadEngineLanding() {
             </p>
           </div>
 
-          <div className="rounded-3xl border border-[#c8ddec] bg-[#07284d] p-8 sm:p-10 shadow-2xl text-white space-y-6">
-            <div className="flex items-center justify-between border-b border-white/15 pb-4">
-              <span className="font-bold text-base text-white">48-Hour Free Package</span>
-              <span className="rounded-full bg-[#ffd12d] px-3.5 py-1 text-xs font-black text-[#07284d] uppercase">
+          <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-b from-[#0a325e] to-[#07284d] p-8 sm:p-10 shadow-[0_24px_60px_rgba(7,40,77,0.25)] text-white space-y-6">
+            {/* Ambient gold glow in card corner */}
+            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#ffd12d]/15 blur-2xl" />
+
+            <div className="relative flex items-center justify-between border-b border-white/15 pb-4">
+              <span className="font-bold text-base text-white">48-Hour Free Deliverable Scope</span>
+              <span className="rounded-full bg-[#ffd12d] px-3.5 py-1 text-xs font-black text-[#07284d] uppercase shadow-sm">
                 100% Free
               </span>
             </div>
 
-            <div className="space-y-4 text-sm">
+            <div className="relative space-y-4 text-sm">
               {[
                 "Homepage redesign concept tailored to your real brand, colors & logo",
                 "Desktop and mobile-first responsive layout (0.12s first paint)",
@@ -445,8 +476,8 @@ export function LeadEngineLanding() {
                 "Delivered to your private tracking portal in 48 hours",
                 "Yours to keep forever with zero obligation",
               ].map((item) => (
-                <div key={item} className="flex items-start gap-3 text-slate-200">
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#ffd12d] text-[#07284d] mt-0.5 font-bold">
+                <div key={item} className="flex items-start gap-3 text-slate-100">
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#ffd12d] text-[#07284d] mt-0.5 font-bold shadow-sm">
                     <Check className="h-3.5 w-3.5" />
                   </div>
                   <span>{item}</span>
@@ -454,14 +485,14 @@ export function LeadEngineLanding() {
               ))}
             </div>
 
-            <div className="pt-4">
+            <div className="relative pt-4">
               <a
                 href="#top"
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#ffd12d] py-4 text-sm font-bold text-[#07284d] shadow-lg transition hover:bg-[#f5c400]"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#ffd12d] py-4 text-sm font-bold text-[#07284d] shadow-[0_6px_25px_rgba(255,209,45,0.35)] transition hover:bg-[#f5c400]"
               >
                 Get My Free Redesign <ArrowRight className="h-4 w-4" />
               </a>
-              <p className="text-center text-xs text-white/60 mt-2.5">
+              <p className="text-center text-xs text-white/70 mt-2.5">
                 48h delivery · No credit card · Yours to keep forever
               </p>
             </div>
@@ -475,10 +506,15 @@ export function LeadEngineLanding() {
       {/* 8. FAQ ACCORDION */}
       <FAQAccordion />
 
-      {/* 9. BOTTOM CALL-TO-ACTION BANNER */}
-      <section className="border-t border-[#d9e8f4] bg-[#07284d] py-20 text-center text-white">
-        <div className="mx-auto max-w-3xl px-6 space-y-6">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#ffd12d]">
+      {/* 9. BOTTOM CALL-TO-ACTION BANNER (High-Tech Navy Glow) */}
+      <section className="relative overflow-hidden border-t border-[#d9e8f4] bg-[#07284d] py-24 text-center text-white">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-15 [background-image:linear-gradient(to_right,rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.1)_1px,transparent_1px)] [background-size:32px_32px]"
+          aria-hidden="true"
+        />
+
+        <div className="relative mx-auto max-w-3xl px-6 space-y-6">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#ffd12d] shadow-sm">
             <Sparkles className="h-3.5 w-3.5" /> Start with the first impression
           </div>
 
@@ -486,14 +522,14 @@ export function LeadEngineLanding() {
             READY TO TRANSFORM <br />
             YOUR HOMEPAGE?
           </h2>
-          <p className="mx-auto max-w-xl text-base text-slate-300">
+          <p className="mx-auto max-w-xl text-base text-slate-200">
             Get a professional redesign concept that turns visitors into paying customers. Delivered in 48 hours. Completely free.
           </p>
 
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               href="#top"
-              className="inline-flex items-center gap-2 rounded-lg bg-[#ffd12d] px-8 py-4 text-sm font-bold text-[#07284d] shadow-xl transition hover:bg-[#f5c400] hover:scale-105"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#ffd12d] px-8 py-4 text-sm font-bold text-[#07284d] shadow-[0_6px_25px_rgba(255,209,45,0.3)] transition hover:bg-[#f5c400] hover:scale-105"
             >
               Get My Free Redesign <ArrowRight className="h-4 w-4" />
             </a>
