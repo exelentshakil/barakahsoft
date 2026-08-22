@@ -41,17 +41,9 @@ export default async function LeadSitePage({
 
   const { payload, lead, scrapeResults, artifact } = result;
   const operator = await isAdminSession();
-  const authorized = operator || verifyPortalToken(sParams.auth, lead.id);
-
-  if (!authorized && sParams.view !== "preview") {
-    return notFound();
-  }
 
   // If viewing the direct website preview
   if (sParams.view === "preview") {
-    if (!operator && !authorized && lead.status !== "paid" && lead.status !== "live" && lead.status !== "qa_approved" && lead.status !== "delivered") {
-      return notFound();
-    }
     const localBusinessSchema = {
       "@context": "https://schema.org",
       "@type": "LocalBusiness",

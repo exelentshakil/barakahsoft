@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   ArrowLeft,
@@ -60,6 +61,8 @@ import { PricingManager } from "@/components/admin/PricingManager";
 import { EditLeadDialog } from "@/components/admin/EditLeadDialog";
 import { DeleteLeadButton } from "@/components/admin/DeleteLeadButton";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 interface AdminLeadWorkspaceProps {
   lead: Lead;
@@ -74,9 +77,12 @@ export function AdminLeadWorkspace({
   scrapeResults,
   otherLeads,
 }: AdminLeadWorkspaceProps) {
+  const router = useRouter();
   const [emailSent, setEmailSent] = useState(Boolean(lead.delivered_at));
   const [sendingEmail, setSendingEmail] = useState(false);
   const [generatingStripe, setGeneratingStripe] = useState(false);
+  const [rescaping, setRescraping] = useState(false);
+  const [previewPath, setPreviewPath] = useState("");
 
   const businessName = lead.business_name || lead.contact_name || lead.source_url;
   const phone = lead.phone || "(718) 353-7227";
@@ -84,12 +90,13 @@ export function AdminLeadWorkspace({
   const facts = (scrapeResults?.facts ?? {}) as Record<string, unknown>;
   const pricing = (artifact?.extracted_assets?.pricing as any) ?? null;
   const portalUrl = `https://portal.barakahsoft.com/s/${lead.slug}`;
+  const previewUrl = `/s/${lead.slug}${previewPath}`;
 
   // 1. Real Extracted Brand & Proof Facts
   const colors = (facts.colors as { primary?: string; accent?: string } | undefined) || {};
   const primaryColor = colors.primary || (artifact?.extracted_assets as any)?.branding?.colors?.primary || "#533AFD";
   const accentColor = colors.accent || (artifact?.extracted_assets as any)?.branding?.colors?.accent || "#FFD12D";
-  const logoName = (artifact?.extracted_assets as any)?.branding?.logo || facts.logo_url ? "scraped-logo.png" : "brand-logo.png";
+  const logoName = (artifact?.extracted_assets as any)?.branding?.logo || facts.logo_url ? "brand-logo.png" : "scraped-logo.png";
 
   const proof = (facts.proof as { rating?: number; reviewCount?: number } | undefined) || {};
   const rating = proof.rating || 5.0;
@@ -143,6 +150,7 @@ export function AdminLeadWorkspace({
 
   // 4. Real AI Q&A Snippets from Artifact
   const faqs = artifact?.funnel_pages?.filter((s) => s.kind === "faq") || [];
+  const services = artifact?.funnel_pages?.filter((s) => s.kind === "service") || [];
   const qas = faqs.length > 0
     ? faqs.slice(0, 4).map((f, i) => ({
         q: f.h2,
@@ -160,11 +168,6 @@ export function AdminLeadWorkspace({
           a: `Your team provides 24/7 priority emergency dispatch with a persistent 1-tap call bar so customers never bounce.`,
           article: "Article #2",
         },
-        {
-          q: `How much does a commercial installation cost on average?`,
-          a: `Commercial installations vary based on project scope. Dedicated landing routes provide clear cost estimation forms.`,
-          article: "Article #3",
-        },
       ];
 
   const radarData = [
@@ -176,6 +179,14 @@ export function AdminLeadWorkspace({
     { subject: "Structured Schema", Client: 100, Competitors: 25, fullMark: 100 },
   ];
 
+  // Editable Delivery Email State
+  const [emailSubject, setEmailSubject] = useState(
+    `Your Rebuilt Homepage & Market Speed Audit are Ready! (${businessName})`
+  );
+  const [emailBody, setEmailBody] = useState(
+    `Hi ${lead.contact_name || "there"}, we mapped your real business proof, Google ${rating} rating, and local search grid in ${city}. Your rebuilt homepage and 28 service pages are ready for review.`
+  );
+
   // Price formatting
   const setupPrice = pricing?.setupPrice ?? 797;
   const monthlyPrice = pricing?.monthlyPrice ?? 0;
@@ -186,6 +197,19 @@ export function AdminLeadWorkspace({
       ? `$${setupPrice} + $${monthlyPrice}/mo`
       : `$${setupPrice}`;
 
+  async function handleRescrape() {
+    setRescraping(true);
+    try {
+      const res = await fetch(`/api/leads/${lead.id}/rescrape`, { method: "POST" });
+      if (!res.ok) throw new Error("Scrape failed");
+      router.refresh();
+    } catch {
+      alert("Failed to re-scrape with Firecrawl. Check your API key.");
+    } finally {
+      setRescraping(false);
+    }
+  }
+
   async function handleSendBrevoEmail() {
     setSendingEmail(true);
     try {
@@ -193,12 +217,13 @@ export function AdminLeadWorkspace({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          subject: `Your Rebuilt Homepage & Market Speed Audit are Ready! (${businessName})`,
-          message: `Hi ${lead.contact_name || "there"}, we mapped your real history, 5.0 rating, and local search grid. Your rebuilt homepage and 28 service pages are ready for review.`,
+          subject: emailSubject,
+          message: emailBody,
         }),
       });
       if (!res.ok) throw new Error("Failed");
       setEmailSent(true);
+      router.refresh();
     } catch {
       alert("Failed to dispatch delivery email via Brevo API.");
     } finally {
@@ -382,9 +407,19 @@ export function AdminLeadWorkspace({
               </span>
               <h3 className="font-bold text-base text-[#0d1738]">Inbound Lead & Verified Facts</h3>
             </div>
-            <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b] shrink-0">
-              <ShieldCheck className="h-3 w-3" /> Verified via Firecrawl
-            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleRescrape}
+                disabled={rescaping}
+                className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-semibold text-[#0d1738] hover:bg-[#f0f3ff]"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 text-[#533afd] ${rescaping ? "animate-spin" : ""}`} />
+                {rescaping ? "Scraping with Firecrawl..." : "Re-Scrape with Firecrawl"}
+              </button>
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b] shrink-0">
+                <ShieldCheck className="h-3 w-3" /> Verified
+              </span>
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3 text-xs leading-relaxed">
@@ -418,7 +453,7 @@ export function AdminLeadWorkspace({
                   <span className="h-3 w-3 rounded-full border" style={{ backgroundColor: accentColor }} /> {accentColor}
                 </span>
               </div>
-              <p className="text-[11px] text-[#777588] pt-1">Logo: {logoName} extracted</p>
+              <p className="text-[11px] text-[#777588] pt-1">Logo: {logoName} active</p>
             </div>
           </div>
         </div>
@@ -431,7 +466,7 @@ export function AdminLeadWorkspace({
                 2
               </span>
               <h3 className="font-bold text-base text-[#0d1738]">
-                Interactive Local Search Grid & Lost Revenue Scanner ({city})
+                Interactive Local 7×7 Search Grid & Lost Revenue Scanner ({city})
               </h3>
             </div>
             <span className="text-xs font-bold text-[#533afd]">Speed Lift: 29 → 98 / 100</span>
@@ -475,7 +510,7 @@ export function AdminLeadWorkspace({
             <div className="space-y-4 rounded-xl border border-[#c7d0fb] bg-[#f0f3ff] p-5 text-xs">
               <div className="flex justify-between items-center border-b border-[#c7d0fb] pb-2.5 text-[11px]">
                 <span className="font-bold text-[#533afd] uppercase">Node #{selectedNode.id}: {selectedNode.name}</span>
-                <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${selectedNode.status === "visible" ? "bg-[#eaf8f0] text-[#0b8f5b]" : "bg-[#ffdad6] text-[#ba1a1a]"}`}>
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${selectedNode.status === "visible" ? "bg-[#eaf8f0] text-[#0b8f5b]" : "bg-[#ffdad6] text-[#ba1a1a]"}`}>
                   {selectedNode.status === "visible" ? "Rank #1-3 Leader" : `Rank #${selectedNode.rank} (Missing)`}
                 </span>
               </div>
@@ -567,8 +602,48 @@ export function AdminLeadWorkspace({
           </div>
         </div>
 
-        {/* LINEAR STEP 4: VISUAL ASSET ENGINE & HERO STUDIO */}
+        {/* LINEAR STEP 4: VISUAL ASSET ENGINE & LIVE PREVIEW STUDIO */}
         {artifact && <AssetSlottingManager lead={lead} artifact={artifact} />}
+
+        {/* LIVE IFRAME PREVIEW INSPECTOR */}
+        <div className="overflow-hidden rounded-2xl border border-border shadow-sm bg-white">
+          <div className="flex items-center justify-between gap-3 border-b border-border bg-muted/40 px-4 py-2.5">
+            <div className="flex items-center gap-2">
+              <Eye className="h-4 w-4 text-primary" />
+              <span className="font-bold text-xs">Live Generated Website Preview</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <select
+                value={previewPath}
+                onChange={(e) => setPreviewPath(e.target.value)}
+                className="rounded-md border border-input bg-background px-2.5 py-1 text-xs"
+              >
+                <option value="">Homepage (0.12s Paint)</option>
+                <option value="/about">About Us</option>
+                <option value="/contact">Contact</option>
+                <option value="/faq">FAQ</option>
+                {services.map((s) => (
+                  <option key={s.slug} value={`/services/${s.slug}`}>
+                    Service: {s.h2}
+                  </option>
+                ))}
+              </select>
+              <a
+                href={previewUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+              >
+                Open Full Window <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+          </div>
+          <iframe
+            src={previewUrl}
+            className="h-[750px] w-full"
+            title="Generated site preview"
+          />
+        </div>
 
         {/* LINEAR STEP 5: AUTOMATED BREVO DELIVERY & LIVE PROPOSAL LINK */}
         <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-5">
@@ -587,12 +662,28 @@ export function AdminLeadWorkspace({
               <span><strong>To:</strong> {email}</span>
               <span><strong>Private Portal:</strong> <a href={portalUrl} target="_blank" className="font-bold text-[#533afd] hover:underline">{portalUrl}</a></span>
             </div>
-            <p className="font-bold text-[#0d1738] text-sm">
-              Subject: Your Rebuilt Homepage & Market Speed Audit are Ready! ({businessName})
-            </p>
-            <p className="text-[#42506a] leading-relaxed">
-              "Hi {lead.contact_name || "there"}, we mapped your real history, Google {rating} rating, and local search grid in {city}. Your rebuilt homepage and 28 service pages are ready for review."
-            </p>
+
+            <div className="space-y-3 pt-1">
+              <div>
+                <span className="font-semibold text-[#0d1738] block mb-1">Email Subject Line:</span>
+                <Input
+                  value={emailSubject}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                  className="bg-white text-xs h-8"
+                />
+              </div>
+
+              <div>
+                <span className="font-semibold text-[#0d1738] block mb-1">Opening Message / Compliment:</span>
+                <Textarea
+                  rows={3}
+                  value={emailBody}
+                  onChange={(e) => setEmailBody(e.target.value)}
+                  className="bg-white text-xs resize-none"
+                />
+              </div>
+            </div>
+
             <div className="flex justify-between items-center pt-2">
               <span className="text-[11px] text-[#777588]">1-Click Delivery via Brevo API</span>
               <button

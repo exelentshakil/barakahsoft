@@ -11,23 +11,19 @@ import { captionUnlabeledPhotos } from "@/lib/scrape/caption-photos";
 import { callPlacesApi, resolvePlacesPhotoUrl } from "@/lib/google/places";
 import { callPagespeedApi } from "@/lib/google/pagespeed";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { scrapeWithFirecrawl } from "@/lib/scrape/firecrawl";
 
-// ScrapeBusiness molecule — fetch_site_html + call_places_api +
-// call_pagespeed_api + extract_photos + extract_logo_color + fetch_gbp_photos
-// -> one complete scrape_results row (plan §4/§5). Everything downstream
-// (playbook detection, section generation, the photo waterfall) reads only
-// from the resulting facts blob — nothing here writes to artifacts directly.
 export async function scrapeBusiness(leadId: string, sourceUrl: string, businessNameHint?: string) {
-  const pages = await fetchSiteHtml(sourceUrl);
-  const homepage = pages[0];
+  const [pages, firecrawlData] = await Promise.all([
+    fetchSiteHtml(sourceUrl),
+    scrapeWithFirecrawl(sourceUrl),
+  ]);
 
+  const homepage = pages[0];
   const photoCandidates = pages.flatMap(extractPhotos);
   const rankedSitePhotos: RankedPhoto[] = await rankPhotoQuality(photoCandidates);
   const captionedSitePhotos = await captionUnlabeledPhotos(rankedSitePhotos);
 
-  // v4 Phase N5 — a real video on the client's own site is preferred over
-  // ever generating one with Veo; enrich-generate.ts checks this before
-  // deciding whether to spend the Veo call at all.
   const rawSiteVideo = extractSiteVideo(pages);
   const siteVideo = rawSiteVideo && (await isHotlinkSafe(rawSiteVideo.url, "video/")) ? rawSiteVideo : null;
 
@@ -37,17 +33,20 @@ export async function scrapeBusiness(leadId: string, sourceUrl: string, business
   const logoColor = homepage ? extractLogoColor(homepage) : { logoUrl: null, brandColorHex: null, brandColorHsl: null };
   const font = homepage ? extractFont(homepage) : { googleFontFamily: null, googleFontStylesheetUrl: null };
 
-  // The site's own declared name (from its <title>) is a far more reliable
-  // Places query than businessNameHint — for real leads that's the intake
-  // form's "name" field, i.e. the submitter's own contact name, not a
-  // business name, and using it here matched Places to unrelated people.
-  const siteName = deriveSiteName(pageInventory[0]?.title ?? null);
+  const siteName = deriveSiteName(pageInventory[0]?.title ?? null) || firecrawlData?.title;
   const places = await callPlacesApi(siteName ?? new URL(sourceUrl).hostname, contactInfo.phones[0]);
   const gbpPhotoUrls = (places?.photo_refs ?? [])
     .map((ref) => resolvePlacesPhotoUrl(ref))
     .filter((url): url is string => !!url);
 
   const pagespeed = await callPagespeedApi(sourceUrl);
+
+  // Extract Firecrawl branding colors or fallback to logoColor
+  const fcBranding = firecrawlData?.branding || {};
+  const fcColors = fcBranding.colors || {};
+  const primaryHex = fcColors.primary || logoColor.brandColorHex || "#533AFD";
+  const accentHex = fcColors.accent || "#FFD12D";
+  const logoUrl = fcBranding.images?.logo || logoColor.logoUrl || null;
 
   const facts = {
     business_name: places?.name ?? siteName ?? businessNameHint ?? null,
@@ -67,14 +66,21 @@ export async function scrapeBusiness(leadId: string, sourceUrl: string, business
     reviews: places?.reviews ?? [],
     business_status: places?.business_status ?? null,
     types: places?.types ?? [],
-    logo_url: logoColor.logoUrl,
-    brand_color_hex: logoColor.brandColorHex,
+    logo_url: logoUrl,
+    brand_color_hex: primaryHex,
     brand_color_hsl: logoColor.brandColorHsl,
+    colors: {
+      primary: primaryHex,
+      accent: accentHex,
+      secondary: fcColors.secondary || "#0D1738",
+    },
+    branding: fcBranding,
     font,
     site_photos: captionedSitePhotos.slice(0, 30),
     site_video: siteVideo,
     gbp_photo_urls: gbpPhotoUrls,
     pagespeed: { mobile: pagespeed.mobile, desktop: pagespeed.desktop },
+    markdown: firecrawlData?.markdown || "",
   };
 
   const admin = createAdminClient();
@@ -99,5 +105,10 @@ export async function scrapeBusiness(leadId: string, sourceUrl: string, business
     await admin.from("leads").update({ place_id: places.place_id }).eq("id", leadId);
   }
 
-  return data;
+  // Update lead business_name and artifacts if empty
+  if (facts.business_name) {
+    await admin.from("leads").update({ business_name: facts.business_name }).eq("id", leadId).is("business_name", null);
+  }
+
+  return { id: data.id, facts };
 }
