@@ -1,6 +1,7 @@
 import { BespokeNav } from "@/components/site-shell/BespokeNav";
 import { BespokeFooter } from "@/components/site-shell/BespokeFooter";
 import { StickyMobileCTA } from "@/components/site-shell/StickyMobileCTA";
+import { LeadAssistant } from "@/components/site-shell/LeadAssistant";
 import { BespokePageBody } from "@/components/site-shell/BespokePage";
 import { siteRootStyle } from "@/components/site-shell/shell-style";
 import type { SitePayload } from "@/components/site-shell/types";
@@ -19,6 +20,9 @@ export function BespokeHomepage({ payload }: { payload: SitePayload }) {
       <BespokePageBody html={payload.bespokeHomepageHtml ?? ""} />
       <BespokeFooter payload={payload} spec={payload.chromeSpec} />
       <StickyMobileCTA payload={payload} />
+      {/* The callback assistant the ad promises. It was fully built and
+          mounted nowhere, so no delivered site had one. */}
+      <LeadAssistant payload={payload} />
     </div>
   );
 }

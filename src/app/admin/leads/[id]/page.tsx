@@ -8,10 +8,13 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
   const supabase = createAdminClient();
 
   const [{ data: lead }, { data: otherLeads }, { data: artifact }, { data: scrapeResults }] = await Promise.all([
-    supabase.from("leads").select("*").eq("id", id).single<Lead>(),
+    supabase.from("leads").select("*").eq("id", id).maybeSingle<Lead>(),
     supabase.from("leads").select("*").order("created_at", { ascending: false }).limit(20).returns<Lead[]>(),
-    supabase.from("artifacts").select("*").eq("lead_id", id).single<Artifact>(),
-    supabase.from("scrape_results").select("*").eq("lead_id", id).single<ScrapeResults>(),
+    // maybeSingle, not single: a lead that has not been analysed yet has
+    // neither row, and .single() throws — which turned every brand-new lead
+    // into a 500 on its own detail page.
+    supabase.from("artifacts").select("*").eq("lead_id", id).maybeSingle<Artifact>(),
+    supabase.from("scrape_results").select("*").eq("lead_id", id).maybeSingle<ScrapeResults>(),
   ]);
 
   if (!lead) notFound();

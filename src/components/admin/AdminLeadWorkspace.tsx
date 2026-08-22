@@ -63,6 +63,7 @@ import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStu
 import { RefinePanel } from "@/components/admin/RefinePanel";
 import { SectionEditor } from "@/components/admin/SectionEditor";
 import { VisibilityPanel } from "@/components/admin/VisibilityPanel";
+import { ApprovalGate } from "@/components/admin/ApprovalGate";
 import { useLeadLive } from "@/hooks/use-lead-live";
 import { PricingManager } from "@/components/admin/PricingManager";
 import { EditLeadDialog } from "@/components/admin/EditLeadDialog";
@@ -620,6 +621,11 @@ export function AdminLeadWorkspace({
             />
           </div>
         )}
+
+        {/* The gate itself. Both this and the domain picker were built and
+            unreachable — mounted only inside a tabs layout nothing renders —
+            so no lead could ever be approved and no portal could unlock. */}
+        <ApprovalGate lead={lead} artifact={artifact} onChanged={() => setReloadKey((k) => k + 1)} />
 
         {/* LINEAR STEP 5: AUTOMATED BREVO DELIVERY & LIVE PROPOSAL LINK */}
         <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-5">
