@@ -1,118 +1,127 @@
 # BarakahSoft Lead Engine V1 — Production Master Specification
 
-**Status**: Production Complete & Verified (`origin/main`).
+**Document Version**: 2.0 (Bespoke Generation & Asset Engine Architecture)  
+**Status**: Active Production Specification (`origin/main`)
 
 ---
 
-## 1. Product & Commercial Model
+## 1. Executive Summary & Core Value Proposition
 
-BarakahSoft is a dedicated lead-generation and high-converting website engine for US businesses and home-service providers (electricians, roofers, HVAC, plumbers, remodelers, movers, restoration, contractors, doctors, professional services, and ecommerce).
+BarakahSoft is a high-converting web design and lead-generation engine designed to acquire business owners via targeted Meta (Facebook) ads and convert them through an interactive, evidence-based sales journey.
 
-### The Inbound Hook:
-* **100% Pure Free Lead Magnet**: Targeted Facebook Ads offering a **Free 48-Hour Homepage Redesign & Local Speed Audit**.
-* **Zero Public Pricing Barrier**: No credit card, no setup fee, no payment required on the landing page.
+### The Inbound Acquisition Model:
+* **100% Pure Free Lead Magnet**: *"Free 48-Hour Homepage Redesign & AI Speed Audit"*.
+* **Zero Public Pricing Barrier**: No credit card, no setup fee, and no payment required on the landing page.
+* **Universal Audience**: Trades, professional services, healthcare/doctors, legal, financial, ecommerce, and logistics.
 
-### The B2B Dynamic Pricing Engine (Admin-Controlled per Lead):
-Once trust is established through a live interactive proposal, operators tailor the exact pricing model for the customer:
+### The Dynamic B2B Monetization Model (Admin-Controlled):
+Pricing is 100% hidden from the public and customized per lead inside the Admin Workspace:
 1. **Low-Budget Starter / Hosting**: `$0 Setup + $30 / month`
 2. **Zero-Down SaaS**: `$0 Setup + $79 / month`
-3. **Full One-Time Buyout**: `$797 Flat` (Anchored against $1,597 agency standard)
+3. **Full One-Time Buyout**: `$797 Flat` (Anchored against standard $1,597 agency value)
 4. **Hybrid Setup + Retainer**: `$779 Setup + $99 / month`
 5. **Optional Meta Ads Management**: `$500 / month` (or 20% of ad spend)
 
 ---
 
-## 2. Lead Lifecycle & Order Flow
+## 2. Identified Architecture Gaps & System Solutions
+
+| System Area | What Was Broken / Causing Issues | Architectural Resolution in V2 |
+| :--- | :--- | :--- |
+| **Website Generation** | Blind auto-generation created generic, repetitive template cards that failed the visual bar. | **On-Demand Bespoke Generator**: Combines real lead facts + inspiration `branding.json` to generate custom, high-converting websites. |
+| **Chat Refinement** | Live previews were decoupled from custom code; editing via Claude Code / Open Code required complex manual steps. | **Direct Bespoke Injector (`/api/leads/[id]/bespoke`)**: Claude Code can update bespoke HTML, JSX, or sections live in Supabase. |
+| **Competitor Research** | Competitor lookup was disconnected during intake scrape, resulting in empty competitor tables. | **Integrated Intake Scraper**: `scrapeBusiness` executes Firecrawl (`branding` + `markdown`) and fetches real Google Places data immediately. |
+| **Iframe Preview** | Iframe rendered the proposal portal instead of the actual generated website homepage. | **Dynamic View Route**: Renders `/s/[leadSlug]?view=preview` with page switcher (`Home`, `Services`, `About`, `FAQ`, `Contact`). |
+| **Asset Persistence** | Sites used fragile external hotlinks that would break if the client shut down their old site. | **1-Click Permanent Asset Migration (`/api/leads/[id]/assets/archive`)**: Sharp converts all images to WebP in Supabase Storage. |
+| **Client Portal Gating** | Portals returned 404 or leaked unverified prices before the website was ready. | **Processing Skeleton Gate**: Shows animated progress tracker while in progress; unlocks full proposal + custom price upon QA approval. |
+
+---
+
+## 3. End-to-End Operational Lifecycle
 
 ```text
-1. INBOUND FACEBOOK AD (Meta Ads)
-   Ad Hook: "A professional homepage redesign, for free. There's genuinely no catch."
-   Pixel ID: 1777973306713413 + Server-Side Meta CAPI Deduplication
-        ↓
-2. UNIVERSAL LANDING PAGE INTAKE (home.barakahsoft.com)
-   2-Step form: Website URL + Problem Checklist + First Name, Email, Phone
-        ↓
-3. INSTANT CONFIRMATION EMAIL #1 (Resend / Brevo API)
-   "We received your request — track your redesign live: portal.barakahsoft.com/s/[slug]?auth=[signed_token]"
-        ↓
-4. AUTOMATED RESEARCH & ASSET EXTRACTION (Inngest + Firecrawl + Google Places + PageSpeed)
-   • Extracts real brand tokens, vector logos, Google review velocity, licenses, and services.
-   • Computes 7×7 Local Search Matrix (49 scan nodes) & 4-competitor benchmark.
-   • Generates 28 dedicated service routes + 8 launch articles with JSON-LD schema.
-        ↓
-5. OPERATOR STUDIO & QA GATE (admin command center /admin/leads/[id])
-   • Visual Asset Engine: Slot in transparent PNG owner cutout, logo, and 6 service card visuals.
-   • 1-Click Remote Asset Migration (/api/leads/[id]/assets/archive): Downloads & optimizes hotlinks to WebP in Supabase.
-   • Sets custom pricing ($0 + $30/mo, $79/mo, $797, $779 + $99/mo).
-   • Operator customizes Delivery Email #2 and clicks [Approve QA & Send Delivery Email].
-        ↓
-6. CLIENT PRIVATE INTERACTIVE PROPOSAL (portal.barakahsoft.com/s/[slug])
-   • Processing Gate: Shows blurred scanning state until QA approval.
-   • Unlocked Proposal:
-     - 6 Problem-to-Solution Cards (customized to their intake focus)
-     - Google AI Overview & Generative Search Readiness (GEO)
-     - Diagnostic Speed Health Scorecard (29 → 98 / 100)
-     - Interactive 49-node Local Search Grid & Inspector
-     - Competitor Benchmark & 6-Axis Radar Chart
-     - Tailored Admin Pricing & 1-Click Stripe Checkout Modal
-        ↓
-7. 1-CLICK CLOSE & STRIPE CHECKOUT
-   Client approves terms → Stripe Checkout session created → Inngest marks lead paid.
-        ↓
-8. 1-CLICK STANDALONE EXPORT & GO-LIVE (48h SLA)
-   Custom domain connection (CNAME to Vercel/AWS) + 100% standalone clean Next.js project zip export.
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│ 1. INBOUND ACQUISITION (Facebook Ads → home.barakahsoft.com)                            │
+│    • Ad copy matches landing hero word-for-word.                                        │
+│    • 2-Step intake collects URL, Contact Name, Email, Phone, and Pain Points.           │
+│    • Server-Side Meta CAPI deduplication + Instant Email #1 (Confirmation).             │
+└─────────────────────────────────────────┬───────────────────────────────────────────────┘
+                                          │
+                                          ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│ 2. INGESTION & FACT EXTRACTION (Inngest: `scrape-run.ts`)                               │
+│    • Firecrawl extracts: Real brand colors (#hex), logo URLs, pages inventory, markdown.│
+│    • Google Places API extracts: Real star rating (5.0 ★), review count, local address. │
+│    • Lead status set to `ready` (Does NOT auto-generate generic broken templates).      │
+└─────────────────────────────────────────┬───────────────────────────────────────────────┘
+                                          │
+                                          ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│ 3. OPERATOR STUDIO & BESPOKE GENERATOR (/admin/leads/[id])                              │
+│    • Step 1: Review Firecrawl brand tokens, logo, verified rating, and city.            │
+│    • Step 2: Bespoke Generation Studio:                                                 │
+│      - Review/edit Brief: Business Name, Founder, Industry, City, 6 Core Services.      │
+│      - Optional: Input competitor/inspiration `branding.json` to borrow modern layouts. │
+│      - Click [🚀 Generate High-Value Bespoke Website] → Builds bespoke site.            │
+│    • Step 3: Visual Asset Engine: Slot transparent PNG owner cutout + 6 service images. │
+│    • Step 4: Click [Migrate Hotlinks to Supabase Storage] → Permanent WebP assets.      │
+│    • Step 5: Configure custom price ($0+$30/mo, $79/mo, $797, $779+$99/mo).             │
+│    • Step 6: Customize Delivery Email #2 and click [Send Delivery Email Now].           │
+└─────────────────────────────────────────┬───────────────────────────────────────────────┘
+                                          │
+                                          ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│ 4. CLIENT PROPOSAL PORTAL (portal.barakahsoft.com/s/[slug])                             │
+│    • Pre-QA Gating: Animated scanning skeleton ("We are building your 48h concept..."). │
+│    • Post-QA Unlocked: Full Digital X-Ray, 49-node map grid, competitor radar,          │
+│      interactive live preview, custom admin pricing, and 1-click Stripe checkout.       │
+└─────────────────────────────────────────┬───────────────────────────────────────────────┘
+                                          │
+                                          ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│ 5. CLOSE & 1-CLICK STANDALONE EXPORT                                                    │
+│    • Client pays on Stripe → Inngest marks lead `paid`.                                 │
+│    • Operator clicks [Export Next.js Project (.zip)] in Admin.                          │
+│    • 100% clean Next.js 15 source code with zero lock-in deployable to Vercel/AWS.      │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 3. The 6 Core Pain Points & Architectural Resolutions
+## 4. The High-Value Website Standard (Bespoke Blueprint)
 
-1. **Outdated Mobile Design & Slow Speed**:
-   * *Old Friction*: 8.4s slow mobile load on 4G cellular; hard to find phone numbers.
-   * *Resolution*: 0.12s mobile first-paint with persistent 1-tap emergency call bar.
-2. **Visitors Leaving Without Calling**:
-   * *Old Friction*: Real 5-star reviews and licenses buried where 70% of visitors never scroll.
-   * *Resolution*: Google 5.0 Rating verified badge & license proof placed front-and-center.
-3. **Nobody Finds Us on Google Search**:
-   * *Old Friction*: Missing from over 75% of surrounding customer search zones.
-   * *Resolution*: 28 dedicated localized service landing pages establishing geographic search relevance.
-4. **Invisible in AI Search (ChatGPT & Gemini)**:
-   * *Old Friction*: Zero structured schema; AI search engines cannot verify business credentials.
-   * *Resolution*: Complete `LocalBusiness` JSON-LD schema & Entity FAQ markup so AI search models cite the business.
-5. **High-Ticket Jobs Bundled in 1 Generic Paragraph**:
-   * *Old Friction*: High-margin services lumped in bulleted lists, losing long-tail search traffic.
-   * *Resolution*: Dedicated high-ticket landing routes with permit guidance, technical details, and instant quote forms.
-6. **Thin Content & Empty Pages**:
-   * *Old Friction*: Zero helpful guides or code compliance articles.
-   * *Resolution*: 8 original, human-reviewed launch articles providing authoritative depth from day one.
+Every generated website must match the visual caliber of top industry leaders (Spennato, BlueBuilt, Roofworx):
+
+1. **Top 24/7 Utility Bar**: Direct clickable phone link (`Need emergency help? Call...`) + Google 5.0 ★ rating badge + CTA button.
+2. **Hero Section**:
+   * Bold, high-contrast typography: `#1 RATED [INDUSTRY] IN [CITY]`.
+   * Verified credentials badge (`Licensed & Insured Local Experts`).
+   * Transparent PNG owner cutout on polo/truck background.
+   * Trust pills (`⭐ 5.0 on Google` · `🛡️ 100% Guaranteed` · `⚡ Same-Day Estimates`).
+   * Instant Free Quote form.
+3. **Core Services**: 6 dedicated high-definition visual cards routing to `/services/[slug]`.
+4. **Content Depth**: 8 launch articles injected with valid `Article` and `FAQPage` JSON-LD schema for Google AI Overview citation.
+5. **Conversion Tech**: Sticky mobile 1-tap call bar + Crisp customer chat integration.
 
 ---
 
-## 4. Technical Architecture & Database Models
+## 5. Technical Stack & API Endpoints
 
-### Core Database Tables (Supabase):
-- `leads`: Contact info, company name, phone, slug, source URL, UTM parameters, lead status (`new`, `scraping`, `qa_approved`, `delivered`, `paid`, `live`), paid_at, delivered_at.
-- `scrape_results`: Firecrawl markdown, brand colors, typography, Google Places data, PageSpeed metrics.
-- `artifacts`: Pre-rendered funnel sections, 28 service route definitions, 8 launch article contents, extracted assets (pricing, custom logo, hero cutout), QA checklist status.
-- `media_assets`: Uploaded owner cutouts, service visuals, and migrated permanent WebP storage paths.
-- `lead_inquiries`: Real-time tracking of proposal views, phone clicks, checkout opens, and visitor quote/callback requests.
+### Database Architecture (Supabase):
+* `leads`: Customer contact info, slug, custom domain, lead status, paid timestamps.
+* `scrape_results`: Firecrawl markdown, brand colors, typography, Google Places data, PageSpeed metrics.
+* `artifacts`: Funnel sections, extracted assets (pricing, custom logo, hero cutout), `bespoke_homepage_html`, QA status.
+* `media_assets`: Uploaded owner cutouts, service visuals, and migrated permanent WebP storage paths.
+* `lead_inquiries`: Real-time tracking of proposal views, phone clicks, checkout opens, and quote requests.
 
-### Core API Endpoints:
-- `/api/intake`: Ingests lead URL, fires Meta CAPI, triggers instant Confirmation Email #1, starts automated Inngest research chain.
-- `/api/s/[leadSlug]/events`: Real-time tracking of customer proposal view, phone clicks, and modal opens.
-- `/api/s/[leadSlug]/quote-request`: Delivers customer quote/callback inquiries directly to business owner's email and logs to database.
-- `/api/leads/[id]/pricing`: Sets dynamic per-lead proposal pricing ($0 setup + $30/mo, $79/mo, $797 flat, $779 + $99/mo).
-- `/api/leads/[id]/assets/archive`: 1-Click crawler that downloads, optimizes (Sharp WebP), and archives remote hotlinks to Supabase Storage.
-- `/api/leads/[id]/deliver`: Customizable Email #2 dispatcher with signed magic link.
-- `/api/stripe/checkout`: Creates one-time or subscription Stripe checkout session matching admin pricing.
-- `/api/stripe/webhook`: Handles `checkout.session.completed`, unlocks full sitemap, and triggers Inngest go-live.
-
----
-
-## 5. Visual System & Codebase Architecture
-
-- **Visual Palette**: BarakahSoft Deep Navy (`#07284d`), Gold (`#ffd12d`), Electric Accent (`#0c68c8`), Canvas (`#ffffff` / `#f8fbfe`).
-- **Atomic Modular Architecture**:
-  - Components follow single-responsibility principles (SRP) and keep files clean, modular, and < 150 lines.
-  - Zero monolithic files; easy feature-by-feature extension without regressions.
-  - Standalone Next.js exports are 100% clean and decoupled from internal backend infrastructure.
+### Core API Routes:
+* `/api/intake`: 2-step public intake endpoint, fires Meta CAPI, starts Inngest fact scraper.
+* `/api/leads/[id]/generate`: On-demand bespoke website generation from brief + `branding.json`.
+* `/api/leads/[id]/bespoke`: Real-time bespoke HTML/JSX injection route for Claude Code / Open Code refinements.
+* `/api/leads/[id]/rescrape`: 1-click re-crawl of client website with Firecrawl.
+* `/api/leads/[id]/assets/archive`: 1-click migration of external image hotlinks into permanent Supabase WebP files.
+* `/api/leads/[id]/pricing`: Admin pricing controller ($0+$30/mo, $79/mo, $797 flat, $779+$99/mo).
+* `/api/leads/[id]/deliver`: Customizable Email #2 dispatcher via native Brevo REST API.
+* `/api/leads/[id]/export`: Real `.zip` export generator creating an isolated Next.js 15 App Router codebase.
+* `/api/stripe/checkout`: Stripe checkout session creator matching admin-configured pricing.
+* `/api/stripe/webhook`: Handles `checkout.session.completed` and unlocks paid workflow.

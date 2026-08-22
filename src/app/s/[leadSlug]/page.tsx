@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSiteData } from "@/lib/get-site-data";
 import { PremiumLeadHomepage } from "@/components/site-shell/PremiumLeadHomepage";
+import { BespokeHomepage } from "@/components/site-shell/BespokeHomepage";
 import { LiveClientProposal } from "@/components/portal/LiveClientProposal";
 import { isAdminSession } from "@/lib/is-admin-session";
 import { verifyPortalToken } from "@/lib/portal-token";
@@ -75,7 +76,11 @@ export default async function LeadSitePage({
       <>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
         {faqSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
-        <PremiumLeadHomepage payload={payload} />
+        {payload.bespokeHomepageHtml ? (
+          <BespokeHomepage payload={payload} />
+        ) : (
+          <PremiumLeadHomepage payload={payload} />
+        )}
       </>
     );
   }
