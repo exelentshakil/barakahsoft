@@ -1,22 +1,22 @@
 import { callOpenAI } from "@/lib/openai-client";
 import { sanitizeBespokeHtml } from "@/lib/sanitize-generated-html";
 import type { DesignDna } from "@/lib/design-dna";
+import type { CopyPlan } from "@/lib/generate-copy-plan";
+import type { MediaPlan } from "@/lib/media/plan-media";
 
-// The bespoke site generator.
+// The markup pass.
 //
-// Two inputs, kept rigorously apart, exactly as the operator model
-// describes them:
+// Three inputs, each decided by a step whose only job was that decision:
 //
-//   BRIEF  — the real business. Every claim, number, name, service and
-//            review on the finished page must trace back to here.
-//   DNA    — the visual system, reverse-engineered from a best-in-class
-//            reference site. Contributes look only, never content.
+//   COPY  — what the page says (generate-copy-plan.ts, already critiqued)
+//   DNA   — how it looks (design-dna.ts, from a reference site)
+//   MEDIA — which image goes in which slot, and what each one shows
+//           (media/plan-media.ts, captioned by vision)
 //
-// The generator writes markup against the closed `bs-*` vocabulary in
-// bespoke.css. It cannot express a color, so it cannot go off-brand; it
-// cannot reference a class that resolves to nothing, so it cannot render
-// broken. That frees the prompt to spend its whole budget on composition
-// and copy instead of policing the model's color choices.
+// This step lays those out. It does not write copy and it does not choose
+// images, because a single call asked to do all three did none of them
+// well: it narrated the brief instead of selling, and placed photographs by
+// position instead of by subject.
 
 export interface SiteBrief {
   businessName: string;
@@ -30,7 +30,7 @@ export interface SiteBrief {
   rating: number | null;
   reviewCount: number | null;
   reviews: { author: string; rating: number; text: string }[];
-  /** Real photo URLs. The generator may use these and nothing else. */
+  /** Real photo URLs from the client's own site and Google profile. */
   photos: string[];
   heroImage: string | null;
   /** Compact digest of the lead's real scraped page content. */
@@ -39,8 +39,8 @@ export interface SiteBrief {
   leadSlug: string;
 }
 
-/** Only URLs the lead actually owns can appear in generated markup. */
-function stripUnknownImages(html: string, allowed: string[]): string {
+/** Only Storage URLs planned for this page may appear in its markup. */
+function stripUnplannedImages(html: string, allowed: string[]): string {
   if (allowed.length === 0) return html.replace(/<img\b[^>]*>/gi, "");
   const allowedSet = new Set(allowed);
   return html.replace(/<img\b[^>]*>/gi, (tag) => {
@@ -50,9 +50,8 @@ function stripUnknownImages(html: string, allowed: string[]): string {
 }
 
 /**
- * Internal links must resolve. A generated href pointing at a route that
- * was never built is a dead link on a page whose entire job is to look
- * more credible than what the client already has.
+ * Internal links must resolve. A dead link on a page whose entire job is to
+ * look more credible than the client's current site is self-defeating.
  */
 function rewriteInternalLinks(html: string, brief: SiteBrief, knownPaths: Set<string>): string {
   const base = `/s/${brief.leadSlug}`;
@@ -61,16 +60,15 @@ function rewriteInternalLinks(html: string, brief: SiteBrief, knownPaths: Set<st
     const path = href.startsWith("/") ? href : `/${href}`;
     const normalised = path.startsWith(base) ? path.slice(base.length) || "/" : path;
     const clean = normalised.replace(/\/+$/, "") || "/";
-    if (clean === "/" ) return `href="${base}"`;
+    if (clean === "/") return `href="${base}"`;
     if (knownPaths.has(clean)) return `href="${base}${clean}"`;
-    // Unknown route — collapse to the contact page rather than 404.
     return `href="${base}/contact"`;
   });
 }
 
 function dnaBlock(dna: DesignDna): string {
-  return `DESIGN DIRECTION (reverse-engineered from a best-in-class reference site — this governs how the page LOOKS, and contributes nothing to what it SAYS):
-- Overall mood: ${dna.mood}
+  return `DESIGN DIRECTION — drawn from a best-in-class reference site. This governs layout and treatment only:
+- Mood: ${dna.mood}
 - Hero treatment: ${dna.layout.heroTreatment}
 - Section rhythm: ${dna.layout.sectionRhythm}
 - Image density: ${dna.layout.imageDensity}
@@ -78,164 +76,131 @@ function dnaBlock(dna: DesignDna): string {
 - Proof presentation: ${dna.layout.proofStyle}
 - Type scale: ${dna.typography.scale}, headings ${dna.typography.headingCase}
 - Geometry: ${dna.geometry.radius} corners, ${dna.geometry.elevation} elevation
-- Signature motifs to actually build, not just gesture at: ${dna.motifs.join("; ") || "none specified"}
-- What makes the reference read premium: ${dna.rationale}`;
+- Signature motifs you must actually build, not gesture at: ${dna.motifs.join("; ") || "none specified"}`;
 }
 
-function briefBlock(brief: SiteBrief): string {
-  const lines: string[] = [
-    `Business name: ${brief.businessName}`,
-    `Industry: ${brief.industry}`,
-    `Primary city / service area: ${brief.city}`,
-  ];
-  if (brief.founder) lines.push(`Owner / founder: ${brief.founder}`);
-  if (brief.phone) lines.push(`Real phone (use verbatim, in tel: links): ${brief.phone}`);
-  if (brief.email) lines.push(`Real email: ${brief.email}`);
-  if (brief.rating && brief.reviewCount) {
-    lines.push(`Verified Google rating: ${brief.rating} stars from ${brief.reviewCount} reviews`);
-  } else {
-    lines.push(`Google rating: NOT VERIFIED — you must not state any rating, star count, or review count anywhere.`);
+function mediaBlock(media: MediaPlan): string {
+  if (media.length === 0) {
+    return `IMAGES: none are available for this page. Build it with type, colour bands and layout alone — and make that a deliberate editorial choice rather than a page with gaps where photos should be. Do not output any <img> tag.`;
   }
-  lines.push(
-    brief.licensedInsured
-      ? `The business states on its own site that it is licensed/insured — you may say so.`
-      : `No licensing or insurance claim appears on the business's own site — you must NOT claim licensed, insured, bonded, or certified.`
-  );
-  lines.push(`Real services (use these exact names):\n${brief.services.map((s) => `  - ${s}`).join("\n")}`);
-  if (brief.areas.length > 0) lines.push(`Real service areas:\n${brief.areas.map((a) => `  - ${a}`).join("\n")}`);
-  if (brief.reviews.length > 0) {
-    lines.push(
-      `Real customer reviews (quote these verbatim or not at all — never write a new one):\n${brief.reviews
-        .map((r) => `  - "${r.text.slice(0, 260)}" — ${r.author} (${r.rating}★)`)
-        .join("\n")}`
-    );
-  } else {
-    lines.push(`No review text is available — do NOT include testimonial quotes of any kind.`);
-  }
-  lines.push(`\nReal scraped content from the business's existing site:\n${brief.factsDigest}`);
-  return lines.join("\n");
+  return `IMAGES — these exact URLs, each already matched to a slot, with a description of what it genuinely shows. Use the image whose subject fits the section you are building. Never place an image in a section it does not depict, and never reuse the same image twice on one page. Any src not in this list is deleted before render:
+${media.map((m) => `  [${m.slot}] ${m.url}\n      shows: ${m.caption}`).join("\n")}
+
+Every <img> needs a real alt attribute describing what the photo shows.`;
 }
 
-const VOCABULARY = `You write HTML using ONLY the class vocabulary below. Any class outside this list is stripped before render, so a page that invents class names renders unstyled. There are no Tailwind classes here and no inline colors — the palette, fonts, radii and spacing are already bound to this vocabulary for this specific business.
+const VOCABULARY = `CLASS VOCABULARY — you may use only these. Any other class is stripped, so invented class names render unstyled. There are no Tailwind classes and no colours here: palette, fonts, radii and spacing are already bound to this vocabulary for this specific business.
 
 LAYOUT
-  bs-section            a full page section (vertical rhythm + side padding)
+  bs-section            a page section (vertical rhythm + side padding)
   bs-section-tight      same, reduced vertical rhythm
-  bs-wrap               centered max-width container (put inside bs-section)
+  bs-wrap               centered max-width container (goes inside bs-section)
   bs-wrap-narrow        centered narrow container, for prose
-  bs-stack / bs-stack-sm / bs-stack-lg    vertical flex with small/normal/large gap
+  bs-stack / bs-stack-sm / bs-stack-lg    vertical flex, small/normal/large gap
   bs-row                horizontal flex, wraps, vertically centered
   bs-row-between        horizontal flex, space-between
   bs-center             centers text (and any bs-row inside it)
   bs-grid-2 / bs-grid-3 / bs-grid-4       responsive equal grids
   bs-split              two-column split, stacks on mobile
   bs-split-wide         two-column split, wider first column
-  bs-split-reverse      add alongside bs-split to flip column order on desktop
-  bs-rows               editorial numbered rows (each child is one row)
+  bs-split-reverse      with bs-split, flips column order on desktop
+  bs-rows               editorial rows (each child is one row)
   bs-bento              irregular bento grid (first child spans 2x2)
 
 SURFACES
-  bs-band-alt           subtle alternate background (on bs-section)
-  bs-band-primary       solid brand-color band
-  bs-band-gradient      brand gradient band
-  bs-band-invert        high-contrast inverted band (dark on a light page)
-  bs-card               elevated card with hover lift
-  bs-card-flush         card with no padding (wrap inner content in bs-card-body)
-  bs-card-body          padded body inside bs-card-flush
-  bs-card-invert        inverted card
-  bs-card-primary       brand-colored card
+  bs-band-alt / bs-band-primary / bs-band-gradient / bs-band-invert
+  bs-card / bs-card-flush (+ bs-card-body) / bs-card-invert / bs-card-primary
 
 TYPE & ACCENTS
-  bs-eyebrow            small uppercase label above a heading
-  bs-lead               larger intro paragraph
-  bs-muted              de-emphasised text
-  bs-highlight          brand-colored text
-  bs-accent-text        accent-colored text
-  bs-pill               small rounded chip (trust signals, tags)
-  bs-numeral            oversized ghosted number
-  bs-divider            horizontal rule
-  bs-rule-accent        short accent bar under a heading
+  bs-eyebrow  bs-lead  bs-muted  bs-highlight  bs-accent-text
+  bs-pill  bs-numeral  bs-divider  bs-rule-accent
 
 BUTTONS
-  bs-btn                base button (always combine with a variant)
-  bs-btn-primary / bs-btn-accent / bs-btn-ghost
-  bs-btn-lg             larger button
-  bs-btn-block          full-width button
+  bs-btn (always with a variant) + bs-btn-primary | bs-btn-accent | bs-btn-ghost
+  bs-btn-lg  bs-btn-block
 
 HERO
-  bs-hero               hero section (use with bs-section)
-  bs-hero-center        centered hero variant
-  bs-hero-media         absolutely-positioned background image layer
-  bs-hero-scrim         contrast scrim over bs-hero-media
-  bs-hero-content       content layer above the scrim
-  bs-hero-over          light-on-dark text, for content over an image
+  bs-hero  bs-hero-center  bs-hero-media  bs-hero-scrim  bs-hero-content  bs-hero-over
 
 MEDIA
-  bs-media              rounded, clipped image frame
-  bs-ratio-square / bs-ratio-photo / bs-ratio-wide / bs-ratio-portrait
+  bs-media  bs-ratio-square  bs-ratio-photo  bs-ratio-wide  bs-ratio-portrait
 
 PROOF
-  bs-stat / bs-stat-value / bs-stat-label     big number + caption
-  bs-quote              left-bordered pull quote
-  bs-stars              star row
+  bs-stat  bs-stat-value  bs-stat-label  bs-quote  bs-stars
 
 LISTS
-  bs-list               bulleted list with accent dots
-  bs-list-plain         list with no bullets
-  bs-faq-item           one question/answer block
+  bs-list  bs-list-plain  bs-faq-item
 
 DECOR
-  bs-icon-badge         square badge for an inline SVG icon
-  bs-edge-diagonal / bs-edge-diagonal-bottom    diagonal section edge
-  bs-decor-orb + bs-decor-orb-tr / bs-decor-orb-bl   soft blurred glow
+  bs-icon-badge  bs-edge-diagonal  bs-edge-diagonal-bottom
+  bs-decor-orb (+ bs-decor-orb-tr | bs-decor-orb-bl)
 
-Inline style="" is permitted for LAYOUT ONLY (grid-template-columns, gap, aspect-ratio, max-width, text-align, order). Any color, background, font or shadow in a style attribute is stripped.`;
+inline style="" is allowed for LAYOUT ONLY (grid-template-columns, gap, aspect-ratio, max-width, text-align, order). Colours, fonts and shadows in a style attribute are stripped.`;
 
-function homepagePrompt(brief: SiteBrief, dna: DesignDna, knownPaths: string[]): string {
-  return `You are a senior web designer building the homepage for a real business. This page has one job: when the owner opens it, it must look so obviously better than the site they have now that it sells itself on sight. It goes to a human reviewer before the client ever sees it, so make confident, committed design decisions — a timid, evenly-spaced page of identical cards is the exact failure mode to avoid.
+const ANCHORS = `SECTION ANCHORS — the site's real navigation links to these ids, so they must appear on the section carrying that content or those links scroll nowhere:
+  id="services"  id="about"  id="reviews"  id="faq"  id="contact"`;
+
+function copyBlock(copy: CopyPlan): string {
+  return `THE COPY — this is written and approved. Lay it out. You may not rewrite it, shorten it into fragments, or add new sentences of your own. Headings, body copy and button labels appear exactly as given.
+
+Headline: ${copy.headline}
+Subhead: ${copy.subhead}
+Hero button: ${copy.heroCta}
+${copy.trustChips.length > 0 ? `Trust chips: ${copy.trustChips.join(" | ")}` : "Trust chips: none — do not invent any"}
+
+Sections, in the order you judge best for this design direction:
+${copy.sections
+  .map(
+    (s) =>
+      `  [${s.id}]\n    eyebrow: ${s.eyebrow}\n    heading: ${s.heading}\n    body: ${s.body}${
+        s.bullets.length > 0 ? `\n    bullets:\n${s.bullets.map((b) => `      - ${b}`).join("\n")}` : ""
+      }`
+  )
+  .join("\n")}
+
+${
+  copy.services.length > 0
+    ? `Services, each linking to its own page:\n${copy.services.map((s) => `  - ${s.name}: ${s.blurb}`).join("\n")}`
+    : "No service list."
+}
+
+${copy.faq.length > 0 ? `FAQ:\n${copy.faq.map((f) => `  Q: ${f.question}\n  A: ${f.answer}`).join("\n")}` : "No FAQ."}
+
+Closing call to action:
+  heading: ${copy.closing.heading}
+  body: ${copy.closing.body}
+  button: ${copy.closing.cta}`;
+}
+
+function homepagePrompt(brief: SiteBrief, copy: CopyPlan, dna: DesignDna, media: MediaPlan, knownPaths: string[]): string {
+  return `You are a senior web designer building the homepage for a real ${brief.industry} business in ${brief.city}. The copy is already written and the photography is already chosen. Your job is composition: turn this into a page that looks unmistakably more expensive than whatever this business has now.
 
 ${dnaBlock(dna)}
 
-THE REAL BUSINESS — every claim, number, name and quote on this page must come from here and nowhere else. Inventing a statistic, a certification, a guarantee, a years-in-business figure, a testimonial or a price is the single worst thing you can do:
-${briefBlock(brief)}
+${copyBlock(copy)}
 
-REAL PHOTOS — these are the only image URLs that may appear in an <img src>. Any other URL is deleted before render. Use them generously if the design direction calls for image density:
-${brief.photos.length > 0 ? brief.photos.map((u) => `  - ${u}`).join("\n") : "  (none available — build a strong page with NO <img> tags at all, using type, color bands and layout for impact)"}
+${mediaBlock(media)}
 
-INTERNAL LINKS — these are the only routes that exist. Link services to their own pages so the page feels like a real site, not a one-pager:
+INTERNAL LINKS — the only routes that exist. Write them exactly as listed:
 ${knownPaths.map((p) => `  - ${p}`).join("\n")}
-Write them as relative paths exactly as listed (e.g. href="/services/panel-upgrades"). Phone links must be tel: links.
+${brief.phone ? `Phone links must be tel:${brief.phone.replace(/[^\d+]/g, "")}` : "There is no phone number — use the contact page for every call to action."}
 
 ${VOCABULARY}
 
-STRUCTURE — build a complete homepage. Do NOT output a <header>, top nav, logo, or <footer>: those are real, separately-rendered components and anything you write there is deleted. Start at the hero, end at the final call-to-action.
+${ANCHORS}
 
-Cover, in whatever order and treatment the design direction above genuinely calls for:
-  1. A hero that commits to the specified hero treatment, with a headline naming this specific business's real trade and real city — not a generic industry slogan.
-  2. A trust strip, but ONLY with signals that are real per the brief.
-  3. The real services, presented in the specified service layout, each linking to its real service page.
-  4. A substantive "why this business" section built from the real scraped content — specific, not "quality workmanship and customer satisfaction".
-  5. Real proof in the specified proof style, only if real reviews or a real verified rating exist.
-  6. The real service areas, if any.
-  7. A genuinely useful FAQ answering what a real customer of this trade would ask, answered only from real facts.
-  8. A closing call-to-action band with the real phone number.
+Do NOT output a <header>, nav, logo or <footer>. Those are separate real components rendered around your output, and anything you write there is deleted. Begin at the hero, end at the closing call to action.
 
-SECTION ANCHORS — the real navigation links to these ids, so they must exist on the sections that carry that content, or those nav links scroll nowhere:
-  id="services" on the services section
-  id="about" on the "why this business" section
-  id="reviews" on the proof section (only if you built one)
-  id="faq" on the FAQ section
-  id="contact" on the closing call-to-action section
-
-QUALITY BAR — these are the things that separate a premium page from a template:
-  - Vary your section surfaces. A page where every section is the same background is the template look you are replacing. Use bs-band-alt, bs-band-invert, bs-band-primary and bs-band-gradient deliberately.
-  - Vary your layouts. Do not use bs-grid-3 for every section. Split layouts, editorial rows and bento grids exist for this reason.
-  - Actually build the signature motifs listed in the design direction.
-  - Write real, specific copy. Every sentence a competitor in this trade could paste onto their own site unchanged is a sentence that has failed.
-  - Headlines should be short and confident. Body copy should be concrete.
+COMPOSITION BAR — this is what separates a premium page from a template:
+  - Vary section surfaces deliberately. A page where every section sits on the same background is the template look being replaced. Use bs-band-alt, bs-band-invert, bs-band-primary and bs-band-gradient with intent.
+  - Vary layout. Do not reach for bs-grid-3 every time. Splits, editorial rows and bento grids exist precisely so consecutive sections do not rhyme.
+  - Build the signature motifs named in the design direction.
+  - Give the hero real presence. It is the whole first impression.
+  - Place every image in the section its description actually matches.
+  - Whitespace is structural, not leftover. Sections should breathe according to the specified rhythm.
 
 Reply with EXACTLY this format:
-RATIONALE: one sentence on the design decisions you committed to
+RATIONALE: one sentence on the composition decisions you committed to
 ---PAGE---
 <the HTML body fragment, nothing else, no markdown fences>`;
 }
@@ -250,50 +215,48 @@ function splitRationale(raw: string): { rationale: string; html: string } {
 }
 
 /**
- * One critique/revise cycle on the generated markup.
+ * One critique/revise cycle on COMPOSITION only.
  *
- * Deliberately bounded to a single pass. The measurable wins here are
- * catching invented claims and catching the "every section looks the same"
- * regression; further passes mostly churn wording while doubling cost.
+ * The copy was already written and edited by a pass whose sole job was
+ * voice, and the images were already matched by subject. Re-litigating
+ * either here produced a reviewer that graded everything shallowly and
+ * caught nothing. This pass looks at layout, surface variety, image
+ * placement and whether the design direction was actually executed.
  */
-async function critiqueAndRevise(html: string, brief: SiteBrief, dna: DesignDna): Promise<string> {
+async function critiqueComposition(html: string, dna: DesignDna, media: MediaPlan): Promise<string> {
   const critique = await callOpenAI(
-    `Review this generated homepage against its brief. Be specific and terse. Reply with exactly "APPROVED" if it passes everything, otherwise list only the concrete problems.
+    `Review this generated homepage as a design director. Reply with exactly "APPROVED" if it passes, otherwise list only the concrete problems, briefly.
 
-Check for:
-1. INVENTED FACTS — any statistic, certification, guarantee, years-in-business, award, price or testimonial not present in the brief below. This is the most serious failure.
-2. MONOTONY — does every section use the same background and the same grid? A premium page varies surface and layout.
-3. GENERIC COPY — sentences a competitor could reuse verbatim ("quality workmanship", "customer satisfaction is our priority", "we go the extra mile").
-4. DESIGN DIRECTION — were the specified hero treatment, service layout, proof style and signature motifs actually built?
-5. Empty or placeholder content ("Lorem", "TODO", "[insert]", empty headings).
+Check:
+1. MONOTONY — do consecutive sections use the same background and the same grid? Does the page rhyme with itself?
+2. DESIGN DIRECTION — were the specified hero treatment, service layout, proof style and signature motifs actually built, or only gestured at?
+3. IMAGE PLACEMENT — is any image in a section its description does not match? Is any image used twice?
+4. HERO — does it have real presence, or is it a headline on a plain background?
+5. STRUCTURE — empty sections, headings with no content beneath them, a section anchor id that is missing.
 
-BRIEF:
-${briefBlock(brief)}
-
-DESIGN DIRECTION:
 ${dnaBlock(dna)}
 
+IMAGE DESCRIPTIONS:
+${media.map((m) => `  ${m.url} shows: ${m.caption}`).join("\n") || "  none"}
+
 PAGE:
-${html.slice(0, 60000)}`,
+${html.slice(0, 70000)}`,
     { maxTokens: 1500, temperature: 0.2 }
   );
 
   if (!critique || critique.trim().toUpperCase().startsWith("APPROVED")) return html;
 
   const revised = await callOpenAI(
-    `Revise this homepage to fix the problems listed. Keep everything that already works — this is a targeted fix, not a rewrite. Stay strictly within the same class vocabulary, and never add a fact that is not in the brief.
+    `Fix these composition problems. This is a targeted revision, not a rewrite — keep everything that already works, and do not change any of the wording.
 
-PROBLEMS TO FIX:
+PROBLEMS:
 ${critique}
-
-BRIEF (the only permitted source of facts):
-${briefBlock(brief)}
 
 CURRENT PAGE:
 ${html}
 
 Reply with the corrected HTML body fragment only — no rationale line, no markdown fences.`,
-    { maxTokens: 20000, temperature: 0.5 }
+    { maxTokens: 24000, temperature: 0.5 }
   );
 
   if (!revised) return html;
@@ -305,84 +268,120 @@ export interface BespokeResult {
   rationale: string;
 }
 
+function finalise(html: string, brief: SiteBrief, media: MediaPlan, knownPaths: string[]): string {
+  return sanitizeBespokeHtml(
+    rewriteInternalLinks(
+      stripUnplannedImages(html, media.map((m) => m.url)),
+      brief,
+      new Set(knownPaths)
+    )
+  );
+}
+
 export async function generateBespokeHomepage(
   brief: SiteBrief,
+  copy: CopyPlan,
   dna: DesignDna,
+  media: MediaPlan,
   knownPaths: string[]
 ): Promise<BespokeResult | null> {
-  const raw = await callOpenAI(homepagePrompt(brief, dna, knownPaths), {
-    maxTokens: 24000,
-    temperature: 0.85,
+  const raw = await callOpenAI(homepagePrompt(brief, copy, dna, media, knownPaths), {
+    maxTokens: 28000,
+    temperature: 0.8,
     system:
-      "You are a senior web designer who writes production HTML. You never invent facts about a business. You never use classes outside the vocabulary you are given.",
+      "You are a senior web designer who writes production HTML. You lay out copy exactly as given without rewriting it, and you use only the class vocabulary you are handed.",
   });
   if (!raw) return null;
 
   const { rationale, html } = splitRationale(raw);
   if (!html) return null;
 
-  const revised = await critiqueAndRevise(html, brief, dna);
-  const pathSet = new Set(knownPaths);
-
-  const finalHtml = sanitizeBespokeHtml(
-    rewriteInternalLinks(stripUnknownImages(revised, brief.photos), brief, pathSet)
-  );
-
-  if (finalHtml.replace(/<[^>]+>/g, "").trim().length < 200) return null;
+  const finalHtml = finalise(await critiqueComposition(html, dna, media), brief, media, knownPaths);
+  if (finalHtml.replace(/<[^>]+>/g, "").trim().length < 400) return null;
 
   return {
     html: finalHtml,
-    rationale: rationale || `Bespoke homepage built to a ${dna.mood} direction drawn from ${dna.sourceName}.`,
+    rationale: rationale || `Composed to a ${dna.mood} direction drawn from ${dna.sourceName}.`,
   };
 }
 
+export type InnerPageKind = "service" | "area" | "location-service" | "about" | "faq" | "contact" | "blog-index" | "blog-post";
+
+export interface InnerPageRequest {
+  kind: InnerPageKind;
+  title: string;
+  subject?: string;
+  area?: string;
+}
+
 /**
- * Inner pages. Deliberately a single pass with no critique cycle — they are
- * shorter, lower-stakes, and there are many of them per site. The homepage
- * is where the generation budget belongs.
+ * Inner pages.
+ *
+ * Copy and layout in one call here, deliberately: an inner page is a
+ * narrower brief with a settled house voice already demonstrated by the
+ * homepage, and there are many of them per site. The homepage is where the
+ * multi-pass budget belongs.
  */
 export async function generateBespokePage(
   brief: SiteBrief,
+  copy: CopyPlan,
   dna: DesignDna,
+  media: MediaPlan,
   knownPaths: string[],
-  page: { kind: "service" | "area" | "about" | "faq" | "contact"; title: string; subject?: string }
+  page: InnerPageRequest
 ): Promise<string | null> {
-  const intent: Record<typeof page.kind, string> = {
-    service: `A dedicated page for the real service "${page.subject}". Explain what it actually involves for a customer in ${brief.city}, what the process looks like, and who it is for — grounded only in the brief. Include a short FAQ specific to this service and a strong closing call to action.`,
-    area: `A local page for "${page.subject}". Explain the real services offered there and why a local customer would choose this business. Never invent landmarks, population figures, or local claims not in the brief.`,
-    about: `The About page. Tell this business's real story using only what the brief contains${brief.founder ? `, centred on ${brief.founder}` : ""}. If the brief is thin, write a short honest page rather than padding it with invented history.`,
-    faq: `A full FAQ page answering what real customers of this trade ask. Answer only from the brief; omit any question the brief cannot honestly answer.`,
-    contact: `The Contact page. Make the real phone number and email unmissable, state the real service areas, and set a clear expectation about getting in touch. Do not invent opening hours.`,
+  const intent: Record<InnerPageKind, string> = {
+    service: `A page dedicated to "${page.subject}". Explain what it actually involves for a customer in ${brief.city}: what happens, what it solves, who needs it, what to expect when they call. Include a short FAQ specific to this service.`,
+    area: `A local page for ${page.area}. Cover the real services offered there and why a local customer would choose this business. Never invent landmarks, population figures or local history.`,
+    "location-service": `A page for "${page.subject}" specifically in ${page.area}. Write for someone in ${page.area} searching for exactly this. Keep it genuinely useful rather than a find-and-replace of the main service page — lead with what is different about doing this work in this area, drawn only from real facts.`,
+    about: `The About page. Tell this business's real story from the facts${brief.founder ? `, centred on ${brief.founder}` : ""}. If the facts are thin, write a short honest page rather than padding it with invented history.`,
+    faq: `A full FAQ answering what real customers of this trade ask before calling. Answer from the facts; omit any question the facts cannot honestly answer.`,
+    contact: `The Contact page. Make the real phone number and email unmissable and state the real service areas. Do not invent opening hours.`,
+    "blog-index": `An index of the articles listed below. A short intro, then the articles as cards linking to their own pages.`,
+    "blog-post": `An article titled "${page.title}". Genuinely useful, specific to this trade, written for a homeowner or business owner researching the problem. Never present a business claim as fact unless it is in the facts below.`,
   };
 
   const raw = await callOpenAI(
-    `You are building the "${page.title}" page for a real business's website. It must feel like it belongs to the same site as the homepage — same design system, same voice.
+    `You are building the "${page.title}" page for a real ${brief.industry} business in ${brief.city}. It must feel like the same site as the homepage — same design system, same voice.
+
+VOICE REFERENCE — the homepage's approved copy, for tone only. Do not repeat it:
+  Headline: ${copy.headline}
+  Subhead: ${copy.subhead}
 
 ${dnaBlock(dna)}
 
 PAGE INTENT: ${intent[page.kind]}
 
-THE REAL BUSINESS — the only permitted source of facts:
-${briefBlock(brief)}
+THE FACTS — the only permitted source of claims. Never state a price, a certification, a guarantee, a rating or a testimonial that is not here:
+  Business: ${brief.businessName}${brief.founder ? `, owner ${brief.founder}` : ""}
+  Serves: ${brief.city}${brief.areas.length > 0 ? ` and ${brief.areas.slice(0, 10).join(", ")}` : ""}
+  ${brief.phone ? `Phone: ${brief.phone}` : "No phone number available"}
+  ${brief.email ? `Email: ${brief.email}` : ""}
+  ${brief.rating && brief.reviewCount ? `Google: ${brief.rating} stars from ${brief.reviewCount} reviews` : "No verified rating — never mention ratings or reviews"}
+  ${brief.licensedInsured ? "States it is licensed and insured on its own site" : "No licensing or insurance claim exists — never claim it"}
+  Services: ${brief.services.join(" | ")}
 
-REAL PHOTOS (the only usable image URLs):
-${brief.photos.length > 0 ? brief.photos.slice(0, 10).map((u) => `  - ${u}`).join("\n") : "  (none — use no <img> tags)"}
+${brief.factsDigest.slice(0, 3000)}
+
+${mediaBlock(media)}
 
 INTERNAL LINKS that exist:
 ${knownPaths.map((p) => `  - ${p}`).join("\n")}
 
 ${VOCABULARY}
 
-Begin with a page-opening section carrying the page title as an <h1>, then the real content, then a closing call-to-action band with the real phone number. No <header>, no nav, no <footer>.
+Write real copy — never narrate the business's data, never count things in a heading, never use filler like "quality workmanship" or "committed to excellence". Open with a section carrying the page title as an <h1>, then the real content, then a closing call to action.
 
-Reply with the HTML body fragment only — no rationale, no markdown fences.`,
-    { maxTokens: 12000, temperature: 0.75, system: "You are a senior web designer who writes production HTML and never invents facts." }
+No <header>, no nav, no <footer>. Reply with the HTML body fragment only — no markdown fences.`,
+    {
+      maxTokens: 14000,
+      temperature: 0.8,
+      system: "You are a senior web designer and copywriter. You never invent facts and you never write filler.",
+    }
   );
 
   if (!raw) return null;
   const cleaned = raw.replace(/^```(?:html)?\s*/i, "").replace(/```\s*$/i, "").trim();
-  const finalHtml = sanitizeBespokeHtml(
-    rewriteInternalLinks(stripUnknownImages(cleaned, brief.photos), brief, new Set(knownPaths))
-  );
-  return finalHtml.replace(/<[^>]+>/g, "").trim().length < 120 ? null : finalHtml;
+  const finalHtml = finalise(cleaned, brief, media, knownPaths);
+  return finalHtml.replace(/<[^>]+>/g, "").trim().length < 200 ? null : finalHtml;
 }

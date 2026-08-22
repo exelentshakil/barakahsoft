@@ -174,6 +174,14 @@ export interface Artifact {
   // Generated markup for inner pages, keyed by route ("about", "faq",
   // "services/panel-upgrades", ...).
   bespoke_pages: Record<string, string>;
+  // The approved copy plan and media plan. Persisted because phase 2 runs
+  // long after phase 1 and must reuse the voice and photography the client
+  // already approved, rather than re-deriving them.
+  copy_plan: unknown | null;
+  media_plan: unknown | null;
+  generation_phase: number;
+  // Per-lead header and footer design, chosen from the design DNA.
+  chrome_spec: unknown | null;
 }
 
 export type BuildJobStage =

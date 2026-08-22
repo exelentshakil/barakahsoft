@@ -22,7 +22,9 @@
 //    back from the API and retry once with the offending parameter
 //    dropped/renamed. Self-correcting instead of a maintenance burden.
 
-export type OpenAIImagePart = { mimeType: string; data: string };
+// Either a public URL (cheaper — the API fetches it, we don't download and
+// re-encode it) or inline base64 for images that aren't publicly reachable.
+export type OpenAIImagePart = { mimeType: string; data: string } | { url: string };
 
 // Ordered newest-first by actual release date, not by name: model families
 // do not sort sensibly by version string, so this ordering is checked
@@ -67,10 +69,8 @@ function buildMessages(prompt: string, options: CallOptions): ChatMessage[] {
   if (options.images?.length) {
     const parts: Record<string, unknown>[] = [{ type: "text", text: prompt }];
     for (const img of options.images) {
-      parts.push({
-        type: "image_url",
-        image_url: { url: `data:${img.mimeType};base64,${img.data}` },
-      });
+      const url = "url" in img ? img.url : `data:${img.mimeType};base64,${img.data}`;
+      parts.push({ type: "image_url", image_url: { url } });
     }
     messages.push({ role: "user", content: parts });
   } else {

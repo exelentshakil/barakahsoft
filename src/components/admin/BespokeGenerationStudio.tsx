@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
@@ -129,7 +129,7 @@ export function BespokeGenerationStudio({
   // Generation is a multi-minute background job (several model calls plus a
   // critique pass), so the button reports real step progress rather than
   // spinning against a request that would have timed out anyway.
-  function pollProgress() {
+  const pollProgress = useCallback(() => {
     const timer = setInterval(async () => {
       try {
         const res = await fetch(`/api/leads/${lead.id}/generate`);
@@ -143,7 +143,7 @@ export function BespokeGenerationStudio({
           clearInterval(timer);
           setGenerating(false);
           if (job.status === "failed") {
-            setGenError(job.error_message || "Generation failed — check the Inngest run for details.");
+            setGenError(job.error_message || "Generation failed \u2014 check the Inngest run for details.");
           } else {
             router.refresh();
             onGenerated?.();
@@ -154,7 +154,36 @@ export function BespokeGenerationStudio({
         // A dropped poll is not a failure — the next tick retries.
       }
     }, 3000);
-  }
+    return timer;
+  }, [lead.id, router, onGenerated]);
+
+  // The job runs in the background, so a reload never interrupts it — but it
+  // did previously lose the only thing watching it, leaving the operator
+  // looking at an idle button while a build was still running. Reattaching on
+  // mount makes the UI reflect real server state rather than the state of
+  // this particular page load.
+  useEffect(() => {
+    let timer: ReturnType<typeof setInterval> | undefined;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch(`/api/leads/${lead.id}/generate`);
+        const data = await res.json().catch(() => ({}));
+        if (cancelled || data.job?.status !== "running") return;
+        setGenerating(true);
+        setProgress({ done: data.job.pages_done ?? 0, total: data.job.pages_total ?? 1 });
+        timer = pollProgress();
+      } catch {
+        // No reachable job status is not itself an error to show.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (timer) clearInterval(timer);
+    };
+  }, [lead.id, pollProgress]);
 
   if (isScraping) {
     return (

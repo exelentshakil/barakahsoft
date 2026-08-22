@@ -29,12 +29,24 @@ export interface BriefOverrides {
   heroImage?: string;
 }
 
-/** Routes that exist for a lead, so generated links always resolve. */
-export function buildKnownPaths(services: string[], areas: string[]): string[] {
+/**
+ * Routes that exist for a lead, so generated links always resolve.
+ *
+ * Phase 1 only knows about the sellable core. Passing phase 2's routes
+ * before they are built would let the homepage link at pages that 404
+ * during the exact window the client is evaluating the work.
+ */
+export function buildKnownPaths(
+  services: string[],
+  areas: string[],
+  extras: { blog?: boolean; locationServices?: { service: string; area: string }[] } = {}
+): string[] {
   return [
     "/",
     ...services.map((s) => `/services/${slugifyText(s)}`),
     ...areas.map((a) => `/areas/${slugifyText(a)}`),
+    ...(extras.locationServices ?? []).map((p) => `/locations/${slugifyText(`${p.service}-${p.area}`)}`),
+    ...(extras.blog ? ["/blog"] : []),
     "/about",
     "/faq",
     "/contact",

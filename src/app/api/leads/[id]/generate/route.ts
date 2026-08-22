@@ -17,7 +17,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { id: leadId } = await params;
   if (!(await isAdminSession())) return NextResponse.json({ error: "Not authorised" }, { status: 401 });
 
-  const overrides = (await req.json().catch(() => ({}))) as BriefOverrides;
+  const body = (await req.json().catch(() => ({}))) as BriefOverrides & { phase?: 1 | 2 };
+  const phase = body.phase === 2 ? 2 : 1;
+  const overrides = body;
   const admin = createAdminClient();
 
   const [{ data: lead }, { data: scrapeResults }] = await Promise.all([
@@ -65,9 +67,28 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (insertErr) return NextResponse.json({ error: insertErr.message }, { status: 500 });
   }
 
+  // Phase 2 builds the deep site (location pages, areas, blog) and is only
+  // meaningful once phase 1's copy plan exists and the client has approved
+  // it. Refusing here gives a clear reason rather than a failed background
+  // run the operator has to go and read logs to understand.
+  if (phase === 2) {
+    const { data: artifact } = await admin
+      .from("artifacts")
+      .select("copy_plan, generation_phase")
+      .eq("lead_id", leadId)
+      .maybeSingle<{ copy_plan: unknown; generation_phase: number }>();
+
+    if (!artifact?.copy_plan || (artifact.generation_phase ?? 0) < 1) {
+      return NextResponse.json(
+        { error: "Build the core site first — the full site reuses the copy and photography the client approved." },
+        { status: 409 }
+      );
+    }
+  }
+
   await inngest.send({
     name: "bespoke/generate.requested",
-    data: { lead_id: leadId, overrides },
+    data: { lead_id: leadId, overrides, phase },
   });
 
   return NextResponse.json({
@@ -75,6 +96,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     leadId,
     slug: lead.slug,
     started: true,
+    phase,
     warnings,
     plan: {
       services: brief.services,

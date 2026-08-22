@@ -1,37 +1,73 @@
 import { inngest } from "@/inngest/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildSiteBrief, buildKnownPaths, type BriefOverrides } from "@/lib/build-site-brief";
-import { generateBespokeHomepage, generateBespokePage } from "@/lib/generate-bespoke-site";
+import {
+  generateBespokeHomepage,
+  generateBespokePage,
+  type InnerPageRequest,
+  type SiteBrief,
+} from "@/lib/generate-bespoke-site";
+import { generateCopyPlan, critiqueCopyPlan, CopyPlanSchema, type CopyPlan } from "@/lib/generate-copy-plan";
 import { DEFAULT_DESIGN_DNA, DesignDnaSchema, type DesignDna } from "@/lib/design-dna";
 import { compileDesignTokens } from "@/lib/design-tokens";
+import { ingestRealPhotos, buildSlots, planMedia, type MediaPlan } from "@/lib/media/plan-media";
+import { buildChromeSpec } from "@/lib/chrome-spec";
 import { slugifyText } from "@/lib/slug";
 import type { FunnelPageSection, Lead, ScrapeResults, Artifact } from "@/types/database";
 
-// bespoke/generate.requested — the real generator behind the Studio's
-// generate button.
+// bespoke/generate.requested — the single generation path.
 //
-// This runs as a background job rather than inside the request for a
-// structural reason: a homepage is a large model call plus a critique pass
-// plus a revise pass, and every inner page is another call. That is minutes
-// of work, well past any serverless request ceiling. Each step below is an
-// Inngest step, so a failure late in the run does not discard the homepage
-// that already succeeded, and the operator sees real progress rather than a
-// spinner.
+// Phase 1 builds the sellable core: homepage, every service page, about,
+// FAQ, contact. That is what the client is sent, and it is the only spend a
+// lead incurs before it responds.
 //
-// Order matters. The homepage is generated FIRST and committed on its own,
-// because it is the artefact that sells the deal — the operator can review
-// and send it while the inner pages are still building.
+// Phase 2 builds the rest — location×service pages, service areas, the blog
+// — and is triggered explicitly after the client approves, so deep spend
+// only happens on leads that convert.
+//
+// Every step is an Inngest step: a failure late in a run does not discard
+// the homepage that already succeeded, progress is visible rather than a
+// spinner, and a browser reload cannot interrupt anything because none of
+// this runs in a request.
 
-const HOMEPAGE_STEPS = 1;
+const MAX_SERVICE_PAGES = 8;
+const MAX_AREAS = 12;
+const MAX_LOCATION_PAGES = 24;
+
+// step.run's return type is Jsonify<T>, which will not unify with a plain
+// generic helper signature. These helpers only ever need "run something and
+// give me back what it produced", so the dependency is modelled that way and
+// the known result shape is asserted at the call site.
+type StepRunner = { run: (id: string, fn: () => Promise<unknown>) => Promise<unknown> };
+
+interface GenerationContext {
+  lead: Lead;
+  brief: SiteBrief;
+  dna: DesignDna;
+  copy: CopyPlan;
+  media: MediaPlan;
+  knownPaths: string[];
+}
+
+function resolveDna(artifact: Artifact | null): DesignDna {
+  // A hand-edited spec that no longer matches the schema falls back to the
+  // house direction rather than failing the run.
+  const parsed = artifact?.inspiration_branding ? DesignDnaSchema.safeParse(artifact.inspiration_branding) : null;
+  return parsed?.success ? parsed.data : DEFAULT_DESIGN_DNA;
+}
 
 export const bespokeGenerate = inngest.createFunction(
   { id: "bespoke-generate", retries: 1 },
   { event: "bespoke/generate.requested" },
   async ({ event, step }) => {
-    const { lead_id, overrides } = event.data as { lead_id: string; overrides: BriefOverrides };
+    const { lead_id, overrides, phase } = event.data as {
+      lead_id: string;
+      overrides: BriefOverrides;
+      phase: 1 | 2;
+    };
     const admin = createAdminClient();
 
-    const context = await step.run("load-context", async () => {
+    const loaded = await step.run("load-context", async () => {
       const [{ data: lead }, { data: scrapeResults }, { data: artifact }] = await Promise.all([
         admin.from("leads").select("*").eq("id", lead_id).single<Lead>(),
         admin.from("scrape_results").select("*").eq("lead_id", lead_id).single<ScrapeResults>(),
@@ -42,17 +78,38 @@ export const bespokeGenerate = inngest.createFunction(
       return { lead, scrapeResults, artifact };
     });
 
-    const brief = buildSiteBrief(context.lead, context.scrapeResults, overrides ?? {});
-    const knownPaths = buildKnownPaths(brief.services, brief.areas);
+    const brief = buildSiteBrief(loaded.lead, loaded.scrapeResults, overrides ?? {});
+    const dna = resolveDna(loaded.artifact);
+    const services = brief.services.slice(0, MAX_SERVICE_PAGES);
+    const areas = brief.areas.slice(0, MAX_AREAS);
 
-    // A hand-edited spec that no longer matches the schema should fall back
-    // to the house default rather than fail the whole run.
-    const parsedDna = context.artifact?.inspiration_branding
-      ? DesignDnaSchema.safeParse(context.artifact.inspiration_branding)
-      : null;
-    const dna: DesignDna = parsedDna?.success ? parsedDna.data : DEFAULT_DESIGN_DNA;
+    const knownPaths = buildKnownPaths(
+      services,
+      phase === 2 ? areas : [],
+      phase === 2 ? { blog: true, locationServices: buildLocationPairs(services, areas) } : {}
+    );
 
-    const innerPageCount = Math.min(brief.services.length, 6) + 3; // services + about/faq/contact
+    // ---- Phase 2 reuses everything the client already approved ----------
+    if (phase === 2) {
+      const storedCopy = loaded.artifact?.copy_plan ? CopyPlanSchema.safeParse(loaded.artifact.copy_plan) : null;
+      if (!storedCopy?.success) {
+        throw new Error("bespoke-generate: phase 2 requires an approved phase 1 copy plan — run phase 1 first");
+      }
+      const media = (loaded.artifact?.media_plan as MediaPlan | null) ?? [];
+      await runPhaseTwo(step, admin, {
+        lead: loaded.lead,
+        brief,
+        dna,
+        copy: storedCopy.data,
+        media,
+        knownPaths,
+      }, services, areas);
+      return { lead_id, phase: 2 };
+    }
+
+    // ---- Phase 1 --------------------------------------------------------
+    const innerPages = services.length + 3; // services + about/faq/contact
+    const totalSteps = 3 + 1 + innerPages; // media, copy, chrome + homepage + inner
 
     await step.run("start-job", async () => {
       await admin.from("build_jobs").delete().eq("lead_id", lead_id).eq("stage", "bespoke");
@@ -61,123 +118,269 @@ export const bespokeGenerate = inngest.createFunction(
         stage: "bespoke",
         status: "running",
         pages_done: 0,
-        pages_total: HOMEPAGE_STEPS + innerPageCount,
+        pages_total: totalSteps,
       });
       await admin.from("leads").update({ status: "rendering" }).eq("id", lead_id);
+      await admin.from("artifacts").update({ full_site_status: "building" }).eq("lead_id", lead_id);
     });
 
-    // ---- Structured sections -------------------------------------------
-    // The mega menu, footer, sitemap.xml and JSON-LD all read funnel_pages,
-    // not the generated markup. Writing real sections here is what stops
-    // the nav from being empty or pointing at pages that do not exist —
-    // the "blank header with bad whitespace" failure.
+    // Media first: the copy pass benefits from knowing what imagery exists,
+    // and the markup pass cannot place an image it has not been given.
+    const media = await step.run("plan-media", async () => {
+      const assets = await ingestRealPhotos(lead_id, brief.photos, brief.industry);
+      const slots = buildSlots(services, brief.industry, brief.city);
+      const plan = await planMedia(lead_id, assets, slots, dna.mood);
+      await admin.from("artifacts").update({ media_plan: plan }).eq("lead_id", lead_id);
+      return plan;
+    });
+
+    await bumpProgress(admin, lead_id, 1);
+
+    const copy = await step.run("write-copy", async () => {
+      const draft = await generateCopyPlan(brief, dna);
+      if (!draft) throw new Error("Copy generation returned nothing — check OPENAI_API_KEY and model access");
+      // The editor pass is allowed to fail without failing the run; a good
+      // draft beats no page.
+      const edited = (await critiqueCopyPlan(draft, brief)) ?? draft;
+      await admin.from("artifacts").update({ copy_plan: edited }).eq("lead_id", lead_id);
+      return edited;
+    });
+
+    await bumpProgress(admin, lead_id, 2);
+
+    // The nav and footer are per-lead designs too, derived from the same
+    // DNA — a generic header on a bespoke page is the loudest possible tell
+    // that the page came off a production line.
+    await step.run("plan-chrome", async () => {
+      const chrome = buildChromeSpec(dna, {
+        services: copy.services.map((s) => s.name),
+        areas: [],
+        hasPhone: !!brief.phone,
+        hasReviews: brief.reviews.length > 0,
+      });
+      await admin.from("artifacts").update({ chrome_spec: chrome }).eq("lead_id", lead_id);
+    });
+
+    await bumpProgress(admin, lead_id, 3);
+
     const funnelPages: FunnelPageSection[] = [
       {
         slug: "hero",
         kind: "hero",
-        h2: `${brief.businessName}`,
-        body_content: brief.factsDigest.slice(0, 240),
+        h2: copy.headline,
+        body_content: copy.subhead,
         media_asset_ids: [],
-        cta: "Get a free quote",
+        cta: copy.heroCta,
         variant_props: { phone: brief.phone, rating: brief.rating, review_count: brief.reviewCount },
       },
-      ...brief.services.slice(0, 6).map((name) => ({
-        slug: slugifyText(name),
+      ...copy.services.slice(0, MAX_SERVICE_PAGES).map((service) => ({
+        slug: slugifyText(service.name),
         kind: "service" as const,
-        h2: name,
-        body_content: `${name} in ${brief.city}.`,
+        h2: service.name,
+        body_content: service.blurb,
         media_asset_ids: [],
-        cta: `About ${name}`,
+        cta: null,
+      })),
+      ...copy.faq.map((f, index) => ({
+        slug: `faq-${index + 1}`,
+        kind: "faq" as const,
+        h2: f.question,
+        body_content: f.answer,
+        media_asset_ids: [],
+        cta: null,
       })),
     ];
 
     await step.run("save-sections", async () => {
-      await admin.from("artifacts").update({
-        funnel_pages: funnelPages,
-        design_tokens: compileDesignTokens(dna),
-        inspiration_branding: dna,
-        full_site_status: "building",
-      }).eq("lead_id", lead_id);
+      await admin
+        .from("artifacts")
+        .update({
+          funnel_pages: funnelPages,
+          design_tokens: compileDesignTokens(dna),
+          inspiration_branding: dna,
+        })
+        .eq("lead_id", lead_id);
     });
 
-    // ---- Homepage -------------------------------------------------------
     const homepage = await step.run("generate-homepage", async () => {
-      const result = await generateBespokeHomepage(brief, dna, knownPaths);
-      if (!result) throw new Error("Homepage generation returned nothing — check OPENAI_API_KEY and model access");
+      const result = await generateBespokeHomepage(brief, copy, dna, media, knownPaths);
+      if (!result) throw new Error("Homepage generation returned nothing");
       return result;
     });
 
     await step.run("save-homepage", async () => {
-      await admin.from("artifacts").update({
-        bespoke_homepage_html: homepage.html,
-        bespoke_rationale: homepage.rationale,
-        last_edited_at: new Date().toISOString(),
-      }).eq("lead_id", lead_id);
-
-      await admin.from("build_jobs").update({ pages_done: HOMEPAGE_STEPS }).eq("lead_id", lead_id).eq("stage", "bespoke");
-
-      // The operator can review and send from here. Everything after this
-      // point is additive depth, not a blocker.
+      await admin
+        .from("artifacts")
+        .update({
+          bespoke_homepage_html: homepage.html,
+          bespoke_rationale: homepage.rationale,
+          last_edited_at: new Date().toISOString(),
+        })
+        .eq("lead_id", lead_id);
+      // Reviewable from here. Everything after is depth, not a blocker.
       await admin.from("leads").update({ status: "qa_pending" }).eq("id", lead_id);
     });
 
-    // ---- Inner pages ----------------------------------------------------
-    // Each page is its own Inngest step so one failed page does not lose the
-    // others, and progress advances visibly rather than in one jump.
-    const pageJobs: { key: string; kind: "service" | "about" | "faq" | "contact"; title: string; subject?: string }[] = [
-      ...brief.services.slice(0, 6).map((name) => ({
-        key: `services/${slugifyText(name)}`,
+    await bumpProgress(admin, lead_id, 4);
+
+    const requests: InnerPageRequest[] = [
+      ...copy.services.slice(0, MAX_SERVICE_PAGES).map((s) => ({
         kind: "service" as const,
-        title: name,
-        subject: name,
+        title: s.name,
+        subject: s.name,
       })),
-      { key: "about", kind: "about", title: `About ${brief.businessName}` },
-      { key: "faq", kind: "faq", title: "Frequently asked questions" },
-      { key: "contact", kind: "contact", title: `Contact ${brief.businessName}` },
+      { kind: "about", title: `About ${brief.businessName}` },
+      { kind: "faq", title: "Frequently asked questions" },
+      { kind: "contact", title: `Contact ${brief.businessName}` },
     ];
 
-    let done = HOMEPAGE_STEPS;
-    const built: Record<string, string> = {};
+    await buildPages(step, admin, lead_id, { lead: loaded.lead, brief, dna, copy, media, knownPaths }, requests, 4);
 
-    for (const job of pageJobs) {
-      const html = await step.run(`generate-page-${job.key.replace(/\//g, "-")}`, async () => {
-        return await generateBespokePage(brief, dna, knownPaths, {
-          kind: job.kind,
-          title: job.title,
-          subject: job.subject,
-        });
-      });
-
-      done += 1;
-      if (html) built[job.key] = html;
-
-      await step.run(`save-page-${job.key.replace(/\//g, "-")}`, async () => {
-        // Re-read rather than accumulating in memory: a retried step must
-        // not clobber pages written by steps that already succeeded.
-        const { data: current } = await admin
-          .from("artifacts")
-          .select("bespoke_pages")
-          .eq("lead_id", lead_id)
-          .single<{ bespoke_pages: Record<string, string> }>();
-
-        await admin.from("artifacts").update({
-          bespoke_pages: { ...(current?.bespoke_pages ?? {}), ...built },
-        }).eq("lead_id", lead_id);
-
-        await admin.from("build_jobs").update({ pages_done: done }).eq("lead_id", lead_id).eq("stage", "bespoke");
-      });
-    }
-
-    await step.run("finish-job", async () => {
-      await admin.from("artifacts").update({
-        full_site_status: "complete",
-        full_site_built_at: new Date().toISOString(),
-        inner_pages_built: true,
-      }).eq("lead_id", lead_id);
-
-      await admin.from("build_jobs").update({ status: "complete", pages_done: done }).eq("lead_id", lead_id).eq("stage", "bespoke");
+    await step.run("finish-phase-1", async () => {
+      await admin
+        .from("artifacts")
+        .update({ inner_pages_built: true, generation_phase: 1, full_site_status: "complete" })
+        .eq("lead_id", lead_id);
+      await admin
+        .from("build_jobs")
+        .update({ status: "complete", pages_done: totalSteps })
+        .eq("lead_id", lead_id)
+        .eq("stage", "bespoke");
     });
 
-    return { lead_id, pagesBuilt: Object.keys(built).length + HOMEPAGE_STEPS };
+    return { lead_id, phase: 1 };
   }
 );
+
+function buildLocationPairs(services: string[], areas: string[]): { service: string; area: string }[] {
+  const pairs: { service: string; area: string }[] = [];
+  for (const area of areas) {
+    for (const service of services.slice(0, 4)) {
+      if (pairs.length >= MAX_LOCATION_PAGES) return pairs;
+      pairs.push({ service, area });
+    }
+  }
+  return pairs;
+}
+
+async function bumpProgress(admin: ReturnType<typeof createAdminClient>, leadId: string, done: number) {
+  await admin.from("build_jobs").update({ pages_done: done }).eq("lead_id", leadId).eq("stage", "bespoke");
+}
+
+/**
+ * Build a list of pages, one Inngest step each.
+ *
+ * Each page saves immediately after it is generated, re-reading the stored
+ * map first, so a retried step never clobbers pages written by steps that
+ * already succeeded.
+ */
+async function buildPages(
+  step: StepRunner,
+  admin: ReturnType<typeof createAdminClient>,
+  leadId: string,
+  ctx: GenerationContext,
+  requests: InnerPageRequest[],
+  startedAt: number
+): Promise<number> {
+  let done = startedAt;
+
+  for (const request of requests) {
+    const key = pageKey(request);
+    const stepId = key.replace(/[^a-z0-9]+/gi, "-");
+
+    const html = (await step.run(`page-${stepId}`, async () =>
+      generateBespokePage(ctx.brief, ctx.copy, ctx.dna, ctx.media, ctx.knownPaths, request)
+    )) as string | null;
+
+    done += 1;
+
+    await step.run(`save-${stepId}`, async () => {
+      const { data: current } = await admin
+        .from("artifacts")
+        .select("bespoke_pages")
+        .eq("lead_id", leadId)
+        .single<{ bespoke_pages: Record<string, string> }>();
+
+      if (html) {
+        await admin
+          .from("artifacts")
+          .update({ bespoke_pages: { ...(current?.bespoke_pages ?? {}), [key]: html } })
+          .eq("lead_id", leadId);
+      }
+      await bumpProgress(admin, leadId, done);
+    });
+  }
+
+  return done;
+}
+
+function pageKey(request: InnerPageRequest): string {
+  switch (request.kind) {
+    case "service":
+      return `services/${slugifyText(request.subject ?? request.title)}`;
+    case "area":
+      return `areas/${slugifyText(request.area ?? request.title)}`;
+    case "location-service":
+      return `locations/${slugifyText(`${request.subject}-${request.area}`)}`;
+    case "blog-post":
+      return `blog/${slugifyText(request.title)}`;
+    case "blog-index":
+      return "blog";
+    default:
+      return request.kind;
+  }
+}
+
+async function runPhaseTwo(
+  step: StepRunner,
+  admin: ReturnType<typeof createAdminClient>,
+  ctx: GenerationContext,
+  services: string[],
+  areas: string[]
+): Promise<void> {
+  const leadId = ctx.lead.id;
+  const pairs = buildLocationPairs(services, areas);
+
+  const articles = ctx.copy.faq.slice(0, 6).map((f) => f.question);
+
+  const requests: InnerPageRequest[] = [
+    ...areas.map((area) => ({ kind: "area" as const, title: area, area })),
+    ...pairs.map((p) => ({
+      kind: "location-service" as const,
+      title: `${p.service} in ${p.area}`,
+      subject: p.service,
+      area: p.area,
+    })),
+    ...(articles.length > 0
+      ? [
+          { kind: "blog-index" as const, title: `${ctx.brief.industry} advice` },
+          ...articles.map((title) => ({ kind: "blog-post" as const, title })),
+        ]
+      : []),
+  ];
+
+  await step.run("start-phase-2", async () => {
+    await admin.from("build_jobs").delete().eq("lead_id", leadId).eq("stage", "bespoke");
+    await admin.from("build_jobs").insert({
+      lead_id: leadId,
+      stage: "bespoke",
+      status: "running",
+      pages_done: 0,
+      pages_total: Math.max(requests.length, 1),
+    });
+  });
+
+  await buildPages(step, admin, leadId, ctx, requests, 0);
+
+  await step.run("finish-phase-2", async () => {
+    await admin
+      .from("artifacts")
+      .update({ generation_phase: 2, full_site_built_at: new Date().toISOString() })
+      .eq("lead_id", leadId);
+    await admin
+      .from("build_jobs")
+      .update({ status: "complete", pages_done: requests.length })
+      .eq("lead_id", leadId)
+      .eq("stage", "bespoke");
+  });
+}
