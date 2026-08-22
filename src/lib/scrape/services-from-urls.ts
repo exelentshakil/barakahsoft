@@ -15,7 +15,34 @@ const AREA_PATH = /\/(areas?|locations?|service-areas?|cities|towns|neighou?rhoo
 
 // Paths that exist on nearly every site and describe no service at all.
 const BOILERPLATE =
-  /^(home|index|about|about-us|contact|contact-us|privacy|privacy-policy|terms|terms-of-service|sitemap|blog|news|careers|jobs|reviews|testimonials|gallery|faq|faqs|team|our-team|financing|coupons|specials|search|login|account|cart|checkout|thank-you|thanks|404)$/i;
+  /^(home|index|about|about-us|contact|contact-us|privacy|privacy-policy|terms|terms-of-service|sitemap|blog|news|careers|jobs|reviews|testimonials|gallery|faq|faqs|team|our-team|financing|coupons|specials|search|login|account|cart|checkout|thank-you|thanks|404|service-areas?|areas-we-serve|locations?|our-services|services)$/i;
+
+// Machine files, not pages. A real roofing site returned "Page Sitemap.Xml",
+// "Post Sitemap2.Xml" and "Category Sitemap.Xml" as services, which would
+// have gone onto the client's rebuilt homepage as things they sell.
+const NOT_A_PAGE = /\.(xml|json|txt|rss|atom|csv|pdf|gz|php|xsl)$/i;
+const FEED_PATH = /(sitemap|feed|rss|wp-json|wp-content|wp-admin|xmlrpc|robots)/i;
+
+// Article URLs. A blog post about a service is not a service, and its title
+// reads as one — "Roof Repair Emergencies You Never Ignore" came through as
+// a service on the same site.
+const ARTICLE_PATH = /\/(blog|news|articles?|posts?|insights?|resources|guides?|tips)\//i;
+const DATED_PATH = /\/(19|20)\d{2}\/(\d{1,2})\//;
+
+/** Whether a URL is a real page that could plausibly be a service. */
+function isCandidatePage(url: string): boolean {
+  if (NOT_A_PAGE.test(url) || FEED_PATH.test(url)) return false;
+  if (ARTICLE_PATH.test(url) || DATED_PATH.test(url)) return false;
+  return true;
+}
+
+// A service is a noun phrase. A headline is a sentence, and article titles
+// slugify into long multi-word paths that read like one.
+function looksLikeAnArticle(slug: string): boolean {
+  const words = slug.split("-").filter(Boolean);
+  if (words.length > 5) return true;
+  return /\b(you|your|we|our|how|why|what|when|should|never|best|top|guide|tips|vs|and-how)\b/i.test(slug);
+}
 
 function slugToName(slug: string): string {
   return slug
@@ -56,11 +83,13 @@ export function deriveBriefFromUrls(urls: string[]): UrlDerivedBrief {
   const notable: string[] = [];
 
   for (const url of urls) {
+    if (!isCandidatePage(url)) continue;
     const segment = lastSegment(url);
     if (!segment) continue;
 
     const slug = segment.toLowerCase().replace(/\.(html?|php|aspx?)$/i, "");
     if (BOILERPLATE.test(slug)) continue;
+    if (looksLikeAnArticle(slug)) continue;
     // A slug this long is an article, and one this short is a code.
     if (slug.length < 3 || slug.length > 60) continue;
     if (/^\d+$/.test(slug)) continue;
@@ -82,10 +111,12 @@ export function deriveBriefFromUrls(urls: string[]): UrlDerivedBrief {
   // otherwise every top-level page becomes a "service".
   if (services.size === 0) {
     for (const url of urls) {
+      if (!isCandidatePage(url)) continue;
       const segment = lastSegment(url);
       if (!segment) continue;
       const slug = segment.toLowerCase().replace(/\.(html?|php|aspx?)$/i, "");
       if (BOILERPLATE.test(slug) || slug.length < 3 || slug.length > 50) continue;
+      if (looksLikeAnArticle(slug)) continue;
 
       try {
         const depth = new URL(url).pathname.split("/").filter(Boolean).length;
