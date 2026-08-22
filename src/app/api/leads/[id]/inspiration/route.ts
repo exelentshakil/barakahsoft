@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminSession } from "@/lib/is-admin-session";
 import { extractDesignDna, DesignDnaSchema } from "@/lib/design-dna";
 import { compileDesignTokens } from "@/lib/design-tokens";
-import { saveToLibrary, listLibrary, autoSelectDna } from "@/lib/inspiration-library";
+import { saveToLibrary, listLibrary, autoSelectOrResearch } from "@/lib/inspiration-library";
 
 export const maxDuration = 120;
 
@@ -83,10 +83,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ ok: true, savedTo: industry, library: await listLibrary() });
   }
 
-  // Re-run automatic selection, for when the operator has since saved a
-  // better reference for this industry.
+  // Research a fresh direction for this lead. An explicit operator action,
+  // because it costs a search plus up to three page reads.
   if (body.auto) {
-    const { dna, label, sourceUrl, from } = await autoSelectDna(
+    const { dna, label, sourceUrl, from } = await autoSelectOrResearch(
       typeof body.industry === "string" ? body.industry : null
     );
     const { error } = await admin

@@ -1,20 +1,26 @@
 import { searchWithFirecrawl } from "@/lib/scrape/firecrawl";
 import { extractDesignDna } from "@/lib/design-dna";
 import { callOpenAI } from "@/lib/openai-client";
-import { saveToLibrary, presetFor } from "@/lib/inspiration-library";
+import { presetFor } from "@/lib/inspiration-library";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { DesignDna } from "@/lib/design-dna";
 
-// Researching the best-designed site in a trade.
+// Researching the best-designed site in a trade, per lead.
 //
 // This is what makes the design direction a finding rather than a preset.
 // Seven house directions cannot cover every trade, and two roofers receiving
 // the same direction is the template feeling the whole system exists to
 // escape.
 //
-// Cost is bounded and amortised: it runs once per NEW industry, and the
-// winner is cached into the reference library so every later lead in that
-// trade reuses it for nothing. A handful of pages buys a direction for an
-// entire market.
+// Per LEAD, not per industry, and that distinction is the whole point.
+// Caching a trade's winning reference would be cheaper, but it would hand
+// every electrician the same design — the exact outcome this system exists
+// to avoid, and worse when two of them compete in the same town. Research
+// runs for each lead, and references already used in that trade are excluded
+// so the search cannot quietly return the same winner twice.
+//
+// It costs a search plus up to three page reads, and it only ever runs on a
+// lead an operator has already decided is real.
 
 // Directories, marketplaces and listicles dominate these searches and are
 // useless as design references — they are not the sites we want to look like.
@@ -47,12 +53,13 @@ interface Candidate {
  */
 export async function researchDesignReference(
   industry: string,
-  options: { maxCandidates?: number } = {}
+  options: { maxCandidates?: number; excludeHosts?: string[] } = {}
 ): Promise<{ dna: DesignDna; sourceUrl: string; label: string } | null> {
   const trade = industry.trim();
   if (!trade) return null;
 
   const maxCandidates = options.maxCandidates ?? 3;
+  const excluded = new Set((options.excludeHosts ?? []).map((h) => h.toLowerCase()));
 
   const hits = (await Promise.all(candidateQueries(trade).map((q) => searchWithFirecrawl(q, 8)))).flat();
 
@@ -68,6 +75,11 @@ export async function researchDesignReference(
         return false;
       }
       if (seen.has(host)) return false;
+      // Two businesses in the same trade must not be built from the same
+      // reference. Re-running the search alone would not achieve that --
+      // the same query returns the same top result -- so previously used
+      // references are excluded outright.
+      if (excluded.has(host)) return false;
       seen.add(host);
       return true;
     })
@@ -136,21 +148,51 @@ Reply with only the index number of the strongest direction. Nothing else.`,
   return candidates[Number.isFinite(index) && index >= 0 && index < candidates.length ? index : 0];
 }
 
+/** Reference hosts already used by other leads in this trade. */
+async function hostsAlreadyUsed(industry: string): Promise<string[]> {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("artifacts")
+    .select("inspiration_url, leads!inner(industry)")
+    .not("inspiration_url", "is", null)
+    .returns<{ inspiration_url: string; leads: { industry: string | null } }[]>();
+
+  const trade = industry.trim().toLowerCase();
+  return (data ?? [])
+    .filter((row) => {
+      const other = (row.leads?.industry ?? "").toLowerCase();
+      return other && (other.includes(trade) || trade.includes(other));
+    })
+    .map((row) => {
+      try {
+        return new URL(row.inspiration_url).hostname.replace(/^www\./, "").toLowerCase();
+      } catch {
+        return "";
+      }
+    })
+    .filter(Boolean);
+}
+
 /**
- * The direction for a lead, researched once per trade then reused.
+ * The design direction for one lead.
  *
- * Every later lead in the same trade gets the cached result instantly and at
- * no cost, which is what makes researching each new market affordable.
+ * Researched per lead, never reused across leads. Caching a trade's winning
+ * reference was cheaper, but it meant every electrician was built from the
+ * same design — which is the template outcome this whole system exists to
+ * avoid. Two businesses in the same trade competing in the same market must
+ * not be handed the same look.
+ *
+ * References already used in this trade are excluded before the model ever
+ * sees them, because re-running the search alone would return the same top
+ * result and quietly produce the duplicate anyway.
  */
-export async function researchAndCache(
+export async function researchForLead(
   industry: string
 ): Promise<{ dna: DesignDna; sourceUrl: string | null; label: string; from: "research" | "preset" }> {
-  const researched = await researchDesignReference(industry);
+  const excludeHosts = await hostsAlreadyUsed(industry);
+  const researched = await researchDesignReference(industry, { excludeHosts });
 
-  if (researched) {
-    await saveToLibrary(industry, researched.label, researched.dna, researched.sourceUrl);
-    return { ...researched, from: "research" };
-  }
+  if (researched) return { ...researched, from: "research" };
 
   const preset = presetFor(industry);
   return { dna: preset.dna, sourceUrl: null, label: preset.label, from: "preset" };

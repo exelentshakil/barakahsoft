@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { DesignDnaSchema, DEFAULT_DESIGN_DNA, type DesignDna } from "@/lib/design-dna";
+import { DEFAULT_DESIGN_DNA, type DesignDna } from "@/lib/design-dna";
 
 // Automatic design direction.
 //
@@ -10,12 +10,15 @@ import { DesignDnaSchema, DEFAULT_DESIGN_DNA, type DesignDna } from "@/lib/desig
 //
 // Two sources, in order:
 //
-//   1. The saved library — references the operator curated themselves, with
-//      their extracted DNA cached. They know which sites in their trades are
-//      genuinely good; the system should not pretend to.
+//   1. Fresh research for THIS lead — see research-design-reference.ts.
+//      Per lead, never shared between leads in the same trade.
 //
 //   2. House presets — real, opinionated directions per trade family, used
-//      before the library has anything for an industry.
+//      only when research finds nothing usable.
+//
+// The saved library sits outside both: it is an operator shortlist applied
+// by hand, not a cache consulted automatically. Auto-applying a saved
+// reference is how two electricians in one town end up with the same site.
 //
 // Deliberately NOT a hardcoded list of third-party URLs to scrape on demand.
 // Those rot: sites redesign, go down, or start blocking crawlers, and each
@@ -336,70 +339,33 @@ export async function listLibrary(): Promise<LibraryEntry[]> {
 }
 
 /**
- * Pick a direction for a lead automatically.
+ * The direction for one lead.
  *
- * A curated reference for the industry always wins over a house preset —
- * the operator knows which sites in their trades are genuinely good, and
- * that judgement should not be overridden by a built-in default.
- */
-export async function autoSelectDna(
-  industry: string | null | undefined
-): Promise<{ dna: DesignDna; label: string; sourceUrl: string | null; from: "library" | "preset" }> {
-  const text = (industry ?? "").trim();
-
-  if (text) {
-    const admin = createAdminClient();
-    const { data } = await admin
-      .from("design_references")
-      .select("label, source_url, dna, industry")
-      .order("created_at", { ascending: false })
-      .returns<{ label: string; source_url: string | null; dna: unknown; industry: string }[]>();
-
-    // Loose matching in both directions: a reference saved for "roofing"
-    // should serve a lead whose industry reads "Roofing & Siding", and the
-    // reverse.
-    const lower = text.toLowerCase();
-    const match = (data ?? []).find((row) => {
-      const ref = row.industry.toLowerCase();
-      return lower.includes(ref) || ref.includes(lower);
-    });
-
-    if (match) {
-      const parsed = DesignDnaSchema.safeParse(match.dna);
-      if (parsed.success) {
-        return { dna: parsed.data, label: match.label, sourceUrl: match.source_url, from: "library" };
-      }
-    }
-  }
-
-  const preset = presetFor(text);
-  return { dna: preset.dna, label: preset.label, sourceUrl: null, from: "preset" };
-}
-
-/**
- * Auto-select, researching the trade first if the library has nothing.
- *
- * Split from autoSelectDna so callers that must stay fast (a UI read) do not
- * accidentally trigger minutes of research, while the scrape job — which is
- * already a background job and already the right moment — does.
+ * The saved library is NOT consulted automatically. Auto-applying a saved
+ * reference to every lead in a trade is how two electricians end up with the
+ * same site, so the library is an operator's shortlist to apply
+ * deliberately, never a cache that answers on its own.
  */
 export async function autoSelectOrResearch(
   industry: string | null | undefined
 ): Promise<{ dna: DesignDna; label: string; sourceUrl: string | null; from: "library" | "preset" | "research" }> {
-  const existing = await autoSelectDna(industry);
-  if (existing.from === "library") return existing;
-
   const text = (industry ?? "").trim();
-  if (!text) return existing;
+  if (!text) return { dna: DEFAULT_DESIGN_DNA, label: "House default direction", sourceUrl: null, from: "preset" };
 
   // Imported lazily: research pulls in Firecrawl search and the DNA
   // extractor, neither of which belongs in the hot path of a library read.
-  const { researchAndCache } = await import("@/lib/research-design-reference");
-  const researched = await researchAndCache(text);
+  const { researchForLead } = await import("@/lib/research-design-reference");
+  const researched = await researchForLead(text);
   return { dna: researched.dna, label: researched.label, sourceUrl: researched.sourceUrl, from: researched.from };
 }
 
-/** Save a reference so every future lead in this industry gets it automatically. */
+/**
+ * Save a reference to the operator's shortlist.
+ *
+ * Applied deliberately from the Studio, never automatically — an
+ * auto-applied reference is a cache, and a cache is how two businesses in
+ * the same trade end up looking alike.
+ */
 export async function saveToLibrary(
   industry: string,
   label: string,

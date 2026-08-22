@@ -1,7 +1,7 @@
 import { inngest } from "@/inngest/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { scrapeBusiness } from "@/lib/scrape";
-import { autoSelectDna, autoSelectOrResearch } from "@/lib/inspiration-library";
+import { autoSelectOrResearch, presetFor } from "@/lib/inspiration-library";
 import { compileDesignTokens } from "@/lib/design-tokens";
 
 // lead/analyse.requested — step 1 of the operator flow.
@@ -58,9 +58,14 @@ export const scrapeRun = inngest.createFunction(
       // worth it once per industry and never worth it on a lead nobody has
       // qualified, so it is opt-in; without it this falls back to the
       // library or a house direction, both of which are free.
-      const { dna, label, sourceUrl, from } = researchDesign
+      // Without research this falls back to the house direction for the
+      // trade -- deliberately NOT to a saved reference. Reusing another
+      // lead's reference is free, but it hands two businesses in the same
+      // trade the same site, which is the one outcome worth paying to avoid.
+      const selected = researchDesign
         ? await autoSelectOrResearch(industry)
-        : await autoSelectDna(industry);
+        : { ...presetFor(industry), sourceUrl: null, from: "preset" as const };
+      const { dna, label, sourceUrl, from } = selected;
 
       const { data: artifact } = await admin
         .from("artifacts")
