@@ -117,6 +117,26 @@ export function PremiumFooter({ payload }: { payload: SitePayload }) {
             <p>
               &copy; {year} {payload.businessName}. All rights reserved.
             </p>
+            {/* Privacy and Terms routes existed but nothing linked to them,
+                leaving two orphaned pages on every delivered site. A real
+                business site is expected to carry both, and their absence
+                from the footer is the first thing a cautious buyer notices. */}
+            {payload.innerPagesBuilt && (
+              <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+                <a href={`/s/${payload.leadSlug}/about`} className="hover:text-foreground">
+                  About
+                </a>
+                <a href={`/s/${payload.leadSlug}/contact`} className="hover:text-foreground">
+                  Contact
+                </a>
+                <a href={`/s/${payload.leadSlug}/privacy`} className="hover:text-foreground">
+                  Privacy Policy
+                </a>
+                <a href={`/s/${payload.leadSlug}/terms`} className="hover:text-foreground">
+                  Terms of Service
+                </a>
+              </nav>
+            )}
           </div>
         </div>
       </Reveal>

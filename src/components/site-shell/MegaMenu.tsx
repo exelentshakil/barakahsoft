@@ -72,8 +72,19 @@ export function MegaMenu({ payload }: { payload: SitePayload }) {
               )}
             </div>
           )}
-          <a href="#reviews" className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent">
-            Reviews
+          {payload.reviews.length > 0 && (
+            <a
+              href={payload.innerPagesBuilt ? `/s/${payload.leadSlug}#reviews` : "#reviews"}
+              className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+            >
+              Reviews
+            </a>
+          )}
+          <a
+            href={payload.innerPagesBuilt ? `/s/${payload.leadSlug}/about` : "#about"}
+            className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+          >
+            About
           </a>
           <a
             href={payload.innerPagesBuilt ? `/s/${payload.leadSlug}/faq` : "#faq"}
@@ -122,6 +133,13 @@ export function MegaMenu({ payload }: { payload: SitePayload }) {
               {area.h2}
             </a>
           ))}
+          <a
+            href={payload.innerPagesBuilt ? `/s/${payload.leadSlug}/about` : "#about"}
+            onClick={() => setMobileOpen(false)}
+            className="block py-2 text-sm font-medium"
+          >
+            About
+          </a>
           <a
             href={payload.innerPagesBuilt ? `/s/${payload.leadSlug}/faq` : "#faq"}
             onClick={() => setMobileOpen(false)}

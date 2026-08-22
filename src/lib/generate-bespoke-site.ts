@@ -220,6 +220,13 @@ Cover, in whatever order and treatment the design direction above genuinely call
   7. A genuinely useful FAQ answering what a real customer of this trade would ask, answered only from real facts.
   8. A closing call-to-action band with the real phone number.
 
+SECTION ANCHORS — the real navigation links to these ids, so they must exist on the sections that carry that content, or those nav links scroll nowhere:
+  id="services" on the services section
+  id="about" on the "why this business" section
+  id="reviews" on the proof section (only if you built one)
+  id="faq" on the FAQ section
+  id="contact" on the closing call-to-action section
+
 QUALITY BAR — these are the things that separate a premium page from a template:
   - Vary your section surfaces. A page where every section is the same background is the template look you are replacing. Use bs-band-alt, bs-band-invert, bs-band-primary and bs-band-gradient deliberately.
   - Vary your layouts. Do not use bs-grid-3 for every section. Split layouts, editorial rows and bento grids exist for this reason.
