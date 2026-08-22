@@ -60,6 +60,7 @@ import {
 import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStudio";
 import { RefinePanel } from "@/components/admin/RefinePanel";
+import { HandBuildPanel } from "@/components/admin/HandBuildPanel";
 import { VisibilityPanel } from "@/components/admin/VisibilityPanel";
 import { AuditPanel } from "@/components/admin/AuditPanel";
 import { ApprovalGate } from "@/components/admin/ApprovalGate";
@@ -508,6 +509,12 @@ export function AdminLeadWorkspace({
             where it gets replaced with the client's real photography. */}
         {artifact?.bespoke_homepage_html && (
           <RefinePanel key={`slots-${reloadKey}`} leadId={lead.id} />
+        )}
+
+        {/* The manual override, for the run that still comes out wrong: the
+            whole brief as one prompt for any tool, and a way back in. */}
+        {scrapeResults && (
+          <HandBuildPanel leadId={lead.id} hasPage={!!artifact?.bespoke_homepage_html} />
         )}
 
         {/* Measured on demand, at a size the operator chooses — every cell

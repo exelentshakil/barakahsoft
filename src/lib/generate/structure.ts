@@ -2,6 +2,17 @@ import { callOpenAI, bestModelChain } from "@/lib/openai-client";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
 import type { DesignDna } from "@/lib/design-dna";
 import type { MediaPlan } from "@/lib/media/plan-media";
+import {
+  STANCE,
+  SPACE_STANDARD,
+  PSYCHOLOGY_STANDARD,
+  HYGIENE_STANDARD,
+  INTERACTION_CONTRACT,
+  truthStandard,
+  PAGE_SHAPE,
+} from "@/lib/generate/standard";
+
+export { INTERACTION_CONTRACT };
 
 // Pass one: the page itself — structure and words together.
 //
@@ -15,24 +26,6 @@ import type { MediaPlan } from "@/lib/media/plan-media";
 // had been pre-built — content came out good and the arrangement did not.
 // The stylesheet pass writes rules for exactly these class names, so the
 // old failure mode of a class resolving to nothing cannot occur.
-
-export const INTERACTION_CONTRACT = `INTERACTIONS — the page gets motion and behaviour by requesting it with data attributes. A reviewed script in the application implements these. Do not write <script> tags; they are stripped.
-
-  data-reveal                  fade and rise this element when it scrolls into view
-  data-reveal-delay="120"      stagger, in milliseconds — use on siblings for a sequence
-  data-count-to="273"          animate a number up to this value on first view.
-                               Put the FINAL value in the element's text as well, so it is
-                               correct without script and for search engines.
-  data-count-suffix="+"        appended to the counted number
-  data-accordion               a group; each child with data-accordion-item opens one at a time
-  data-accordion-item          one item; it gets data-open="true|false" which you style
-  data-accordion-trigger       the clickable header inside an item
-  data-bar="4.9"               a proportional bar; pair with data-bar-max="5"
-  data-bar-fill                the inner element whose width is animated
-
-The page root also gets data-scrolled="true" once scrolled past 40px, which you may style against.
-
-Use these deliberately and sparingly. A reveal on every element is noise; a reveal on section headings and a staggered service grid is craft.`;
 
 function factsBlock(brief: SiteBrief): string {
   const lines: string[] = [
@@ -79,11 +72,9 @@ export async function generateStructure(
   knownPaths: string[],
   previousFailures?: string
 ): Promise<StructureResult | null> {
-  const prompt = `You are a Senior UI/UX Architect and Conversion Rate Optimiser. Not a coder decorating a page — someone whose job is that a visitor understands the offer and takes one action.
+  const prompt = `${STANCE}
 
 Write the complete homepage for a real ${brief.industry} business in ${brief.city}.
-
-Clarity beats artistry every time. Where a decision is between looking clever and being understood, choose understood.
 
 The owner opens this page and decides in about four seconds whether you are better than whoever built their current site. Make committed decisions — a timid page of evenly-spaced identical cards is the failure to avoid.
 
@@ -124,53 +115,25 @@ Anything else becomes an on-page anchor. Give each service block an id of its sl
 ${brief.phone ? `Phone links: tel:${brief.phone.replace(/[^\d+]/g, "")}` : ""}
 
 ═══ HOW TO WRITE THE MARKUP ═══
-SEMANTIC INTEGRITY. <header> is not yours to write, but <main>, <section>, <article>, <aside>, <figure>, <figcaption>, <blockquote>, <ul>, <dl> all are. Endless nested <div> is forbidden — if a block has a meaning, use the element that carries it. A screen reader and a crawler should be able to read the page structure without the CSS.
+${HYGIENE_STANDARD}
 
-Real <h1>/<h2>/<h3> hierarchy that steps down properly. Exactly one <h1>.
+The stylesheet pass builds to this geometry, so structure the markup so it is possible:
+${SPACE_STANDARD}
 
-LAYOUT GEOMETRY — the stylesheet pass builds to these, so structure the markup so they are possible:
-  - A 12-column grid on desktop, collapsing to a fluid 4-column feel on mobile.
-  - Section breaks of 96px to 128px vertically. Containers padded 24px to 32px.
-  - At least 40% of any screen is whitespace. Crowding is what makes a page look cheap.
-
-F-SHAPED READING. Western readers sweep left along the top, then down the left margin. Put the promise, the proof and the primary action on those lines. A call to action floated right in the middle of a section is a call to action nobody sees.
-
-FORMS. If the page carries a form, it is short or it is stepped. A wall of fields kills a conversion — ask for the minimum that lets someone follow up, and say what happens next.
-
-TRUST ANCHORS. Real reviews, real credentials and real guarantees belong INSIDE the conversion moment — next to the button, not in a section of their own three screens away. Hesitation happens at the point of action, so the reassurance goes there.
+${PSYCHOLOGY_STANDARD}
 
 Name classes descriptively and consistently, block-then-element:
   hero, hero__inner, hero__title, hero__actions
   services, services__grid, service-card, service-card__title
 The stylesheet pass styles exactly what you name, so be consistent — do not invent three names for the same kind of thing.
 
-Every <img> needs an explicit width and height in the attributes, real alt text, and loading="lazy" — except the hero image, which takes loading="eager" and fetchpriority="high". The dimensions are not optional: without them the page shifts while loading, which Google measures and penalises, and which feels broken under a reader's thumb.
-
-NO <style> and NO <script> — both are stripped. NO inline style attributes for anything visual. NO <header>, <nav> or <footer>: those are separate real components rendered around your output.
 
 ${INTERACTION_CONTRACT}
 
-═══ THE RULE ON TRUTH ═══
-Every FACT must be true — never a price, a founding year, a certification, an award, a guarantee, a rating or a testimonial that is not above.
-The FRAMING is yours. If the hours say open 24 hours you may write "Someone picks up at 3am." If they hold ${brief.rating ?? "4.9"} stars across ${brief.reviewCount ?? "273"} reviews you may write that as a sentence with force.
-Never write about the source data or about the website itself.
-
-NEVER write anything like these — each came from real failed output:
-- Counting things in a heading: "Five clear service paths", "Three ways we help"
-- Narrating the data: "lists these exact services", "posted hours", "verified details"
-- Naming the section instead of saying something: "Direct contact, posted hours, local address"
-- The legal name as the headline, especially in capitals
-- Filler: "quality workmanship", "customer satisfaction is our priority", "we go the extra mile", "committed to excellence"
-- A number with no meaning, e.g. a stat reading "24" for "open 24 hours"
+${truthStandard(brief.rating, brief.reviewCount)}
 
 ═══ WHAT THE PAGE MUST DO ═══
-ABOVE THE FOLD a visitor must know what this business does, where, and exactly one thing to do next.
-
-Then, in whatever order the design direction genuinely calls for: real trust signals the facts support, the real services, a substantive reason to choose them built from their real content, real proof if real reviews exist, service areas if real, a genuinely useful FAQ, and a closing call to action carrying the real phone number.
-
-Section ids the real navigation links to: services, about, reviews, faq, contact
-
-Aim for eight to twelve sections. Enough that the page feels like a real site, never padded with a section that says nothing.
+${PAGE_SHAPE}
 ${
   previousFailures
     ? `\n═══ A PREVIOUS ATTEMPT WAS REJECTED ═══\nThis is a fresh build, not a repair. Just make sure none of these are true of yours:\n${previousFailures}\n`

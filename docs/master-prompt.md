@@ -1,8 +1,29 @@
 # The master prompt
 
-Paste this into OpenCode, Claude Code, Cursor or any agent when automatic
-generation has produced something you cannot send. Replace the two bracketed
-lines at the top. Everything below them is fixed.
+## Use the per-lead one
+
+In the admin, on any analysed lead: **Build it somewhere else → Copy build
+prompt**. That gives you this same standard with *that lead's* real facts,
+palette, planned imagery, conversion intent, the owner's own complaints and
+everything the quality gate currently measures as wrong, already inlined —
+`GET /api/leads/<id>/prompt`.
+
+Paste it into OpenCode, Claude, Cursor or a plain chat window. Nothing needs
+API access. Paste the HTML and CSS back into the same panel; it is sanitised
+and saved as a new version.
+
+The current page is deliberately left out unless you tick the box. Showing a
+model the flat page it is meant to replace anchors it to that page — the same
+reason a rejected build is regenerated fresh rather than patched.
+
+Both prompts are assembled from `src/lib/generate/standard.ts`, which is also
+what the two generator passes read. There is one copy of the standard, so a
+hand-fixed page cannot be built to a different spec than an automatic one.
+
+## The generic version
+
+For a tool that *can* reach the API, or when you want to see the shape of it.
+Replace the two bracketed lines; everything below them is fixed.
 
 ---
 
