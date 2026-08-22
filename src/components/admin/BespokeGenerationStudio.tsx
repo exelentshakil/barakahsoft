@@ -263,6 +263,7 @@ export function BespokeGenerationStudio({
           leadId={lead.id}
           initialUrl={artifact?.inspiration_url ?? null}
           initialBranding={(artifact?.inspiration_branding as never) ?? null}
+          industry={industry}
         />
 
         <form onSubmit={handleGenerate} className="space-y-5 text-xs">

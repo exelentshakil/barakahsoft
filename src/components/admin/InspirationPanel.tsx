@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Palette, Sparkles, Trash2, Code2, AlertTriangle } from "lucide-react";
+import { BookmarkPlus, Loader2, Palette, Sparkles, Trash2, Code2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,11 +33,13 @@ export function InspirationPanel({
   leadId,
   initialUrl,
   initialBranding,
+  industry,
   onChange,
 }: {
   leadId: string;
   initialUrl: string | null;
   initialBranding: DesignDnaShape | null;
+  industry?: string;
   onChange?: () => void;
 }) {
   const [url, setUrl] = useState(initialUrl ?? "");
@@ -46,6 +48,7 @@ export function InspirationPanel({
   const [warnings, setWarnings] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showJson, setShowJson] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [jsonDraft, setJsonDraft] = useState("");
 
   async function extract() {
@@ -94,6 +97,32 @@ export function InspirationPanel({
     }
   }
 
+  // Curating a reference is the highest-leverage action here: it applies to
+  // every future lead in this industry automatically.
+  async function saveToLibrary() {
+    if (!industry?.trim()) {
+      setError("Set the lead's Exact Industry below before saving this to the library.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/leads/${leadId}/inspiration`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ saveToLibrary: true, industry }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Could not save to the library");
+      setSaved(true);
+      setTimeout(() => setSaved(false), 4000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function clear() {
     setBusy(true);
     try {
@@ -118,8 +147,9 @@ export function InspirationPanel({
             <h4 className="text-sm font-bold text-[#0d1738]">Inspiration Design DNA</h4>
           </div>
           <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-            Paste the best site in this client&apos;s industry. We read its palette, typography, geometry and layout
-            rhythm and build this client&apos;s site to that caliber.{" "}
+            A direction is picked automatically for this industry the moment scraping finishes. To override it, paste
+            the best site you know in this client&apos;s trade — we read its palette, typography, geometry and layout
+            rhythm, then <b>Save for industry</b> so every future lead in this trade uses it too.{" "}
             <span className="font-semibold text-[#0d1738]">
               Visual direction only — none of its copy, claims or reviews are ever used.
             </span>
@@ -192,6 +222,15 @@ export function InspirationPanel({
               </button>
               <button
                 type="button"
+                onClick={saveToLibrary}
+                disabled={busy}
+                title="Reuse this direction for every future lead in this industry"
+                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-50"
+              >
+                <BookmarkPlus className="h-3 w-3" /> {saved ? "Saved" : "Save for industry"}
+              </button>
+              <button
+                type="button"
                 onClick={clear}
                 disabled={busy}
                 className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-red-600 hover:bg-red-50"
@@ -261,8 +300,8 @@ export function InspirationPanel({
 
       {!branding && (
         <p className="text-[11px] text-muted-foreground">
-          No inspiration set — generation will use the house default direction. Adding a reference is what lifts the
-          result from good to best-in-class.
+          No direction set yet. One is chosen automatically as soon as scraping finishes — paste a URL above only if you
+          want to override it.
         </p>
       )}
     </div>
