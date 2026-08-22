@@ -151,6 +151,38 @@ export async function GET() {
 
   return NextResponse.json({
     allOk: Object.values(checks).every((c) => c.ok),
+    // Which environment this code is ACTUALLY running as.
+    //
+    // Vercel scopes environment variables per environment, so a var set for
+    // Production only is genuinely absent on a Preview deployment — and the
+    // symptom is indistinguishable from "the key is wrong". Reporting this
+    // turns that guess into a fact.
+    runtime: {
+      vercelEnv: process.env.VERCEL_ENV ?? "(not on Vercel)",
+      branch: process.env.VERCEL_GIT_COMMIT_REF ?? null,
+      commit: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? null,
+      deploymentUrl: process.env.VERCEL_URL ?? null,
+    },
+    // Names only, never values — enough to tell "absent" from "wrong",
+    // without putting secrets in an HTTP response.
+    envVarsPresent: Object.fromEntries(
+      [
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET",
+        "STRIPE_BUILD_PRICE_ID",
+        "STRIPE_HOSTING_PRICE_ID",
+        "STRIPE_HOSTING_SUPPORT_PRICE_ID",
+        "STRIPE_LEAD_ENGINE_PRICE_ID",
+        "BREVO_API_KEY",
+        "BREVO_SENDER_EMAIL",
+        "FIRECRAWL_API_KEY",
+        "GOOGLE_PLACES_API_KEY",
+        "GEMINI_API_KEY",
+        "OPENAI_API_KEY",
+        "INNGEST_EVENT_KEY",
+        "NEXT_PUBLIC_PORTAL_URL",
+      ].map((name) => [name, !!process.env[name]])
+    ),
     checks,
     // Inngest cannot be pinged from here: it calls US. A missing event key
     // means events are dropped silently, which is the failure mode most
