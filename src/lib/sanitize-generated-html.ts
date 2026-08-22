@@ -71,6 +71,20 @@ const SAFE_STYLE_PROPS = new Set([
   "object-position", "opacity",
 ]);
 
+// CONFIRMED PRODUCTION LEAK: generated pages embedded Google Places photo
+// URLs verbatim, and those URLs carry `key=AIza...` -- the account's Places
+// API key was written into the database and served in public page source on
+// every delivered site. The durable fix is mirroring photos into Storage so
+// no key-bearing URL is ever a candidate (see the media pipeline), but this
+// is the backstop that makes it structurally impossible to publish one:
+// any URL carrying something shaped like a credential is dropped here,
+// whatever produced it.
+const CREDENTIAL_IN_URL = /[?&](key|api_?key|token|access_token|signature|sig)=/i;
+
+function urlLeaksCredential(url: string): boolean {
+  return CREDENTIAL_IN_URL.test(url) || /AIza[0-9A-Za-z_-]{20,}/.test(url) || /sk-[0-9A-Za-z_-]{20,}/.test(url);
+}
+
 // url(), expression(), and CSS escapes are the classic vectors for smuggling
 // a request or a script through a style attribute.
 const UNSAFE_STYLE_VALUE = /url\s*\(|expression\s*\(|javascript:|@import|\\/i;
@@ -136,6 +150,15 @@ export function sanitizeBespokeHtml(rawHtml: string): string {
         // Every outbound link opens safely; internal anchors are untouched.
         if (tagName === "a" && next.href && /^https?:/i.test(next.href)) {
           next.rel = "noopener noreferrer";
+        }
+
+        // Drop, rather than publish, any asset URL carrying a credential.
+        // A missing image is a cosmetic problem; a leaked API key is not.
+        for (const attr of ["src", "href"]) {
+          if (next[attr] && urlLeaksCredential(next[attr])) {
+            if (tagName === "img") return { tagName, attribs: {} };
+            delete next[attr];
+          }
         }
 
         // A generated page can reference dozens of photos. Anything below
