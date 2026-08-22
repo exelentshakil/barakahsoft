@@ -81,7 +81,12 @@ export function BespokeGenerationStudio({
   const [genWarnings, setGenWarnings] = useState<string[]>([]);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
 
-  const isScraping = lead.status === "scraping" || (!scrapeResults && lead.status === "new");
+  // Only true while a scrape is genuinely running. This previously also
+  // matched any lead that simply had no scrape yet, so a brand-new lead
+  // displayed "Firecrawl is analyzing..." while nothing at all was happening
+  // -- and the operator waited for a result that was never coming.
+  const isScraping = lead.status === "scraping";
+  const notAnalysed = !scrapeResults && !isScraping;
 
   async function handleGenerate(e: React.FormEvent) {
     e.preventDefault();
@@ -229,10 +234,28 @@ export function BespokeGenerationStudio({
         <CardContent className="p-8 text-center space-y-3">
           <Loader2 className="h-7 w-7 animate-spin text-[#533afd] mx-auto" />
           <h3 className="font-bold text-base text-[#0d1738]">
-            Firecrawl is analyzing {lead.source_url}...
+            Reading {lead.source_url}...
           </h3>
           <p className="text-xs text-muted-foreground max-w-md mx-auto">
-            Extracting genuine brand colors, sitemaps, photos, reviews, and schema. The generation studio will auto-populate as soon as scraping completes.
+            Mapping the site&apos;s pages, extracting real brand colours, photos, reviews and schema. This panel fills in
+            by itself as each step lands.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (notAnalysed) {
+    return (
+      <Card className="border border-dashed border-[#c7d0fb] bg-[#fbfaff] shadow-sm">
+        <CardContent className="p-8 text-center space-y-3">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-[#c7d0fb] bg-white text-[#533afd]">
+            <Sparkles className="h-6 w-6" />
+          </span>
+          <h3 className="font-bold text-base text-[#0d1738]">This lead has not been analysed yet</h3>
+          <p className="text-xs text-muted-foreground max-w-md mx-auto">
+            Nothing has been spent on it. Press <b>Analyse this lead</b> above to read their site — two Firecrawl pages —
+            and the brief, brand tokens and generation studio all appear here.
           </p>
         </CardContent>
       </Card>

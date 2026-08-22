@@ -97,7 +97,19 @@ export function AdminLeadWorkspace({
   // the pipeline so nothing here needs a manual reload to become true.
   useLeadLive(lead.id, () => setReloadKey((k) => k + 1));
 
-  const businessName = lead.business_name || lead.contact_name || lead.source_url;
+  // The contact's name is not the business's name. Falling back to it put
+  // "Matt" in the header where the company belongs, and into the delivery
+  // email as the thing being redesigned. The domain is a far better stand-in
+  // until the real name is scraped.
+  const businessName =
+    lead.business_name ||
+    (() => {
+      try {
+        return new URL(lead.source_url).hostname.replace(/^www\./, "");
+      } catch {
+        return lead.source_url;
+      }
+    })();
   const phone = lead.phone || "No phone on file";
   const email = lead.email || "No email on file";
   const facts = (scrapeResults?.facts ?? {}) as Record<string, unknown>;

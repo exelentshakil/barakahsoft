@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getSiteData } from "@/lib/get-site-data";
+import { getSiteData, getLeadProgress } from "@/lib/get-site-data";
+import { PortalPending } from "@/components/portal/PortalPending";
 import { BespokeHomepage } from "@/components/site-shell/BespokeHomepage";
 import { NotBuiltYet } from "@/components/site-shell/NotBuiltYet";
 import { LiveClientProposal } from "@/components/portal/LiveClientProposal";
@@ -38,7 +39,21 @@ export default async function LeadSitePage({
   const { leadSlug } = await params;
   const sParams = searchParams ? await searchParams : {};
   const result = await getSiteData(leadSlug);
-  if (!result) notFound();
+
+  // A real lead whose build has not finished gets a progress page, not a
+  // 404. An interested client follows their link EARLY, which is precisely
+  // when a not-found page reads as "this company is not real".
+  if (!result) {
+    const progress = await getLeadProgress(leadSlug);
+    if (!progress) notFound();
+    return (
+      <PortalPending
+        businessName={progress.lead.business_name || new URL(progress.lead.source_url).hostname.replace(/^www\./, "")}
+        analysed={progress.analysed}
+        built={progress.built}
+      />
+    );
+  }
 
   const { payload, lead, scrapeResults, artifact } = result;
   const operator = await isAdminSession();
