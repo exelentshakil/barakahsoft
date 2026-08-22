@@ -35,9 +35,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
 
     const businessName = body.businessName || lead.business_name || "Your Business";
-    const industry = body.industry || lead.industry || "Strategic Services";
+    const industry = body.industry || lead.industry || "Specialized Contractors";
     const city = body.city || "Local Area";
-    const phone = body.phone || lead.phone || "(631) 637-2772";
+    const phone = body.phone || lead.phone || "(718) 353-7227";
     const email = body.email || lead.email || "hello@example.com";
     const founder = body.founder || "Founder";
     const heroImage = body.heroImage || "";
@@ -48,12 +48,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const servicesList: string[] = Array.isArray(body.services) && body.services.length > 0
       ? body.services
       : [
-          "Core Service 1",
-          "Core Service 2",
-          "Core Service 3",
-          "Core Service 4",
-          "Core Service 5",
-          "Core Service 6",
+          "200-Amp Electrical Panel Upgrades",
+          "Level 2 EV Charger Installation",
+          "24/7 Emergency Dispatch",
+          "DOB Code Violations Clearance",
+          "Commercial Electrical Fit-Outs",
+          "Lighting & Power Distribution",
         ];
 
     const areasList: string[] = [
@@ -63,15 +63,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       "United States",
     ];
 
+    const headline = `#1 RATED ${industry.toUpperCase()} IN ${city.toUpperCase()}`;
+    const subhead = `Protecting what matters most. From emergency repairs to full commercial installations, we provide licensed, insured, and guaranteed workmanship across ${city}.`;
+
     // 1. Generate High-Converting Funnel Sections
     const generatedSections: FunnelPageSection[] = [
       {
         slug: "hero",
         kind: "hero",
-        h2: `#1 RATED ${industry.toUpperCase()} IN ${city.toUpperCase()}`,
-        body_content: `We help established businesses eliminate bottlenecks, build scalable systems, and turn attention into qualified customers.`,
+        h2: headline,
+        body_content: subhead,
         media_asset_ids: [],
-        cta: "Request a Free Quote",
+        cta: "Get Your Free Quote",
         variant_props: {
           image_url: heroImage,
           founder_name: founder,
@@ -148,6 +151,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         logo: logoUrl,
         typography: { primaryFont: "Outfit", secondaryFont: "Inter" },
       },
+      business_name: businessName,
       hero_cutout: heroImage,
       services_list: servicesList,
       areas_list: areasList,

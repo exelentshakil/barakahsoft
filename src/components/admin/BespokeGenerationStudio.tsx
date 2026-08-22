@@ -47,15 +47,22 @@ export function BespokeGenerationStudio({
   const pages = Array.isArray(facts.pages) ? (facts.pages as any[]) : [];
   const extractedNavServices = pages.flatMap((p) => (Array.isArray(p.navLinks) ? p.navLinks.map((n: any) => n.text) : []));
   const uniqueServices = Array.from(new Set(extractedNavServices)).filter((s) => s && s.length < 35 && !["Home", "Blog", "Contact", "About", "Privacy Policy", "Terms"].includes(s));
-  const fallbackServices = uniqueServices.length > 0 ? uniqueServices.slice(0, 6).join("\n") : "Core Service 1\nCore Service 2\nCore Service 3\nCore Service 4\nCore Service 5\nCore Service 6";
 
-  // Auto-populated fields strictly from THAT specific lead's scraped facts
-  const defaultBusinessName = schema.name || (typeof facts.business_name === "string" ? facts.business_name : null) || lead.business_name || "";
-  const defaultFounder = schema.founder?.name || lead.contact_name || "";
-  const defaultLogo = schema.logo || (typeof facts.logo_url === "string" ? facts.logo_url : "") || "";
-  const defaultHero = primaryScrapedPhoto || "";
-  const defaultCity = schema.address?.addressLocality ? `${schema.address.addressLocality}, ${schema.address.addressRegion || ""}`.trim() : typeof facts.town === "string" ? facts.town : "";
-  const defaultIndustry = lead.industry || (typeof facts.industry === "string" ? facts.industry : "Services & Growth");
+  // Extract previously saved generated assets from Supabase
+  const extracted = (artifact?.extracted_assets as any) || {};
+
+  const defaultBusinessName = extracted.business_name || schema.name || (typeof facts.business_name === "string" ? facts.business_name : null) || lead.business_name || "";
+  const defaultFounder = extracted.founder_name || schema.founder?.name || lead.contact_name || "";
+  const defaultLogo = extracted.branding?.logo || schema.logo || (typeof facts.logo_url === "string" ? facts.logo_url : "") || "";
+  const defaultHero = extracted.hero_cutout || primaryScrapedPhoto || "";
+  const defaultCity = extracted.city || (schema.address?.addressLocality ? `${schema.address.addressLocality}, ${schema.address.addressRegion || ""}`.trim() : typeof facts.town === "string" ? facts.town : "New York, NY");
+  const defaultIndustry = extracted.industry || lead.industry || (typeof facts.industry === "string" ? facts.industry : "Electrical & Specialized Contractors");
+
+  const defaultServices = Array.isArray(extracted.services_list) && extracted.services_list.length > 0
+    ? extracted.services_list.join("\n")
+    : uniqueServices.length > 0
+    ? uniqueServices.slice(0, 6).join("\n")
+    : "200-Amp Electrical Panel Upgrades\nLevel 2 EV Charger Installation\n24/7 Emergency Dispatch\nDOB Code Violations Clearance\nCommercial Electrical Fit-Outs\nLighting & Power Distribution";
 
   const [businessName, setBusinessName] = useState(defaultBusinessName);
   const [founder, setFounder] = useState(defaultFounder);
@@ -63,9 +70,9 @@ export function BespokeGenerationStudio({
   const [logoUrl, setLogoUrl] = useState(defaultLogo);
   const [city, setCity] = useState(defaultCity);
   const [industry, setIndustry] = useState(defaultIndustry);
-  const [servicesText, setServicesText] = useState(fallbackServices);
-  const [primaryColor, setPrimaryColor] = useState((facts.colors as any)?.primary || "#533AFD");
-  const [accentColor, setAccentColor] = useState((facts.colors as any)?.accent || "#FFD12D");
+  const [servicesText, setServicesText] = useState(defaultServices);
+  const [primaryColor, setPrimaryColor] = useState(extracted.branding?.colors?.primary || (facts.colors as any)?.primary || "#533AFD");
+  const [accentColor, setAccentColor] = useState(extracted.branding?.colors?.accent || (facts.colors as any)?.accent || "#FFD12D");
   const [generating, setGenerating] = useState(false);
   const [showJson, setShowJson] = useState(false);
   const [rawJson, setRawJson] = useState("");
@@ -76,9 +83,9 @@ export function BespokeGenerationStudio({
     e.preventDefault();
     setGenerating(true);
     try {
-      const services = servicesText
+      const services = (servicesText || "")
         .split("\n")
-        .map((s) => s.trim())
+        .map((s: string) => s.trim())
         .filter(Boolean);
 
       const payload = showJson && rawJson.trim()
@@ -93,8 +100,8 @@ export function BespokeGenerationStudio({
             services,
             primaryColor,
             accentColor,
-            phone: lead.phone || nap.phone || "",
-            email: lead.email || nap.email || "",
+            phone: lead.phone || nap.phone || "(718) 353-7227",
+            email: lead.email || nap.email || "client@example.com",
           };
 
       const res = await fetch(`/api/leads/${lead.id}/generate`, {
@@ -180,7 +187,7 @@ export function BespokeGenerationStudio({
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
                   className="mt-1 h-8 text-xs bg-[#f9f9ff]"
-                  placeholder="e.g. HeartCore Growth"
+                  placeholder="e.g. York Electrical Contractors"
                   required
                 />
               </div>
@@ -192,7 +199,7 @@ export function BespokeGenerationStudio({
                   value={founder}
                   onChange={(e) => setFounder(e.target.value)}
                   className="mt-1 h-8 text-xs bg-[#f9f9ff]"
-                  placeholder="e.g. Jim Sabellico"
+                  placeholder="e.g. David Karagounis"
                 />
               </div>
 
@@ -203,7 +210,7 @@ export function BespokeGenerationStudio({
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   className="mt-1 h-8 text-xs bg-[#f9f9ff]"
-                  placeholder="e.g. Farmingdale, NY"
+                  placeholder="e.g. Flushing, NY"
                 />
               </div>
 
@@ -214,7 +221,7 @@ export function BespokeGenerationStudio({
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value)}
                   className="mt-1 h-8 text-xs bg-[#f9f9ff]"
-                  placeholder="e.g. AI Integration & Strategic Marketing"
+                  placeholder="e.g. Electrical & Solar Contractors"
                 />
               </div>
 
@@ -225,7 +232,7 @@ export function BespokeGenerationStudio({
                   value={heroImage}
                   onChange={(e) => setHeroImage(e.target.value)}
                   className="mt-1 h-8 text-xs bg-[#f9f9ff]"
-                  placeholder="https://.../owner-headshot.jpeg"
+                  placeholder="https://.../owner-headshot.png"
                 />
               </div>
 
@@ -244,11 +251,11 @@ export function BespokeGenerationStudio({
                 <Label htmlFor="gen-services" className="text-xs font-bold">Core Services / Products (1 per line)</Label>
                 <Textarea
                   id="gen-services"
-                  rows={4}
+                  rows={5}
                   value={servicesText}
                   onChange={(e) => setServicesText(e.target.value)}
                   className="mt-1 text-xs bg-[#f9f9ff] font-sans"
-                  placeholder="Service 1&#10;Service 2&#10;Service 3"
+                  placeholder="200-Amp Electrical Panel Upgrades&#10;EV Charger Installation&#10;Emergency Electrician Dispatch&#10;DOB Code Violations Clearance"
                 />
               </div>
             </div>
