@@ -66,6 +66,7 @@ import { RefinePanel } from "@/components/admin/RefinePanel";
 import { HandBuildPanel } from "@/components/admin/HandBuildPanel";
 import { VisibilityPanel } from "@/components/admin/VisibilityPanel";
 import { AuditPanel } from "@/components/admin/AuditPanel";
+import { CompetitorPanel } from "@/components/admin/CompetitorPanel";
 import { ApprovalGate } from "@/components/admin/ApprovalGate";
 import { useLeadLive } from "@/hooks/use-lead-live";
 import { PricingManager } from "@/components/admin/PricingManager";
@@ -178,6 +179,11 @@ export function AdminLeadWorkspace({
   const city = typeof nap.address === "string" ? nap.address.split(",")[0] : typeof facts.town === "string" ? facts.town : null;
 
   // 2. Real Google Places Competitor Benchmark (Zero Fake Fallbacks)
+  // Rivals actually benchmarked, from the column the audit route writes.
+  // Excludes the client's own row, which is in there as a comparison.
+  const benchmark = scrapeResults?.competitors as { rows?: { isClient?: boolean }[] } | null | undefined;
+  const measuredRivals = benchmark?.rows?.filter((row) => !row.isClient).length ?? 0;
+
   const scrapedCompetitors = (facts.competitors as Array<{ name: string; user_ratings_total?: number; rating?: number; website?: string }>) || [];
   const competitorsList = scrapedCompetitors.length > 0
     ? [
@@ -516,9 +522,13 @@ export function AdminLeadWorkspace({
               value={`${Array.isArray(facts.sitemap_urls) ? (facts.sitemap_urls as unknown[]).length : services.length || 0}`}
               tone="neutral"
             />
+            {/* The measured benchmark lives in the scrape_results.competitors
+                COLUMN, which is what the audit route reads and writes. This
+                read facts.competitors — a different place entirely — so it
+                showed 0 while the panel below had a full table. */}
             <HeaderStat
               label="Rivals measured"
-              value={`${scrapedCompetitors.length || 0}`}
+              value={`${measuredRivals}`}
               tone="neutral"
             />
           </div>
@@ -702,6 +712,8 @@ export function AdminLeadWorkspace({
         </TabPanel>
 
         <TabPanel active={tab === "rivals"}>
+        {scrapeResults && <CompetitorPanel key={`rivals-${reloadKey}`} leadId={lead.id} />}
+
         {scrapeResults && (
           <VisibilityPanel key={`visibility-${reloadKey}`} leadId={lead.id} industry={lead.industry} />
         )}

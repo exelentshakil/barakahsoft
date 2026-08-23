@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { AlertTriangle, BarChart3, Loader2, Search, TrendingDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { BarChart3, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 // What is wrong with the client's current site, and who is beating them.
@@ -21,15 +20,6 @@ interface AuditFinding {
   resolution: string;
   /** The measurement behind the claim, so it can be checked on a call. */
   evidence?: string;
-}
-
-interface Competitor {
-  name: string;
-  website: string | null;
-  rating: number | null;
-  reviewCount: number | null;
-  speedScore: number | null;
-  isClient: boolean;
 }
 
 const SEVERITY_STYLE: Record<string, string> = {
@@ -56,18 +46,14 @@ export function AuditPanel({ leadId }: { leadId: string }) {
     pagesChecked?: number;
     pagesKnown?: number;
   } | null>(null);
-  const [competitors, setCompetitors] = useState<{ query: string; rows: Competitor[] } | null>(null);
   const [analysed, setAnalysed] = useState(true);
   const [loading, setLoading] = useState(true);
-  const [measuring, setMeasuring] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
       const res = await fetch(`/api/leads/${leadId}/audit`);
       const data = await res.json().catch(() => ({}));
       setAudit(data.audit ?? null);
-      setCompetitors(data.competitors ?? null);
       setAnalysed(data.analysed !== false);
     } catch {
       // A failed read is not worth a banner; the next action retries.
@@ -79,21 +65,6 @@ export function AuditPanel({ leadId }: { leadId: string }) {
   useEffect(() => {
     load();
   }, [load]);
-
-  async function measure() {
-    setMeasuring(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/leads/${leadId}/audit`, { method: "POST" });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Could not measure competitors");
-      setCompetitors(data.competitors);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Measurement failed");
-    } finally {
-      setMeasuring(false);
-    }
-  }
 
   if (loading) {
     return (
@@ -208,70 +179,6 @@ export function AuditPanel({ leadId }: { leadId: string }) {
           </div>
         )}
 
-        <div className="border-t border-border pt-4">
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Search className="h-3.5 w-3.5 text-muted-foreground" />
-              <h4 className="text-xs font-bold text-[#0d1738]">Who they are up against</h4>
-            </div>
-            {!competitors && (
-              <Button
-                type="button"
-                size="sm"
-                disabled={measuring}
-                onClick={measure}
-                className="h-7 gap-1.5 bg-[#0d1738] text-[11px] font-bold text-white hover:bg-[#1b2a5c]"
-              >
-                {measuring ? <Loader2 className="h-3 w-3 animate-spin" /> : <TrendingDown className="h-3 w-3" />}
-                {measuring ? "Measuring..." : "Find real competitors"}
-              </Button>
-            )}
-          </div>
-
-          {error && (
-            <p className="flex items-start gap-2 rounded-md bg-red-50 p-2 text-[11px] font-medium text-red-700">
-              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              {error}
-            </p>
-          )}
-
-          {!competitors && !error && (
-            <p className="text-[11px] text-muted-foreground">
-              Searches for their trade in their city, then measures each competitor&apos;s real review count and real
-              mobile speed. Costs a search and a few API calls, so it runs only when you ask.
-            </p>
-          )}
-
-          {competitors && (
-            <div className="overflow-x-auto rounded-lg border border-border">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-border bg-[#fbfbfd] text-[10px] uppercase tracking-wide text-muted-foreground">
-                    <th className="px-3 py-2 font-bold">Business</th>
-                    <th className="px-3 py-2 font-bold">Google rating</th>
-                    <th className="px-3 py-2 font-bold">Reviews</th>
-                    <th className="px-3 py-2 font-bold">Mobile speed</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {competitors.rows.map((row) => (
-                    <tr key={row.name} className={row.isClient ? "bg-[#f0f3ff] font-bold text-[#533afd]" : "text-[#42506a]"}>
-                      <td className="px-3 py-2">
-                        {row.name}
-                        {row.isClient && <span className="ml-1.5 text-[10px] font-bold">(your lead)</span>}
-                      </td>
-                      {/* A blank cell is honest. Nothing here is filled in
-                          when it could not be measured. */}
-                      <td className="px-3 py-2 tabular-nums">{row.rating ?? "—"}</td>
-                      <td className="px-3 py-2 tabular-nums">{row.reviewCount ?? "—"}</td>
-                      <td className="px-3 py-2 tabular-nums">{row.speedScore ?? "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
       </CardContent>
     </Card>
   );

@@ -45,9 +45,18 @@ export function LiveClientProposal({
   const report = buildReportModules(lead, scrapeResults);
 
   const isPaid = Boolean(lead.paid_at) || lead.status === "paid" || lead.status === "live";
+
+  // "ready" was on this list and must never be: scrape-run sets it the
+  // moment analysis finishes, where it means "ready for the operator to
+  // build", not "reviewed and fit to send". So the instant a lead was
+  // scraped its portal unblurred and showed the client a full proposal --
+  // pricing, report and all -- around a site nobody had built or checked.
+  //
+  // Approval is the human gate. Only qa_approved and the states after it
+  // count, plus the artifact's own qa_status.
   const isApproved =
     artifact?.qa_status === "approved" ||
-    ["qa_approved", "ready", "delivered", "paid", "live"].includes(lead.status);
+    ["qa_approved", "delivered", "paid", "live"].includes(lead.status);
 
   // Dynamic Pricing from Admin Configuration
   const pricingData = (artifact?.extracted_assets?.pricing as any) ?? {};
