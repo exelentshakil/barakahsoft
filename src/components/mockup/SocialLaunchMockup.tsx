@@ -116,39 +116,37 @@ const BG_THEMES = [
   },
 ];
 
-// Helper: Convert any remote image to base64 so SVG/Canvas export draws real photos
+// Helper: Convert any remote image to base64 via internal proxy so SVG/Canvas export draws real photos reliably
 async function urlToBase64(url: string | null | undefined): Promise<string | null> {
   if (!url) return null;
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      try {
-        const c = document.createElement("canvas");
-        c.width = img.naturalWidth || img.width;
-        c.height = img.naturalHeight || img.height;
-        const ctx = c.getContext("2d");
-        if (!ctx) return resolve(null);
-        ctx.drawImage(img, 0, 0);
-        resolve(c.toDataURL("image/png"));
-      } catch {
-        resolve(null);
-      }
-    };
-    img.onerror = () => {
-      // Fallback try with direct fetch
-      fetch(url, { mode: "cors" })
-        .then((res) => res.blob())
-        .then((blob) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = () => resolve(null);
-          reader.readAsDataURL(blob);
-        })
-        .catch(() => resolve(null));
-    };
-    img.src = url;
-  });
+  if (url.startsWith("data:")) return url;
+
+  try {
+    const res = await fetch(`/api/image-proxy?url=${encodeURIComponent(url)}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.dataUri) return data.dataUri;
+    }
+  } catch (err) {
+    console.warn("[urlToBase64] proxy fetch failed, trying direct fetch", err);
+  }
+
+  try {
+    const res = await fetch(url, { mode: "cors" });
+    if (res.ok) {
+      const blob = await res.blob();
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(blob);
+      });
+    }
+  } catch {
+    // Fallback ignored
+  }
+
+  return null;
 }
 
 function wrapWords(text: string, maxCharsPerLine = 22): string[] {

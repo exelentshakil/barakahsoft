@@ -145,7 +145,14 @@ NEVER WRITE ANYTHING LIKE THESE — each appeared in real failed output:${BANNED
 ═══ WHAT THE PAGE MUST DO ═══
 ABOVE THE FOLD, without scrolling, a visitor must know: what this business does, where it operates, and exactly one thing to do next. If they read nothing else they should know whether to call.
 
-Then, in whatever order and treatment the design direction genuinely calls for: real trust signals (only ones the facts support), the real services each linking to its own page, a substantive reason to choose them built from their real content, real proof if real reviews exist, service areas if real, a genuinely useful FAQ, and a closing call to action carrying the real phone number.
+Then, in whatever order and treatment the design direction genuinely calls for:
+- Real trust signals (only ones the facts support).
+- Real services each linking to its own page with crisp benefits.
+- A substantive, high-converting About / Story section (id="about") featuring the owner portrait (holding plans/on-site), an empathetic problem-aware headline (e.g. "Don't Let a Small Leak Destroy Your Biggest Investment"), 2 rich paragraphs on their local craftsmanship and philosophy, a 4-column trust metric ribbon, and dual action buttons.
+- Real proof if real reviews exist (id="reviews") with "★★★★★ 5.0 from Verified Reviews", headline "What Our Customers Say", subhead "Real feedback from property owners across the area", and up to 10 customer reviews.
+- Service areas if real.
+- A comprehensive Frequently Asked Questions section (id="faq") with a large clear headline, subheadline, at least 10 high-intent trade questions with clear answers.
+- A closing call to action carrying the real phone number.
 
 Section anchors the real navigation links to: id="services" id="about" id="reviews" id="faq" id="contact"
 
