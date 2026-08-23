@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AlertTriangle, Check, History, Image as ImageIcon, Loader2, Sparkles, Upload } from "lucide-react";
+import { AlertTriangle, Check, History, Image as ImageIcon, Loader2, Sparkles, Upload, Sliders } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -141,6 +141,25 @@ export function RefinePanel({ leadId }: { leadId: string }) {
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Avatar generation failed");
+    } finally {
+      setBusySlot(null);
+    }
+  }
+
+  async function regenerateSlotDirect(slotKey: string, caption: string) {
+    setBusySlot(slotKey);
+    setError(null);
+    try {
+      const res = await fetch(`/api/leads/${leadId}/slots`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slot: slotKey, subject: caption }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Generation failed");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Generation failed");
     } finally {
       setBusySlot(null);
     }
@@ -307,7 +326,7 @@ export function RefinePanel({ leadId }: { leadId: string }) {
                       {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
                       Real photo
                     </Button>
-                    {(slot.key.includes("about") || slot.key.includes("team") || slot.key.includes("hero")) && (
+                    {(slot.key.includes("about") || slot.key.includes("team") || slot.key.includes("founder")) ? (
                       <Button
                         type="button"
                         size="sm"
@@ -320,6 +339,19 @@ export function RefinePanel({ leadId }: { leadId: string }) {
                         <Sparkles className="h-3 w-3" />
                         AI Avatar
                       </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={busy}
+                        onClick={() => regenerateSlotDirect(slot.key, slot.caption)}
+                        title="Retouch this photo with commercial AI photography"
+                        className="h-7 gap-1 text-[11px] text-[#0d1738] hover:bg-[#f0f3ff] hover:text-[#533afd] font-semibold"
+                      >
+                        <Sparkles className="h-3 w-3 text-amber-500" />
+                        AI Retouch
+                      </Button>
                     )}
                     <Button
                       type="button"
@@ -330,9 +362,10 @@ export function RefinePanel({ leadId }: { leadId: string }) {
                         setPromptFor(promptFor === slot.key ? null : slot.key);
                         setPromptText(slot.caption);
                       }}
-                      className="h-7 gap-1 text-[11px]"
+                      title="Custom prompt"
+                      className="h-7 px-2 text-[11px]"
                     >
-                      <Sparkles className="h-3 w-3" />
+                      <Sliders className="h-3 w-3" />
                     </Button>
                   </div>
 
