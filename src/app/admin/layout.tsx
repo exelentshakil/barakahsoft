@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Globe2, Zap, LogOut } from "lucide-react";
 import { CrispChat } from "@/components/CrispChat";
+import { NewLeadWatcher } from "@/components/admin/NewLeadWatcher";
 
 const LOGO_URL = "https://barakahsoft.com/wp-content/uploads/2026/01/Logo1.png";
 
@@ -17,6 +18,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-screen bg-[#f9f9ff] text-[#0d1738] font-sans antialiased">
+      {/* Realtime Lead Watcher with Soothing Shopify-Style Chime */}
+      <NewLeadWatcher />
+
       {/* 1. TOP BAR (Direct from Admin Prototype) */}
       <header className="sticky top-0 z-30 border-b border-[#e5e7f2] bg-white">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
