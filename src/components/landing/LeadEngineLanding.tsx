@@ -42,7 +42,6 @@ import { FAQAccordion } from "@/components/landing/FAQAccordion";
 import { Nav } from "@/components/landing/Nav";
 import { LandingTeamShowcase } from "@/components/landing/LandingTeamShowcase";
 import { Marquee } from "@/components/landing/primitives/Marquee";
-import { IndustryProofGrid } from "@/components/landing/IndustryProofGrid";
 import { CrispChat } from "@/components/CrispChat";
 
 const SUPABASE_STORAGE_URL = "https://liepxeeugfrxmidcmbxo.supabase.co/storage/v1/object/public/design-reference";
@@ -336,7 +335,7 @@ export function LeadEngineLanding() {
       </section>
 
       {/* 4. "SEE WHAT YOUR NEW WEBSITE COULD LOOK LIKE" (Smooth Multi-Row Marquee Showcase with Grid Backdrop) */}
-      <section id="examples" className="relative border-b border-[#d9e8f4] bg-[#f8fbfe] py-20 lg:py-28 overflow-hidden space-y-10">
+      <section id="design-quality" className="relative scroll-mt-24 border-b border-[#d9e8f4] bg-[#f8fbfe] py-20 lg:py-28 overflow-hidden space-y-10">
         <div
           className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(to_right,rgba(12,104,200,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(12,104,200,0.05)_1px,transparent_1px)] [background-size:48px_48px]"
           aria-hidden="true"
@@ -368,11 +367,6 @@ export function LeadEngineLanding() {
           </Marquee>
         </div>
       </section>
-
-      {/* 4b. TRADE COVERAGE — the marquee proves the work looks good, this
-          proves it covers the reader's own trade, which is the objection
-          that actually stops a plumber watching roofing sites scroll past. */}
-      <IndustryProofGrid />
 
       {/* 5. VISUAL STEP 0 TO DELIVERY JOURNEY (Modern SaaS Interactive Timeline) */}
       <section id="how-it-works" className="relative border-b border-[#d9e8f4] bg-white py-20 lg:py-28">

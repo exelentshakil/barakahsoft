@@ -6,7 +6,9 @@ const LINKS = [
   { href: "#how-it-works", label: "How it works" },
   { href: "#team", label: "Team" },
   // { href: "#design-standard", label: "Design standard" },
-  { href: "#industries", label: "Industries" },
+  // Pointed at #industries, which lives in a section this page does not
+  // render — the link scrolled nowhere.
+  { href: "#design-quality", label: "Design Quality" },
   { href: "#faq", label: "FAQ" },
 ];
 
