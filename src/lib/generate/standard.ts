@@ -167,7 +167,14 @@ the page is where a visitor decides whether these are the people. Where no image
 use a bordered contact card with the real number and hours rather than leaving the second half
 empty.
 
-Then, in whatever order the design direction genuinely calls for: real trust signals the facts support, the real services, a substantive reason to choose them built from their real content, real proof if real reviews exist, service areas if real, a genuinely useful FAQ, and a closing call to action carrying the real phone number.
+Then, in whatever order the design direction genuinely calls for:
+- Real trust signals the facts support.
+- Real services each with clear benefits and imagery.
+- A substantive "About / Our Story" section highlighting the founder/team, craftsmanship values, and 4 key statistics.
+- A prominent Reviews section (id="reviews") featuring "★★★★★ 5.0 from Verified Reviews", headline "What Our Customers Say", subheadline "Real feedback from property owners across the area", and a slider/grid of up to 10 customer reviews.
+- Service areas with visual badges/cards.
+- A comprehensive Frequently Asked Questions section (id="faq") with a large clear headline, subheadline, at least 10 high-intent trade questions with clear answers, and a final CTA.
+- A closing call to action carrying the real phone number.
 
 Service areas are a specific content type, not a generic text list — give each one a real visual anchor (a location-pin icon, a small map motif, or a distinct card treatment), never bare text in a row. A list of city names with nothing else on the page is the clearest tell of an unfinished section.
 

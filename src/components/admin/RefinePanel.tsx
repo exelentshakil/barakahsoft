@@ -122,6 +122,30 @@ export function RefinePanel({ leadId }: { leadId: string }) {
     }
   }
 
+  async function generateAvatar(slotKey: string) {
+    setBusySlot(slotKey);
+    setError(null);
+    try {
+      const res = await fetch(`/api/leads/${leadId}/generate-avatar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.url) throw new Error(data.error || "Avatar generation failed");
+      await fetch(`/api/leads/${leadId}/slots`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slot: slotKey, url: data.url }),
+      });
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Avatar generation failed");
+    } finally {
+      setBusySlot(null);
+    }
+  }
+
   async function restore(pageKey: string, version: number) {
     setError(null);
     try {
@@ -250,6 +274,20 @@ export function RefinePanel({ leadId }: { leadId: string }) {
                       {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
                       Real photo
                     </Button>
+                    {(slot.key.includes("about") || slot.key.includes("team") || slot.key.includes("hero")) && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={busy}
+                        onClick={() => generateAvatar(slot.key)}
+                        title="Generate a photorealistic owner portrait with Gemini AI"
+                        className="h-7 gap-1 text-[11px] text-[#533afd] hover:bg-[#f0f3ff] border-[#533afd]/30 font-bold"
+                      >
+                        <Sparkles className="h-3 w-3" />
+                        AI Avatar
+                      </Button>
+                    )}
                     <Button
                       type="button"
                       size="sm"

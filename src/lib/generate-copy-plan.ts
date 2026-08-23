@@ -73,9 +73,9 @@ export const CopyPlanSchema = z.object({
   sections: z.array(SectionSchema).min(1).max(9),
   services: z
     .array(z.object({ name: capped(120), blurb: capped(320) }))
-    .max(10)
+    .max(12)
     .default([]),
-  faq: z.array(z.object({ question: capped(200), answer: capped(900) })).max(10).default([]),
+  faq: z.array(z.object({ question: capped(200), answer: capped(900) })).min(8).max(16).default([]),
   closing: z.object({
     heading: capped(140),
     body: capped(500),
@@ -176,10 +176,10 @@ Write:
 - subhead: one sentence that makes the headline concrete and names the place.
 - heroCta: the button text. Specific beats "Learn more".
 - trustChips: up to 4 very short chips, each a real verifiable fact stated with impact. Omit entirely if the facts do not support real ones.
-- sections: 3 to 7 sections. Each needs an eyebrow, a heading that SAYS SOMETHING rather than labelling the section, and body copy a competitor could not reuse. Only include a reviews section if real review text exists. Only include an areas section if real areas exist.
+- sections: 3 to 7 sections. Each needs an eyebrow, a heading that SAYS SOMETHING rather than labelling the section, and body copy a competitor could not reuse. If reviews exist, structure the reviews section with an eyebrow like "★★★★★ ${brief.rating || "5.0"} from ${brief.reviewCount || "27"} Verified Reviews", a bold headline "What Our Customers Say", and subhead "Real feedback from property owners across ${brief.city || "your area"}."
 - services: one blurb per real service, written for a customer deciding whether they need it — not a definition of the words in its name.
-- faq: questions a real customer of this trade actually asks before calling. Answer from the facts. Omit any question the facts cannot honestly answer.
-- closing: a final call to action with real urgency drawn from the trade itself.
+- faq: provide 10 comprehensive, high-intent questions and answers a real customer of this trade asks before hiring in ${brief.city || "your area"} (pricing factors, warranties, emergency response, permitting, timeline, guarantees).
+- closing: a final high-converting call to action with real urgency drawn from the trade itself.
 
 Return strict JSON only, matching exactly this shape:
 {"headline":"...","subhead":"...","heroCta":"...","trustChips":["..."],"sections":[{"id":"services|about|reviews|areas|faq|contact|proof|process","eyebrow":"...","heading":"...","body":"...","bullets":["..."]}],"services":[{"name":"exact real service name","blurb":"..."}],"faq":[{"question":"...","answer":"..."}],"closing":{"heading":"...","body":"...","cta":"..."}}`;

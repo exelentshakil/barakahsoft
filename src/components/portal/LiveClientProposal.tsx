@@ -135,12 +135,12 @@ export function LiveClientProposal({
         />
 
         {/* 3D Website Redesign Showcase Mockup */}
-        <section className="rounded-3xl border border-[#c7d0fb] bg-white p-6 sm:p-10 shadow-sm flex flex-col items-center space-y-6">
+        <section className="flex flex-col items-center space-y-6">
           <div className="text-center max-w-xl space-y-1">
             <span className="text-xs font-bold uppercase tracking-widest text-[#533afd]">
               High-Converting Modern Redesign
             </span>
-            <h3 className="text-xl sm:text-2xl font-bold text-[#0d1738]">
+            <h3 className="text-2xl sm:text-3xl font-bold text-[#0d1738]">
               Your Brand, Elevated to Category Leader
             </h3>
             <p className="text-xs sm:text-sm text-muted-foreground">
@@ -148,7 +148,7 @@ export function LiveClientProposal({
             </p>
           </div>
 
-          <div className="w-full flex justify-center py-2">
+          <div className="w-full flex justify-center">
             <SocialLaunchMockup
               data={{
                 businessName,
@@ -163,7 +163,7 @@ export function LiveClientProposal({
                 founderTitle: "Founder / Operator",
                 aboutHeadline: `A PASSION FOR ${(lead.industry || "QUALITY").toUpperCase()} EXCELLENCE`,
                 heroHeadline: payload.headline || `PREMIER ${(lead.industry || "SERVICES").toUpperCase()}`,
-                photoUrl: payload.heroImageUrl || ((scrapeResults?.facts as any)?.site_photos?.[0]?.url as string) || null,
+                photoUrl: ((scrapeResults?.facts as any)?.founder_photo_url as string) || payload.heroImageUrl || ((scrapeResults?.facts as any)?.site_photos?.[0]?.url as string) || null,
                 secondaryPhotoUrl: ((scrapeResults?.facts as any)?.site_photos?.[1]?.url as string) || payload.services?.[0]?.imageUrl || null,
                 siteUrl: lead.source_url,
                 previewUrl: `/s/${lead.slug}?view=preview`,
