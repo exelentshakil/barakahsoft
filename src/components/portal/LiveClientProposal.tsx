@@ -83,14 +83,18 @@ export function LiveClientProposal({
           tier: monthlyPrice > 0 ? "hosting" : "website",
         }),
       });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert("Redirecting to secure Stripe checkout...");
+      const data = await res.json().catch(() => ({}));
+      // Both failure paths used to say "redirecting to checkout" and then
+      // do nothing, so a client trying to pay was told it was working while
+      // it was not. Telling them to get in touch is the honest version, and
+      // it keeps the sale alive.
+      if (!res.ok || !data.url) {
+        alert("We could not open the payment page just now. Please get in touch and we will send you a payment link directly.");
+        return;
       }
+      window.location.href = data.url;
     } catch {
-      alert("Redirecting to checkout session...");
+      alert("We could not reach the payment page. Please check your connection and try again.");
     } finally {
       setCheckoutLoading(false);
     }

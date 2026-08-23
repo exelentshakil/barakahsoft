@@ -360,14 +360,17 @@ export function AdminLeadWorkspace({
           tier: monthlyPrice > 0 ? "hosting" : "website",
         }),
       });
-      const data = await res.json();
-      if (data.url) {
-        window.open(data.url, "_blank");
-      } else {
-        alert(`Stripe ${priceDisplay} checkout session prepared for ${businessName}!`);
+      const data = await res.json().catch(() => ({}));
+      // A failure used to report itself as "checkout session prepared!",
+      // so an operator would tell a client a payment link was on its way
+      // when nothing had been created at all.
+      if (!res.ok || !data.url) {
+        alert(data.error || "Could not create the payment link. Check the price is set for this lead.");
+        return;
       }
+      window.open(data.url, "_blank");
     } catch {
-      alert(`Directing to Stripe ${priceDisplay} checkout session...`);
+      alert("Could not reach Stripe. Check the connection and try again.");
     } finally {
       setGeneratingStripe(false);
     }
