@@ -144,7 +144,6 @@ export function LiveClientProposal({
           setupPrice={setupPrice}
           monthlyPrice={monthlyPrice}
           standardValue={standardValue}
-          discountLabel={discountLabel}
         />
 
         <ProposalDecisionBox

@@ -5,7 +5,6 @@ interface ProposalPricingSectionProps {
   setupPrice: number;
   monthlyPrice: number;
   standardValue: number;
-  discountLabel: string;
 }
 
 export function ProposalPricingSection({
@@ -13,48 +12,35 @@ export function ProposalPricingSection({
   setupPrice,
   monthlyPrice,
   standardValue,
-  discountLabel,
 }: ProposalPricingSectionProps) {
-  // Each line says the problem it solves rather than the thing we build.
-  // A business owner does not want "LocalBusiness schema"; he wants to stop
-  // losing the person who searched at nine at night and called someone else.
+  // Each line says the problem it solves rather than the thing we build. A
+  // business owner does not want "LocalBusiness schema"; he wants to stop
+  // losing the person who searched at nine at night and rang someone else.
+  // Short enough to scan, because this is the section where a decision gets
+  // made and a paragraph per line is a reason to put it off.
   //
-  // Values are proportions of the anchor rather than fixed numbers, so they
-  // always add up to the figure printed above them. Hardcoded amounts summed
-  // to $1,550 under a headline reading $1,297, which is the kind of thing a
-  // careful buyer checks and a careless one is annoyed by later.
+  // Amounts are rounded to the nearest 25 and the headline total is their
+  // sum, not a separately configured figure. Proportions of an odd anchor
+  // produced "$402 Value" and "$97 Value" — an oddly precise number reads as
+  // generated rather than considered, and a list that does not add up to the
+  // total above it is the kind of thing a careful buyer checks.
   //
-  // Three claims were removed outright: "28 dedicated service landing pages"
-  // (the real number depends on how many services and areas they have),
-  // "8 original launch articles" (the generator writes no articles at all),
-  // and "0.12s Mobile Load Time" (nothing measures it — it was a number
-  // somebody typed).
-  const share = (fraction: number) => Math.round(standardValue * fraction);
-  const parts = [share(0.31), share(0.385), share(0.193), share(0.075)];
-  const remainder = Math.max(0, standardValue - parts.reduce((a, b) => a + b, 0));
+  // Three claims were removed outright when this was rewritten: "28
+  // dedicated service landing pages" (the real number depends on how many
+  // services and areas they have), "8 original launch articles" (the
+  // generator writes no articles at all), and "0.12s Mobile Load Time"
+  // (nothing measures it — it was a number somebody typed).
+  const share = (fraction: number) => Math.max(25, Math.round((standardValue * fraction) / 25) * 25);
+  const parts = [share(0.31), share(0.385), share(0.193), share(0.075), share(0.037)];
+  const anchor = parts.reduce((total, part) => total + part, 0);
 
   const deliverableItems = [
-    {
-      item: "A homepage built around your real reviews, real services and real photos — so the proof you already earned is the first thing a visitor sees",
-      val: `$${parts[0]} Value`,
-    },
-    {
-      item: "A page for every service you offer and every area you serve, so someone searching for one specific job lands on that job instead of hunting your homepage",
-      val: `$${parts[1]} Value`,
-    },
-    {
-      item: "An AI assistant that answers questions in your words and takes the caller's details — the enquiry at nine at night that currently goes to whoever answers first",
-      val: `$${parts[2]} Value`,
-    },
-    {
-      item: "Written so Google and ChatGPT can quote you directly when someone asks about your trade in your area",
-      val: `$${parts[3]} Value`,
-    },
-    {
-      item: "Built for speed on a phone, with one-tap calling everywhere your number appears",
-      val: `$${remainder} Value`,
-    },
-    { item: "Your own domain, SSL and hosting, set up and looked after", val: "Included" },
+    { item: "A homepage that leads with your reviews and your real work, instead of burying them", val: parts[0] },
+    { item: "A page for every service and every area you cover, so each job gets found on its own", val: parts[1] },
+    { item: "An AI assistant that answers questions and takes details — including at nine at night", val: parts[2] },
+    { item: "Written so Google and ChatGPT quote you when someone asks about your trade", val: parts[3] },
+    { item: "Fast on a phone, with one-tap calling everywhere your number appears", val: parts[4] },
+    { item: "Your domain, SSL and hosting, set up and looked after", val: null },
   ];
 
   return (
@@ -63,24 +49,29 @@ export function ProposalPricingSection({
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#f0f3ff] px-3 py-1 text-xs font-bold text-[#533afd] shrink-0">
-              <Tag className="h-3 w-3" /> Proposal & Launch Pricing
+              <Tag className="h-3 w-3" /> What it costs
             </span>
-            <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-3 py-1 text-xs font-bold text-[#0b8f5b] shrink-0">
-              <Sparkles className="h-3 w-3" /> {discountLabel}
-            </span>
+            {setupPrice === 0 && (
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-3 py-1 text-xs font-bold text-[#0b8f5b] shrink-0">
+                <Sparkles className="h-3 w-3" /> Nothing to pay today
+              </span>
+            )}
           </div>
-          <h2 className="mt-2 text-3xl font-bold text-[#0d1738]">
-            Custom Launch & Ongoing Plan
-          </h2>
-          <p className="mt-1 text-sm text-[#42506a]">
-            Standard agency value anchored at ${standardValue} — curated specifically for {businessName}.
+          {/* "Custom Launch & Ongoing Plan" and "Standard agency value
+              anchored at $1297 — curated specifically for" are our words for
+              our own pricing. "Anchored" says out loud that the number is an
+              anchor, which is the one thing an anchor must not do. */}
+          <h2 className="mt-2 text-3xl font-bold text-[#0d1738]">Putting it live</h2>
+          <p className="mt-1.5 max-w-md text-sm leading-relaxed text-[#42506a]">
+            An agency would quote around ${anchor.toLocaleString()} to build this. Here is what is in it, and what you
+            actually pay.
           </p>
         </div>
 
         {/* Price Tag Box */}
         <div className="rounded-xl bg-[#f9f9ff] border border-[#c7d0fb] p-5 text-left sm:text-right shrink-0">
-          <span className="text-xs text-[#777588] line-through font-semibold">
-            Standard Value: ${standardValue}
+          <span className="text-xs font-semibold text-[#777588] line-through">
+            ${anchor.toLocaleString()} elsewhere
           </span>
           <div className="mt-0.5 flex items-baseline gap-1 sm:justify-end">
             {setupPrice === 0 && monthlyPrice > 0 ? (
@@ -102,12 +93,10 @@ export function ProposalPricingSection({
               </>
             )}
           </div>
-          <span className="text-[11px] font-bold text-[#0b8f5b] block mt-1">
-            {setupPrice === 0 && monthlyPrice > 0
-              ? `✓ $0 Upfront · $${monthlyPrice}/mo Hosting & Maintenance`
-              : setupPrice > 0 && monthlyPrice > 0
-              ? `✓ $${setupPrice} Setup · $${monthlyPrice}/mo Ongoing Retainer`
-              : `✓ 100% Client-Owned Website`}
+          {/* This line repeated the price that is directly above it. It gets
+              to say the thing the price cannot: that stopping is easy. */}
+          <span className="mt-1.5 block text-[11px] font-bold text-[#0b8f5b]">
+            {monthlyPrice > 0 ? "Cancel any time · you own the site" : "One payment · you own the site"}
           </span>
         </div>
       </div>
@@ -119,7 +108,9 @@ export function ProposalPricingSection({
               <CheckCircle2 className="h-4 w-4 shrink-0 text-[#0b8f5b] mt-0.5" />
               <span className="font-medium text-[#0d1738] text-xs sm:text-sm">{d.item}</span>
             </div>
-            <span className="text-[11px] font-bold text-[#533afd] shrink-0">{d.val}</span>
+            <span className="shrink-0 text-[11px] font-bold text-[#533afd]">
+              {d.val === null ? "Included" : `$${d.val}`}
+            </span>
           </div>
         ))}
       </div>
