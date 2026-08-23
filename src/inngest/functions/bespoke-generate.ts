@@ -63,7 +63,26 @@ function resolveDna(artifact: Artifact | null): DesignDna {
 }
 
 export const bespokeGenerate = inngest.createFunction(
-  { id: "bespoke-generate", retries: 1 },
+  {
+    id: "bespoke-generate",
+    retries: 1,
+    // Without this the build_jobs row stays "running" after a failed run,
+    // so the studio sits on "Building... 2 of 4" forever and the operator
+    // has no way to tell a slow build from a dead one. Runs once, after
+    // the retries are exhausted.
+    onFailure: async ({ event, error }) => {
+      const leadId = (event?.data?.event?.data as { lead_id?: string } | undefined)?.lead_id;
+      if (!leadId) return;
+      const admin = createAdminClient();
+      await admin
+        .from("build_jobs")
+        .update({ status: "failed", error_message: String(error?.message ?? error).slice(0, 500) })
+        .eq("lead_id", leadId)
+        .eq("stage", "bespoke");
+      await admin.from("artifacts").update({ full_site_status: "failed" }).eq("lead_id", leadId);
+      console.error(`[bespoke-generate] run failed for ${leadId}: ${error?.message ?? error}`);
+    },
+  },
   { event: "bespoke/generate.requested" },
   async ({ event, step }) => {
     const { lead_id, overrides, phase, provider } = event.data as {
@@ -236,8 +255,12 @@ export const bespokeGenerate = inngest.createFunction(
       const structure = await step.run(`structure-${attempt}`, async () => {
         const result = await generateStructure(brief, dna, media, knownPaths, failures, provider);
         if (!result) {
+          // Naming the provider matters: this said "[openai]" whatever was
+          // actually used, so a failing Gemini build sent whoever read it
+          // to the wrong logs entirely.
+          const used = provider ?? "openai";
           throw new Error(
-            "Structure generation returned nothing. The [openai] log line reports whether the model returned empty content or output that was empty once sanitized."
+            `Structure generation returned nothing from ${used}. Check the [${used}] log line — it says whether the model was unavailable, returned empty content, or produced output that was empty once sanitized.`
           );
         }
         return result;

@@ -1,5 +1,5 @@
 import { callOpenAI, bestModelChain } from "@/lib/openai-client";
-import { callGemini, bestGeminiModel } from "@/lib/gemini-client";
+import { callGemini, bestGeminiChain } from "@/lib/gemini-client";
 
 export type GenerationProvider = "openai" | "gemini";
 
@@ -19,10 +19,12 @@ export async function callBestModel(
   provider: GenerationProvider = "openai"
 ): Promise<string | null> {
   if (provider === "gemini") {
-    return callGemini(prompt, bestGeminiModel(), undefined, {
+    const chain = bestGeminiChain();
+    return callGemini(prompt, chain[0], undefined, {
       system: options.system,
       temperature: options.temperature,
       maxTokens: options.maxTokens,
+      modelChain: chain,
     });
   }
   return callOpenAI(prompt, {
