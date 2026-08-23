@@ -92,6 +92,29 @@ const STATUS_LABEL: Record<string, string> = {
   lost: "Lost",
 };
 
+function HeaderStat({
+  label,
+  value,
+  suffix = "",
+  tone = "neutral",
+}: {
+  label: string;
+  value: string;
+  suffix?: string;
+  tone?: "good" | "bad" | "neutral";
+}) {
+  const colour = tone === "bad" ? "text-red-600" : tone === "good" ? "text-[#0b8f5b]" : "text-[#0d1738]";
+  return (
+    <div className="min-w-0">
+      <p className="truncate text-xs font-semibold text-[#777588]">{label}</p>
+      <p className={`mt-0.5 text-xl font-bold tabular-nums ${colour}`}>
+        {value}
+        {suffix && <span className="text-sm font-semibold text-[#777588]">{suffix}</span>}
+      </p>
+    </div>
+  );
+}
+
 interface AdminLeadWorkspaceProps {
   lead: Lead;
   artifact: Artifact | null;
@@ -431,12 +454,14 @@ export function AdminLeadWorkspace({
 
       {/* 2. RIGHT COLUMN: LINEAR STUDIO WORKSPACE */}
       <div className="space-y-8">
-        {/* Top Overview Banner */}
-        <div className="rounded-2xl border border-[#c7d0fb] bg-white p-7 shadow-sm flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
-          <div className="min-w-0 flex-1">
-            {/* These are all single-line labels. Without wrapping allowed on
-                the row and nowrap on each chip, the buttons opposite squeeze
-                them until "Sent to the client" stacks one word per line. */}
+        {/* The lead header.
+            Deliberately stacked rather than a two-column row. Six actions and
+            a business name cannot share a row inside this column: the actions
+            take the width they need and the name gets whatever is left, which
+            is how "Spennato Family Roofing" ended up wrapping one word per
+            line underneath the buttons. Stacking cannot break at any width. */}
+        <div className="space-y-5 rounded-2xl border border-[#c7d0fb] bg-white p-7 shadow-sm">
+          <div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#f0f3ff] px-2.5 py-1 text-xs font-bold text-[#533afd]">
                 <Zap className="h-3 w-3" /> Active Pipeline
@@ -446,12 +471,48 @@ export function AdminLeadWorkspace({
               </Badge>
               <DeliverySlaTimer createdAt={lead.created_at} deliveredAt={lead.delivered_at} />
             </div>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight text-[#0d1738] sm:text-3xl">
+            <h1 className="mt-2.5 text-2xl font-bold tracking-tight text-[#0d1738] sm:text-3xl">
               {businessName}
             </h1>
-            <p className="mt-1 text-sm text-[#42506a]">
-              {lead.contact_name || "Owner"} · {phone} · {email}
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[#42506a]">
+              <span>{lead.contact_name || "Owner"}</span>
+              <span className="text-[#c7d0fb]">|</span>
+              <span>{phone}</span>
+              <span className="text-[#c7d0fb]">|</span>
+              <span className="truncate">{email}</span>
             </p>
+          </div>
+
+          {/* What this lead is worth knowing at a glance, measured rather
+              than decorative — the numbers an operator would otherwise open
+              three tabs to find. */}
+          <div className="grid grid-cols-2 gap-3 border-y border-[#eef0f8] py-4 sm:grid-cols-4">
+            <HeaderStat
+              label="Their mobile speed"
+              value={typeof scrapeResults?.pagespeed_mobile?.score === "number" ? `${scrapeResults.pagespeed_mobile.score}` : "—"}
+              suffix="/100"
+              tone={
+                typeof scrapeResults?.pagespeed_mobile?.score === "number" && scrapeResults.pagespeed_mobile.score < 50
+                  ? "bad"
+                  : "neutral"
+              }
+            />
+            <HeaderStat
+              label="Google reviews"
+              value={reviewCount > 0 ? `${reviewCount}` : "—"}
+              suffix={rating ? ` · ${rating}★` : ""}
+              tone="good"
+            />
+            <HeaderStat
+              label="Pages on their site"
+              value={`${Array.isArray(facts.sitemap_urls) ? (facts.sitemap_urls as unknown[]).length : services.length || 0}`}
+              tone="neutral"
+            />
+            <HeaderStat
+              label="Rivals measured"
+              value={`${scrapedCompetitors.length || 0}`}
+              tone="neutral"
+            />
           </div>
 
           <div className="flex flex-wrap gap-2.5 items-center">

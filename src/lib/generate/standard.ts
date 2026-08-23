@@ -66,6 +66,15 @@ CARD GRIDS. Spacing between siblings in a grid or flex row comes from \`gap\` on
 always. A negative margin on a card to "pull" it against its neighbour is what makes two cards
 overlap or collide edge-to-edge — it has shipped broken before and is never the right tool here.
 
+CARDS IN ONE GRID ARE THE SAME SHAPE AS EACH OTHER. Either every card in a grid carries an
+image or none of them does — never some. A row where two cards have photographs and the third
+does not is the single most common way generated output looks unfinished: the cards end up
+different heights, the images sit at different points, and the eye reads the gap as a mistake
+rather than a design. If you have images for only some of the services, put the images in a
+separate feature block and give the service grid an icon or a rule instead. Cards in a grid
+also carry the same blocks in the same order — if one has an eyebrow, a title, a paragraph and
+a link, they all do, even where a line is shorter.
+
 TOUCH. Every interactive element is at least 44px tall on mobile. A button a thumb misses is
 a conversion lost, and small tap targets are the clearest tell that a page was designed on a
 desktop and never tried on a phone.`;
@@ -143,6 +152,20 @@ NEVER write anything like these — each came from real failed output:
 }
 
 export const PAGE_SHAPE = `ABOVE THE FOLD a visitor must know what this business does, where, and exactly one thing to do next.
+
+THE HERO HOLDS FOUR THINGS AND STOPS: the promise, one supporting sentence, the actions, and
+at most three short proof items. Each proof item is two or three words — "Licensed and insured",
+"Free estimates" — not a sentence with hours and conditions in it. They sit on one line on a
+desktop and wrap to two on a phone; if they cannot, there are too many or they are too long.
+Everything else you want to say about trust belongs further down the page, where there is room
+for it.
+
+THE CLOSING CALL TO ACTION IS A REAL SECTION, not a strip of text. Give it two halves: the ask
+and the contact detail on one side, and on the other something to look at — the owner, the team,
+or finished work, from the images below. A trade is bought from people, and the last thing on
+the page is where a visitor decides whether these are the people. Where no image is available,
+use a bordered contact card with the real number and hours rather than leaving the second half
+empty.
 
 Then, in whatever order the design direction genuinely calls for: real trust signals the facts support, the real services, a substantive reason to choose them built from their real content, real proof if real reviews exist, service areas if real, a genuinely useful FAQ, and a closing call to action carrying the real phone number.
 

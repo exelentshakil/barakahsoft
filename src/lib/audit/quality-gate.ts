@@ -134,6 +134,77 @@ function maxVerticalPaddingPx(css: string): number | null {
   return max;
 }
 
+// Which text tokens are legible on which fill. Anything else in the same
+// rule is a contrast failure by construction — these pairings are what the
+// compiled palette guarantees, and nothing else is checked for contrast at
+// all.
+const READABLE_ON: { fill: string; allowed: string[]; label: string }[] = [
+  {
+    fill: "--bs-primary",
+    allowed: ["--bs-on-primary"],
+    label: "the brand colour",
+  },
+  {
+    fill: "--bs-accent",
+    allowed: ["--bs-on-accent"],
+    label: "the accent colour",
+  },
+  {
+    fill: "--bs-invert-surface",
+    allowed: ["--bs-invert-ink", "--bs-on-primary"],
+    label: "an inverted band",
+  },
+  {
+    fill: "--bs-surface",
+    allowed: ["--bs-ink", "--bs-ink-muted", "--bs-primary-on-surface"],
+    label: "the page background",
+  },
+  {
+    fill: "--bs-surface-alt",
+    allowed: ["--bs-ink", "--bs-ink-muted", "--bs-primary-on-surface"],
+    label: "the alternate background",
+  },
+];
+
+/**
+ * Read each rule block and check the fill and the text agree.
+ *
+ * Deliberately conservative: only rules that set BOTH a background and a
+ * colour from the token set are judged, because a rule that sets only one
+ * inherits the other from a parent this cannot see. That misses some real
+ * failures and invents none, which is the correct trade for a gate that
+ * blocks a build.
+ */
+function verifyTokenPairs(css: string): QualityFinding[] {
+  const findings: QualityFinding[] = [];
+  const seen = new Set<string>();
+
+  // Strip at-rule preludes so nested blocks still parse as plain rules.
+  for (const block of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const selector = block[1].trim().split(/\s*,\s*/)[0].slice(0, 60);
+    const body = block[2];
+
+    const bg = body.match(/background(?:-color)?\s*:[^;]*var\(\s*(--bs-[a-z-]+)/i)?.[1];
+    const fg = body.match(/(?<!-)\bcolor\s*:[^;]*var\(\s*(--bs-[a-z-]+)/i)?.[1];
+    if (!bg || !fg) continue;
+
+    const pair = READABLE_ON.find((p) => p.fill === bg);
+    if (!pair || pair.allowed.includes(fg)) continue;
+
+    const key = `${bg}|${fg}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    findings.push({
+      severity: "blocker",
+      check: "contrast",
+      detail: `\`${selector}\` fills with ${bg} and sets text to ${fg}. On ${pair.label} the readable text token is ${pair.allowed[0]} — as written this renders text against a background of nearly the same darkness.`,
+    });
+  }
+
+  return findings;
+}
+
 function verifyStylesheet(css: string): QualityFinding[] {
   const findings: QualityFinding[] = [];
   const add = (severity: QualityFinding["severity"], check: string, detail: string) =>
@@ -230,6 +301,14 @@ function verifyStylesheet(css: string): QualityFinding[] {
   if (literals > 6) {
     add("blocker", "colour", `${literals} literal colour values in the stylesheet. Colour must come from the design tokens.`);
   }
+
+  // ---- The unreadable button ------------------------------------------
+  // Every fill token has exactly one text token that is contrast-checked
+  // against it. A rule that fills with --bs-primary and then sets text to
+  // --bs-ink produces navy-on-navy: invisible, and shipped to a real client
+  // more than once. The pairing is mechanical, so it is checked rather than
+  // asked for.
+  findings.push(...verifyTokenPairs(css));
 
   // Negative margins between siblings in a grid/flex row are the most common
   // way two cards end up overlapping or colliding edge-to-edge. Spacing
