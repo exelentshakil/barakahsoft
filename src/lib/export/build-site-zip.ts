@@ -331,6 +331,12 @@ Every one is optional. See \`.env.local.example\` for what each does.
 | \`LEAD_INBOX_EMAIL\` | The address enquiries go to |
 | \`GEMINI_API_KEY\` | The AI chat assistant |
 
+## Privacy policy and terms
+
+This site ships without them on purpose — they are legal documents and they
+should be your words, not ours. When you have them, add a page for each
+under \`app/\` and link them from the footer in \`app/site/BespokeFooter.tsx\`.
+
 ## Adding your own tracking
 
 - **Google Search Console** — verify by adding the meta tag it gives you to
@@ -470,8 +476,15 @@ export function cn(...inputs: ClassValue[]) {
   );
 
   // The payload and chrome spec the components were rendered against, as
-  // data. Same values the preview used, so the same decisions get made.
-  site.file("payload.json", JSON.stringify(payload, null, 2));
+  // data. Same values the preview used, so the same decisions get made —
+  // with two overrides that only apply once the site is on its own domain:
+  // its pages are at the root rather than under /s/<slug>, and it ships no
+  // privacy or terms routes, because writing a client's legal pages for
+  // them is not ours to do.
+  site.file(
+    "payload.json",
+    JSON.stringify({ ...payload, basePath: "", hideLegalLinks: true }, null, 2)
+  );
 
   // Real shapes, not Record<string, any>. The loose version compiled here
   // and then failed in the client's own `next build`, because a callback
@@ -492,6 +505,10 @@ export interface SitePayload {
   leadSlug: string;
   logoUrl: string | null;
   innerPagesBuilt: boolean;
+  /** "" here — this site is the root of its own domain. */
+  basePath?: string;
+  /** Add your own privacy policy and terms, then link them here. */
+  hideLegalLinks?: boolean;
   differentiator?: string | null;
   googleReviewsUrl: string | null;
   socialUrls: string[];

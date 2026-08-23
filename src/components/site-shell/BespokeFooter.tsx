@@ -11,7 +11,7 @@ import type { SitePayload } from "@/components/site-shell/types";
 // cautious buyer notices.
 
 function href(payload: SitePayload, path: string): string {
-  return `/s/${payload.leadSlug}${path}`;
+  return `${payload.basePath ?? `/s/${payload.leadSlug}`}${path}`;
 }
 
 // Real profiles the business already runs. A delivered site that does not
@@ -164,8 +164,12 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
           </p>
           <nav>
             {isCompact && <a href={payload.innerPagesBuilt ? href(payload, "/contact") : "#contact"}>Contact</a>}
-            <a href={href(payload, "/privacy")}>Privacy Policy</a>
-            <a href={href(payload, "/terms")}>Terms of Service</a>
+            {!payload.hideLegalLinks && (
+              <>
+                <a href={href(payload, "/privacy")}>Privacy Policy</a>
+                <a href={href(payload, "/terms")}>Terms of Service</a>
+              </>
+            )}
           </nav>
         </div>
       </div>

@@ -18,7 +18,7 @@ import type { SitePayload } from "@/components/site-shell/types";
 // and the page it framed were visibly two different designs.
 
 function href(payload: SitePayload, path: string): string {
-  return `/s/${payload.leadSlug}${path}`;
+  return `${payload.basePath ?? `/s/${payload.leadSlug}`}${path}`;
 }
 
 function anchorOr(payload: SitePayload, path: string, anchor: string): string {

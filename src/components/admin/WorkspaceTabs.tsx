@@ -59,11 +59,12 @@ export function WorkspaceTabs({
 
   return (
     <div className="rounded-2xl border border-[#e5e7f2] bg-white p-2 shadow-sm">
-      {/* A fixed grid rather than flex-wrap: eight steps in a wrapping flex
-          row reflow into ragged rows that change height as labels change,
-          which is what made this strip feel like it was overflowing. */}
+      {/* Two rows of four, never eight across. Eight columns in this panel
+          leaves about forty pixels for the label, which truncated every one
+          of them to "Thei…" and "App…" — a tab nobody can read is a tab
+          nobody presses. */}
       <div
-        className="grid grid-cols-2 gap-1 sm:grid-cols-4 xl:grid-cols-8"
+        className="grid grid-cols-2 gap-1 sm:grid-cols-4"
         role="tablist"
         aria-label="Lead delivery steps"
       >
@@ -94,8 +95,8 @@ export function WorkspaceTabs({
                 {step.done && !isActive ? <Check className="h-3 w-3" /> : index + 1}
               </span>
               <span className="flex min-w-0 items-center gap-1.5">
-                <Icon className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate text-[11px] font-bold">{step.label}</span>
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="truncate text-sm font-bold">{step.label}</span>
               </span>
             </button>
           );

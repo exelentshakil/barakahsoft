@@ -433,12 +433,17 @@ export function AdminLeadWorkspace({
       <div className="space-y-8">
         {/* Top Overview Banner */}
         <div className="rounded-2xl border border-[#c7d0fb] bg-white p-7 shadow-sm flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#f0f3ff] px-2.5 py-1 text-xs font-bold text-[#533afd] shrink-0">
+          <div className="min-w-0 flex-1">
+            {/* These are all single-line labels. Without wrapping allowed on
+                the row and nowrap on each chip, the buttons opposite squeeze
+                them until "Sent to the client" stacks one word per line. */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#f0f3ff] px-2.5 py-1 text-xs font-bold text-[#533afd]">
                 <Zap className="h-3 w-3" /> Active Pipeline
               </span>
-              <Badge variant="outline" className="text-sm">{STATUS_LABEL[lead.status] ?? lead.status}</Badge>
+              <Badge variant="outline" className="whitespace-nowrap text-sm">
+                {STATUS_LABEL[lead.status] ?? lead.status}
+              </Badge>
               <DeliverySlaTimer createdAt={lead.created_at} deliveredAt={lead.delivered_at} />
             </div>
             <h1 className="mt-2 text-2xl font-bold tracking-tight text-[#0d1738] sm:text-3xl">

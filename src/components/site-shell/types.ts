@@ -49,6 +49,15 @@ export interface SitePayload {
   fontFamily: string | null;
   fontStylesheetUrl: string | null;
   innerPagesBuilt: boolean;
+  // Where this site's own routes live. Undefined here means /s/<slug>,
+  // which is correct while we host it. The exported site is the root of its
+  // own domain, so it sets "" and every chrome link resolves to /services/x
+  // rather than /s/<slug>/services/x, which would 404 on their host.
+  basePath?: string;
+  // The exported site ships no privacy or terms routes -- we are not
+  // putting words in a client's legal pages -- so the links are omitted
+  // rather than left pointing at nothing.
+  hideLegalLinks?: boolean;
   // v3 (Phase L) — whether enrich-expand.ts has finished for this lead.
   // Orthogonal to innerPagesBuilt (payment/indexability): about/faq/legal/
   // location pages need real expanded content to exist at all, regardless

@@ -116,8 +116,8 @@ export function DeliverySlaTimer({
   if (now === null) {
     return (
       <span
-        className={`inline-flex items-center gap-1.5 rounded-full border border-[#e5e7f2] bg-[#fbfbfd] font-semibold text-[#777588] ${
-          compact ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs"
+        className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#e5e7f2] bg-[#fbfbfd] font-semibold text-[#777588] ${
+          compact ? "px-2 py-0.5 text-[11px]" : "px-2.5 py-1 text-xs"
         }`}
       >
         <Timer className="h-3.5 w-3.5 shrink-0" />
@@ -137,11 +137,11 @@ export function DeliverySlaTimer({
           ? `Delivered ${new Date(deliveredAt).toLocaleString()} · 48h target from ${new Date(createdAt).toLocaleString()}`
           : `48h target from ${new Date(createdAt).toLocaleString()}`
       }
-      className={`inline-flex items-center gap-1.5 rounded-full border font-semibold ${style.wrap} ${
-        compact ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs"
+      className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border font-semibold ${style.wrap} ${
+        compact ? "px-2 py-0.5 text-[11px]" : "px-2.5 py-1 text-xs"
       }`}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} aria-hidden />
+      <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${style.dot}`} aria-hidden />
       <Icon state={state} />
       <span className="tabular-nums">{duration}</span>
       {!compact && <span className="font-medium opacity-80">{style.label}</span>}
