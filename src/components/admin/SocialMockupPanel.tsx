@@ -97,11 +97,41 @@ export function SocialMockupPanel({
 
   const copyPlan = (artifact?.copy_plan as any) ?? {};
   const aboutSection = copyPlan.sections?.find((s: any) => s.id === "about");
-  const aboutHeadline = aboutSection?.heading || `A PASSION FOR ${trade.toUpperCase()} EXCELLENCE`;
-  const aboutBody =
-    aboutSection?.body ||
-    `Dedicated to providing premium ${trade.toLowerCase()} and expert craftsmanship across ${city} with verified customer satisfaction.`;
-  const heroHeadline = copyPlan.headline || `PREMIER ${trade.toUpperCase()} IN ${city.toUpperCase()}`;
+
+  let heroHeadline = copyPlan.headline || "";
+  let aboutHeadline = aboutSection?.heading || "";
+  let aboutBody = aboutSection?.body || "";
+
+  // Extract real live copy directly from the generated homepage HTML if present
+  if (artifact?.bespoke_homepage_html) {
+    const html = artifact.bespoke_homepage_html;
+    const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+    if (h1Match) {
+      const cleanH1 = h1Match[1].replace(/<[^>]+>/g, "").trim();
+      if (cleanH1) heroHeadline = cleanH1;
+    }
+
+    const aboutMatch = html.match(/<section[^>]*id=["']about["'][^>]*>([\s\S]*?)<\/section>/i);
+    if (aboutMatch) {
+      const aboutContent = aboutMatch[1];
+      const h2Match = aboutContent.match(/<h[23][^>]*>([\s\S]*?)<\/h[23]>/i);
+      if (h2Match) {
+        const cleanH2 = h2Match[1].replace(/<[^>]+>/g, "").trim();
+        if (cleanH2) aboutHeadline = cleanH2;
+      }
+      const pMatch = aboutContent.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
+      if (pMatch) {
+        const cleanP = pMatch[1].replace(/<[^>]+>/g, "").trim();
+        if (cleanP) aboutBody = cleanP;
+      }
+    }
+  }
+
+  if (!heroHeadline) heroHeadline = `PREMIER ${trade.toUpperCase()} IN ${city.toUpperCase()}`;
+  if (!aboutHeadline) aboutHeadline = `A PASSION FOR ${trade.toUpperCase()} EXCELLENCE`;
+  if (!aboutBody) {
+    aboutBody = `Dedicated to providing premium ${trade.toLowerCase()} and expert craftsmanship across ${city} with verified customer satisfaction.`;
+  }
 
   const mockupData: MockupData = {
     businessName,

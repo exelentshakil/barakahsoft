@@ -739,8 +739,8 @@ function generateRealisticMockupSvg({
   heroBase64?: string | null;
 }) {
   const isStory = format === "story";
-  const contentYOffset = isStory ? 480 : 180;
-  const contentScale = isStory ? "scale(1.12)" : "scale(1.0)";
+  const contentYOffset = isStory ? 380 : 180;
+  const contentScale = isStory ? "scale(1.18)" : "scale(1.0)";
   const narrative = aboutBody || `Dedicated to expert ${trade.toLowerCase()} and quality craftsmanship across ${city}.`;
 
   // Intelligently wrap headlines so words are NEVER split in half
@@ -748,7 +748,7 @@ function generateRealisticMockupSvg({
   const aboutLines = wrapWords(aboutHeading.toUpperCase(), 22);
   const narrativeLines = wrapWords(narrative, 34);
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
     <defs>
       <filter id="macShadow" x="-15%" y="-15%" width="135%" height="135%">
         <feDropShadow dx="0" dy="32" stdDeviation="42" flood-color="rgba(0,0,0,0.65)" />
@@ -851,7 +851,7 @@ function generateRealisticMockupSvg({
         <rect x="34" y="36" width="144" height="144" rx="18" fill="#1e293b" stroke="rgba(255,255,255,0.45)" stroke-width="2"/>
         ${
           photoBase64
-            ? `<g clip-path="url(#photoClip)"><image href="${photoBase64}" x="34" y="36" width="144" height="144" preserveAspectRatio="xMidYMid slice" /></g>`
+            ? `<g clip-path="url(#photoClip)"><image href="${photoBase64}" xlink:href="${photoBase64}" x="34" y="36" width="144" height="144" preserveAspectRatio="xMidYMid slice" /></g>`
             : `<text x="106" y="112" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="34">${escapeXml(
                 founder.slice(0, 2).toUpperCase()
               )}</text>`
@@ -863,7 +863,7 @@ function generateRealisticMockupSvg({
             ? `<g filter="url(#sheetShadow)">
                 <circle cx="56" cy="58" r="15" fill="#ffffff" stroke="rgba(255,255,255,0.8)" stroke-width="1.5" />
                 <g clip-path="url(#logoClip)">
-                  <image href="${logoBase64}" x="42" y="44" width="28" height="28" preserveAspectRatio="xMidYMid meet" />
+                  <image href="${logoBase64}" xlink:href="${logoBase64}" x="42" y="44" width="28" height="28" preserveAspectRatio="xMidYMid meet" />
                 </g>
               </g>`
             : ""

@@ -13,7 +13,13 @@ export async function GET(req: Request) {
   }
 
   try {
-    const res = await fetch(imageUrl, {
+    let fullUrl = imageUrl.trim();
+    if (fullUrl.startsWith("/")) {
+      const origin = new URL(req.url).origin;
+      fullUrl = `${origin}${fullUrl}`;
+    }
+
+    const res = await fetch(fullUrl, {
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; BarakahSoft/1.0)",
       },
