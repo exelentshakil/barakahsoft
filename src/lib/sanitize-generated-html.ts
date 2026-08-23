@@ -19,6 +19,9 @@ const ALLOWED_TAGS = [
   "h1", "h2", "h3", "h4", "h5", "h6", "p", "span", "a", "img", "svg", "path",
   "ul", "ol", "li", "button", "strong", "em", "br", "hr", "figure", "figcaption",
   "blockquote", "cite", "time", "small", "dl", "dt", "dd",
+  // The hero lead-capture form. Safe only in combination with
+  // FORM_TARGET_ATTRS below, which guarantees it cannot name a destination.
+  "form", "label", "input", "select", "option", "textarea",
 ];
 
 // Interaction hooks. The generator asks for behaviour with these and a
@@ -35,7 +38,29 @@ const INTERACTION_ATTRS = [
   "data-bar",
   "data-bar-max",
   "data-bar-fill",
+  "data-lead-form",
+  "data-lead-form-message",
+  "data-open-quote-modal",
 ];
+
+// The attributes that could point a generated form at somewhere other than
+// this application. They are stripped unconditionally, from every tag, so a
+// model-authored form has no way to express a destination at all: with no
+// action/formaction it can only ever reach BespokeRuntime, which cancels the
+// native submit and POSTs to the lead's own quote-request endpoint. This is
+// what makes allowing <form> at all safe — the tag is permitted, naming a
+// target is not. None of these is ever valid on a link, so they go from
+// every tag.
+const FORM_TARGET_ATTRS = ["action", "formaction", "method", "formmethod", "enctype", "form"];
+
+// `target` is legitimate on an anchor (target="_blank") and is only a
+// submission concern on the form elements, so it is stripped by tag.
+const TARGET_STRIPPED_TAGS = new Set(["form", "input", "button", "select", "textarea"]);
+
+// Input types that belong on a lead-capture form. Anything else is coerced
+// to "text" rather than dropped, so an odd type never silently removes a
+// field the layout was built around.
+const SAFE_INPUT_TYPES = new Set(["text", "tel", "email", "number", "checkbox", "radio", "submit", "search", "url", "date", "time"]);
 
 const ALLOWED_ATTRIBUTES = {
   "*": ["class", "id", "style", ...INTERACTION_ATTRS],
@@ -45,6 +70,13 @@ const ALLOWED_ATTRIBUTES = {
   svg: ["viewBox", "fill", "stroke", "xmlns", "width", "height", "stroke-width", "stroke-linecap", "stroke-linejoin"],
   path: ["d", "fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin"],
   time: ["datetime"],
+  // No action/method anywhere here by construction — see FORM_TARGET_ATTRS.
+  form: ["aria-label", "novalidate"],
+  label: ["for", "aria-label"],
+  input: ["type", "name", "placeholder", "required", "value", "autocomplete", "inputmode", "aria-label", "maxlength", "min", "max", "step", "pattern"],
+  select: ["name", "required", "aria-label", "multiple"],
+  option: ["value", "selected"],
+  textarea: ["name", "placeholder", "required", "rows", "cols", "aria-label", "maxlength"],
 };
 
 const ALLOWED_SCHEMES = ["http", "https", "tel", "mailto", "#"];
@@ -143,10 +175,31 @@ export function sanitizeBespokeHtml(rawHtml: string): string {
     // a section header — because the site's real chrome is rendered around
     // this markup, not inside it, and the class scoping keeps generated rules
     // off it.
-    nonTextTags: ["script", "style", "textarea", "option", "form", "input", "iframe"],
+    //
+    // form/input/select/textarea/option are legal here too, unlike the legacy
+    // path above. The hero lead-capture form is a real conversion mechanism
+    // and stripping it silently deleted the highest-value block on the page.
+    // Safety comes from FORM_TARGET_ATTRS instead: the tags are allowed, but
+    // naming a destination is not, so a generated form can only ever be
+    // submitted by the reviewed runtime to this application's own endpoint.
+    nonTextTags: ["script", "style", "iframe"],
     transformTags: {
       "*": (tagName, attribs) => {
         const next: Record<string, string> = { ...attribs };
+
+        // A generated form may never name where it posts. Stripped from every
+        // tag, not just <form>, because formaction on a submit button is the
+        // same hole by another name.
+        for (const attr of FORM_TARGET_ATTRS) delete next[attr];
+        if (TARGET_STRIPPED_TAGS.has(tagName)) delete next.target;
+
+        // Keep generated inputs to types that make sense on a lead form. A
+        // password or file input on a client's public marketing page is
+        // never intended and is not worth trusting to prompt discipline.
+        if (tagName === "input") {
+          const type = (next.type ?? "text").toLowerCase();
+          if (!SAFE_INPUT_TYPES.has(type)) next.type = "text";
+        }
 
         // Class names are no longer filtered. Pages ship their own
         // stylesheet now, so the names are the model's to choose — the old

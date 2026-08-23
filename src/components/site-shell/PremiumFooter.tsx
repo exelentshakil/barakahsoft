@@ -33,7 +33,12 @@ export function PremiumFooter({ payload }: { payload: SitePayload }) {
         <div className="mx-auto max-w-6xl px-6 py-14">
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
             <div className="lg:col-span-2">
-              <p className="font-display text-lg font-bold">{payload.businessName}</p>
+              {payload.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={payload.logoUrl} alt={payload.businessName} className="h-9 w-auto" />
+              ) : (
+                <p className="font-display text-lg font-bold">{payload.businessName}</p>
+              )}
               <p className="mt-3 max-w-xs text-sm text-muted-foreground">{payload.differentiator}</p>
               {(payload.socialUrls.length > 0) && (
                 <div className="mt-4 flex gap-3">

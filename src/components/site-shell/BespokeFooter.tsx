@@ -64,9 +64,14 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
         {!isCompact && (
           <div className={`bs-footer-cols ${columnCount >= 4 ? "bs-footer-cols-4" : "bs-footer-cols-3"}`}>
             <div>
-              <p className="bs-logo" style={{ marginBottom: "0.75rem" }}>
-                {payload.businessName}
-              </p>
+              <a href={href(payload, "")} className="bs-logo" style={{ marginBottom: "0.75rem" }}>
+                {payload.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={payload.logoUrl} alt={payload.businessName} />
+                ) : (
+                  <span>{payload.businessName}</span>
+                )}
+              </a>
               <div className="bs-footer-list">
                 {payload.nap.phone && (
                   <a href={`tel:${phoneDigits}`}>

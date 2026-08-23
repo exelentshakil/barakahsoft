@@ -17,8 +17,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { id: leadId } = await params;
   if (!(await isAdminSession())) return NextResponse.json({ error: "Not authorised" }, { status: 401 });
 
-  const body = (await req.json().catch(() => ({}))) as BriefOverrides & { phase?: 1 | 2 };
+  const body = (await req.json().catch(() => ({}))) as BriefOverrides & { phase?: 1 | 2; provider?: string };
   const phase = body.phase === 2 ? 2 : 1;
+  const provider = body.provider === "gemini" ? "gemini" : "openai";
   const overrides = body;
   const admin = createAdminClient();
 
@@ -33,6 +34,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       { error: "This lead has not been scraped yet. Run a scrape before generating." },
       { status: 409 }
     );
+  }
+
+  if (provider === "gemini" && !process.env.GEMINI_API_KEY) {
+    return NextResponse.json({ error: "Gemini is not configured on this deployment — GEMINI_API_KEY is not set." }, { status: 422 });
   }
 
   const brief = buildSiteBrief(lead, scrapeResults, overrides);
@@ -88,7 +93,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   await inngest.send({
     name: "bespoke/generate.requested",
-    data: { lead_id: leadId, overrides, phase },
+    data: { lead_id: leadId, overrides, phase, provider },
   });
 
   return NextResponse.json({
@@ -97,6 +102,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     slug: lead.slug,
     started: true,
     phase,
+    provider,
     warnings,
     plan: {
       services: brief.services,

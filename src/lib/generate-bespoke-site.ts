@@ -229,6 +229,8 @@ ${VOCABULARY_REFERENCE}
 
 Write real copy — never narrate the business's data, never count things in a heading, never use filler like "quality workmanship" or "committed to excellence". Open with a section carrying the page title as an <h1>, then the real content, then a closing call to action.
 
+THE CALL TO ACTION IS A REAL MECHANISM. Put data-open-quote-modal on it (a <button> or <a>): that opens the site's real lead-capture form, which is already built, validated and wired to email the business owner. Never write your own <form> — there is nowhere for a model-authored form to submit to, so it would only look like it works. Where a phone number exists, pair it with a tel: link.
+
 No <header>, no nav, no <footer>. Reply with the HTML body fragment only — no markdown fences.`,
     {
       maxTokens: 28000,

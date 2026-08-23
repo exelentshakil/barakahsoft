@@ -1,4 +1,4 @@
-import { callOpenAI, bestModelChain } from "@/lib/openai-client";
+import { callBestModel, type GenerationProvider } from "@/lib/generate/model";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
 import type { DesignDna } from "@/lib/design-dna";
 import type { MediaPlan } from "@/lib/media/plan-media";
@@ -70,7 +70,8 @@ export async function generateStructure(
   dna: DesignDna,
   media: MediaPlan,
   knownPaths: string[],
-  previousFailures?: string
+  previousFailures?: string,
+  provider: GenerationProvider = "openai"
 ): Promise<StructureResult | null> {
   const prompt = `${STANCE}
 
@@ -87,6 +88,13 @@ ${factsBlock(brief)}
 Primary action: ${brief.intent.primaryLabel}
 ${brief.intent.guidance}
 ${brief.intent.secondaryLabel ? `Secondary action: ${brief.intent.secondaryLabel}` : ""}
+${
+  brief.intent.primary !== "call-now" && brief.intent.primary !== "shop"
+    ? `\nThis business converts on a quote, booking, enquiry or consultation. Build a real data-lead-form INSIDE THE HERO SECTION itself, above the fold — see INTERACTIONS below for its exact shape. A visible form outperforms a button that opens one; do not settle for the button here. Every OTHER repeat of "${brief.intent.primaryLabel}" further down the page (a sticky element, a closing section, a service card) uses data-open-quote-modal instead, so the full form is not rebuilt at every decision point.`
+    : brief.intent.secondary && brief.intent.secondary !== "call-now" && brief.intent.secondary !== "shop"
+      ? `\nThe secondary "${brief.intent.secondaryLabel}" action opens the real lead form: put data-open-quote-modal on that button. Do not write a <form> for it.`
+      : ""
+}
 
 ${
   brief.painInstructions.length > 0
@@ -108,6 +116,7 @@ ${
     ? media.map((m) => `[${m.slot}] ${m.url}\n    shows: ${m.caption}`).join("\n")
     : "None. Build with type, colour and layout alone, and make that a deliberate editorial choice rather than a page with holes in it. Output no <img> tags."
 }
+${media.length > 0 ? "This list is deliberately incomplete for some services — do not assume one exists per service. If a service, feature or card has no matching slot above, do not force an image+text split layout onto it; give it a text-forward or icon-led treatment matching the visual weight of its siblings, not an empty gap where an image should be." : ""}
 
 ═══ LINKS THAT EXIST ═══
 ${knownPaths.map((p) => `  ${p}`).join("\n")}
@@ -144,13 +153,16 @@ DESIGN NOTES: three or four sentences describing the visual system you intend �
 ---PAGE---
 <the HTML body fragment, no markdown fences>`;
 
-  const raw = await callOpenAI(prompt, {
-    maxTokens: 60000,
-    temperature: 0.85,
-    modelChain: bestModelChain(),
-    system:
-      "You are a senior web designer and conversion copywriter writing production HTML. You never invent facts about a business, and you name classes consistently because someone else is writing the CSS.",
-  });
+  const raw = await callBestModel(
+    prompt,
+    {
+      maxTokens: 60000,
+      temperature: 0.85,
+      system:
+        "You are a senior web designer and conversion copywriter writing production HTML. You never invent facts about a business, and you name classes consistently because someone else is writing the CSS.",
+    },
+    provider
+  );
 
   if (!raw) return null;
 

@@ -31,7 +31,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ leadSlu
   const { leadSlug } = await params;
   const body = await req.json().catch(() => null);
 
-  if (typeof body?.name !== "string" || !body.name.trim() || typeof body?.contact !== "string" || !body.contact.trim()) {
+  // The hero form (name/phone/email/service, no combined "contact" field)
+  // and the modal (name/contact/message) both land here. `contact` is kept
+  // for the modal; the hero form's phone/email collapse into it below.
+  const phone = typeof body?.phone === "string" ? body.phone.trim() : "";
+  const email = typeof body?.email === "string" ? body.email.trim() : "";
+  const service = typeof body?.service === "string" ? body.service.trim() : "";
+  const contact = (typeof body?.contact === "string" ? body.contact.trim() : "") || phone || email;
+
+  if (typeof body?.name !== "string" || !body.name.trim() || !contact) {
     return NextResponse.json({ error: "Name and email or phone are required" }, { status: 400 });
   }
 
@@ -53,14 +61,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ leadSlu
   }
 
   const name = body.name.trim().slice(0, 200);
-  const contact = body.contact.trim().slice(0, 200);
+  const contactValue = contact.slice(0, 200);
   const message = typeof body.message === "string" ? body.message.trim().slice(0, 2000) : "";
   const safeName = escapeHtml(name);
-  const safeContact = escapeHtml(contact);
+  const safeContact = escapeHtml(contactValue);
   const safeMessage = escapeHtml(message);
-  // Reply-To only when the submitted contact actually looks like an email --
-  // a phone number there isn't a valid Reply-To header.
-  const replyTo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact) ? contact : undefined;
+  const safePhone = phone ? escapeHtml(phone.slice(0, 40)) : "";
+  const safeEmail = email ? escapeHtml(email.slice(0, 200)) : "";
+  const safeService = service ? escapeHtml(service.slice(0, 200)) : "";
+  // Reply-To prefers an explicit email field, then falls back to contact
+  // only when it actually looks like an email -- a phone number there isn't
+  // a valid Reply-To header.
+  const replyTo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || contactValue) ? email || contactValue : undefined;
 
   try {
     await resend.emails.send({
@@ -71,7 +83,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ leadSlu
       html: `
         <p>New quote request from your website (${result.payload.businessName}).</p>
         <p><strong>Name:</strong> ${safeName}</p>
-        <p><strong>Contact:</strong> ${safeContact}</p>
+        ${safePhone ? `<p><strong>Phone:</strong> ${safePhone}</p>` : ""}
+        ${safeEmail ? `<p><strong>Email:</strong> ${safeEmail}</p>` : ""}
+        ${!safePhone && !safeEmail ? `<p><strong>Contact:</strong> ${safeContact}</p>` : ""}
+        ${safeService ? `<p><strong>What they need:</strong> ${safeService}</p>` : ""}
         ${message ? `<p><strong>Message:</strong> ${safeMessage}</p>` : ""}
       `,
     });
@@ -80,9 +95,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ leadSlu
       channel: "form",
       status: "new",
       name,
-      contact,
+      contact: contactValue,
       source: "website_form",
-      metadata: { message },
+      metadata: { message, phone: phone || undefined, email: email || undefined, service: service || undefined },
     });
     return NextResponse.json({ ok: true });
   } catch (err) {

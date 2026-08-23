@@ -97,6 +97,15 @@ call to action, and a button a thumb misses is a lost enquiry.
 - Motion comes from data attributes only: `data-reveal`, `data-reveal-delay`,
   `data-count-to`, `data-accordion`, `data-bar`. The runtime implementing them
   is reviewed application code — see `BespokeRuntime.tsx`.
+- **Lead capture is a data attribute too, never a model-authored `<form>`.**
+  `data-lead-form` marks a real form in the hero (fields named `name`, `phone`,
+  `email`, `service`, plus a `data-lead-form-message` status element);
+  `data-open-quote-modal` on any other CTA opens the same form as a modal. Both
+  are submitted by `BespokeRuntime.tsx` to the lead's own quote-request
+  endpoint, which emails the business owner. The sanitizer permits these form
+  tags but strips `action`/`formaction`/`method`/`target`, so a generated form
+  physically cannot name a destination. *Blocker if a quote/booking/enquiry
+  trade ships a hero with no `data-lead-form`.*
 - Every transition wrapped in `@media (prefers-reduced-motion: no-preference)`.
 - `:hover` on everything clickable, `:focus-visible` on everything interactive.
   *Both blockers.*

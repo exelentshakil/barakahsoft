@@ -42,7 +42,7 @@ export default async function ContactPage({ params }: { params: Promise<{ leadSl
           replacing this section would cost the page its only working
           conversion path. */}
       {payload.bespokePages["contact"] && (
-        <BespokePageBody html={payload.bespokePages["contact"]} css={payload.bespokeCss} />
+        <BespokePageBody html={payload.bespokePages["contact"]} css={payload.bespokeCss} leadSlug={payload.leadSlug} />
       )}
 
       <section className="py-16">

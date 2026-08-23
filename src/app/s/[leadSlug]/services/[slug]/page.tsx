@@ -53,7 +53,7 @@ export default async function ServicePage({ params }: { params: Promise<{ leadSl
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service_schema) }} />
       <BespokeNav payload={payload} spec={payload.chromeSpec} />
       {payload.bespokePages[`services/${slug}`] ? (
-        <BespokePageBody html={payload.bespokePages[`services/${slug}`]} css={payload.bespokeCss} />
+        <BespokePageBody html={payload.bespokePages[`services/${slug}`]} css={payload.bespokeCss} leadSlug={payload.leadSlug} />
       ) : (
         <ServiceDetailTemplate payload={payload} service={service} />
       )}

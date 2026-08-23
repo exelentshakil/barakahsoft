@@ -231,6 +231,14 @@ function verifyStylesheet(css: string): QualityFinding[] {
     add("blocker", "colour", `${literals} literal colour values in the stylesheet. Colour must come from the design tokens.`);
   }
 
+  // Negative margins between siblings in a grid/flex row are the most common
+  // way two cards end up overlapping or colliding edge-to-edge. Spacing
+  // between siblings belongs to `gap` on the parent, never a pull on the
+  // child.
+  if (/margin(?:-(?:top|bottom|left|right|inline(?:-start|-end)?|block(?:-start|-end)?))?\s*:\s*-\d/i.test(css)) {
+    add("blocker", "layout", "A negative margin is declared somewhere. Spacing between sibling cards must come from `gap` on the parent, never a negative margin pulling a child — that is how cards end up overlapping.");
+  }
+
   return findings;
 }
 
@@ -309,6 +317,28 @@ export function verifyHomepage(
   }
   if (brief.intent.primary === "call-now" && (html.match(/href="tel:/gi)?.length ?? 0) < 2) {
     add("blocker", "cta", "This trade converts on the phone; the number must appear at more than one decision point.");
+  }
+
+  // The real lead-capture form/modal only activates from an element
+  // carrying one of these attributes. A trade whose action is a form,
+  // booking or enquiry but never uses either has a CTA that looks like it
+  // works and does nothing when clicked.
+  const FORM_INTENTS = new Set(["quote-form", "book-appointment", "consultation", "enquiry"]);
+  // The negative lookahead matters: data-lead-form-message would otherwise
+  // satisfy a \b boundary, so a stray status element with no actual form
+  // around it would pass a blocking check.
+  const LEAD_FORM_ATTR = /data-lead-form(?![-\w])/i;
+  if (FORM_INTENTS.has(brief.intent.primary)) {
+    if (!LEAD_FORM_ATTR.test(hero)) {
+      add("blocker", "cta", "This trade converts on a quote, booking or enquiry, and the hero has no real lead-capture form (data-lead-form) in it — a button that opens one elsewhere is not enough above the fold.");
+    }
+  } else if (
+    brief.intent.secondary !== null &&
+    FORM_INTENTS.has(brief.intent.secondary) &&
+    !/data-open-quote-modal/i.test(html) &&
+    !LEAD_FORM_ATTR.test(html)
+  ) {
+    add("blocker", "cta", "This trade's secondary action is a quote/booking/enquiry, and no element on the page carries data-open-quote-modal or data-lead-form — so that CTA leads nowhere.");
   }
 
   // ---- Truth -----------------------------------------------------------

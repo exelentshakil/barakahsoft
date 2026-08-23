@@ -8,6 +8,7 @@ import {
 } from "@/lib/generate-bespoke-site";
 import { generateStructure } from "@/lib/generate/structure";
 import { generateStylesheet } from "@/lib/generate/stylesheet";
+import type { GenerationProvider } from "@/lib/generate/model";
 import { DEFAULT_DESIGN_DNA, DesignDnaSchema, type DesignDna } from "@/lib/design-dna";
 import { compileDesignTokens } from "@/lib/design-tokens";
 import { ingestRealPhotos, buildSlots, planMedia, type MediaPlan } from "@/lib/media/plan-media";
@@ -65,10 +66,11 @@ export const bespokeGenerate = inngest.createFunction(
   { id: "bespoke-generate", retries: 1 },
   { event: "bespoke/generate.requested" },
   async ({ event, step }) => {
-    const { lead_id, overrides, phase } = event.data as {
+    const { lead_id, overrides, phase, provider } = event.data as {
       lead_id: string;
       overrides: BriefOverrides;
       phase: 1 | 2;
+      provider?: GenerationProvider;
     };
     const admin = createAdminClient();
 
@@ -232,7 +234,7 @@ export const bespokeGenerate = inngest.createFunction(
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS && !accepted; attempt++) {
       const structure = await step.run(`structure-${attempt}`, async () => {
-        const result = await generateStructure(brief, dna, media, knownPaths, failures);
+        const result = await generateStructure(brief, dna, media, knownPaths, failures, provider);
         if (!result) {
           throw new Error(
             "Structure generation returned nothing. The [openai] log line reports whether the model returned empty content or output that was empty once sanitized."
@@ -242,7 +244,7 @@ export const bespokeGenerate = inngest.createFunction(
       });
 
       const stylesheet = await step.run(`stylesheet-${attempt}`, async () => {
-        const result = await generateStylesheet(structure.html, structure.designNotes, dna, gateTokens, failures);
+        const result = await generateStylesheet(structure.html, structure.designNotes, dna, gateTokens, failures, provider);
         if (!result) {
           throw new Error(
             "Stylesheet generation returned nothing usable. An unstyled page is not shippable, so this fails rather than falling back."

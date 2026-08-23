@@ -1,4 +1,4 @@
-import { callOpenAI, bestModelChain } from "@/lib/openai-client";
+import { callBestModel, type GenerationProvider } from "@/lib/generate/model";
 import { sanitizeGeneratedCss } from "@/lib/sanitize-css";
 import type { DesignDna } from "@/lib/design-dna";
 import type { DesignTokens } from "@/lib/design-tokens";
@@ -26,7 +26,8 @@ export async function generateStylesheet(
   designNotes: string,
   dna: DesignDna,
   tokens: DesignTokens,
-  previousFailures?: string
+  previousFailures?: string,
+  provider: GenerationProvider = "openai"
 ): Promise<StylesheetResult | null> {
   const tokenList = Object.entries(tokens.vars)
     .map(([name, value]) => `  ${name}: ${value};`)
@@ -82,6 +83,22 @@ Make the primary call to action unmissable. It should be the most visually
 prominent thing on the first screen after the headline. Give it presence:
 generous padding, real weight, a considered hover.
 
+THE LEAD FORM, if the markup contains [data-lead-form]
+This is the conversion mechanism and it must look like the most valuable thing
+on the page — not a bare stack of browser-default inputs. Style the fields
+themselves: real height (44px minimum), token borders, a clear :focus-visible
+state, and a submit button matching the primary call to action above.
+The application sets a data-state attribute on the form as it submits, so:
+- [data-lead-form][data-state="submitting"] — show it is working (a dimmed or
+  busy submit button); the button is also disabled, so style :disabled.
+- [data-lead-form][data-state="success"] — HIDE the fields and the button, and
+  show [data-lead-form-message] as a clear confirmation. Leaving the fields
+  visible after a successful send reads as though nothing happened.
+- [data-lead-form][data-state="error"] — keep the fields visible so the visitor
+  can retry, and show [data-lead-form-message] in a warning tone.
+- [data-lead-form-message] is empty until there is something to say, so give it
+  no height or spacing when it is empty (:empty).
+
 WHAT MAKES IT LOOK EXPENSIVE
 - Consistency. The same radius, the same shadow, the same spacing step throughout.
 - Restraint. Two type sizes per section, not five. One accent, not four.
@@ -94,13 +111,16 @@ ${
 }
 Reply with CSS ONLY. No markdown fences, no commentary, no <style> tag. Do not write @import or url() — both are stripped. Start at the first selector.`;
 
-  const raw = await callOpenAI(prompt, {
-    maxTokens: 40000,
-    temperature: 0.6,
-    modelChain: bestModelChain(),
-    system:
-      "You are a senior front-end designer who writes production CSS. You use only custom properties for colour, and you write a rule for every class in the markup you are given.",
-  });
+  const raw = await callBestModel(
+    prompt,
+    {
+      maxTokens: 40000,
+      temperature: 0.6,
+      system:
+        "You are a senior front-end designer who writes production CSS. You use only custom properties for colour, and you write a rule for every class in the markup you are given.",
+    },
+    provider
+  );
 
   if (!raw) return null;
 

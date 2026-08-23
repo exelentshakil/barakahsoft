@@ -102,6 +102,10 @@ export function BespokeGenerationStudio({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataSignature]);
   const [accentColor, setAccentColor] = useState(extracted.branding?.colors?.accent || (facts.colors as any)?.accent || "#FFD12D");
+  // Which model writes the homepage markup and stylesheet. OpenAI is the
+  // proven default; Gemini is opt-in per generation so the two can be
+  // compared on real leads before either becomes the default.
+  const [provider, setProvider] = useState<"openai" | "gemini">("openai");
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
   const [genWarnings, setGenWarnings] = useState<string[]>([]);
@@ -140,6 +144,7 @@ export function BespokeGenerationStudio({
           // than one with no phone number at all.
           phone: lead.phone || nap.phone || undefined,
           email: lead.email || nap.email || undefined,
+          provider,
         }),
       });
 
@@ -402,6 +407,44 @@ export function BespokeGenerationStudio({
               </div>
             </div>
           )}
+
+          {/* Which model writes the markup and the stylesheet. Both passes use
+              the one chosen here, so a build is entirely one model's work and
+              the two can be judged against each other on the same lead. */}
+          <div className="rounded-lg border border-[#c7d0fb] bg-[#fbfaff] p-3.5">
+            <div className="flex items-center gap-2">
+              <Zap className="h-3.5 w-3.5 text-[#533afd]" />
+              <Label className="text-xs font-bold text-[#0d1738]">Design model</Label>
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Writes both the page markup and its stylesheet. Run the same lead through each to see which sells better —
+              regenerating replaces the current homepage.
+            </p>
+            <div className="mt-2.5 grid gap-2 sm:grid-cols-2">
+              {([
+                { id: "openai", name: "OpenAI", note: "The proven default. Every prompt here was tuned against it." },
+                { id: "gemini", name: "Gemini", note: "Untuned on this prompt — compare before trusting a client build to it." },
+              ] as const).map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  disabled={generating}
+                  onClick={() => setProvider(option.id)}
+                  className={`rounded-lg border p-2.5 text-left transition disabled:opacity-60 ${
+                    provider === option.id
+                      ? "border-[#533afd] bg-white shadow-sm ring-1 ring-[#533afd]"
+                      : "border-border bg-white hover:border-[#c7d0fb]"
+                  }`}
+                >
+                  <span className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#0d1738]">{option.name}</span>
+                    {provider === option.id && <CheckCircle2 className="h-3.5 w-3.5 text-[#533afd]" />}
+                  </span>
+                  <span className="mt-0.5 block text-[10px] leading-snug text-muted-foreground">{option.note}</span>
+                </button>
+              ))}
+            </div>
+          </div>
 
           {genError && (
             <p className="rounded-md bg-red-50 p-2.5 text-[11px] font-medium text-red-700">{genError}</p>

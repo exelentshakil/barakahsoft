@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useQuoteModal } from "@/components/site-shell/QuoteModalProvider";
 
 // The interaction layer for generated pages.
 //
@@ -19,13 +20,84 @@ import { useEffect } from "react";
 // every behaviour respects prefers-reduced-motion. Content is never created
 // by script, so nothing here affects what a crawler sees.
 
-export function BespokeRuntime() {
+export function BespokeRuntime({ leadSlug }: { leadSlug: string }) {
+  const openQuoteModal = useQuoteModal();
+
   useEffect(() => {
     const root = document.querySelector<HTMLElement>(".bespoke-page");
     if (!root) return;
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const cleanups: (() => void)[] = [];
+
+    // ---- Lead-capture trigger --------------------------------------------
+    // The generator marks a repeat CTA with this attribute instead of
+    // writing a real form: the actual form, validation and email delivery
+    // already exist (QuoteRequestModal), and generated markup cannot call a
+    // React hook to open it. This is the one bridge between the two.
+    const onQuoteClick = (event: Event) => {
+      const trigger = (event.target as HTMLElement).closest<HTMLElement>("[data-open-quote-modal]");
+      if (!trigger) return;
+      event.preventDefault();
+      openQuoteModal();
+    };
+    root.addEventListener("click", onQuoteClick);
+    cleanups.push(() => root.removeEventListener("click", onQuoteClick));
+
+    // ---- Real inline lead form -------------------------------------------
+    // The generator writes the fields (name/phone/email/service) and a
+    // status element; this submits them to the same real, email-delivering
+    // endpoint the quote modal uses, and reflects submitting/success/error
+    // back onto the form and its status element via data-state, which the
+    // stylesheet pass was told to style. A native submit is never allowed
+    // to fire — that would be a bare GET/reload to nowhere.
+    const forms = root.querySelectorAll<HTMLFormElement>("[data-lead-form]");
+    const formCleanups: (() => void)[] = [];
+    forms.forEach((form) => {
+      const message = form.querySelector<HTMLElement>("[data-lead-form-message]");
+      const submitButton = form.querySelector<HTMLButtonElement>('button[type="submit"], button:not([type])');
+
+      const onSubmit = async (event: Event) => {
+        event.preventDefault();
+        const data = new FormData(form);
+        const name = String(data.get("name") ?? "").trim();
+        const phone = String(data.get("phone") ?? "").trim();
+        const email = String(data.get("email") ?? "").trim();
+        const service = String(data.get("service") ?? "").trim();
+
+        if (!name || (!phone && !email)) {
+          form.setAttribute("data-state", "error");
+          if (message) message.textContent = "Please add your name and a phone number or email.";
+          return;
+        }
+
+        form.setAttribute("data-state", "submitting");
+        if (submitButton) submitButton.disabled = true;
+        if (message) message.textContent = "Sending...";
+
+        try {
+          const res = await fetch(`/api/s/${leadSlug}/quote-request`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, phone, email, service }),
+          });
+          const result = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(result.error || "Something went wrong — please try again or call directly.");
+          form.setAttribute("data-state", "success");
+          if (message) message.textContent = "Thanks — we'll be in touch shortly.";
+        } catch (err) {
+          form.setAttribute("data-state", "error");
+          if (message) message.textContent = err instanceof Error ? err.message : "Something went wrong — please try again.";
+        } finally {
+          if (submitButton) submitButton.disabled = false;
+        }
+      };
+
+      form.setAttribute("data-state", "idle");
+      form.addEventListener("submit", onSubmit);
+      formCleanups.push(() => form.removeEventListener("submit", onSubmit));
+    });
+    cleanups.push(() => formCleanups.forEach((fn) => fn()));
 
     // ---- Scroll reveal --------------------------------------------------
     // Elements start visible in CSS and are only hidden once this runs, so a
@@ -148,7 +220,7 @@ export function BespokeRuntime() {
     cleanups.push(() => window.removeEventListener("scroll", onScroll));
 
     return () => cleanups.forEach((fn) => fn());
-  }, []);
+  }, [leadSlug, openQuoteModal]);
 
   return null;
 }

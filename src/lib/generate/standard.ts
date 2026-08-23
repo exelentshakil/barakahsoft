@@ -33,6 +33,14 @@ brand colour as body text.
 - --bs-primary-on-surface is the accent CORRECTED for readability as text. Any accent-coloured
   TEXT must use it; fills may use --bs-primary directly since they pair with --bs-on-primary.
 
+TOKENS ARE PAIRS, NOT A PALETTE TO MIX FREELY. --bs-ink is correct against --bs-surface and
+WRONG against --bs-invert-surface or --bs-primary — inside a section whose background switches
+to --bs-invert-surface or --bs-primary, every text, icon and border in it switches with it, to
+--bs-invert-ink / --bs-on-primary. The most common way a generated page ships an invisible
+button or unreadable text is a fill and its own text token pulled from two different bands.
+Before finishing any section with a non-default background, re-check every child's colour
+against THAT background specifically, not against the page's base surface.
+
 Never write a hex code, an rgb(), a font family or a shadow that is not built from these.`;
 
 export const TYPE_STANDARD = `TYPE — two families, maximum. One display face for headings, one highly legible sans for
@@ -54,13 +62,17 @@ export const SPACE_STANDARD = `SPACE IS THE PRODUCT. This is what separates an e
   At least 40% of any screen stays empty. Whitespace is what steers the eye to the offer;
   a crowded page hides its own call to action.
 
+CARD GRIDS. Spacing between siblings in a grid or flex row comes from \`gap\` on the parent,
+always. A negative margin on a card to "pull" it against its neighbour is what makes two cards
+overlap or collide edge-to-edge — it has shipped broken before and is never the right tool here.
+
 TOUCH. Every interactive element is at least 44px tall on mobile. A button a thumb misses is
 a conversion lost, and small tap targets are the clearest tell that a page was designed on a
 desktop and never tried on a phone.`;
 
 export const PSYCHOLOGY_STANDARD = `F-SHAPED READING. Western readers sweep left along the top, then down the left margin. Put the promise, the proof and the primary action on those lines. A call to action floated right in the middle of a section is a call to action nobody sees.
 
-FORMS. If the page carries a form, it is short or it is stepped. A wall of fields kills a conversion — ask for the minimum that lets someone follow up, and say what happens next.
+LEAD CAPTURE. Never write your own <form>; it has nowhere to submit to. Use data-lead-form for the real hero form and data-open-quote-modal for every other repeat of the CTA — see INTERACTIONS below. That form already asks for the minimum a real follow-up needs.
 
 TRUST ANCHORS. Real reviews, real credentials and real guarantees belong INSIDE the conversion moment — next to the button, not in a section of their own three screens away. Hesitation happens at the point of action, so the reassurance goes there.`;
 
@@ -74,6 +86,30 @@ NO <style> and NO <script> — both are stripped. NO inline style attributes for
 
 export const INTERACTION_CONTRACT = `INTERACTIONS — the page gets motion and behaviour by requesting it with data attributes. A reviewed script in the application implements these. Do not write <script> tags; they are stripped.
 
+  data-lead-form                a real, working lead-capture form. Use it in the hero itself for
+                                any business that converts on a quote, booking, enquiry or
+                                consultation — a visible form above the fold outperforms a
+                                button that opens one, and this one is already validated and
+                                wired to email the business owner for real. Field names are
+                                fixed, everything else about how it looks is yours:
+                                  name="name"      text, required
+                                  name="phone"     tel, required unless email is also present
+                                  name="email"     email, include it whenever it fits
+                                  name="service"   a <select> built from this business's real
+                                                   services (optional)
+                                One submit <button>. Also include one empty element inside the
+                                form marked data-lead-form-message for the submit/success/error
+                                text the application will write into it. Do not add onsubmit,
+                                action or method attributes — the application submits it for
+                                real. Style [data-lead-form][data-state="success"] to hide the
+                                fields and reveal the message; [data-state="error"] to reveal
+                                the message without hiding the fields, so the visitor can retry.
+  data-open-quote-modal         put this on any OTHER call to action that repeats the same offer
+                                further down the page (a sticky bar, a closing section, a
+                                service card) — it opens the same real form as a modal, so the
+                                full form is not rebuilt at every decision point. Never write
+                                your own <form> for these; there is nowhere for a model-authored
+                                form to submit to, so it would only look like it works.
   data-reveal                  fade and rise this element when it scrolls into view
   data-reveal-delay="120"      stagger, in milliseconds — use on siblings for a sequence
   data-count-to="273"          animate a number up to this value on first view.
@@ -109,6 +145,8 @@ NEVER write anything like these — each came from real failed output:
 export const PAGE_SHAPE = `ABOVE THE FOLD a visitor must know what this business does, where, and exactly one thing to do next.
 
 Then, in whatever order the design direction genuinely calls for: real trust signals the facts support, the real services, a substantive reason to choose them built from their real content, real proof if real reviews exist, service areas if real, a genuinely useful FAQ, and a closing call to action carrying the real phone number.
+
+Service areas are a specific content type, not a generic text list — give each one a real visual anchor (a location-pin icon, a small map motif, or a distinct card treatment), never bare text in a row. A list of city names with nothing else on the page is the clearest tell of an unfinished section.
 
 Section ids the real navigation links to: services, about, reviews, faq, contact
 

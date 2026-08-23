@@ -120,7 +120,16 @@ export function auditCurrentSite(input: AuditInput): SiteAudit {
     });
   }
 
-  const hasFaq = /frequently asked|\bfaq\b/i.test(bodyText) || pages.some((p) => /faq/i.test(p.url));
+  // Checked across every crawled page, not just the homepage — a real FAQ
+  // usually lives on its own page, and a homepage-only check missed it
+  // every time. Text match is broadened past the literal word "FAQ" (a
+  // section titled "Common Questions" or "Have Questions?" is still an
+  // FAQ), and FAQPage structured data counts on its own even with no
+  // matching visible text, since that's still a real, working FAQ.
+  const faqTextPattern = /frequently asked|\bfaqs?\b|common questions|have questions|questions?\s*(and|&)\s*answers|\bq\s*&\s*a\b/i;
+  const hasFaq =
+    pages.some((p) => faqTextPattern.test(p.bodyText ?? "") || /\bfaq\b|questions/i.test(p.url)) ||
+    /FAQPage/i.test(JSON.stringify(schema));
   if (!hasFaq) {
     add({
       severity: "warning",
