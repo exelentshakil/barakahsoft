@@ -137,17 +137,24 @@ export function VisibilityPanel({ leadId, industry }: { leadId: string; industry
               Choose a size. Every area is a paid search, so pick the smallest that makes the point
               {industry ? ` for a ${industry.toLowerCase()}` : ""}.
             </p>
-            <div className="grid gap-2 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 lg:grid-cols-3">
               {SIZES.map((size) => (
                 <button
                   key={size.cells}
                   type="button"
                   onClick={() => run(size.cells)}
-                  className="rounded-lg border border-border p-3 text-left transition hover:border-[#533afd] hover:bg-[#fbfaff]"
+                  className="group flex flex-col rounded-xl border border-border bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#533afd] hover:shadow-md"
                 >
-                  <span className="block text-sm font-bold text-[#0d1738]">{size.label}</span>
-                  <span className="mt-0.5 block font-mono text-[11px] text-[#533afd]">{size.note}</span>
-                  <span className="mt-1 block text-[11px] leading-snug text-muted-foreground">{size.when}</span>
+                  <span className="flex items-center justify-between">
+                    <span className="text-lg font-bold tracking-tight text-[#0d1738]">{size.label}</span>
+                    <span className="rounded-full bg-[#f0f3ff] px-2 py-0.5 font-mono text-[10px] font-bold text-[#533afd]">
+                      {size.note}
+                    </span>
+                  </span>
+                  <span className="mt-2 block text-[11px] leading-snug text-muted-foreground">{size.when}</span>
+                  <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-[#533afd] opacity-0 transition group-hover:opacity-100">
+                    Run this size <TrendingDown className="h-3 w-3 rotate-90" />
+                  </span>
                 </button>
               ))}
             </div>

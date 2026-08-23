@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { QuoteRequestModal } from "@/components/site-shell/QuoteRequestModal";
-import { CrispChat } from "@/components/CrispChat";
+import { SiteSupportChat } from "@/components/site-shell/SiteSupportChat";
 import type { SitePayload } from "@/components/site-shell/types";
 
 const QuoteModalContext = createContext<(() => void) | null>(null);
@@ -21,7 +21,7 @@ export function QuoteModalProvider({ payload, children }: { payload: SitePayload
     <QuoteModalContext.Provider value={value}>
       {children}
       <QuoteRequestModal payload={payload} open={open} onOpenChange={setOpen} />
-      <CrispChat />
+      <SiteSupportChat />
     </QuoteModalContext.Provider>
   );
 }

@@ -58,6 +58,8 @@ import {
   YAxis,
 } from "recharts";
 import type { Lead, Artifact, ScrapeResults } from "@/types/database";
+import { WorkspaceTabs, TabPanel, type WorkspaceStep } from "@/components/admin/WorkspaceTabs";
+import { DeliverySlaTimer } from "@/components/admin/DeliverySlaTimer";
 import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStudio";
 import { RefinePanel } from "@/components/admin/RefinePanel";
 import { HandBuildPanel } from "@/components/admin/HandBuildPanel";
@@ -92,6 +94,7 @@ export function AdminLeadWorkspace({
   const [rescraping, setRescraping] = useState(false);
   const [previewPath, setPreviewPath] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
+  const [tab, setTab] = useState("lead");
 
   // Scrape and generation both run in the background. This keeps every panel
   // -- verified facts, brief defaults, preview, refine slots -- in step with
@@ -183,6 +186,49 @@ export function AdminLeadWorkspace({
   const pendingCloseAmount = otherLeads
     .filter((l) => !l.paid_at && !["paid", "live", "lost"].includes(l.status))
     .reduce((acc) => acc + 797, 0);
+
+  // The job, as five steps in the order they actually happen. `done` is read
+  // from real state rather than from where the operator has clicked, so the
+  // strip is the lead's progress record: the next thing to do is the first
+  // step without a tick.
+  const isApproved = artifact?.qa_status === "approved" || ["qa_approved", "delivered", "paid", "live"].includes(lead.status);
+  const steps: WorkspaceStep[] = [
+    {
+      id: "lead",
+      label: "The lead",
+      hint: "Who came in, and what we verified about them from their own site. Start here: if nothing has been analysed yet, press Analyse.",
+      icon: Target,
+      done: !!scrapeResults,
+    },
+    {
+      id: "build",
+      label: "Build the site",
+      hint: "Check the brief is right, then generate. Refine the photography afterwards — generated imagery is a placeholder, never the deliverable.",
+      icon: Sparkles,
+      done: !!artifact?.bespoke_homepage_html,
+    },
+    {
+      id: "proof",
+      label: "The evidence",
+      hint: "What is wrong with their current site, and who is beating them. This is the sales conversation — every line is checkable against their own site.",
+      icon: BarChart3,
+      done: !!(scrapeResults?.competitors || scrapeResults?.search_visibility),
+    },
+    {
+      id: "review",
+      label: "Review & approve",
+      hint: "Look at the real page the client will see, then approve it. Nothing reaches the client as a proposal until this is done.",
+      icon: Eye,
+      done: isApproved,
+    },
+    {
+      id: "deliver",
+      label: "Send & get paid",
+      hint: "Send the proposal link, set the price, and dispatch the payment link. This is the last step.",
+      icon: Send,
+      done: !!lead.delivered_at || !!lead.paid_at,
+    },
+  ];
 
   // Step 1. This is the first point at which a lead costs anything: intake
   // deliberately spends nothing, so a spam submission sits in the list for
@@ -319,6 +365,10 @@ export function AdminLeadWorkspace({
                     </span>
                     <ChevronRight className="h-3 w-3 text-[#777588]" />
                   </div>
+
+                  <div className="mt-2">
+                    <DeliverySlaTimer createdAt={item.created_at} deliveredAt={item.delivered_at} compact />
+                  </div>
                 </Link>
               );
             })}
@@ -354,6 +404,7 @@ export function AdminLeadWorkspace({
               </span>
               <span className="text-xs font-mono text-[#777588]">#{lead.id.slice(0, 8)}</span>
               <Badge variant="outline">{lead.status}</Badge>
+              <DeliverySlaTimer createdAt={lead.created_at} deliveredAt={lead.delivered_at} />
             </div>
             <h1 className="mt-2 text-2xl font-bold tracking-tight text-[#0d1738] sm:text-3xl">
               {businessName}
@@ -412,6 +463,9 @@ export function AdminLeadWorkspace({
           </div>
         </div>
 
+        <WorkspaceTabs steps={steps} active={tab} onChange={setTab} />
+
+        <TabPanel active={tab === "lead"}>
         {/* LINEAR STEP 1: INBOUND INTAKE & VERIFIED FACTS */}
         <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-5">
           <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
@@ -496,6 +550,9 @@ export function AdminLeadWorkspace({
           </div>
         </div>
 
+        </TabPanel>
+
+        <TabPanel active={tab === "build"}>
         {/* LINEAR STEP 2: BESPOKE GENERATOR STUDIO (On-Demand High-Value Builder) */}
         <BespokeGenerationStudio
           lead={lead}
@@ -517,6 +574,9 @@ export function AdminLeadWorkspace({
           <HandBuildPanel leadId={lead.id} hasPage={!!artifact?.bespoke_homepage_html} />
         )}
 
+        </TabPanel>
+
+        <TabPanel active={tab === "proof"}>
         {/* Measured on demand, at a size the operator chooses — every cell
             is a paid search and the measurement is worth far more to a
             metro-wide roofer than to a painter working three postcodes. */}
@@ -525,7 +585,9 @@ export function AdminLeadWorkspace({
             during analysis. */}
         {scrapeResults && <AuditPanel key={`audit-${reloadKey}`} leadId={lead.id} />}
 
-        {scrapeResults && <VisibilityPanel leadId={lead.id} industry={lead.industry} />}
+        {scrapeResults && (
+          <VisibilityPanel key={`visibility-${reloadKey}`} leadId={lead.id} industry={lead.industry} />
+        )}
 
         {/* LINEAR STEP 3: COMPETITOR BENCHMARK & MARKET POSITIONING (Only Real Competitors) */}
         {competitorsList.length > 0 && (
@@ -578,6 +640,9 @@ export function AdminLeadWorkspace({
             business's phone number as a route. The Refine panel above is the
             working version. */}
 
+        </TabPanel>
+
+        <TabPanel active={tab === "review"}>
         {/* LIVE IFRAME PREVIEW INSPECTOR OR GENERATION PROMPT */}
         {!artifact ? (
           <div className="rounded-2xl border-2 border-dashed border-[#c7d0fb] bg-[#f0f3ff] p-12 text-center space-y-4">
@@ -638,6 +703,9 @@ export function AdminLeadWorkspace({
             so no lead could ever be approved and no portal could unlock. */}
         <ApprovalGate lead={lead} artifact={artifact} onChanged={() => setReloadKey((k) => k + 1)} />
 
+        </TabPanel>
+
+        <TabPanel active={tab === "deliver"}>
         {/* LINEAR STEP 5: AUTOMATED BREVO DELIVERY & LIVE PROPOSAL LINK */}
         <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-5">
           <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
@@ -718,6 +786,7 @@ export function AdminLeadWorkspace({
             <CreditCard className="h-4 w-4" /> Send {priceDisplay} Payment Link
           </button>
         </div>
+        </TabPanel>
       </div>
     </div>
   );
