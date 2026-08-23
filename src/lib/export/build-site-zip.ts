@@ -37,6 +37,35 @@ function tpl(value: string): string {
   return value.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
 }
 
+// Components shipped verbatim into the client's folder rather than
+// reimplemented in it.
+//
+// A hand-written approximation of the header and footer is how the export
+// stops matching the site the client approved: it silently drops the
+// utility bar, the rating badge, the services dropdown, the footer CTA
+// band, the social links and the mobile menu, because none of those are
+// visible in the markup — they are decisions the chrome spec makes at
+// render time. Copying the real components keeps the delivered site and
+// the previewed site the same artifact, and the only cost is rewriting
+// their import paths.
+const SHIPPED_COMPONENTS: { from: string; to: string }[] = [
+  { from: "src/components/site-shell/BespokeNav.tsx", to: "app/site/BespokeNav.tsx" },
+  { from: "src/components/site-shell/BespokeFooter.tsx", to: "app/site/BespokeFooter.tsx" },
+  { from: "src/components/site-shell/StickyMobileCTA.tsx", to: "app/site/StickyMobileCTA.tsx" },
+  { from: "src/components/ui/button.tsx", to: "app/site/ui/button.tsx" },
+];
+
+function rewriteImports(source: string, depth: number): string {
+  const up = depth === 0 ? "." : Array.from({ length: depth }, () => "..").join("/");
+  return source
+    .replace(/@\/components\/site-shell\/QuoteModalProvider/g, `${up}/QuoteModalProvider`)
+    .replace(/@\/components\/site-shell\/types/g, `${up}/types`)
+    .replace(/@\/lib\/chrome-spec/g, `${up}/types`)
+    .replace(/@\/components\/ui\/button/g, `${up}/ui/button`)
+    .replace(/@\/lib\/utils/g, `${up}/utils`)
+    .replace(/@\/components\/site-shell\/([A-Za-z0-9_-]+)/g, `${up}/$1`);
+}
+
 function navHtml(payload: SitePayload): string {
   const phone = payload.nap.phone;
   const digits = phone?.replace(/[^\d+]/g, "") ?? "";
@@ -148,12 +177,22 @@ export async function buildSiteZip(lead: Lead, payload: SitePayload): Promise<Bu
           react: "19.0.0",
           "react-dom": "19.0.0",
           resend: "^4.0.0",
+          // The shipped header, footer and sticky bar are the real
+          // components from the preview, so they carry the real deps.
+          "lucide-react": "^0.460.0",
+          "@radix-ui/react-slot": "^1.1.0",
+          "class-variance-authority": "^0.7.0",
+          clsx: "^2.1.1",
+          "tailwind-merge": "^2.5.0",
         },
         devDependencies: {
           "@types/node": "^22.7.0",
           "@types/react": "^19.0.0",
           "@types/react-dom": "^19.0.0",
           typescript: "^5.6.0",
+          tailwindcss: "^3.4.13",
+          postcss: "^8.4.47",
+          autoprefixer: "^10.4.20",
         },
       },
       null,
@@ -193,6 +232,33 @@ export async function buildSiteZip(lead: Lead, payload: SitePayload): Promise<Bu
   );
 
   zip.file("next-env.d.ts", `/// <reference types="next" />\n/// <reference types="next/image-types/global" />\n`);
+
+  // Tailwind is here because the shipped chrome components use its
+  // utilities for icon sizing and the mobile breakpoint. Scanning app/**
+  // covers them.
+  zip.file("postcss.config.mjs", `export default { plugins: { tailwindcss: {}, autoprefixer: {} } };\n`);
+  zip.file(
+    "tailwind.config.ts",
+    `import type { Config } from "tailwindcss";
+
+export default {
+  content: ["./app/**/*.{ts,tsx}"],
+  theme: {
+    extend: {
+      colors: {
+        // Mapped onto this site's own tokens so a Tailwind colour utility
+        // and a token-styled element cannot disagree.
+        primary: "var(--bs-primary)",
+        "primary-foreground": "var(--bs-on-primary)",
+        border: "var(--bs-border-color)",
+        ring: "var(--bs-primary)",
+      },
+    },
+  },
+  plugins: [],
+} satisfies Config;
+`
+  );
   zip.file(".gitignore", `node_modules\n.next\n.env.local\n.DS_Store\n`);
 
   // ---- Environment, documented rather than guessed at --------------------
@@ -285,11 +351,29 @@ ${payload.bespokePages && Object.keys(payload.bespokePages).length > 0 ? "| `app
     .map(([key, value]) => `  ${key}: ${value};`)
     .join("\n");
 
+  // The preview applies these on its root wrapper, not in :root. Leaving
+  // them out is why an export could come back in the wrong brand colour or
+  // the wrong font while every other token was right.
+  const shellVars: string[] = [];
+  if (payload.brandColorHsl) {
+    shellVars.push(`  --primary: ${payload.brandColorHsl};`);
+    shellVars.push(`  --ring: ${payload.brandColorHsl};`);
+  }
+  if (payload.fontFamily) {
+    shellVars.push(`  --font-sans: "${payload.fontFamily}", system-ui, sans-serif;`);
+    shellVars.push(`  --font-display: "${payload.fontFamily}", system-ui, sans-serif;`);
+  }
+
   app.file(
     "globals.css",
-    `/* Design tokens — the palette, type and rhythm of this site. */
+    `@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens — the palette, type and rhythm of this site. */
 :root {
 ${tokenCss}
+${shellVars.join("\n")}
 }
 
 /* Base reset. The chrome and page stylesheets are written expecting a
@@ -345,15 +429,217 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 `
   );
 
-  // Chrome is injected as HTML rather than written as JSX: it is authored
-  // against the same class names as the stylesheet, and hand-converting it
-  // to JSX (className, self-closing tags, entities) is a source of silent
-  // breakage for no benefit.
-  app.file(
-    "chrome.ts",
-    `export const NAV_HTML = \`${tpl(navHtml(payload))}\`;
+  // ---- The real chrome, copied rather than approximated -----------------
+  const site = app.folder("site")!;
+  for (const { from, to } of SHIPPED_COMPONENTS) {
+    try {
+      const source = await readFile(path.join(process.cwd(), from), "utf8");
+      const depth = to.split("/").length - 3; // relative to app/site/
+      const target = to.replace(/^app\/site\//, "");
+      if (target.includes("/")) {
+        const [dir, file] = target.split("/");
+        site.folder(dir)!.file(file, rewriteImports(source, depth));
+      } else {
+        site.file(target, rewriteImports(source, 0));
+      }
+    } catch {
+      // A missing component would produce a folder that does not compile,
+      // which is worse than one that is missing a feature — so this is
+      // surfaced rather than swallowed.
+      throw new Error(`export: could not read ${from}`);
+    }
+  }
 
-export const FOOTER_HTML = \`${tpl(footerHtml(payload))}\`;
+  site.file(
+    "utils.ts",
+    `import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+`
+  );
+
+  // The payload and chrome spec the components were rendered against, as
+  // data. Same values the preview used, so the same decisions get made.
+  site.file("payload.json", JSON.stringify(payload, null, 2));
+
+  // Real shapes, not Record<string, any>. The loose version compiled here
+  // and then failed in the client's own `next build`, because a callback
+  // parameter off an `any` is an implicit any under strict mode — so the
+  // folder we handed over would not have built on their machine.
+  site.file(
+    "types.ts",
+    `// The shape of payload.json, as the shipped chrome components read it.
+export interface SiteLink {
+  slug: string;
+  h2: string;
+  /** Used as the description line in the header's services dropdown. */
+  body_content: string;
+}
+
+export interface SitePayload {
+  businessName: string;
+  leadSlug: string;
+  logoUrl: string | null;
+  innerPagesBuilt: boolean;
+  differentiator?: string | null;
+  googleReviewsUrl: string | null;
+  socialUrls: string[];
+  services: SiteLink[];
+  areas: SiteLink[];
+  nap: {
+    phone: string | null;
+    email: string | null;
+    address: string | null;
+  };
+  proof: {
+    rating: number | null;
+    reviewCount: number | null;
+  };
+  chromeSpec: ChromeSpec;
+  [key: string]: unknown;
+}
+
+export type NavArchetype = "mega" | "split" | "centered" | "minimal";
+export type FooterArchetype = "columns" | "editorial" | "bold-cta" | "compact";
+
+/** How this site's header and footer were composed. */
+export interface ChromeSpec {
+  nav: {
+    archetype: NavArchetype;
+    utilityBar: boolean;
+    sticky: boolean;
+    ctaStyle: "solid" | "accent" | "ghost";
+    showPhone: boolean;
+    showRating: boolean;
+    servicesDropdown: boolean;
+    areasDropdown: boolean;
+  };
+  footer: {
+    archetype: FooterArchetype;
+    ctaBand: boolean;
+    showAreas: boolean;
+    showServices: boolean;
+  };
+}
+`
+  );
+
+  site.file(
+    "QuoteModalProvider.tsx",
+    `"use client";
+
+import { createContext, useCallback, useContext, useMemo, useState } from "react";
+
+// The quote form the header and sticky bar open. Posts to /api/enquiry,
+// which emails whoever LEAD_INBOX_EMAIL names.
+const QuoteModalContext = createContext<(() => void) | null>(null);
+
+export function useQuoteModal(): () => void {
+  return useContext(QuoteModalContext) ?? (() => {});
+}
+
+export function QuoteModalProvider({ businessName, children }: { businessName: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const openModal = useCallback(() => setOpen(true), []);
+  const value = useMemo(() => openModal, [openModal]);
+
+  return (
+    <QuoteModalContext.Provider value={value}>
+      {children}
+      {open && <QuoteModal businessName={businessName} onClose={() => setOpen(false)} />}
+    </QuoteModalContext.Provider>
+  );
+}
+
+function QuoteModal({ businessName, onClose }: { businessName: string; onClose: () => void }) {
+  const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    const data = new FormData(event.currentTarget);
+    try {
+      const res = await fetch("/api/enquiry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: String(data.get("name") ?? ""),
+          phone: String(data.get("phone") ?? ""),
+          email: String(data.get("email") ?? ""),
+          service: String(data.get("service") ?? ""),
+        }),
+      });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(result.error || "Something went wrong.");
+      setSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: "fixed", inset: 0, zIndex: 100, display: "grid", placeItems: "center", background: "rgba(0,0,0,.5)", padding: "1rem" }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ width: "min(28rem, 100%)", borderRadius: "1rem", background: "var(--bs-surface, #fff)", color: "var(--bs-ink, #1b1b1b)", padding: "1.5rem" }}
+      >
+        {sent ? (
+          <>
+            <h2 style={{ margin: 0, fontSize: "1.125rem", fontWeight: 700 }}>Request sent</h2>
+            <p style={{ marginTop: ".5rem", fontSize: ".875rem", color: "var(--bs-ink-muted, #666)" }}>
+              {businessName} will get back to you shortly.
+            </p>
+            <button type="button" onClick={onClose} style={{ marginTop: "1rem", fontWeight: 700, color: "var(--bs-primary-on-surface, var(--bs-primary, #0d1738))" }}>
+              Close
+            </button>
+          </>
+        ) : (
+          <>
+            <h2 style={{ margin: 0, fontSize: "1.125rem", fontWeight: 700 }}>Get a free quote</h2>
+            <p style={{ marginTop: ".25rem", fontSize: ".8125rem", color: "var(--bs-ink-muted, #666)" }}>
+              Tell us what you need and we&apos;ll come back to you.
+            </p>
+            <form onSubmit={submit} style={{ marginTop: "1rem", display: "grid", gap: ".625rem" }}>
+              <input name="name" required placeholder="Your name" style={fieldStyle} />
+              <input name="phone" placeholder="Phone" style={fieldStyle} />
+              <input name="email" type="email" placeholder="Email" style={fieldStyle} />
+              <textarea name="service" rows={3} placeholder="What do you need? (optional)" style={fieldStyle} />
+              {error && <p style={{ margin: 0, fontSize: ".8125rem", color: "#b91c1c" }}>{error}</p>}
+              <button
+                type="submit"
+                disabled={busy}
+                style={{ minHeight: "2.75rem", borderRadius: ".5rem", fontWeight: 700, background: "var(--bs-primary, #0d1738)", color: "var(--bs-on-primary, #fff)", opacity: busy ? .6 : 1 }}
+              >
+                {busy ? "Sending..." : "Send request"}
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const fieldStyle: React.CSSProperties = {
+  minHeight: "2.75rem",
+  borderRadius: ".5rem",
+  border: "1px solid var(--bs-border-color, #e5e7f2)",
+  padding: ".5rem .75rem",
+  fontSize: ".875rem",
+  background: "var(--bs-surface, #fff)",
+  color: "var(--bs-ink, #1b1b1b)",
+};
 `
   );
 
@@ -361,19 +647,29 @@ export const FOOTER_HTML = \`${tpl(footerHtml(payload))}\`;
     "page.tsx",
     `import SiteRuntime from "./SiteRuntime";
 import Assistant from "./Assistant";
-import { NAV_HTML, FOOTER_HTML } from "./chrome";
+import { BespokeNav } from "./site/BespokeNav";
+import { BespokeFooter } from "./site/BespokeFooter";
+import { StickyMobileCTA } from "./site/StickyMobileCTA";
+import { QuoteModalProvider } from "./site/QuoteModalProvider";
+import payload from "./site/payload.json";
 
 const HOMEPAGE_HTML = \`${tpl(homepage)}\`;
 
+// The same tree the preview rendered, in the same order, from the same
+// payload — so what was approved is what is delivered.
 export default function HomePage() {
+  const site = payload as any;
   return (
-    <>
-      <div dangerouslySetInnerHTML={{ __html: NAV_HTML }} />
-      <div className="bespoke-page" dangerouslySetInnerHTML={{ __html: HOMEPAGE_HTML }} />
-      <div dangerouslySetInnerHTML={{ __html: FOOTER_HTML }} />
-      <SiteRuntime />
-      <Assistant businessName={${JSON.stringify(name)}}${payload.nap.phone ? ` phone={${JSON.stringify(payload.nap.phone)}}` : ""} />
-    </>
+    <QuoteModalProvider businessName={site.businessName}>
+      <div className="pb-20 lg:pb-0">
+        <BespokeNav payload={site} spec={site.chromeSpec} />
+        <div className="bespoke-page" dangerouslySetInnerHTML={{ __html: HOMEPAGE_HTML }} />
+        <BespokeFooter payload={site} spec={site.chromeSpec} />
+        <StickyMobileCTA payload={site} />
+        <SiteRuntime />
+        <Assistant businessName={${JSON.stringify(name)}}${payload.nap.phone ? ` phone={${JSON.stringify(payload.nap.phone)}}` : ""} />
+      </div>
+    </QuoteModalProvider>
   );
 }
 `

@@ -77,15 +77,21 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   // it. Refusing here gives a clear reason rather than a failed background
   // run the operator has to go and read logs to understand.
   if (phase === 2) {
+    // The approved homepage is what phase 2 builds against — it is the voice
+    // and design reference every inner page is matched to. This used to
+    // require copy_plan, which nothing has written since the separate copy
+    // pass was removed, so the check could never pass and the whole deep
+    // build was unreachable. It now asks for the thing phase 2 actually
+    // needs, which is also exactly what the job itself checks.
     const { data: artifact } = await admin
       .from("artifacts")
-      .select("copy_plan, generation_phase")
+      .select("bespoke_homepage_html, generation_phase")
       .eq("lead_id", leadId)
-      .maybeSingle<{ copy_plan: unknown; generation_phase: number }>();
+      .maybeSingle<{ bespoke_homepage_html: string | null; generation_phase: number }>();
 
-    if (!artifact?.copy_plan || (artifact.generation_phase ?? 0) < 1) {
+    if (!artifact?.bespoke_homepage_html || (artifact.generation_phase ?? 0) < 1) {
       return NextResponse.json(
-        { error: "Build the core site first — the full site reuses the copy and photography the client approved." },
+        { error: "Build the homepage first — every inner page is written to match it." },
         { status: 409 }
       );
     }

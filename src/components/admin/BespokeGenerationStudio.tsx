@@ -118,6 +118,29 @@ export function BespokeGenerationStudio({
   const isScraping = lead.status === "scraping";
   const notAnalysed = !scrapeResults && !isScraping;
 
+  // Phase 2: every service, area, about, FAQ and contact page, each written
+  // to match the homepage that was approved. It is a separate button rather
+  // than part of the first build because until the client says yes, that
+  // spend is on a lead that may never reply.
+  async function handleBuildRest() {
+    setGenerating(true);
+    setGenError(null);
+    setGenWarnings([]);
+    try {
+      const res = await fetch(`/api/leads/${lead.id}/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phase: 2, provider }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Could not start the full-site build");
+      pollProgress();
+    } catch (err) {
+      setGenError(err instanceof Error ? err.message : "Full-site build failed to start");
+      setGenerating(false);
+    }
+  }
+
   async function handleGenerate(e: React.FormEvent) {
     e.preventDefault();
     setGenerating(true);
@@ -502,12 +525,59 @@ export function BespokeGenerationStudio({
               ) : (
                 <>
                   <Rocket className="h-4 w-4 text-[#ffd12d]" />
-                  Generate High-Value Bespoke Website
+                  {artifact?.bespoke_homepage_html ? "Rebuild the homepage" : "Generate High-Value Bespoke Website"}
                 </>
               )}
             </Button>
           </div>
         </form>
+
+        {/* The rest of the site, once the homepage is right. Held back until
+            then deliberately: every inner page is written to match the
+            homepage, so building them first means rebuilding them all when
+            the homepage changes. */}
+        {artifact?.bespoke_homepage_html && (
+          <div className="rounded-lg border border-[#c7d0fb] bg-[#fbfaff] p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-[#533afd]" />
+                  <h4 className="text-sm font-bold text-[#0d1738]">Build the rest of the pages</h4>
+                  {(artifact?.generation_phase ?? 0) >= 2 && (
+                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                      Built
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 max-w-xl text-[11px] leading-relaxed text-muted-foreground">
+                  A page for every service and every area they serve, plus about, FAQ and contact — each written to match
+                  the homepage above, in the same voice and the same design. This is the slow one: a page per step, several
+                  minutes. Run it once the homepage is right, because changing the homepage means running it again.
+                </p>
+              </div>
+
+              <Button
+                type="button"
+                onClick={handleBuildRest}
+                disabled={generating}
+                variant="outline"
+                className="gap-2 border-[#533afd] font-bold text-[#533afd] hover:bg-[#f0f3ff]"
+              >
+                {generating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Building...
+                  </>
+                ) : (
+                  <>
+                    <Layers className="h-4 w-4" />
+                    {(artifact?.generation_phase ?? 0) >= 2 ? "Rebuild all pages" : "Build all pages"}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
