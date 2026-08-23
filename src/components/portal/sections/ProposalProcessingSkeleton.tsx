@@ -38,7 +38,11 @@ export function ProposalProcessingSkeleton({ businessName }: ProposalProcessingS
       icon: ShieldCheck,
       tone: "text-[#777588]",
       title: "Someone checks it",
-      body: "A person goes through it before it reaches you. That is the part most tools skip.",
+      // Was "that is the part most tools skip". Comparing ourselves to
+      // tools puts us in that category in the reader's head — they were not
+      // thinking about tools until we raised it, and a person waiting on
+      // human work does not need to be told what software would have done.
+      body: "Nothing reaches you that one of us has not read through first.",
     },
   ];
 
