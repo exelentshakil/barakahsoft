@@ -26,7 +26,7 @@ export function ProposalHero({
       <div className="flex items-center gap-2">
         <span className="flex h-2.5 w-2.5 rounded-full bg-[#533afd] animate-pulse" />
         <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
-          Digital X-Ray & Proposal Ready
+          Your rebuilt homepage
         </span>
       </div>
 
@@ -34,16 +34,29 @@ export function ProposalHero({
         {businessName}
       </h1>
 
+      {/* The lead was won by a page that said "you already know it's not
+          good" and then handed to one that said "Digital X-Ray & Proposal
+          Ready". That voice change lands at the exact moment someone is
+          deciding whether to trust us, and it reads as the salesperson
+          arriving. Same plain voice throughout.
+
+          Written only from what is known: the previous copy asserted a
+          rating, a review count and a city unconditionally, so a business
+          with none of them was told about its "real proof" of undefined
+          reviews. */}
       <p className="max-w-3xl text-base leading-relaxed text-[#42506a] sm:text-lg">
-        {/* Written from what is actually known. The previous copy asserted a
-            rating, a review count and a city unconditionally, so a business
-            with none of them was told about its "real proof" of undefined
-            reviews. */}
-        We went through your website in detail{address ? ` and how you show up around ${address}` : ""}.
-        {rating && reviewCount
-          ? ` You have genuine proof behind you — ${reviewCount} reviews at ${rating} stars — and your current site is hiding it.`
-          : " Below is exactly what we found, and what your rebuilt site does about it."}
-        {" "}Here is the verified breakdown of the lead machine we would put in its place.
+        {rating && reviewCount ? (
+          <>
+            {reviewCount} people have rated you {rating} stars. That is better than most of the
+            {address ? ` businesses near ${address}` : " businesses"} you are competing with — and almost none of it is
+            on your website. You are not losing work because of the work. You are losing it before anyone gets that far.
+          </>
+        ) : (
+          <>
+            We went through your site{address ? ` and how you show up around ${address}` : ""}, page by page. Everything
+            below is on your site today, so you can open it alongside this and check any of it.
+          </>
+        )}
       </p>
 
       <div className="pt-2 flex flex-wrap gap-4">
@@ -53,7 +66,7 @@ export function ProposalHero({
           rel="noreferrer"
           className="inline-flex items-center gap-2 rounded-md bg-[#533afd] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#432bd9]"
         >
-          Open Live Homepage Preview <ExternalLink className="h-4 w-4" />
+          See your new homepage <ExternalLink className="h-4 w-4" />
         </a>
         {isPaid ? (
           <div className="inline-flex items-center gap-2 rounded-md bg-[#eaf8f0] px-6 py-3.5 text-sm font-semibold text-[#0b8f5b]">
@@ -64,7 +77,7 @@ export function ProposalHero({
             onClick={onOpenCheckout}
             className="inline-flex items-center gap-2 rounded-md bg-[#0b8f5b] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#09744a]"
           >
-            Launch Complete Website ({priceFormattedLabel}) <ArrowRight className="h-4 w-4" />
+            Put it live ({priceFormattedLabel}) <ArrowRight className="h-4 w-4" />
           </button>
         )}
       </div>
