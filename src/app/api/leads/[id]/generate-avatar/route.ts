@@ -45,44 +45,90 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     `Photorealistic, high-end professional editorial portrait of ${founderName}, the master founder and owner of "${businessName}", a premier ${trade} company in ${city}. The founder is smiling warmly, wearing a clean modern work shirt, holding architectural floor plans and blueprints on a bright residential renovation job site. Cinematic natural lighting, 8k resolution, authentic craftsmanship, crisp focus, shallow depth of field, award-winning commercial photography.`;
 
   try {
-    // Call Google Imagen 3 via Generative Language API
-    const imagenUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict`;
-    const res = await fetch(imagenUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey,
-      },
-      body: JSON.stringify({
-        instances: [{ prompt: customPrompt }],
-        parameters: {
-          sampleCount: 1,
-          aspectRatio: "1:1",
-          outputMimeType: "image/jpeg",
-          personGeneration: "allow_adult",
-        },
-      }),
-    });
-
     let imageBuffer: Buffer | null = null;
 
-    if (res.ok) {
-      const data = await res.json();
-      const base64Bytes = data.predictions?.[0]?.bytesBase64Encoded;
-      if (base64Bytes) {
-        imageBuffer = Buffer.from(base64Bytes, "base64");
+    // 1. Try Google Imagen 3 via Generative Language API
+    if (apiKey) {
+      const imagenModels = [
+        "imagen-3.0-generate-002",
+        "imagen-3.0-fast-generate-001",
+        "imagegeneration@006",
+      ];
+
+      for (const modelName of imagenModels) {
+        try {
+          const imagenUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:predict`;
+          const res = await fetch(imagenUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-goog-api-key": apiKey,
+            },
+            body: JSON.stringify({
+              instances: [{ prompt: customPrompt }],
+              parameters: {
+                sampleCount: 1,
+                aspectRatio: "1:1",
+                outputMimeType: "image/jpeg",
+                personGeneration: "allow_adult",
+              },
+            }),
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            const base64Bytes = data.predictions?.[0]?.bytesBase64Encoded;
+            if (base64Bytes) {
+              imageBuffer = Buffer.from(base64Bytes, "base64");
+              break;
+            }
+          }
+        } catch (err) {
+          console.warn(`[generate-avatar] ${modelName} failed`, err);
+        }
       }
-    } else {
-      console.warn(`[generate-avatar] Imagen 3 returned status ${res.status}, trying fallback generation`);
     }
 
-    // Fallback if Imagen 3 preview is not enabled on this key: use high quality placeholder or retry with secondary model
+    // 2. Fallback to OpenAI DALL-E 3 / HD image generation if Imagen 3 is restricted
+    if (!imageBuffer && process.env.OPENAI_API_KEY) {
+      try {
+        const openaiRes = await fetch("https://api.openai.com/v1/images/generations", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "dall-e-3",
+            prompt: customPrompt,
+            size: "1024x1024",
+            quality: "hd",
+            n: 1,
+          }),
+        });
+
+        if (openaiRes.ok) {
+          const openaiData = await openaiRes.json();
+          const imgUrl = openaiData.data?.[0]?.url;
+          if (imgUrl) {
+            const dl = await fetch(imgUrl);
+            if (dl.ok) {
+              imageBuffer = Buffer.from(await dl.arrayBuffer());
+            }
+          }
+        } else {
+          console.error(`[generate-avatar] OpenAI returned ${openaiRes.status}`);
+        }
+      } catch (err) {
+        console.error("[generate-avatar] OpenAI fallback error", err);
+      }
+    }
+
     if (!imageBuffer) {
-      // Return helpful message if image generation API is restricted
       return NextResponse.json(
         {
           error:
-            "Could not generate portrait with Imagen 3. Please ensure Imagen 3 is enabled on your Google Cloud project or upload an owner image directly.",
+            "Could not generate portrait. Please verify your GEMINI_API_KEY / OPENAI_API_KEY permissions or upload an image directly.",
         },
         { status: 502 }
       );
