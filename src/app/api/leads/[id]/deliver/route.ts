@@ -60,10 +60,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       </div>
       <div style="background-color: #f9f9ff; border: 1px solid #e5e7f2; border-radius: 8px; padding: 16px; font-size: 12px; color: #42506a; margin-top: 24px;">
         <p style="margin: 0 0 6px 0; font-weight: 600; color: #0d1738;">What you will see in your portal:</p>
-        <p style="margin: 0;">• 0.12s Mobile Speed vs. Old Site Core Web Vitals</p>
-        <p style="margin: 4px 0 0 0;">• Local Search Visibility Matrix & Competitor Radar</p>
-        <p style="margin: 4px 0 0 0;">• Live Homepage Preview with 1-Tap Call & AI Assistant</p>
-        <p style="margin: 4px 0 0 0;">• 100% Free to Keep with zero obligation</p>
+        <p style="margin: 0;">• Your new homepage, live, next to the one you have now</p>
+        <p style="margin: 4px 0 0 0;">• Your real mobile speed score, measured by Google</p>
+        <p style="margin: 4px 0 0 0;">• Where you appear in local search across your area, and who is beating you</p>
+        <p style="margin: 4px 0 0 0;">• Yours to keep, with no obligation</p>
       </div>
       <p style="font-size: 12px; color: #777588; margin-top: 28px; border-top: 1px solid #e5e7f2; padding-top: 16px;">
         BarakahSoft LLC · Direct Line: +1 (307) 533-6678 · hello@barakahsoft.com

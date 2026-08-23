@@ -44,7 +44,7 @@ export function ProposalProcessingSkeleton({ businessName }: ProposalProcessingS
             <Clock className="h-4 w-4 text-[#777588] shrink-0 mt-0.5" />
             <div>
               <p className="font-bold text-[#0d1738]">3. Desktop & Mobile Rebuild</p>
-              <p className="text-[11px] text-muted-foreground">Tailored 0.12s first-paint layout</p>
+              <p className="text-[11px] text-muted-foreground">A layout built around your real business</p>
             </div>
           </div>
 

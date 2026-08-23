@@ -15,13 +15,46 @@ export function ProposalPricingSection({
   standardValue,
   discountLabel,
 }: ProposalPricingSectionProps) {
+  // Each line says the problem it solves rather than the thing we build.
+  // A business owner does not want "LocalBusiness schema"; he wants to stop
+  // losing the person who searched at nine at night and called someone else.
+  //
+  // Values are proportions of the anchor rather than fixed numbers, so they
+  // always add up to the figure printed above them. Hardcoded amounts summed
+  // to $1,550 under a headline reading $1,297, which is the kind of thing a
+  // careful buyer checks and a careless one is annoyed by later.
+  //
+  // Three claims were removed outright: "28 dedicated service landing pages"
+  // (the real number depends on how many services and areas they have),
+  // "8 original launch articles" (the generator writes no articles at all),
+  // and "0.12s Mobile Load Time" (nothing measures it — it was a number
+  // somebody typed).
+  const share = (fraction: number) => Math.round(standardValue * fraction);
+  const parts = [share(0.31), share(0.385), share(0.193), share(0.075)];
+  const remainder = Math.max(0, standardValue - parts.reduce((a, b) => a + b, 0));
+
   const deliverableItems = [
-    { item: "Conversion-focused homepage built around your real logo, proof, services, and calls to action", val: "$400 Value" },
-    { item: "28 dedicated service landing pages that give high-value jobs a clear path to contact you", val: "$600 Value" },
-    { item: "8 original launch articles written for local customers (never blank)", val: "$300 Value" },
-    { item: "AI search readiness and LocalBusiness schema foundation", val: "$150 Value" },
-    { item: "0.12s Mobile Load Time with sticky 1-tap call buttons and AI lead assistant", val: "$100 Value" },
-    { item: "Connected to your custom domain with SSL security & fast reliable hosting", val: "Included Free" },
+    {
+      item: "A homepage built around your real reviews, real services and real photos — so the proof you already earned is the first thing a visitor sees",
+      val: `$${parts[0]} Value`,
+    },
+    {
+      item: "A page for every service you offer and every area you serve, so someone searching for one specific job lands on that job instead of hunting your homepage",
+      val: `$${parts[1]} Value`,
+    },
+    {
+      item: "An AI assistant that answers questions in your words and takes the caller's details — the enquiry at nine at night that currently goes to whoever answers first",
+      val: `$${parts[2]} Value`,
+    },
+    {
+      item: "Written so Google and ChatGPT can quote you directly when someone asks about your trade in your area",
+      val: `$${parts[3]} Value`,
+    },
+    {
+      item: "Built for speed on a phone, with one-tap calling everywhere your number appears",
+      val: `$${remainder} Value`,
+    },
+    { item: "Your own domain, SSL and hosting, set up and looked after", val: "Included" },
   ];
 
   return (

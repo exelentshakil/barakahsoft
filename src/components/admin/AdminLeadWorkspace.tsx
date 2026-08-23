@@ -181,12 +181,16 @@ export function AdminLeadWorkspace({
   const competitorsList = scrapedCompetitors.length > 0
     ? [
         {
-          name: `${businessName} (Rebuilt)`,
-          reviews: reviewCount > 0 ? `${reviewCount}+ ★ ${rating}` : "5.0 ★",
-          speed: "0.12s (98/100)",
-          routes: "28 Pages",
-          territory: "Full Territory",
-          status: "Leader",
+          name: `${businessName} (your lead)`,
+          // Their real review count, or nothing. This row used to assert
+          // "5.0 ★", "0.12s (98/100)", "28 Pages" and "Leader" for a site
+          // that had not been measured — invented figures about our own
+          // rebuild, sitting in a table of real competitor data.
+          reviews: reviewCount > 0 ? `${reviewCount} ★ ${rating}` : "—",
+          speed: typeof scrapeResults?.pagespeed_mobile?.score === "number" ? `${scrapeResults.pagespeed_mobile.score}/100` : "—",
+          routes: "—",
+          territory: city ?? "—",
+          status: "Your lead",
         },
         ...scrapedCompetitors.slice(0, 3).map((c, i) => ({
           name: c.name,
@@ -781,7 +785,7 @@ export function AdminLeadWorkspace({
                   onChange={(e) => setPreviewPath(e.target.value)}
                   className="rounded-md border border-input bg-background px-2.5 py-1 text-xs"
                 >
-                  <option value="">Homepage (0.12s Paint)</option>
+                  <option value="">Homepage</option>
                   <option value="/about">About Us</option>
                   <option value="/contact">Contact</option>
                   <option value="/faq">FAQ</option>

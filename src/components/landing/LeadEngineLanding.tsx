@@ -42,6 +42,7 @@ import { FAQAccordion } from "@/components/landing/FAQAccordion";
 import { Nav } from "@/components/landing/Nav";
 import { LandingTeamShowcase } from "@/components/landing/LandingTeamShowcase";
 import { Marquee } from "@/components/landing/primitives/Marquee";
+import { IndustryProofGrid } from "@/components/landing/IndustryProofGrid";
 import { CrispChat } from "@/components/CrispChat";
 
 const SUPABASE_STORAGE_URL = "https://liepxeeugfrxmidcmbxo.supabase.co/storage/v1/object/public/design-reference";
@@ -162,19 +163,19 @@ const VISUAL_JOURNEY = [
     step: "02",
     tag: "48-Hour Rebuild",
     title: "AI Smart Concept & Rebuild",
-    body: "Our design team crafts a high-contrast homepage with 0.12s mobile load time, AI callback assistant, and dedicated service sections.",
+    body: "Our design team crafts a high-contrast homepage built for speed on a phone, with an AI assistant that answers questions and takes callback requests, and a section for every service you offer.",
     badge: "Step 02 · 100% Free",
     icon: Laptop,
-    highlights: ["0.12s Mobile first-paint", "AI chat & callback capture", "1-Tap emergency call bar"],
+    highlights: ["Built for mobile speed", "AI chat & callback capture", "1-Tap call bar on mobile"],
   },
   {
     step: "03",
     tag: "Private Portal",
     title: "Review Your Interactive X-Ray",
-    body: "Open your private portal to explore your 49-point local search matrix, 6-axis competitor radar, and live interactive homepage preview.",
+    body: "Open your private portal to see where you appear in local search across your area, how you compare to the businesses beating you, and a live preview of your new homepage.",
     badge: "Step 03 · Zero Risk",
     icon: BarChart3,
-    highlights: ["49-Point search grid", "Competitor radar", "Live preview link"],
+    highlights: ["Local search grid", "Competitor comparison", "Live preview link"],
   },
   {
     step: "04",
@@ -314,7 +315,7 @@ export function LeadEngineLanding() {
                 <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-white/80">Included</span>
               </div>
               <p className="mt-1 font-bold text-base text-white">Digital X-Ray & Search Audit</p>
-              <p className="mt-0.5 text-xs text-white/70">0.12s mobile speed test, 49-node map grid, and competitor radar.</p>
+              <p className="mt-0.5 text-xs text-white/70">Real mobile speed test, a local search grid across your area, and how your competitors compare.</p>
             </div>
           </div>
 
@@ -367,6 +368,11 @@ export function LeadEngineLanding() {
           </Marquee>
         </div>
       </section>
+
+      {/* 4b. TRADE COVERAGE — the marquee proves the work looks good, this
+          proves it covers the reader's own trade, which is the objection
+          that actually stops a plumber watching roofing sites scroll past. */}
+      <IndustryProofGrid />
 
       {/* 5. VISUAL STEP 0 TO DELIVERY JOURNEY (Modern SaaS Interactive Timeline) */}
       <section id="how-it-works" className="relative border-b border-[#d9e8f4] bg-white py-20 lg:py-28">
@@ -469,7 +475,7 @@ export function LeadEngineLanding() {
             <div className="relative space-y-4 text-sm">
               {[
                 "Homepage redesign concept tailored to your real brand, colors & logo",
-                "Desktop and mobile-first responsive layout (0.12s first paint)",
+                "Desktop and mobile-first responsive layout, built for speed on a phone",
                 "Interactive AI lead assistant & instant callback request capture",
                 "Evidence-based Digital X-Ray audit & Core Web Vitals speed test",
                 "Google AI Overview & ChatGPT entity schema markup",
