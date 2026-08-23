@@ -1,4 +1,5 @@
 import { CheckCircle2, Circle, Loader2 } from "lucide-react";
+import { PendingAutoRefresh } from "@/components/portal/PendingAutoRefresh";
 
 // Shown when a real lead's site is not ready yet.
 //
@@ -18,7 +19,8 @@ export function PortalPending({
   const steps = [
     { label: "Reading your current website", done: analysed },
     { label: "Designing your new homepage", done: built },
-    { label: "Final review by our team", done: false },
+    // The one thing here worth saying that a competitor cannot.
+    { label: "A person checks it before you see it", done: false },
   ];
 
   const current = steps.findIndex((s) => !s.done);
@@ -31,9 +33,9 @@ export function PortalPending({
           <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight text-[#0d1738]">
             We&apos;re building your redesign
           </h1>
-          <p className="mt-2 text-sm text-[#5b6270]">
-            {businessName} — your concept and audit will appear right here. We&apos;ll email you the moment it&apos;s
-            ready.
+          <p className="mt-2 text-sm leading-relaxed text-[#5b6270]">
+            {businessName} — your new homepage will appear right here. Most people have theirs back the same business
+            day, and we&apos;ll email you the moment it&apos;s ready. Nothing to do in the meantime.
           </p>
 
           <ol className="mt-7 space-y-3">
@@ -58,8 +60,10 @@ export function PortalPending({
           </ol>
         </div>
 
+        <PendingAutoRefresh />
+
         <p className="mt-4 text-center text-xs text-[#989db0]">
-          Bookmark this page — it updates as your build progresses.
+          Keep this page open if you like — it updates on its own. It&apos;s yours to keep either way.
         </p>
       </div>
     </main>
