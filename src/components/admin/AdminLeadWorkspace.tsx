@@ -70,6 +70,7 @@ import { ApprovalGate } from "@/components/admin/ApprovalGate";
 import { useLeadLive } from "@/hooks/use-lead-live";
 import { PricingManager } from "@/components/admin/PricingManager";
 import { HandoverPanel } from "@/components/admin/HandoverPanel";
+import { LeadValuePanel, type LeadValueData } from "@/components/admin/LeadValuePanel";
 import { EditLeadDialog } from "@/components/admin/EditLeadDialog";
 import { DeleteLeadButton } from "@/components/admin/DeleteLeadButton";
 import { Badge } from "@/components/ui/badge";
@@ -884,6 +885,9 @@ export function AdminLeadWorkspace({
         </TabPanel>
 
         <TabPanel active={tab === "close"}>
+        {/* What they can pay, before the panel that asks what to charge. */}
+        <LeadValuePanel leadId={lead.id} value={(facts.lead_value as LeadValueData | undefined) ?? null} />
+
         {/* LINEAR STEP 6: DYNAMIC PRICING MANAGER */}
         <PricingManager leadId={lead.id} currentPricing={pricing} />
 

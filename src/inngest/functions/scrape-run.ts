@@ -4,6 +4,7 @@ import { scrapeBusiness } from "@/lib/scrape";
 import { autoSelectOrResearch, presetFor } from "@/lib/inspiration-library";
 import { classifyBusiness } from "@/lib/classify-business";
 import { compileDesignTokens } from "@/lib/design-tokens";
+import { evaluateLeadValue } from "@/lib/audit/lead-value";
 
 // lead/analyse.requested — step 1 of the operator flow.
 //
@@ -154,6 +155,33 @@ export const scrapeRun = inngest.createFunction(
       }
 
       console.log(`[scrape-run] design direction for ${lead_id}: ${label} (from ${from})`);
+    });
+
+    // What this lead can pay, worked out from the scrape that has just been
+    // paid for. It runs here rather than on demand because the operator
+    // needs it before the first call, and because everything it reads is
+    // already in memory at this point.
+    await step.run("evaluate-lead-value", async () => {
+      const { data: scrape } = await admin
+        .from("scrape_results")
+        .select("facts, pagespeed_mobile")
+        .eq("lead_id", lead_id)
+        .maybeSingle<{ facts: Record<string, unknown>; pagespeed_mobile: Record<string, unknown> | null }>();
+      if (!scrape?.facts) return { skipped: "no facts" };
+
+      const value = await evaluateLeadValue({
+        facts: scrape.facts,
+        industry: lead.industry ?? (typeof scrape.facts.industry === "string" ? scrape.facts.industry : null),
+        pagespeedMobile: scrape.pagespeed_mobile,
+      });
+
+      await admin
+        .from("scrape_results")
+        .update({ facts: { ...scrape.facts, lead_value: value } })
+        .eq("lead_id", lead_id);
+
+      console.log(`[scrape-run] lead value for ${lead_id}: ${value.tier} (${value.score}/100)`);
+      return { tier: value.tier, score: value.score };
     });
 
     await step.run("mark-scrape-complete", async () => {
