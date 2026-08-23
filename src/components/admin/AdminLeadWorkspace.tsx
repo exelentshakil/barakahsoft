@@ -196,56 +196,56 @@ export function AdminLeadWorkspace({
   const steps: WorkspaceStep[] = [
     {
       id: "lead",
-      label: "The lead",
+      label: "Lead",
       hint: "Who came in, and what we verified about them from their own site. Start here: if nothing has been analysed yet, press Analyse.",
       icon: Target,
       done: !!scrapeResults,
     },
     {
       id: "build",
-      label: "Build the site",
+      label: "Build",
       hint: "Check the brief reads like their real business, pick the model, then generate. This is the slow pass — a few minutes.",
       icon: Sparkles,
       done: !!artifact?.bespoke_homepage_html,
     },
     {
       id: "photos",
-      label: "Real photos",
+      label: "Photos",
       hint: "Swap the generated placeholders for the client's own photography. Generated imagery sells the concept; it is never the deliverable.",
       icon: ImageIcon,
       done: !!artifact?.bespoke_homepage_html,
     },
     {
       id: "audit",
-      label: "Their site's faults",
+      label: "Their faults",
       hint: "What is wrong with the site they have now. Every line is checkable against their own site — this is the sales conversation, not a report.",
       icon: ShieldAlert,
       done: !!scrapeResults,
     },
     {
       id: "rivals",
-      label: "Who beats them",
+      label: "Rivals",
       hint: "Where they are invisible in local search, and how real competitors compare. Costs real searches, so it runs only when you ask.",
       icon: BarChart3,
       done: !!(scrapeResults?.competitors || scrapeResults?.search_visibility),
     },
     {
       id: "review",
-      label: "Review & approve",
+      label: "Approve",
       hint: "Look at the real page the client will see, then approve it. Nothing reaches them as a proposal until this is done.",
       icon: Eye,
       done: isApproved,
     },
     {
       id: "send",
-      label: "Send it",
+      label: "Send",
       hint: "Email the proposal link. This is the moment the 48-hour clock is answering for.",
       icon: Send,
       done: !!lead.delivered_at,
     },
     {
       id: "close",
-      label: "Price & close",
+      label: "Get paid",
       hint: "Set the price and dispatch the payment link. Payment unlocks the deep site build and go-live.",
       icon: CircleDollarSign,
       done: !!lead.paid_at,
@@ -600,7 +600,7 @@ export function AdminLeadWorkspace({
 
         </TabPanel>
 
-        <TabPanel active={tab === "proof"}>
+        <TabPanel active={tab === "audit"}>
         {/* Measured on demand, at a size the operator chooses — every cell
             is a paid search and the measurement is worth far more to a
             metro-wide roofer than to a painter working three postcodes. */}
@@ -731,7 +731,7 @@ export function AdminLeadWorkspace({
 
         </TabPanel>
 
-        <TabPanel active={tab === "deliver"}>
+        <TabPanel active={tab === "send"}>
         {/* LINEAR STEP 5: AUTOMATED BREVO DELIVERY & LIVE PROPOSAL LINK */}
         <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-5">
           <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
