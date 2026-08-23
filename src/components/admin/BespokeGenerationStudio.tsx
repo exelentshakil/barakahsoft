@@ -330,11 +330,12 @@ export function BespokeGenerationStudio({
                 <Sparkles className="h-4 w-4" />
               </span>
               <h3 className="font-bold text-lg text-[#0d1738]">
-                Bespoke Website Generation & Storytelling Studio
+                Build their website
               </h3>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Verify Firecrawl extracted brand facts or customize the brief below, then click Generate to build a tailored high-converting website.
+              These details came from reading their own site. Check they look right — anything wrong here ends up on their
+              homepage — then press Generate.
             </p>
           </div>
 

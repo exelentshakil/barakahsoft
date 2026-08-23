@@ -144,14 +144,14 @@ export function InspirationPanel({
             <span className="flex h-6 w-6 items-center justify-center rounded-md bg-[#f0f3ff] text-[#533afd]">
               <Palette className="h-3.5 w-3.5" />
             </span>
-            <h4 className="text-sm font-bold text-[#0d1738]">Inspiration Design DNA</h4>
+            <h4 className="text-sm font-bold text-[#0d1738]">What their site should look like</h4>
           </div>
-          <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-            A direction is picked automatically for this industry the moment scraping finishes. To override it, paste
-            the best site you know in this client&apos;s trade — we read its palette, typography, geometry and layout
-            rhythm, then <b>Save for industry</b> so every future lead in this trade uses it too.{" "}
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+            We already picked a look that suits this trade. You only need to touch this if you want a different one:
+            paste the best site you know in their trade and we copy its colours, fonts and spacing. Then{" "}
+            <b>Use for this trade</b> makes every future lead in this trade look like it too.{" "}
             <span className="font-semibold text-[#0d1738]">
-              Visual direction only — none of its copy, claims or reviews are ever used.
+              We only copy the look — never their words, claims or reviews.
             </span>
           </p>
         </div>
@@ -183,7 +183,7 @@ export function InspirationPanel({
           className="h-9 gap-2 bg-[#0d1738] px-4 text-xs font-bold text-white hover:bg-[#1b2a5c]"
         >
           {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 text-[#ffd12d]" />}
-          {busy ? "Reading site..." : "Extract Design DNA"}
+          {busy ? "Reading site..." : "Copy this look"}
         </Button>
       </div>
 
@@ -227,7 +227,7 @@ export function InspirationPanel({
                 title="Reuse this direction for every future lead in this industry"
                 className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-50"
               >
-                <BookmarkPlus className="h-3 w-3" /> {saved ? "Saved" : "Save for industry"}
+                <BookmarkPlus className="h-3 w-3" /> {saved ? "Saved" : "Use for this trade"}
               </button>
               <button
                 type="button"

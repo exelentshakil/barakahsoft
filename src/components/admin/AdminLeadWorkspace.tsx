@@ -75,6 +75,22 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
+// Database status values, said the way an operator would say them. The raw
+// values are how the pipeline talks to itself; "qa_pending" tells someone
+// working this queue nothing about what they are supposed to do next.
+const STATUS_LABEL: Record<string, string> = {
+  new: "New — not looked at yet",
+  scraping: "Reading their site",
+  ready: "Ready to build",
+  rendering: "Building the site",
+  qa_pending: "Waiting for you to approve",
+  qa_approved: "Approved — ready to send",
+  delivered: "Sent to the client",
+  paid: "Paid",
+  live: "Live",
+  lost: "Lost",
+};
+
 interface AdminLeadWorkspaceProps {
   lead: Lead;
   artifact: Artifact | null;
@@ -283,7 +299,7 @@ export function AdminLeadWorkspace({
       });
       if (!res.ok) throw new Error("Scrape failed");
     } catch {
-      alert("Could not start the re-scrape. Check the Firecrawl key.");
+      alert("Could not start reading their site. Try again in a moment — if it keeps failing, the site may be blocking us.");
       setRescraping(false);
     }
   }
@@ -303,7 +319,7 @@ export function AdminLeadWorkspace({
       setEmailSent(true);
       router.refresh();
     } catch {
-      alert("Failed to dispatch delivery email via Brevo API.");
+      alert("The email did not send. Check the client has a real email address on file, then try again.");
     } finally {
       setSendingEmail(false);
     }
@@ -339,11 +355,9 @@ export function AdminLeadWorkspace({
       <aside className="space-y-6">
         <div className="rounded-xl border border-[#e5e7f2] bg-white p-4 space-y-3">
           <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-2">
-            <span className="font-bold text-xs uppercase tracking-wider text-[#777588]">
-              INBOUND LEAD ORDERS
-            </span>
-            <span className="rounded-full bg-[#f0f3ff] px-2 py-0.5 text-[10px] font-bold text-[#533afd]">
-              {otherLeads.length} Active
+            <span className="text-sm font-bold text-[#0d1738]">Your leads</span>
+            <span className="rounded-full bg-[#f0f3ff] px-2 py-0.5 text-xs font-bold text-[#533afd]">
+              {otherLeads.length} open
             </span>
           </div>
 
@@ -361,19 +375,19 @@ export function AdminLeadWorkspace({
                       : "bg-white hover:bg-slate-50 border-[#e5e7f2]"
                   }`}
                 >
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="rounded bg-[#f0f3ff] px-1.5 py-0.5 text-[10px] font-bold text-[#533afd] capitalize">
+                  <div className="flex items-center justify-between">
+                    <span className="rounded bg-[#f0f3ff] px-1.5 py-0.5 text-xs font-bold text-[#533afd] capitalize">
                       {itemTrade}
                     </span>
-                    <span className="font-bold text-xs text-[#0b8f5b]">$797</span>
+                    <span className="text-sm font-bold text-[#0b8f5b]">$797</span>
                   </div>
 
-                  <p className="mt-1 font-bold text-xs text-[#0d1738] truncate">
+                  <p className="mt-1.5 truncate text-sm font-bold text-[#0d1738]">
                     {item.business_name || item.slug}
                   </p>
-                  <p className="text-[10px] text-[#777588] truncate">{item.contact_name || item.source_url}</p>
+                  <p className="truncate text-xs text-[#777588]">{item.contact_name || item.source_url}</p>
 
-                  <div className="mt-2 flex items-center justify-between text-[10px]">
+                  <div className="mt-2 flex items-center justify-between text-xs">
                     <span
                       className={`font-semibold capitalize ${
                         item.status === "paid"
@@ -383,7 +397,7 @@ export function AdminLeadWorkspace({
                           : "text-amber-600"
                       }`}
                     >
-                      {item.status === "qa_approved" ? "Preview Ready" : item.status}
+                      {STATUS_LABEL[item.status] ?? item.status}
                     </span>
                     <ChevronRight className="h-3 w-3 text-[#777588]" />
                   </div>
@@ -397,18 +411,17 @@ export function AdminLeadWorkspace({
           </div>
         </div>
 
-        {/* Weekly Pulse */}
-        <div className="rounded-xl border border-[#e5e7f2] bg-white p-5 space-y-3 text-xs">
-          <span className="font-bold uppercase tracking-wider text-[#777588] text-[10px]">WEEKLY PULSE</span>
-          <div className="flex justify-between items-center">
-            <span className="text-[#777588]">Collected This Week:</span>
-            <span className="font-bold text-sm text-[#0b8f5b]">
+        <div className="space-y-3 rounded-xl border border-[#e5e7f2] bg-white p-5">
+          <span className="text-sm font-bold text-[#0d1738]">This week</span>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-[#42506a]">Paid</span>
+            <span className="text-base font-bold text-[#0b8f5b]">
               ${collectedThisWeek.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[#777588]">Pending Close:</span>
-            <span className="font-bold text-sm text-[#533afd]">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-[#42506a]">Still to close</span>
+            <span className="text-base font-bold text-[#533afd]">
               ${pendingCloseAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
@@ -424,14 +437,13 @@ export function AdminLeadWorkspace({
               <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#f0f3ff] px-2.5 py-1 text-xs font-bold text-[#533afd] shrink-0">
                 <Zap className="h-3 w-3" /> Active Pipeline
               </span>
-              <span className="text-xs font-mono text-[#777588]">#{lead.id.slice(0, 8)}</span>
-              <Badge variant="outline">{lead.status}</Badge>
+              <Badge variant="outline" className="text-sm">{STATUS_LABEL[lead.status] ?? lead.status}</Badge>
               <DeliverySlaTimer createdAt={lead.created_at} deliveredAt={lead.delivered_at} />
             </div>
             <h1 className="mt-2 text-2xl font-bold tracking-tight text-[#0d1738] sm:text-3xl">
               {businessName}
             </h1>
-            <p className="text-xs text-[#777588] mt-0.5">
+            <p className="mt-1 text-sm text-[#42506a]">
               {lead.contact_name || "Owner"} · {phone} · {email}
             </p>
           </div>
@@ -441,37 +453,41 @@ export function AdminLeadWorkspace({
               href={portalUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-md bg-[#533afd] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#432bd9]"
+              title="Opens the page the client sees: their new homepage, the report and the price."
+              className="inline-flex items-center gap-2 rounded-md bg-[#533afd] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#432bd9]"
             >
-              <ExternalLink className="h-3.5 w-3.5" /> Customer Proposal Portal
+              <ExternalLink className="h-4 w-4" /> See what the client sees
             </a>
 
             <button
               onClick={handleSendBrevoEmail}
               disabled={sendingEmail}
-              className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2.5 text-xs font-bold text-white transition ${
+              title="Emails the client a private link to their new homepage and report."
+              className={`inline-flex items-center gap-2 rounded-md px-4 py-2.5 text-sm font-bold text-white transition ${
                 emailSent ? "bg-[#0b8f5b]" : "bg-[#533afd] hover:bg-[#432bd9]"
               }`}
             >
-              <Mail className="h-3.5 w-3.5" />
-              {sendingEmail ? "Dispatching via Brevo..." : emailSent ? "Brevo Email Sent ✓" : "Send Brevo Magic Link"}
+              <Mail className="h-4 w-4" />
+              {sendingEmail ? "Sending..." : emailSent ? "Link sent ✓" : "Email their site to them"}
             </button>
 
             {lead.phone && (
               <a
                 href={`tel:${lead.phone.replace(/\D/g, "")}`}
-                className="inline-flex items-center gap-1.5 rounded-md bg-[#0b8f5b] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#09744a]"
+                title={`Calls ${lead.phone}`}
+                className="inline-flex items-center gap-2 rounded-md bg-[#0b8f5b] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#09744a]"
               >
-                <PhoneCall className="h-3.5 w-3.5" /> Click-to-Call
+                <PhoneCall className="h-4 w-4" /> Call them
               </a>
             )}
 
             <button
               onClick={handleGenerateStripeCheckout}
               disabled={generatingStripe}
-              className="inline-flex items-center gap-1.5 rounded-md border border-[#533afd] bg-white px-4 py-2.5 text-xs font-bold text-[#533afd] hover:bg-[#f0f3ff]"
+              title="Creates a Stripe payment link for this price and opens it."
+              className="inline-flex items-center gap-2 rounded-md border border-[#533afd] bg-white px-4 py-2.5 text-sm font-bold text-[#533afd] hover:bg-[#f0f3ff]"
             >
-              <CircleDollarSign className="h-3.5 w-3.5" /> Send {priceDisplay} Invoice
+              <CircleDollarSign className="h-4 w-4" /> Ask for payment · {priceDisplay}
             </button>
 
             <EditLeadDialog
@@ -505,7 +521,7 @@ export function AdminLeadWorkspace({
                   className="inline-flex items-center gap-1.5 rounded-md bg-[#533afd] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#432bd9] disabled:opacity-60"
                 >
                   <RefreshCw className={`h-3.5 w-3.5 ${rescraping ? "animate-spin" : ""}`} />
-                  {rescraping ? "Analysing..." : "Analyse this lead · 2 pages"}
+                  {rescraping ? "Reading their site..." : "Read their site · 2 pages"}
                 </button>
               ) : (
                 <>
@@ -521,7 +537,7 @@ export function AdminLeadWorkspace({
                   <button
                     onClick={() => handleAnalyse("deep")}
                     disabled={rescraping}
-                    title="Crawl the client's real pages. Costs a Firecrawl page each."
+                    title="Reads up to 27 of their pages instead of 2. Slower and costs more, but finds every service and area they mention."
                     className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-semibold text-[#0d1738] hover:bg-[#f0f3ff]"
                   >
                     Deep crawl · up to 25
@@ -676,9 +692,9 @@ export function AdminLeadWorkspace({
               <Sparkles className="h-7 w-7" />
             </div>
             <div className="space-y-1.5">
-              <h4 className="font-bold text-lg text-[#0d1738]">Website Generation Ready</h4>
-              <p className="text-xs text-[#60778d] max-w-lg mx-auto leading-relaxed">
-                Firecrawl has extracted the brand tokens, location, and services in Step 2 above. Review or customize the brief, then click <strong className="text-[#533afd]">Generate High-Value Bespoke Website</strong> to build and render the live website preview.
+              <h4 className="font-bold text-lg text-[#0d1738]">Ready to build their site</h4>
+              <p className="mx-auto max-w-lg text-sm leading-relaxed text-[#42506a]">
+                We have read their site and filled in their name, services and area. Open the <strong className="text-[#533afd]">Build</strong> step, check those details look right, then press Generate. The finished page appears here.
               </p>
             </div>
           </div>
@@ -739,46 +755,53 @@ export function AdminLeadWorkspace({
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f0f3ff] text-xs font-bold text-[#533afd]">
                 5
               </span>
-              <h3 className="font-bold text-base text-[#0d1738]">Automated Brevo Delivery & Live Proposal Link</h3>
+              <h3 className="text-base font-bold text-[#0d1738]">Send their new site to them</h3>
             </div>
-            <span className="text-xs font-mono text-[#777588]">magic_{lead.id.slice(0, 4)} token</span>
           </div>
 
-          <div className="rounded-xl border border-[#c7d0fb] bg-[#f0f3ff] p-5 text-xs space-y-3.5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#c7d0fb] pb-2.5 text-[11px] gap-2">
-              <span><strong>To:</strong> {email}</span>
-              <span><strong>Private Portal:</strong> <a href={portalUrl} target="_blank" className="font-bold text-[#533afd] hover:underline">{portalUrl}</a></span>
+          <p className="text-sm text-[#42506a]">
+            This emails {lead.contact_name || "the owner"} a private link to their new homepage and the report on their
+            current site. Nobody else can open it. Edit the wording below if you want to say something specific.
+          </p>
+
+          <div className="space-y-4 rounded-xl border border-[#c7d0fb] bg-[#f0f3ff] p-5">
+            <div className="flex flex-col gap-2 border-b border-[#c7d0fb] pb-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                <strong>Goes to:</strong> {email}
+              </span>
+              <a href={portalUrl} target="_blank" rel="noreferrer" className="font-bold text-[#533afd] hover:underline">
+                Preview the link they get
+              </a>
             </div>
 
-            <div className="space-y-3 pt-1">
+            <div className="space-y-3">
               <div>
-                <span className="font-semibold text-[#0d1738] block mb-1">Email Subject Line:</span>
+                <span className="mb-1 block text-sm font-semibold text-[#0d1738]">Subject</span>
                 <Input
                   value={emailSubject}
                   onChange={(e) => setEmailSubject(e.target.value)}
-                  className="bg-white text-xs h-8"
+                  className="h-9 bg-white text-sm"
                 />
               </div>
 
               <div>
-                <span className="font-semibold text-[#0d1738] block mb-1">Opening Message / Compliment:</span>
+                <span className="mb-1 block text-sm font-semibold text-[#0d1738]">First line of the email</span>
                 <Textarea
                   rows={3}
                   value={emailBody}
                   onChange={(e) => setEmailBody(e.target.value)}
-                  className="bg-white text-xs resize-none"
+                  className="resize-none bg-white text-sm"
                 />
               </div>
             </div>
 
-            <div className="flex justify-between items-center pt-2">
-              <span className="text-[11px] text-[#777588]">1-Click Delivery via Brevo API</span>
+            <div className="flex items-center justify-end pt-1">
               <button
                 onClick={handleSendBrevoEmail}
                 disabled={sendingEmail}
-                className="rounded-md bg-[#533afd] px-5 py-2.5 text-xs font-bold text-white transition hover:bg-[#432bd9]"
+                className="rounded-md bg-[#533afd] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#432bd9]"
               >
-                {sendingEmail ? "Sending..." : emailSent ? "Delivered via Brevo ✓" : "Send Delivery Email Now"}
+                {sendingEmail ? "Sending..." : emailSent ? "Sent ✓" : "Send it now"}
               </button>
             </div>
           </div>
