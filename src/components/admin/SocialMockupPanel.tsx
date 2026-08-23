@@ -66,6 +66,35 @@ export function SocialMockupPanel({
   const reviewCount = (facts?.review_count as number) || 100;
   const previewUrl = `/s/${lead.slug}?view=preview`;
 
+  const [generatingAvatar, setGeneratingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [currentFeaturedPhoto, setCurrentFeaturedPhoto] = useState<string | null>(
+    (facts?.founder_photo_url as string) || (extracted?.about_image_url as string) || photoUrl
+  );
+  const [photosList, setPhotosList] = useState<string[]>(availablePhotos);
+
+  async function handleGenerateAvatar() {
+    setGeneratingAvatar(true);
+    setAvatarError(null);
+    try {
+      const res = await fetch(`/api/leads/${lead.id}/generate-avatar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || "Could not generate owner portrait");
+      }
+      setCurrentFeaturedPhoto(data.url);
+      setPhotosList((prev) => [data.url, ...prev]);
+    } catch (err) {
+      setAvatarError(err instanceof Error ? err.message : "Generation failed");
+    } finally {
+      setGeneratingAvatar(false);
+    }
+  }
+
   const mockupData: MockupData = {
     businessName,
     city,
@@ -79,9 +108,9 @@ export function SocialMockupPanel({
     founderTitle: "Founder / CEO",
     aboutHeadline: `A PASSION FOR ${trade.toUpperCase()} EXCELLENCE`,
     heroHeadline: `PREMIER ${trade.toUpperCase()} IN ${city.toUpperCase()}`,
-    photoUrl,
-    secondaryPhotoUrl,
-    availablePhotos,
+    photoUrl: currentFeaturedPhoto,
+    secondaryPhotoUrl: photosList[1] || currentFeaturedPhoto,
+    availablePhotos: photosList,
     siteUrl: lead.source_url,
     previewUrl,
   };
@@ -279,9 +308,45 @@ Duration: 6.0 Seconds (Seamless Loop)
           </span>
         </div>
 
+        {/* Founder Portrait AI Generator Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#533afd]/20 bg-[#f9f9ff] p-3.5 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#533afd] text-white shadow-sm">
+              <Sparkles className="h-4 w-4" />
+            </span>
+            <div>
+              <p className="font-bold text-[#0d1738]">Business Owner Portrait / Avatar (Gemini AI)</p>
+              <p className="text-[11px] text-muted-foreground">
+                Generate or enhance an ultra-HD founder portrait holding blueprints/plans for {businessName}&apos;s story
+              </p>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            size="sm"
+            disabled={generatingAvatar}
+            onClick={handleGenerateAvatar}
+            className="gap-1.5 bg-[#533afd] text-white hover:bg-[#432bd9] font-bold text-xs shadow-sm"
+          >
+            {generatingAvatar ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            {generatingAvatar ? "Generating Ultra-HD Portrait..." : "✨ Generate Owner Avatar (Gemini AI)"}
+          </Button>
+        </div>
+
+        {avatarError && (
+          <p className="rounded-lg bg-red-50 p-2.5 text-xs font-medium text-red-700">
+            {avatarError}
+          </p>
+        )}
+
         {/* 3D Mockup Visual Stage */}
         <div className="flex justify-center">
-          <SocialLaunchMockup data={mockupData} showControls={true} />
+          <SocialLaunchMockup
+            data={mockupData}
+            showControls={true}
+            onSelectPhoto={(url) => setCurrentFeaturedPhoto(url)}
+          />
         </div>
 
         {/* Studio Content Tabs */}
