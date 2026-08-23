@@ -10,6 +10,8 @@ import {
   RefreshCw,
   Sliders,
   Type,
+  ExternalLink,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -26,6 +28,7 @@ export interface MockupData {
   city?: string | null;
   trade?: string | null;
   brandColor?: string | null;
+  logoUrl?: string | null;
   rating?: number | null;
   reviewCount?: number | null;
   yearsExperience?: number | string | null;
@@ -36,6 +39,7 @@ export interface MockupData {
   heroSubheadline?: string | null;
   photoUrl?: string | null;
   secondaryPhotoUrl?: string | null;
+  availablePhotos?: string[];
   siteUrl?: string | null;
   previewUrl?: string | null;
   headlineMode?: MockupHeadlineMode;
@@ -78,30 +82,26 @@ const BG_THEMES = [
   {
     id: "olive",
     name: "Sage Olive (Ref 1)",
-    gradient: "from-[#4c5c49] via-[#354333] to-[#202a1e]",
-    glow: "rgba(76, 92, 73, 0.45)",
-    ribbonColor: "#1d3624",
+    gradient: "from-[#4a5a47] via-[#334131] to-[#1e271c]",
+    ribbonColor: "#1a3320",
   },
   {
     id: "sky",
     name: "Azure Sky (Ref 2)",
-    gradient: "from-[#79a9cc] via-[#4d7ca0] to-[#285072]",
-    glow: "rgba(121, 169, 204, 0.45)",
-    ribbonColor: "#2c4e6e",
+    gradient: "from-[#75a6c8] via-[#48779b] to-[#254c6d]",
+    ribbonColor: "#284a68",
   },
   {
     id: "midnight",
     name: "Midnight Navy",
-    gradient: "from-[#1a2b4a] via-[#101c33] to-[#070d1a]",
-    glow: "rgba(26, 43, 74, 0.5)",
-    ribbonColor: "#142540",
+    gradient: "from-[#182845] via-[#0f1a2f] to-[#060c18]",
+    ribbonColor: "#12223a",
   },
   {
     id: "charcoal",
     name: "Studio Charcoal",
-    gradient: "from-[#333842] via-[#21242b] to-[#13151a]",
-    glow: "rgba(51, 56, 66, 0.45)",
-    ribbonColor: "#1f232b",
+    gradient: "from-[#30353e] via-[#1f2228] to-[#121418]",
+    ribbonColor: "#1c2027",
   },
 ];
 
@@ -109,13 +109,16 @@ export function SocialLaunchMockup({
   data,
   showControls = true,
   className = "",
+  onSelectPhoto,
 }: {
   data: MockupData;
   showControls?: boolean;
   className?: string;
+  onSelectPhoto?: (url: string) => void;
 }) {
   const [themeId, setThemeId] = useState("olive");
   const [headlineMode, setHeadlineMode] = useState<MockupHeadlineMode>(data.headlineMode || "proposed");
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(data.photoUrl || data.secondaryPhotoUrl || null);
   const [downloading, setDownloading] = useState<string | null>(null);
   const mockupRef = useRef<HTMLDivElement>(null);
 
@@ -129,13 +132,15 @@ export function SocialLaunchMockup({
     data.heroHeadline || `PREMIER ${trade.toUpperCase()} IN ${city.toUpperCase()}`;
   const aboutHeading =
     data.aboutHeadline || `A PASSION FOR ${trade.toUpperCase()} AND RENOVATION EXCELLENCE`;
-  const founder = data.founderName || "Michael Allan";
+  const founder = data.founderName || "Founder & Team";
   const founderRole = data.founderTitle || "Founder / CEO";
   const ratingText = data.rating ? `${data.rating}★` : "5★";
   const reviewsCountText = data.reviewCount ? `${data.reviewCount}+` : "100+";
   const yearsExp = data.yearsExperience ? `${data.yearsExperience}+` : "10+";
 
   const activeHeadline = HEADLINE_OPTIONS.find((h) => h.id === headlineMode) || HEADLINE_OPTIONS[0];
+
+  const featuredCardPhoto = selectedPhoto || data.photoUrl || data.secondaryPhotoUrl;
 
   // High-Resolution 1080px Canvas Export (4:5 Feed, 9:16 Story, Transparent PNG)
   async function downloadImage(format: "feed" | "story" | "transparent") {
@@ -153,22 +158,22 @@ export function SocialLaunchMockup({
       if (format !== "transparent") {
         const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
         if (themeId === "sky") {
-          bgGradient.addColorStop(0, "#79a9cc");
-          bgGradient.addColorStop(0.45, "#4d7ca0");
-          bgGradient.addColorStop(1, "#285072");
+          bgGradient.addColorStop(0, "#75a6c8");
+          bgGradient.addColorStop(0.45, "#48779b");
+          bgGradient.addColorStop(1, "#254c6d");
         } else if (themeId === "midnight") {
-          bgGradient.addColorStop(0, "#1a2b4a");
-          bgGradient.addColorStop(0.45, "#101c33");
-          bgGradient.addColorStop(1, "#070d1a");
+          bgGradient.addColorStop(0, "#182845");
+          bgGradient.addColorStop(0.45, "#0f1a2f");
+          bgGradient.addColorStop(1, "#060c18");
         } else if (themeId === "charcoal") {
-          bgGradient.addColorStop(0, "#333842");
-          bgGradient.addColorStop(0.45, "#21242b");
-          bgGradient.addColorStop(1, "#13151a");
+          bgGradient.addColorStop(0, "#30353e");
+          bgGradient.addColorStop(0.45, "#1f2228");
+          bgGradient.addColorStop(1, "#121418");
         } else {
           // Sage Olive (Exact match to Reference 1)
-          bgGradient.addColorStop(0, "#4c5c49");
-          bgGradient.addColorStop(0.45, "#354333");
-          bgGradient.addColorStop(1, "#202a1e");
+          bgGradient.addColorStop(0, "#4a5a47");
+          bgGradient.addColorStop(0.45, "#334131");
+          bgGradient.addColorStop(1, "#1e271c");
         }
         ctx.fillStyle = bgGradient;
         ctx.fillRect(0, 0, width, height);
@@ -214,8 +219,7 @@ export function SocialLaunchMockup({
         ratingText,
         reviewsCountText,
         yearsExp,
-        headlineLine1: activeHeadline.line1,
-        headlineLine2: activeHeadline.line2,
+        featuredPhoto: featuredCardPhoto,
       });
 
       const img = new Image();
@@ -251,7 +255,7 @@ export function SocialLaunchMockup({
       {/* 3D Mockup Stage Container (4:5 Aspect Ratio matching references) */}
       <div
         ref={mockupRef}
-        className={`relative w-full max-w-[580px] aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-b ${theme.gradient} select-none border border-white/15 flex flex-col justify-between p-6 sm:p-8`}
+        className={`relative w-full max-w-[560px] aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-b ${theme.gradient} select-none border border-white/15 flex flex-col justify-between p-6 sm:p-8`}
         style={{
           boxShadow: "0 35px 70px -15px rgba(0, 0, 0, 0.65), inset 0 1px 2px rgba(255,255,255,0.3)",
         }}
@@ -280,82 +284,87 @@ export function SocialLaunchMockup({
           {/* Ground Soft Ambient Shadow */}
           <div className="absolute bottom-4 left-6 right-6 h-12 bg-black/50 blur-2xl rounded-full transform scale-x-110 -rotate-2" />
 
-          {/* 1. REALISTIC 3D MACBOOK (Angled Left 3/4 Perspective) */}
+          {/* 1. PHOTOREALISTIC 3D MACBOOK (Angled Left 3/4 Perspective) */}
           <div
-            className="relative w-[88%] max-w-[460px] transition-transform duration-500"
+            className="relative w-[88%] max-w-[450px] transition-transform duration-500"
             style={{
               transform: "rotateY(-18deg) rotateX(14deg) rotateZ(3deg) translateY(12px)",
               transformStyle: "preserve-3d",
             }}
           >
-            {/* Screen Glass & Bezel */}
-            <div className="relative rounded-t-2xl bg-[#1a1c20] p-2 sm:p-2.5 pb-3 sm:pb-4 shadow-2xl border border-white/25 ring-1 ring-black/70">
-              {/* Screen Inner Display */}
+            {/* Screen Glass & Aluminum Bezel */}
+            <div className="relative rounded-t-2xl bg-[#14161a] p-2 sm:p-2.5 pb-3 sm:pb-4 shadow-2xl border border-white/25 ring-1 ring-black/70">
+              {/* Screen Top Camera Notch */}
+              <div className="absolute top-1 left-1/2 -translate-x-1/2 h-1.5 w-10 bg-[#000] rounded-b-md z-20 flex items-center justify-center">
+                <span className="h-0.5 w-0.5 rounded-full bg-[#1e293b]" />
+              </div>
+
+              {/* Screen Inner Display: Embeds the LIVE Website Viewport */}
               <div className="relative aspect-[16/10] w-full rounded-lg bg-[#0e1626] overflow-hidden shadow-inner border border-black/80 flex flex-col">
-                {/* Real Website Header Bar */}
-                <div
-                  className="h-5 sm:h-6 w-full flex items-center justify-between px-2 text-[6px] sm:text-[7.5px] font-bold text-white shadow-sm"
-                  style={{ backgroundColor: primaryColor }}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-2.5 w-2.5 rounded-full bg-white/40 shadow-sm" />
-                    <span className="truncate max-w-[110px] font-black">{businessShortName}</span>
+                {data.previewUrl ? (
+                  <div className="relative w-full h-full overflow-hidden bg-white">
+                    <iframe
+                      src={data.previewUrl}
+                      title="Live Generated Website Mockup Preview"
+                      tabIndex={-1}
+                      className="absolute top-0 left-0 border-0 pointer-events-none"
+                      style={{
+                        width: "1280px",
+                        height: "800px",
+                        transform: "scale(0.285)",
+                        transformOrigin: "top left",
+                      }}
+                    />
+                    {/* Glass Reflection Glare Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/15 pointer-events-none" />
                   </div>
-                  <div className="flex items-center gap-2 opacity-90 scale-90">
-                    <span>Home</span>
-                    <span>About</span>
-                    <span>Services</span>
-                    <span className="rounded bg-white/20 px-1.5 py-0.5 font-bold">Call Now</span>
-                  </div>
-                </div>
+                ) : (
+                  /* Fallback High-Fidelity Website Viewport */
+                  <div className="relative flex-1 bg-slate-900 p-2.5 sm:p-3.5 flex flex-col justify-between text-white overflow-hidden">
+                    <div
+                      className="absolute inset-0 opacity-45 bg-cover bg-center"
+                      style={{
+                        backgroundImage: data.photoUrl ? `url(${data.photoUrl})` : undefined,
+                        backgroundColor: primaryColor,
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-transparent" />
 
-                {/* Real Hero Section on Screen */}
-                <div className="relative flex-1 bg-slate-900 p-2.5 sm:p-3.5 flex flex-col justify-between text-white overflow-hidden">
-                  <div
-                    className="absolute inset-0 opacity-45 bg-cover bg-center"
-                    style={{
-                      backgroundImage: data.photoUrl ? `url(${data.photoUrl})` : undefined,
-                      backgroundColor: primaryColor,
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-transparent" />
-
-                  {/* Hero Copy */}
-                  <div className="relative z-10 space-y-1 max-w-[80%]">
-                    <span className="inline-block rounded bg-emerald-500/30 px-1.5 py-0.5 text-[5px] sm:text-[6.5px] font-extrabold tracking-wider uppercase text-emerald-300 border border-emerald-400/30">
-                      SERVING {city.toUpperCase()}
-                    </span>
-                    <h3 className="text-[8px] sm:text-[10px] font-black leading-tight line-clamp-2 uppercase text-white drop-shadow">
-                      {heroHeading}
-                    </h3>
-                    <div className="flex items-center gap-1.5 pt-0.5">
-                      <span
-                        className="rounded px-2 py-0.5 text-[5.5px] sm:text-[7px] font-bold text-white shadow"
-                        style={{ backgroundColor: primaryColor }}
-                      >
-                        GET A FREE QUOTE →
+                    <div className="relative z-10 space-y-1 max-w-[80%]">
+                      <span className="inline-block rounded bg-emerald-500/30 px-1.5 py-0.5 text-[5px] sm:text-[6.5px] font-extrabold tracking-wider uppercase text-emerald-300 border border-emerald-400/30">
+                        SERVING {city.toUpperCase()}
                       </span>
-                      <span className="text-[5.5px] sm:text-[6.5px] text-amber-400 font-bold">
-                        ★★★★★ {ratingText}
+                      <h3 className="text-[8px] sm:text-[10px] font-black leading-tight line-clamp-2 uppercase text-white drop-shadow">
+                        {heroHeading}
+                      </h3>
+                      <div className="flex items-center gap-1.5 pt-0.5">
+                        <span
+                          className="rounded px-2 py-0.5 text-[5.5px] sm:text-[7px] font-bold text-white shadow"
+                          style={{ backgroundColor: primaryColor }}
+                        >
+                          GET A FREE QUOTE →
+                        </span>
+                        <span className="text-[5.5px] sm:text-[6.5px] text-amber-400 font-bold">
+                          ★★★★★ {ratingText}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="relative z-10 bg-white/95 rounded p-1.5 text-[#0d1738] flex items-center justify-between shadow-sm">
+                      <div>
+                        <span className="block text-[4.5px] sm:text-[5.5px] font-bold uppercase text-muted-foreground">
+                          Trusted Across {city}
+                        </span>
+                        <span className="block text-[6px] sm:text-[7px] font-black truncate max-w-[150px]">
+                          {trade.toUpperCase()} EXPERTS WITH 5-STAR REPUTATION
+                        </span>
+                      </div>
+                      <span className="rounded bg-[#0d1738] px-1.5 py-0.5 text-[4.5px] sm:text-[5.5px] font-bold text-white">
+                        READ REVIEWS
                       </span>
                     </div>
                   </div>
-
-                  {/* Below-Fold Service Strip Preview on Screen */}
-                  <div className="relative z-10 bg-white/95 rounded p-1.5 text-[#0d1738] flex items-center justify-between shadow-sm">
-                    <div>
-                      <span className="block text-[4.5px] sm:text-[5.5px] font-bold uppercase text-muted-foreground">
-                        Trusted Across {city}
-                      </span>
-                      <span className="block text-[6px] sm:text-[7px] font-black truncate max-w-[150px]">
-                        {trade.toUpperCase()} EXPERTS WITH 5-STAR REPUTATION
-                      </span>
-                    </div>
-                    <span className="rounded bg-[#0d1738] px-1.5 py-0.5 text-[4.5px] sm:text-[5.5px] font-bold text-white">
-                      READ REVIEWS
-                    </span>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
@@ -383,15 +392,15 @@ export function SocialLaunchMockup({
             {/* Sheet Top Notch */}
             <div className="h-1.5 w-12 bg-slate-300 rounded-full mx-auto my-1 opacity-60" />
 
-            {/* Sheet Main Header with Founder Story */}
+            {/* Sheet Main Header with Founder Story & Real Logo */}
             <div className="p-3 sm:p-4 text-white" style={{ backgroundColor: primaryColor }}>
               <div className="flex items-start gap-2.5">
-                {/* Photo with Name Overlay Tag (Exact Match to Ref 1 & 2) */}
+                {/* Photo with Real Logo & Name Overlay (Exact Match to References) */}
                 <div className="relative h-14 w-14 sm:h-18 sm:w-18 rounded-xl bg-slate-800 overflow-hidden shrink-0 border-2 border-white/40 shadow-md">
-                  {data.secondaryPhotoUrl || data.photoUrl ? (
+                  {featuredCardPhoto ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={data.secondaryPhotoUrl || data.photoUrl || ""}
+                      src={featuredCardPhoto}
                       alt={founder}
                       className="h-full w-full object-cover"
                     />
@@ -400,8 +409,17 @@ export function SocialLaunchMockup({
                       {founder.slice(0, 2).toUpperCase()}
                     </div>
                   )}
+
+                  {/* Real Logo Overlay Tag */}
+                  {data.logoUrl && (
+                    <div className="absolute top-1 left-1 h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-white p-0.5 shadow-md flex items-center justify-center border border-white/60">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={data.logoUrl} alt="Logo" className="h-full w-full object-contain" />
+                    </div>
+                  )}
+
                   {/* Founder Name Tag Overlay */}
-                  <div className="absolute bottom-0 inset-x-0 bg-white/95 text-[#0d1738] p-0.5 text-center">
+                  <div className="absolute bottom-0 inset-x-0 bg-white/95 text-[#0d1738] p-0.5 text-center shadow-sm">
                     <span className="block text-[5px] sm:text-[6px] font-black truncate">{founder}</span>
                     <span className="block text-[4px] sm:text-[5px] text-muted-foreground truncate">{founderRole}</span>
                   </div>
@@ -482,9 +500,48 @@ export function SocialLaunchMockup({
 
       {/* Control Panel for Operator */}
       {showControls && (
-        <div className="w-full max-w-[580px] space-y-4 bg-white p-5 rounded-2xl border border-border shadow-sm">
-          {/* 1. Headline Wording Switcher */}
-          <div className="space-y-1.5">
+        <div className="w-full max-w-[560px] space-y-4 bg-white p-5 rounded-2xl border border-border shadow-sm">
+          {/* 1. Featured Photo Selector from Scraped Photos */}
+          {data.availablePhotos && data.availablePhotos.length > 0 && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#0d1738] flex items-center gap-1.5">
+                  <ImageIcon className="h-3.5 w-3.5 text-[#533afd]" /> Featured Card Photo
+                </span>
+                <span className="text-[10px] text-muted-foreground font-semibold">
+                  Pick the best hero / team shot
+                </span>
+              </div>
+              <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                {data.availablePhotos.slice(0, 7).map((url, idx) => (
+                  <button
+                    key={url}
+                    type="button"
+                    onClick={() => {
+                      setSelectedPhoto(url);
+                      onSelectPhoto?.(url);
+                    }}
+                    className={`relative h-12 w-12 shrink-0 rounded-lg overflow-hidden border-2 transition ${
+                      featuredCardPhoto === url
+                        ? "border-[#533afd] scale-105 shadow-md ring-2 ring-[#533afd]/20"
+                        : "border-border opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={url} alt={`Option ${idx + 1}`} className="h-full w-full object-cover" />
+                    {featuredCardPhoto === url && (
+                      <span className="absolute top-0.5 right-0.5 h-3 w-3 bg-[#533afd] rounded-full flex items-center justify-center text-white text-[8px]">
+                        ✓
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 2. Headline Wording Switcher */}
+          <div className="space-y-1.5 pt-1 border-t border-border/70">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-[#0d1738] flex items-center gap-1.5">
                 <Type className="h-3.5 w-3.5 text-[#533afd]" /> Poster Headline Style
@@ -512,7 +569,7 @@ export function SocialLaunchMockup({
             </div>
           </div>
 
-          {/* 2. Theme Background Switcher */}
+          {/* 3. Theme Background Switcher */}
           <div className="flex items-center justify-between pt-1 border-t border-border/70">
             <span className="text-xs font-bold text-[#0d1738] flex items-center gap-1.5">
               <Sliders className="h-3.5 w-3.5 text-[#533afd]" /> Background Palette (Reference Match)
@@ -532,7 +589,7 @@ export function SocialLaunchMockup({
             </div>
           </div>
 
-          {/* 3. High-Res Export Buttons */}
+          {/* 4. High-Res Export Buttons */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-border/70">
             <Button
               type="button"
@@ -597,8 +654,7 @@ function generateRealisticMockupSvg({
   ratingText,
   reviewsCountText,
   yearsExp,
-  headlineLine1,
-  headlineLine2,
+  featuredPhoto,
 }: {
   data: MockupData;
   theme: (typeof BG_THEMES)[0];
@@ -616,8 +672,7 @@ function generateRealisticMockupSvg({
   ratingText: string;
   reviewsCountText: string;
   yearsExp: string;
-  headlineLine1: string;
-  headlineLine2: string;
+  featuredPhoto?: string | null;
 }) {
   const isStory = format === "story";
   const contentYOffset = isStory ? 320 : 180;

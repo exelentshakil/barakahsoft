@@ -134,7 +134,7 @@ export function LiveClientProposal({
           onOpenCheckout={() => setShowCheckout(true)}
         />
 
-        {/* 3D Website Launch Showcase Mockup */}
+        {/* 3D Website Redesign Showcase Mockup */}
         <section className="rounded-3xl border border-[#c7d0fb] bg-white p-6 sm:p-10 shadow-sm flex flex-col items-center space-y-6">
           <div className="text-center max-w-xl space-y-1">
             <span className="text-xs font-bold uppercase tracking-widest text-[#533afd]">
@@ -148,26 +148,30 @@ export function LiveClientProposal({
             </p>
           </div>
 
-          <SocialLaunchMockup
-            data={{
-              businessName,
-              city: (scrapeResults?.facts as Record<string, unknown> | null)?.town as string || null,
-              trade: lead.industry || payload.services?.[0]?.h2 || "Services",
-              brandColor: ((scrapeResults?.facts as Record<string, unknown> | null)?.brand_color_hex as string) || "#1b4d3e",
-              rating: typeof rating === "number" ? rating : typeof rating === "string" ? parseFloat(rating) : 5.0,
-              reviewCount: typeof reviewCount === "number" ? reviewCount : typeof reviewCount === "string" ? parseInt(reviewCount, 10) : 100,
-              yearsExperience: 10,
-              founderName: "Owner & Team",
-              founderTitle: "Founder / Operator",
-              aboutHeadline: `A PASSION FOR ${(lead.industry || "QUALITY").toUpperCase()} EXCELLENCE`,
-              heroHeadline: payload.headline || `PREMIER ${(lead.industry || "SERVICES").toUpperCase()}`,
-              photoUrl: payload.heroImageUrl || null,
-              secondaryPhotoUrl: payload.services?.[0]?.imageUrl || null,
-              siteUrl: lead.source_url,
-              headlineMode: isPaid ? "launched" : "proposed",
-            }}
-            showControls={false}
-          />
+          <div className="w-full flex justify-center py-2">
+            <SocialLaunchMockup
+              data={{
+                businessName,
+                city: ((scrapeResults?.facts as Record<string, unknown> | null)?.town as string) || null,
+                trade: lead.industry || payload.services?.[0]?.h2 || "Services",
+                brandColor: ((scrapeResults?.facts as Record<string, unknown> | null)?.brand_color_hex as string) || "#1b4d3e",
+                logoUrl: ((scrapeResults?.facts as any)?.logo_url as string) || null,
+                rating: typeof rating === "number" ? rating : typeof rating === "string" ? parseFloat(rating) : 5.0,
+                reviewCount: typeof reviewCount === "number" ? reviewCount : typeof reviewCount === "string" ? parseInt(reviewCount, 10) : 100,
+                yearsExperience: ((scrapeResults?.facts as any)?.years_in_business as number) || 10,
+                founderName: ((scrapeResults?.facts as any)?.founder_name as string) || lead.contact_name || "Owner & Team",
+                founderTitle: "Founder / Operator",
+                aboutHeadline: `A PASSION FOR ${(lead.industry || "QUALITY").toUpperCase()} EXCELLENCE`,
+                heroHeadline: payload.headline || `PREMIER ${(lead.industry || "SERVICES").toUpperCase()}`,
+                photoUrl: payload.heroImageUrl || ((scrapeResults?.facts as any)?.site_photos?.[0]?.url as string) || null,
+                secondaryPhotoUrl: ((scrapeResults?.facts as any)?.site_photos?.[1]?.url as string) || payload.services?.[0]?.imageUrl || null,
+                siteUrl: lead.source_url,
+                previewUrl: `/s/${lead.slug}?view=preview`,
+                headlineMode: isPaid ? "launched" : "proposed",
+              }}
+              showControls={false}
+            />
+          </div>
         </section>
 
         {/* Modules render only when there is measured data behind them AND

@@ -37,16 +37,25 @@ export function SocialMockupPanel({
   const photos = (facts?.site_photos as { url?: string }[] | undefined) ?? [];
   const gbpPhotos = (facts?.gbp_photo_urls as string[] | undefined) ?? [];
 
-  const photoUrl =
-    gbpPhotos[0] ||
-    photos[0]?.url ||
-    (extracted?.hero_image_url as string) ||
-    null;
+  // Combine all real photos into a deduplicated list
+  const availablePhotos: string[] = Array.from(
+    new Set(
+      [
+        ...gbpPhotos,
+        ...photos.map((p) => p.url).filter(Boolean),
+        extracted?.hero_image_url as string,
+        extracted?.about_image_url as string,
+      ].filter(Boolean) as string[]
+    )
+  );
 
-  const secondaryPhotoUrl =
-    gbpPhotos[1] ||
-    photos[1]?.url ||
-    (extracted?.about_image_url as string) ||
+  const photoUrl = availablePhotos[0] || null;
+  const secondaryPhotoUrl = availablePhotos[1] || availablePhotos[0] || null;
+
+  const logoUrl =
+    (extracted?.branding as any)?.logo ||
+    (facts?.logo_url as string) ||
+    ((facts?.existing_schema as any)?.logo as string) ||
     null;
 
   const businessName = lead.business_name || (facts?.business_name as string) || lead.slug;
@@ -55,12 +64,14 @@ export function SocialMockupPanel({
   const brandColorHex = (facts?.brand_color_hex as string) || (extracted?.brand_color_hex as string) || "#1b4d3e";
   const rating = (facts?.rating as number) || 5.0;
   const reviewCount = (facts?.review_count as number) || 100;
+  const previewUrl = `/s/${lead.slug}?view=preview`;
 
   const mockupData: MockupData = {
     businessName,
     city,
     trade,
     brandColor: brandColorHex,
+    logoUrl,
     rating,
     reviewCount,
     yearsExperience: (facts?.years_in_business as number) || 10,
@@ -70,7 +81,9 @@ export function SocialMockupPanel({
     heroHeadline: `PREMIER ${trade.toUpperCase()} IN ${city.toUpperCase()}`,
     photoUrl,
     secondaryPhotoUrl,
+    availablePhotos,
     siteUrl: lead.source_url,
+    previewUrl,
   };
 
   // Panel View Tabs: Captions | Motion Guidelines | Moodboard
