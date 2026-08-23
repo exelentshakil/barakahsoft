@@ -15,6 +15,7 @@ import { ProposalPricingSection } from "@/components/portal/sections/ProposalPri
 import { ProposalDecisionBox } from "@/components/portal/sections/ProposalDecisionBox";
 import { ProposalCheckoutModal } from "@/components/portal/sections/ProposalCheckoutModal";
 import { ProposalFooter } from "@/components/portal/sections/ProposalFooter";
+import { SocialLaunchMockup, type MockupData } from "@/components/mockup/SocialLaunchMockup";
 
 interface LiveClientProposalProps {
   lead: Lead;
@@ -132,6 +133,41 @@ export function LiveClientProposal({
           priceFormattedLabel={priceFormattedLabel}
           onOpenCheckout={() => setShowCheckout(true)}
         />
+
+        {/* 3D Website Launch Showcase Mockup */}
+        <section className="rounded-3xl border border-[#c7d0fb] bg-white p-6 sm:p-10 shadow-sm flex flex-col items-center space-y-6">
+          <div className="text-center max-w-xl space-y-1">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#533afd]">
+              High-Converting Modern Redesign
+            </span>
+            <h3 className="text-xl sm:text-2xl font-bold text-[#0d1738]">
+              Your Brand, Elevated to Category Leader
+            </h3>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              A bespoke, lightning-fast digital storefront engineered to convert local search visitors into qualified phone calls and bookings.
+            </p>
+          </div>
+
+          <SocialLaunchMockup
+            data={{
+              businessName,
+              city: (scrapeResults?.facts as Record<string, unknown> | null)?.town as string || null,
+              trade: lead.industry || payload.services?.[0]?.h2 || "Services",
+              brandColor: ((scrapeResults?.facts as Record<string, unknown> | null)?.brand_color_hex as string) || "#1b4d3e",
+              rating: typeof rating === "number" ? rating : typeof rating === "string" ? parseFloat(rating) : 5.0,
+              reviewCount: typeof reviewCount === "number" ? reviewCount : typeof reviewCount === "string" ? parseInt(reviewCount, 10) : 100,
+              yearsExperience: 10,
+              founderName: "Owner & Team",
+              founderTitle: "Founder / Operator",
+              aboutHeadline: `A PASSION FOR ${(lead.industry || "QUALITY").toUpperCase()} EXCELLENCE`,
+              heroHeadline: payload.headline || `PREMIER ${(lead.industry || "SERVICES").toUpperCase()}`,
+              photoUrl: payload.heroImageUrl || null,
+              secondaryPhotoUrl: payload.services?.[0]?.imageUrl || null,
+              siteUrl: lead.source_url,
+            }}
+            showControls={false}
+          />
+        </section>
 
         {/* Modules render only when there is measured data behind them AND
             they apply to this kind of business. A national agency does not

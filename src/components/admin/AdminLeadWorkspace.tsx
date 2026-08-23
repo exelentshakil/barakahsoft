@@ -74,6 +74,7 @@ import { HandoverPanel } from "@/components/admin/HandoverPanel";
 import { LeadValuePanel, type LeadValueData } from "@/components/admin/LeadValuePanel";
 import { EditLeadDialog } from "@/components/admin/EditLeadDialog";
 import { DeleteLeadButton } from "@/components/admin/DeleteLeadButton";
+import { SocialMockupPanel } from "@/components/admin/SocialMockupPanel";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -838,6 +839,11 @@ export function AdminLeadWorkspace({
             unreachable — mounted only inside a tabs layout nothing renders —
             so no lead could ever be approved and no portal could unlock. */}
         <ApprovalGate lead={lead} artifact={artifact} onChanged={() => setReloadKey((k) => k + 1)} />
+
+        {/* 3D Mockup Asset Panel for Social Media (Instagram / Facebook / After Effects) */}
+        {artifact?.bespoke_homepage_html && (
+          <SocialMockupPanel lead={lead} artifact={artifact} facts={facts} />
+        )}
 
         </TabPanel>
 
