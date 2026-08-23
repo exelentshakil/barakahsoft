@@ -11,6 +11,24 @@ interface ProposalHeroProps {
   onOpenCheckout: () => void;
 }
 
+/**
+ * The town out of a formatted postal address.
+ *
+ * Google returns "9751 Susan Rd, Philadelphia, PA 19115, USA", and dropping
+ * that whole string into a sentence gave a client "most of the businesses
+ * near 9751 Susan Rd, Philadelphia, PA 19115, USA you are competing with".
+ * Nobody says their own address that way, and reading it in a sentence
+ * written for them is the tell that nobody wrote it.
+ */
+function townFrom(address: string | null): string | null {
+  if (!address) return null;
+  const parts = address.split(",").map((p) => p.trim()).filter(Boolean);
+  // Street, town, region + postcode, country. Two parts or fewer is not a
+  // full postal address, so there is nothing safe to pull out of it.
+  if (parts.length < 3) return null;
+  return parts[parts.length - 3] || null;
+}
+
 export function ProposalHero({
   businessName,
   address,
@@ -21,6 +39,8 @@ export function ProposalHero({
   priceFormattedLabel,
   onOpenCheckout,
 }: ProposalHeroProps) {
+  const town = townFrom(address);
+
   return (
     <section className="rounded-2xl border border-[#c7d0fb] bg-white p-8 sm:p-12 shadow-sm space-y-6">
       <div className="flex items-center gap-2">
@@ -47,13 +67,13 @@ export function ProposalHero({
       <p className="max-w-3xl text-base leading-relaxed text-[#42506a] sm:text-lg">
         {rating && reviewCount ? (
           <>
-            {reviewCount} people have rated you {rating} stars. That is better than most of the
-            {address ? ` businesses near ${address}` : " businesses"} you are competing with — and almost none of it is
-            on your website. You are not losing work because of the work. You are losing it before anyone gets that far.
+            {reviewCount} people have rated you {rating} stars. That is better than most of the businesses
+            {town ? ` in ${town}` : " near you"} you are competing with — and almost none of it is on your website. You
+            are not losing work because of the work. You are losing it before anyone gets that far.
           </>
         ) : (
           <>
-            We went through your site{address ? ` and how you show up around ${address}` : ""}, page by page. Everything
+            We went through your site{town ? `, and how you show up around ${town}` : ""}, page by page. Everything
             below is on your site today, so you can open it alongside this and check any of it.
           </>
         )}
@@ -86,16 +106,18 @@ export function ProposalHero({
       <div className="border-t border-[#e5e7f2] pt-8">
         <div className="grid grid-cols-3 gap-4 text-center text-xs">
           <div className="rounded-xl bg-[#f0f3ff] p-4 border border-[#e5e7f2]">
-            <span className="font-bold text-[#533afd]">Step 1: Done ✓</span>
-            <p className="mt-1 text-[#0d1738] font-semibold text-sm">Website X-Ray & Audit</p>
+            {/* Said the way the page that won this lead says things. "Website
+                X-Ray & Audit" is our word for it, not theirs. */}
+            <span className="font-bold text-[#533afd]">Done ✓</span>
+            <p className="mt-1 text-[#0d1738] font-semibold text-sm">We rebuilt your homepage</p>
           </div>
           <div className="rounded-xl border-2 border-[#533afd] bg-white p-4 shadow-sm">
-            <span className={`font-bold ${isPaid ? "text-[#0b8f5b]" : "text-[#533afd]"}`}>{isPaid ? "Step 2: Complete ✓" : "Step 2: Current"}</span>
-            <p className="mt-1 text-[#0d1738] font-semibold text-sm">{isPaid ? "Launch Approved" : "You Review the Concept"}</p>
+            <span className={`font-bold ${isPaid ? "text-[#0b8f5b]" : "text-[#533afd]"}`}>{isPaid ? "Done ✓" : "You are here"}</span>
+            <p className="mt-1 text-[#0d1738] font-semibold text-sm">{isPaid ? "You said yes" : "Have a look at it"}</p>
           </div>
           <div className={`rounded-xl p-4 border ${isPaid ? "border-2 border-[#0b8f5b] bg-[#eaf8f0] text-[#0b8f5b]" : "border-[#e5e7f2] bg-[#f9f9ff] text-[#777588]"}`}>
-            <span className="font-bold">{isPaid ? "Step 3: Active" : "Step 3: Next"}</span>
-            <p className="mt-1 font-semibold text-sm">{isPaid ? "QA, Domain & Go-Live" : "Launch in 48 Hours"}</p>
+            <span className="font-bold">{isPaid ? "In progress" : "If you want it"}</span>
+            <p className="mt-1 font-semibold text-sm">{isPaid ? "Live within 48 hours" : "Live within 48 hours"}</p>
           </div>
         </div>
       </div>

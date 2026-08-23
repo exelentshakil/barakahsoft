@@ -47,10 +47,16 @@ export function ReportAudit({ audit, businessName }: { audit: SiteAudit; busines
 
               <p className="mt-3 text-[13px] leading-relaxed text-[#42506a]">{finding.finding}</p>
 
-              <p className="mt-3 flex gap-2 text-[13px] leading-relaxed text-[#42506a]">
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#ba1a1a]" />
-                <span>{finding.consequence}</span>
-              </p>
+              {/* A passing check has no consequence, and rendering the row
+                  anyway left a red warning triangle floating beside nothing
+                  on every "working" card -- a page that says WORKING and
+                  shows an alarm icon next to it reads as broken. */}
+              {finding.consequence && (
+                <p className="mt-3 flex gap-2 text-[13px] leading-relaxed text-[#42506a]">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#ba1a1a]" />
+                  <span>{finding.consequence}</span>
+                </p>
+              )}
 
               <p className="mt-3 flex gap-2 border-t border-[#e5e7f2] pt-3 text-[13px] leading-relaxed text-[#0b6b45]">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#0b8f5b]" />
