@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Download,
   Sparkles,
@@ -10,7 +10,6 @@ import {
   RefreshCw,
   Sliders,
   Type,
-  Maximize2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -18,8 +17,8 @@ export type MockupHeadlineMode =
   | "proposed" // "REDESIGN PROPOSED"
   | "concept"  // "WEBSITE CONCEPT READY"
   | "upgrade"  // "HIGH-PERFORMANCE REDESIGN"
-  | "launched" // "NEW WEBSITE LAUNCHED"
-  | "preview"; // "PRIVATE REDESIGN PREVIEW"
+  | "preview"  // "PRIVATE DESIGN PREVIEW"
+  | "launched"; // "NEW WEBSITE LAUNCHED"
 
 export interface MockupData {
   businessName: string;
@@ -57,7 +56,7 @@ const HEADLINE_OPTIONS: { id: MockupHeadlineMode; line1: string; line2: string; 
   },
   {
     id: "upgrade",
-    line1: "HIGH-CONVERTING",
+    line1: "HIGH-PERFORMANCE",
     line2: "REDESIGN",
     tag: "Authority Pitch",
   },
@@ -77,39 +76,32 @@ const HEADLINE_OPTIONS: { id: MockupHeadlineMode; line1: string; line2: string; 
 
 const BG_THEMES = [
   {
-    id: "brand",
-    name: "Brand Forest",
-    gradient: "from-[#3e5647] via-[#283d31] to-[#17251e]",
-    glow: "rgba(62, 86, 71, 0.4)",
-    cardBg: "#173628",
-  },
-  {
-    id: "sage",
-    name: "Sage Olive",
-    gradient: "from-[#576953] via-[#3d4b3b] to-[#252f23]",
-    glow: "rgba(87, 105, 83, 0.4)",
-    cardBg: "#2f3f2d",
+    id: "olive",
+    name: "Sage Olive (Ref 1)",
+    gradient: "from-[#4c5c49] via-[#354333] to-[#202a1e]",
+    glow: "rgba(76, 92, 73, 0.45)",
+    ribbonColor: "#1d3624",
   },
   {
     id: "sky",
-    name: "Sky Azure",
-    gradient: "from-[#6397c0] via-[#3f6d93] to-[#224461]",
-    glow: "rgba(99, 151, 192, 0.4)",
-    cardBg: "#2b567d",
+    name: "Azure Sky (Ref 2)",
+    gradient: "from-[#79a9cc] via-[#4d7ca0] to-[#285072]",
+    glow: "rgba(121, 169, 204, 0.45)",
+    ribbonColor: "#2c4e6e",
   },
   {
     id: "midnight",
     name: "Midnight Navy",
-    gradient: "from-[#1b2b48] via-[#101b31] to-[#070c17]",
-    glow: "rgba(27, 43, 72, 0.5)",
-    cardBg: "#162847",
+    gradient: "from-[#1a2b4a] via-[#101c33] to-[#070d1a]",
+    glow: "rgba(26, 43, 74, 0.5)",
+    ribbonColor: "#142540",
   },
   {
     id: "charcoal",
     name: "Studio Charcoal",
-    gradient: "from-[#343840] via-[#21242a] to-[#131519]",
-    glow: "rgba(52, 56, 64, 0.4)",
-    cardBg: "#22262e",
+    gradient: "from-[#333842] via-[#21242b] to-[#13151a]",
+    glow: "rgba(51, 56, 66, 0.45)",
+    ribbonColor: "#1f232b",
   },
 ];
 
@@ -122,130 +114,124 @@ export function SocialLaunchMockup({
   showControls?: boolean;
   className?: string;
 }) {
-  const [themeId, setThemeId] = useState("brand");
+  const [themeId, setThemeId] = useState("olive");
   const [headlineMode, setHeadlineMode] = useState<MockupHeadlineMode>(data.headlineMode || "proposed");
   const [downloading, setDownloading] = useState<string | null>(null);
   const mockupRef = useRef<HTMLDivElement>(null);
 
   const theme = BG_THEMES.find((t) => t.id === themeId) || BG_THEMES[0];
-  const primaryColor = data.brandColor || "#1b4d3e";
+  const primaryColor = data.brandColor || theme.ribbonColor;
 
   const businessShortName = data.businessName || "Your Business";
+  const city = data.city || "New York";
+  const trade = data.trade || "Contractor";
   const heroHeading =
-    data.heroHeadline ||
-    `PREMIER ${data.trade ? data.trade.toUpperCase() : "SERVICES"} IN ${data.city ? data.city.toUpperCase() : "YOUR CITY"}`;
+    data.heroHeadline || `PREMIER ${trade.toUpperCase()} IN ${city.toUpperCase()}`;
   const aboutHeading =
-    data.aboutHeadline ||
-    `A PASSION FOR ${data.trade ? data.trade.toUpperCase() : "EXCELLENCE"} AND RENOVATION EXCELLENCE`;
-  const founder = data.founderName || "Founder & Team";
+    data.aboutHeadline || `A PASSION FOR ${trade.toUpperCase()} AND RENOVATION EXCELLENCE`;
+  const founder = data.founderName || "Michael Allan";
   const founderRole = data.founderTitle || "Founder / CEO";
-  const ratingText = data.rating ? `${data.rating}★` : "5.0★";
+  const ratingText = data.rating ? `${data.rating}★` : "5★";
   const reviewsCountText = data.reviewCount ? `${data.reviewCount}+` : "100+";
+  const yearsExp = data.yearsExperience ? `${data.yearsExperience}+` : "10+";
 
   const activeHeadline = HEADLINE_OPTIONS.find((h) => h.id === headlineMode) || HEADLINE_OPTIONS[0];
 
-  // Client-side high-resolution canvas export for FB & Instagram / After Effects
+  // High-Resolution 1080px Canvas Export (4:5 Feed, 9:16 Story, Transparent PNG)
   async function downloadImage(format: "feed" | "story" | "transparent") {
     setDownloading(format);
     try {
       const width = 1080;
-      const height = format === "story" ? 1920 : 1350; // 4:5 vertical feed vs 9:16 story
+      const height = format === "story" ? 1920 : 1350;
       const canvas = document.createElement("canvas");
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      // 1. Draw Background (unless transparent for After Effects)
+      // Draw Background
       if (format !== "transparent") {
         const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
         if (themeId === "sky") {
-          bgGradient.addColorStop(0, "#73a9d2");
-          bgGradient.addColorStop(0.5, "#47789f");
-          bgGradient.addColorStop(1, "#264866");
+          bgGradient.addColorStop(0, "#79a9cc");
+          bgGradient.addColorStop(0.45, "#4d7ca0");
+          bgGradient.addColorStop(1, "#285072");
         } else if (themeId === "midnight") {
-          bgGradient.addColorStop(0, "#1d2e50");
-          bgGradient.addColorStop(0.5, "#101b33");
-          bgGradient.addColorStop(1, "#070c17");
+          bgGradient.addColorStop(0, "#1a2b4a");
+          bgGradient.addColorStop(0.45, "#101c33");
+          bgGradient.addColorStop(1, "#070d1a");
         } else if (themeId === "charcoal") {
-          bgGradient.addColorStop(0, "#323740");
-          bgGradient.addColorStop(0.5, "#202329");
-          bgGradient.addColorStop(1, "#121417");
-        } else if (themeId === "sage") {
-          bgGradient.addColorStop(0, "#5a6e57");
-          bgGradient.addColorStop(0.4, "#445542");
-          bgGradient.addColorStop(1, "#2a3628");
+          bgGradient.addColorStop(0, "#333842");
+          bgGradient.addColorStop(0.45, "#21242b");
+          bgGradient.addColorStop(1, "#13151a");
         } else {
-          // Brand forest dark luxury (exact match to target 1)
-          bgGradient.addColorStop(0, "#486353");
-          bgGradient.addColorStop(0.4, "#2d4236");
-          bgGradient.addColorStop(1, "#18261e");
+          // Sage Olive (Exact match to Reference 1)
+          bgGradient.addColorStop(0, "#4c5c49");
+          bgGradient.addColorStop(0.45, "#354333");
+          bgGradient.addColorStop(1, "#202a1e");
         }
         ctx.fillStyle = bgGradient;
         ctx.fillRect(0, 0, width, height);
 
         // Watermark ghost text behind laptop
         ctx.save();
-        ctx.fillStyle = "rgba(255, 255, 255, 0.055)";
-        ctx.font = "900 130px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+        ctx.font = "900 140px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(businessShortName.toUpperCase(), width / 2, height * 0.72);
         ctx.restore();
 
-        // 2. Draw Top Heading (Dynamic)
-        const titleY = format === "story" ? 220 : 170;
+        // Top Heading (Dynamic with soft glow)
+        const titleY = format === "story" ? 210 : 160;
         ctx.save();
         ctx.textAlign = "center";
         ctx.font = "900 68px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-
-        // Soft drop shadow / glow
-        ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
+        ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
         ctx.shadowBlur = 24;
         ctx.shadowOffsetY = 8;
-
         ctx.fillStyle = "#ffffff";
         ctx.fillText(activeHeadline.line1, width / 2, titleY);
-        ctx.fillText(activeHeadline.line2, width / 2, titleY + 74);
+        ctx.fillText(activeHeadline.line2, width / 2, titleY + 76);
         ctx.restore();
       }
 
-      // Convert SVG/DOM of the exact 3D laptop & floating page into high-res Canvas raster
-      if (mockupRef.current) {
-        const svgData = generateMockupSvg({
-          data,
-          theme,
-          width,
-          height,
-          format,
-          primaryColor,
-          businessShortName,
-          heroHeading,
-          aboutHeading,
-          founder,
-          founderRole,
-          ratingText,
-          reviewsCountText,
-          headlineLine1: activeHeadline.line1,
-          headlineLine2: activeHeadline.line2,
-        });
+      // Render the complete 3D realistic composition
+      const svgData = generateRealisticMockupSvg({
+        data,
+        theme,
+        width,
+        height,
+        format,
+        primaryColor,
+        businessShortName,
+        city,
+        trade,
+        heroHeading,
+        aboutHeading,
+        founder,
+        founderRole,
+        ratingText,
+        reviewsCountText,
+        yearsExp,
+        headlineLine1: activeHeadline.line1,
+        headlineLine2: activeHeadline.line2,
+      });
 
-        const img = new Image();
-        const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-        const url = URL.createObjectURL(svgBlob);
+      const img = new Image();
+      const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(svgBlob);
 
-        await new Promise((resolve, reject) => {
-          img.onload = () => {
-            ctx.drawImage(img, 0, 0);
-            URL.revokeObjectURL(url);
-            resolve(true);
-          };
-          img.onerror = reject;
-          img.src = url;
-        });
-      }
+      await new Promise((resolve, reject) => {
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0);
+          URL.revokeObjectURL(url);
+          resolve(true);
+        };
+        img.onerror = reject;
+        img.src = url;
+      });
 
-      // Trigger Instant Download
       const dataUrl = canvas.toDataURL("image/png");
       const a = document.createElement("a");
       const cleanName = businessShortName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
@@ -262,26 +248,26 @@ export function SocialLaunchMockup({
 
   return (
     <div className={`flex flex-col items-center space-y-4 ${className}`}>
-      {/* 3D Mockup Container (Responsive 4:5 Poster Aspect Ratio) */}
+      {/* 3D Mockup Stage Container (4:5 Aspect Ratio matching references) */}
       <div
         ref={mockupRef}
-        className={`relative w-full max-w-[560px] aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-b ${theme.gradient} select-none border border-white/10 flex flex-col justify-between p-6 sm:p-8`}
+        className={`relative w-full max-w-[580px] aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-b ${theme.gradient} select-none border border-white/15 flex flex-col justify-between p-6 sm:p-8`}
         style={{
-          boxShadow: "0 30px 60px -15px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255,255,255,0.25)",
+          boxShadow: "0 35px 70px -15px rgba(0, 0, 0, 0.65), inset 0 1px 2px rgba(255,255,255,0.3)",
         }}
       >
-        {/* Background Ghost Watermark */}
+        {/* Background Subtle Watermark */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden opacity-10">
-          <span className="font-black text-6xl sm:text-8xl tracking-widest text-white uppercase transform -rotate-12 translate-y-16">
+          <span className="font-black text-7xl sm:text-9xl tracking-widest text-white uppercase transform -rotate-12 translate-y-24">
             {businessShortName}
           </span>
         </div>
 
-        {/* Top Header: DYNAMIC HEADLINE (Proposed / Concept / Upgrade / Launched) */}
+        {/* Dynamic Top Header: NEW WEBSITE LAUNCHED / REDESIGN PROPOSED */}
         <div className="relative z-10 text-center pt-2 sm:pt-3">
           <h2
-            className="text-2xl sm:text-4xl font-black tracking-wider text-white uppercase drop-shadow-[0_6px_16px_rgba(0,0,0,0.5)] font-sans"
-            style={{ textShadow: "0 4px 18px rgba(0,0,0,0.4)" }}
+            className="text-2xl sm:text-4xl font-black tracking-wider text-white uppercase drop-shadow-[0_8px_18px_rgba(0,0,0,0.55)] font-sans"
+            style={{ textShadow: "0 4px 20px rgba(0,0,0,0.45)" }}
           >
             {activeHeadline.line1}
             <br />
@@ -289,33 +275,33 @@ export function SocialLaunchMockup({
           </h2>
         </div>
 
-        {/* 3D Composition Stage: Realistic MacBook 3D (Left) + Floating Story Sheet (Right) */}
+        {/* 3D Realistic Composition Stage */}
         <div className="relative z-10 w-full flex-1 flex items-center justify-center mt-2 perspective-[1400px]">
-          {/* Ground Soft Contact Shadow */}
-          <div className="absolute bottom-6 left-6 right-6 h-10 bg-black/45 blur-2xl rounded-full transform scale-x-110 -rotate-3" />
+          {/* Ground Soft Ambient Shadow */}
+          <div className="absolute bottom-4 left-6 right-6 h-12 bg-black/50 blur-2xl rounded-full transform scale-x-110 -rotate-2" />
 
-          {/* LAYER 1: Realistic 3D Angled MacBook (Left Side) */}
+          {/* 1. REALISTIC 3D MACBOOK (Angled Left 3/4 Perspective) */}
           <div
-            className="relative w-[85%] max-w-[430px] transition-transform duration-500"
+            className="relative w-[88%] max-w-[460px] transition-transform duration-500"
             style={{
-              transform: "rotateY(-19deg) rotateX(13deg) rotateZ(3.5deg) translateY(10px)",
+              transform: "rotateY(-18deg) rotateX(14deg) rotateZ(3deg) translateY(12px)",
               transformStyle: "preserve-3d",
             }}
           >
-            {/* Screen Bezel (Matte Aluminum Bezel with Webpage Viewport) */}
-            <div className="relative rounded-t-2xl bg-[#1e2024] p-2 sm:p-2.5 pb-3 sm:pb-4 shadow-2xl border border-white/20 ring-1 ring-black/60">
-              {/* Screen Glass & Real Hero Display */}
+            {/* Screen Glass & Bezel */}
+            <div className="relative rounded-t-2xl bg-[#1a1c20] p-2 sm:p-2.5 pb-3 sm:pb-4 shadow-2xl border border-white/25 ring-1 ring-black/70">
+              {/* Screen Inner Display */}
               <div className="relative aspect-[16/10] w-full rounded-lg bg-[#0e1626] overflow-hidden shadow-inner border border-black/80 flex flex-col">
-                {/* Real Website Top Nav Strip */}
+                {/* Real Website Header Bar */}
                 <div
                   className="h-5 sm:h-6 w-full flex items-center justify-between px-2 text-[6px] sm:text-[7.5px] font-bold text-white shadow-sm"
                   style={{ backgroundColor: primaryColor }}
                 >
                   <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-white/40 shadow-sm" />
-                    <span className="truncate max-w-[100px] font-black">{businessShortName}</span>
+                    <span className="h-2.5 w-2.5 rounded-full bg-white/40 shadow-sm" />
+                    <span className="truncate max-w-[110px] font-black">{businessShortName}</span>
                   </div>
-                  <div className="flex items-center gap-2 opacity-85 scale-90">
+                  <div className="flex items-center gap-2 opacity-90 scale-90">
                     <span>Home</span>
                     <span>About</span>
                     <span>Services</span>
@@ -323,9 +309,8 @@ export function SocialLaunchMockup({
                   </div>
                 </div>
 
-                {/* Real Website Hero Section */}
-                <div className="relative flex-1 bg-slate-900 p-2.5 sm:p-3.5 flex flex-col justify-center text-white overflow-hidden">
-                  {/* Real Hero Photo Background */}
+                {/* Real Hero Section on Screen */}
+                <div className="relative flex-1 bg-slate-900 p-2.5 sm:p-3.5 flex flex-col justify-between text-white overflow-hidden">
                   <div
                     className="absolute inset-0 opacity-45 bg-cover bg-center"
                     style={{
@@ -335,56 +320,74 @@ export function SocialLaunchMockup({
                   />
                   <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-transparent" />
 
-                  {/* Real Hero Copy */}
-                  <div className="relative z-10 space-y-1.5 max-w-[85%]">
+                  {/* Hero Copy */}
+                  <div className="relative z-10 space-y-1 max-w-[80%]">
                     <span className="inline-block rounded bg-emerald-500/30 px-1.5 py-0.5 text-[5px] sm:text-[6.5px] font-extrabold tracking-wider uppercase text-emerald-300 border border-emerald-400/30">
-                      Serving {data.city || "NYC & Surrounding Areas"}
+                      SERVING {city.toUpperCase()}
                     </span>
                     <h3 className="text-[8px] sm:text-[10px] font-black leading-tight line-clamp-2 uppercase text-white drop-shadow">
                       {heroHeading}
                     </h3>
                     <div className="flex items-center gap-1.5 pt-0.5">
                       <span
-                        className="rounded-md px-2 py-0.5 text-[5.5px] sm:text-[7px] font-bold text-white shadow-md"
+                        className="rounded px-2 py-0.5 text-[5.5px] sm:text-[7px] font-bold text-white shadow"
                         style={{ backgroundColor: primaryColor }}
                       >
-                        Get a Free Quote →
+                        GET A FREE QUOTE →
                       </span>
                       <span className="text-[5.5px] sm:text-[6.5px] text-amber-400 font-bold">
-                        ★★★★★ {ratingText} (5/5)
+                        ★★★★★ {ratingText}
                       </span>
                     </div>
+                  </div>
+
+                  {/* Below-Fold Service Strip Preview on Screen */}
+                  <div className="relative z-10 bg-white/95 rounded p-1.5 text-[#0d1738] flex items-center justify-between shadow-sm">
+                    <div>
+                      <span className="block text-[4.5px] sm:text-[5.5px] font-bold uppercase text-muted-foreground">
+                        Trusted Across {city}
+                      </span>
+                      <span className="block text-[6px] sm:text-[7px] font-black truncate max-w-[150px]">
+                        {trade.toUpperCase()} EXPERTS WITH 5-STAR REPUTATION
+                      </span>
+                    </div>
+                    <span className="rounded bg-[#0d1738] px-1.5 py-0.5 text-[4.5px] sm:text-[5.5px] font-bold text-white">
+                      READ REVIEWS
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Laptop Aluminum Bottom Deck / Keyboard Base */}
+            {/* Aluminum Keyboard Deck & Chassis Base */}
             <div
-              className="relative h-3.5 sm:h-4.5 w-[106%] -left-[3%] rounded-b-2xl bg-gradient-to-b from-[#e1e4ea] to-[#a8adb6] shadow-2xl border-t border-white/80 flex items-center justify-center"
+              className="relative h-4 sm:h-5 w-[108%] -left-[4%] rounded-b-2xl bg-gradient-to-b from-[#e3e6ec] via-[#c6cbd4] to-[#999fa9] shadow-2xl border-t border-white/90 flex items-center justify-center"
               style={{
                 transform: "rotateX(56deg) translateZ(-4px)",
-                boxShadow: "0 18px 36px rgba(0,0,0,0.65), 0 2px 4px rgba(255,255,255,0.4) inset",
+                boxShadow: "0 22px 45px rgba(0,0,0,0.7), 0 2px 4px rgba(255,255,255,0.5) inset",
               }}
             >
               {/* Center Display Open Notch */}
-              <div className="h-1 w-12 sm:w-16 bg-[#868c96] rounded-full mx-auto" />
+              <div className="h-1 w-14 sm:w-20 bg-[#7c828e] rounded-full mx-auto" />
             </div>
           </div>
 
-          {/* LAYER 2: Floating Feature Sheet / Mobile Story Card (Right Foreground) */}
+          {/* 2. REALISTIC FLOATING FEATURE SHEET / BROWSER WINDOW (Overlapping Right Foreground) */}
           <div
-            className="absolute -right-2 sm:-right-4 top-1 sm:top-3 w-[66%] max-w-[290px] rounded-2xl bg-white shadow-2xl border border-white/90 overflow-hidden transition-transform duration-500"
+            className="absolute -right-1 sm:-right-3 top-0 sm:top-2 w-[68%] max-w-[310px] rounded-2xl bg-white shadow-2xl border border-white/95 overflow-hidden transition-transform duration-500"
             style={{
-              transform: "rotateY(-13deg) rotateX(7deg) rotateZ(-2.5deg) translateZ(45px)",
-              boxShadow: "0 25px 50px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0,0,0,0.06)",
+              transform: "rotateY(-12deg) rotateX(8deg) rotateZ(-2.5deg) translateZ(50px)",
+              boxShadow: "0 28px 55px -10px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0,0,0,0.06)",
             }}
           >
-            {/* Sheet Top Banner with Founder/Team Photo & Story */}
-            <div className="p-3.5 sm:p-4 text-white shadow-inner" style={{ backgroundColor: primaryColor }}>
+            {/* Sheet Top Notch */}
+            <div className="h-1.5 w-12 bg-slate-300 rounded-full mx-auto my-1 opacity-60" />
+
+            {/* Sheet Main Header with Founder Story */}
+            <div className="p-3 sm:p-4 text-white" style={{ backgroundColor: primaryColor }}>
               <div className="flex items-start gap-2.5">
-                {/* Real Team / Founder Photo */}
-                <div className="relative h-12 w-12 sm:h-16 sm:w-16 rounded-xl bg-slate-800 overflow-hidden shrink-0 border-2 border-white/40 shadow-lg">
+                {/* Photo with Name Overlay Tag (Exact Match to Ref 1 & 2) */}
+                <div className="relative h-14 w-14 sm:h-18 sm:w-18 rounded-xl bg-slate-800 overflow-hidden shrink-0 border-2 border-white/40 shadow-md">
                   {data.secondaryPhotoUrl || data.photoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -397,66 +400,79 @@ export function SocialLaunchMockup({
                       {founder.slice(0, 2).toUpperCase()}
                     </div>
                   )}
+                  {/* Founder Name Tag Overlay */}
+                  <div className="absolute bottom-0 inset-x-0 bg-white/95 text-[#0d1738] p-0.5 text-center">
+                    <span className="block text-[5px] sm:text-[6px] font-black truncate">{founder}</span>
+                    <span className="block text-[4px] sm:text-[5px] text-muted-foreground truncate">{founderRole}</span>
+                  </div>
                 </div>
 
                 <div className="min-w-0 flex-1 space-y-0.5">
-                  <span className="text-[6px] sm:text-[7px] uppercase font-black tracking-widest text-white/70">
-                    Our Story
+                  <span className="text-[6px] sm:text-[7px] uppercase font-black tracking-widest text-white/75">
+                    OUR STORY
                   </span>
-                  <h4 className="text-[7.5px] sm:text-[9.5px] font-black leading-snug line-clamp-2 uppercase">
+                  <h4 className="text-[8px] sm:text-[10px] font-black leading-snug line-clamp-2 uppercase">
                     {aboutHeading}
                   </h4>
-                  <p className="text-[6px] sm:text-[7.5px] text-white/90 line-clamp-1 font-bold">
-                    {founder} · <span className="opacity-80 font-normal">{founderRole}</span>
+                  <p className="text-[5.5px] sm:text-[6.5px] text-white/80 line-clamp-2 leading-tight">
+                    Dedicated to providing premium {trade.toLowerCase()} and expert craftsmanship across {city} with verified satisfaction.
                   </p>
+                  <div className="pt-1 flex items-center gap-1">
+                    <span className="rounded bg-white/20 px-1.5 py-0.5 text-[5px] sm:text-[6px] font-bold">
+                      GET A FREE QUOTE →
+                    </span>
+                    <span className="rounded bg-white/10 px-1 py-0.5 text-[5px] sm:text-[6px] font-bold">
+                      FOLLOW US
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Verified Trust Metrics Strip (4 Columns) */}
-              <div className="mt-3 pt-2.5 border-t border-white/20 grid grid-cols-4 gap-1 text-center">
+              {/* 4-Column Metric Ribbon (Exact Match to References) */}
+              <div className="mt-3 pt-2.5 border-t border-white/25 grid grid-cols-4 gap-1 text-center">
                 <div>
-                  <span className="block text-[8.5px] sm:text-[11px] font-black">{data.yearsExperience || "10+"}</span>
-                  <span className="block text-[5px] sm:text-[6.5px] text-white/75 uppercase font-semibold">Experience</span>
+                  <span className="block text-[9px] sm:text-[11.5px] font-black">{yearsExp}</span>
+                  <span className="block text-[4.5px] sm:text-[6px] text-white/80 uppercase font-bold">Experience</span>
                 </div>
                 <div>
-                  <span className="block text-[8.5px] sm:text-[11px] font-black">{ratingText}</span>
-                  <span className="block text-[5px] sm:text-[6.5px] text-white/75 uppercase font-semibold">Reviews</span>
+                  <span className="block text-[9px] sm:text-[11.5px] font-black">{ratingText}</span>
+                  <span className="block text-[4.5px] sm:text-[6px] text-white/80 uppercase font-bold">Reviews</span>
                 </div>
                 <div>
-                  <span className="block text-[8.5px] sm:text-[11px] font-black">1-Year</span>
-                  <span className="block text-[5px] sm:text-[6.5px] text-white/75 uppercase font-semibold">Warranty</span>
+                  <span className="block text-[9px] sm:text-[11.5px] font-black">1-YEAR</span>
+                  <span className="block text-[4.5px] sm:text-[6px] text-white/80 uppercase font-bold">Guarantee</span>
                 </div>
                 <div>
-                  <span className="block text-[8.5px] sm:text-[11px] font-black">100%</span>
-                  <span className="block text-[5px] sm:text-[6.5px] text-white/75 uppercase font-semibold">Focus</span>
+                  <span className="block text-[9px] sm:text-[11.5px] font-black">100%</span>
+                  <span className="block text-[4.5px] sm:text-[6px] text-white/80 uppercase font-bold">Focus</span>
                 </div>
               </div>
             </div>
 
-            {/* Sheet Lower Area: Service Guarantee & CTA */}
-            <div className="p-3 bg-[#fbfbfd] space-y-1.5">
-              <span className="text-[5.5px] sm:text-[6.5px] font-black uppercase tracking-wider text-muted-foreground">
-                Craftsmanship You Can Trust
+            {/* Sheet Lower Area: Service Callout */}
+            <div className="p-3 bg-[#fbfbfd] space-y-1">
+              <span className="text-[5px] sm:text-[6px] font-black uppercase tracking-wider text-muted-foreground">
+                CRAFTSMANSHIP YOU CAN TRUST
               </span>
-              <p className="text-[7.5px] sm:text-[9px] font-black text-[#0d1738] leading-tight">
-                Expert {data.trade || "Local"} Services &amp; Dedicated Support
+              <p className="text-[7.5px] sm:text-[9.5px] font-black text-[#0d1738] leading-tight uppercase">
+                EXPERT {city.toUpperCase()} {trade.toUpperCase()} SERVICES
               </p>
               <div className="flex items-center justify-between pt-1">
-                <span className="text-[6px] sm:text-[7.5px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                <span className="text-[6px] sm:text-[7px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                   ✓ Verified Live
                 </span>
                 <span
-                  className="rounded px-2.5 py-0.5 text-[6px] sm:text-[7.5px] font-bold text-white shadow-sm"
+                  className="rounded px-2.5 py-0.5 text-[6px] sm:text-[7px] font-bold text-white shadow-sm"
                   style={{ backgroundColor: primaryColor }}
                 >
-                  Get Quote →
+                  Call Now
                 </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Footer Brand Credit */}
+        {/* Footer Credit */}
         <div className="relative z-10 text-center pb-1">
           <p className="text-[9px] sm:text-[11px] font-bold tracking-widest text-white/60 uppercase">
             DESIGNED &amp; DELIVERED BY BARAKAHSOFT
@@ -464,17 +480,17 @@ export function SocialLaunchMockup({
         </div>
       </div>
 
-      {/* Admin / Export Controls */}
+      {/* Control Panel for Operator */}
       {showControls && (
-        <div className="w-full max-w-[560px] space-y-4 bg-white p-5 rounded-2xl border border-border shadow-sm">
-          {/* 1. Headline Wording Switcher (Proposed vs Concept vs Launched) */}
+        <div className="w-full max-w-[580px] space-y-4 bg-white p-5 rounded-2xl border border-border shadow-sm">
+          {/* 1. Headline Wording Switcher */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-[#0d1738] flex items-center gap-1.5">
                 <Type className="h-3.5 w-3.5 text-[#533afd]" /> Poster Headline Style
               </span>
               <span className="text-[10px] text-muted-foreground font-semibold">
-                Switch wording for ongoing content
+                Match stage (Proposed vs Launched)
               </span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
@@ -496,10 +512,10 @@ export function SocialLaunchMockup({
             </div>
           </div>
 
-          {/* 2. Theme Color Selector */}
+          {/* 2. Theme Background Switcher */}
           <div className="flex items-center justify-between pt-1 border-t border-border/70">
             <span className="text-xs font-bold text-[#0d1738] flex items-center gap-1.5">
-              <Sliders className="h-3.5 w-3.5 text-[#533afd]" /> Poster Background Theme
+              <Sliders className="h-3.5 w-3.5 text-[#533afd]" /> Background Palette (Reference Match)
             </span>
             <div className="flex items-center gap-1.5">
               {BG_THEMES.map((t) => (
@@ -516,7 +532,7 @@ export function SocialLaunchMockup({
             </div>
           </div>
 
-          {/* 3. Download Options */}
+          {/* 3. High-Res Export Buttons */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-border/70">
             <Button
               type="button"
@@ -564,19 +580,23 @@ export function SocialLaunchMockup({
   );
 }
 
-// Generate self-contained SVG for high-resolution 1080px Canvas rasterization
-function generateMockupSvg({
+// Generate self-contained SVG for 1080px Canvas rasterization matching the reference images
+function generateRealisticMockupSvg({
   data,
   width,
   height,
   format,
   primaryColor,
   businessShortName,
+  city,
+  trade,
   heroHeading,
   aboutHeading,
   founder,
+  founderRole,
   ratingText,
   reviewsCountText,
+  yearsExp,
   headlineLine1,
   headlineLine2,
 }: {
@@ -587,134 +607,161 @@ function generateMockupSvg({
   format: "feed" | "story" | "transparent";
   primaryColor: string;
   businessShortName: string;
+  city: string;
+  trade: string;
   heroHeading: string;
   aboutHeading: string;
   founder: string;
   founderRole: string;
   ratingText: string;
   reviewsCountText: string;
+  yearsExp: string;
   headlineLine1: string;
   headlineLine2: string;
 }) {
   const isStory = format === "story";
-  const contentYOffset = isStory ? 300 : 160;
+  const contentYOffset = isStory ? 320 : 180;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
     <defs>
-      <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
-        <feDropShadow dx="0" dy="28" stdDeviation="38" flood-color="rgba(0,0,0,0.6)" />
+      <filter id="macShadow" x="-15%" y="-15%" width="135%" height="135%">
+        <feDropShadow dx="0" dy="32" stdDeviation="42" flood-color="rgba(0,0,0,0.65)" />
       </filter>
-      <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="24" stdDeviation="30" flood-color="rgba(0,0,0,0.5)" />
+      <filter id="sheetShadow" x="-20%" y="-20%" width="145%" height="145%">
+        <feDropShadow dx="0" dy="28" stdDeviation="34" flood-color="rgba(0,0,0,0.55)" />
       </filter>
-      <linearGradient id="laptopGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#2a2e35"/>
-        <stop offset="100%" stop-color="#121418"/>
+      <linearGradient id="lidGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#242830"/>
+        <stop offset="100%" stop-color="#0f1115"/>
       </linearGradient>
-      <linearGradient id="baseGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#e2e5eb"/>
-        <stop offset="100%" stop-color="#9ca1ab"/>
+      <linearGradient id="deckGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#e3e6ec"/>
+        <stop offset="40%" stop-color="#c6cbd4"/>
+        <stop offset="100%" stop-color="#9197a3"/>
       </linearGradient>
     </defs>
 
     <g transform="translate(0, ${contentYOffset})">
-      <!-- 1. REALISTIC 3D MACBOOK MOCKUP -->
-      <g transform="translate(130, 230) rotate(3) skewY(-8) scale(0.96)" filter="url(#shadow)">
-        <!-- Screen Outer Bezel -->
-        <rect x="0" y="0" width="590" height="390" rx="20" fill="url(#laptopGrad)" stroke="rgba(255,255,255,0.22)" stroke-width="2.5"/>
+      <!-- 1. MACBOOK PRO 3D CHASSIS (LEFT) -->
+      <g transform="translate(120, 220) rotate(3) skewY(-8) scale(0.96)" filter="url(#macShadow)">
+        <!-- Outer Lid Bezel -->
+        <rect x="0" y="0" width="610" height="400" rx="22" fill="url(#lidGrad)" stroke="rgba(255,255,255,0.28)" stroke-width="2.5"/>
         
-        <!-- Screen Display Content -->
-        <rect x="18" y="18" width="554" height="354" rx="10" fill="#0d1728"/>
+        <!-- Screen Glass -->
+        <rect x="18" y="18" width="574" height="364" rx="12" fill="#0b111e"/>
         
-        <!-- Website Header Strip -->
-        <rect x="18" y="18" width="554" height="40" fill="${primaryColor}"/>
-        <circle cx="34" cy="38" r="6" fill="rgba(255,255,255,0.4)" />
-        <text x="48" y="43" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="15">${escapeXml(
+        <!-- Webpage Nav Header Strip -->
+        <rect x="18" y="18" width="574" height="42" fill="${primaryColor}"/>
+        <circle cx="36" cy="39" r="6.5" fill="rgba(255,255,255,0.4)" />
+        <text x="50" y="44" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="15">${escapeXml(
           businessShortName
         )}</text>
-        <text x="550" y="43" text-anchor="end" fill="#ffffff" opacity="0.85" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="700" font-size="11">Home  ·  About  ·  Services  ·  Call Now</text>
+        <text x="570" y="44" text-anchor="end" fill="#ffffff" opacity="0.88" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="700" font-size="11.5">Home  ·  About  ·  Services  ·  Call Now</text>
 
-        <!-- Screen Hero Content -->
-        <rect x="18" y="58" width="554" height="314" fill="#0f172a"/>
-        <text x="44" y="112" fill="#6ee7b7" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="12" letter-spacing="1.2">SERVING ${escapeXml(
-          (data.city || "LOCAL AREA").toUpperCase()
+        <!-- Webpage Hero Body on Screen -->
+        <rect x="18" y="60" width="574" height="322" fill="#0f172a"/>
+        <text x="44" y="116" fill="#6ee7b7" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="12.5" letter-spacing="1.5">SERVING ${escapeXml(
+          city.toUpperCase()
         )}</text>
-        <text x="44" y="148" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="23">${escapeXml(
-          heroHeading.slice(0, 35)
+        <text x="44" y="152" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="24">${escapeXml(
+          heroHeading.slice(0, 34)
         )}</text>
-        <text x="44" y="180" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="23">${escapeXml(
-          heroHeading.slice(35, 70) || "EXPERT SERVICES & GUARANTEE"
+        <text x="44" y="186" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="24">${escapeXml(
+          heroHeading.slice(34, 68) || "EXPERT SERVICES & GUARANTEE"
         )}</text>
         
-        <!-- CTA Button on screen -->
-        <rect x="44" y="218" width="160" height="38" rx="8" fill="${primaryColor}"/>
-        <text x="124" y="242" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="13">Get A Free Quote →</text>
-        <text x="225" y="242" fill="#fbbf24" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="14">★★★★★ ${ratingText}</text>
+        <!-- CTA & Rating on Screen -->
+        <rect x="44" y="222" width="165" height="38" rx="8" fill="${primaryColor}"/>
+        <text x="126" y="246" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="13">GET A FREE QUOTE →</text>
+        <text x="230" y="246" fill="#fbbf24" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="14">★★★★★ ${ratingText}</text>
 
-        <!-- Laptop Lower Aluminum Base -->
-        <path d="M -25,390 L 615,390 L 575,432 L 15,432 Z" fill="url(#baseGrad)" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
-        <rect x="255" y="390" width="85" height="7" rx="3.5" fill="#6b7280"/>
+        <!-- Below Fold Section Preview on Screen (Exact match to Reference 1) -->
+        <rect x="44" y="276" width="522" height="70" rx="8" fill="rgba(255,255,255,0.96)"/>
+        <text x="60" y="298" fill="#64748b" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="9" letter-spacing="1">TRUSTED ACROSS ${escapeXml(
+          city.toUpperCase()
+        )}</text>
+        <text x="60" y="322" fill="#0f172a" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="14">${escapeXml(
+          trade.toUpperCase()
+        )} EXPERTS WITH A REPUTATION FOR EXCELLENCE</text>
+        <rect x="430" y="300" width="120" height="28" rx="6" fill="#0f172a"/>
+        <text x="490" y="318" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="10.5">READ REVIEWS →</text>
+
+        <!-- Aluminum Laptop Deck / Base -->
+        <path d="M -30,400 L 640,400 L 595,445 L 15,445 Z" fill="url(#deckGrad)" stroke="rgba(255,255,255,0.75)" stroke-width="1.5"/>
+        <rect x="260" y="400" width="90" height="8" rx="4" fill="#6b7280"/>
       </g>
 
-      <!-- 2. FLOATING FEATURE SHEET (Right Foreground) -->
-      <g transform="translate(415, 140) rotate(-4) skewY(5.5) scale(0.99)" filter="url(#cardShadow)">
-        <!-- Sheet Container Card -->
-        <rect x="0" y="0" width="530" height="470" rx="26" fill="#ffffff" stroke="rgba(255,255,255,0.95)" stroke-width="2.5"/>
+      <!-- 2. REALISTIC FLOATING FEATURE SHEET (RIGHT FOREGROUND) -->
+      <g transform="translate(420, 130) rotate(-4) skewY(5.5) scale(1.0)" filter="url(#sheetShadow)">
+        <!-- Sheet White Outer Border -->
+        <rect x="0" y="0" width="540" height="480" rx="28" fill="#ffffff" stroke="rgba(255,255,255,0.98)" stroke-width="2.5"/>
         
         <!-- Sheet Top Brand Banner -->
-        <rect x="0" y="0" width="530" height="290" rx="26" fill="${primaryColor}"/>
-        <rect x="0" y="260" width="530" height="30" fill="${primaryColor}"/>
+        <rect x="0" y="0" width="540" height="300" rx="28" fill="${primaryColor}"/>
+        <rect x="0" y="270" width="540" height="30" fill="${primaryColor}"/>
 
-        <!-- Photo Frame inside Sheet -->
-        <rect x="32" y="36" width="136" height="136" rx="16" fill="#1e293b" stroke="rgba(255,255,255,0.45)" stroke-width="2"/>
-        <text x="100" y="112" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="32">${escapeXml(
+        <!-- Photo Frame with Name Overlay -->
+        <rect x="34" y="36" width="144" height="144" rx="18" fill="#1e293b" stroke="rgba(255,255,255,0.45)" stroke-width="2"/>
+        <text x="106" y="112" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="34">${escapeXml(
           founder.slice(0, 2).toUpperCase()
         )}</text>
-
-        <!-- Story Heading in Sheet -->
-        <text x="190" y="62" fill="#ffffff" opacity="0.8" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="800" font-size="12" letter-spacing="1.5">OUR STORY</text>
-        <text x="190" y="94" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="19">${escapeXml(
-          aboutHeading.slice(0, 25)
-        )}</text>
-        <text x="190" y="122" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="19">${escapeXml(
-          aboutHeading.slice(25, 52) || "CUSTOMER EXCELLENCE"
-        )}</text>
-        <text x="190" y="156" fill="#ffffff" opacity="0.95" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="14">${escapeXml(
+        <rect x="34" y="145" width="144" height="35" rx="4" fill="rgba(255,255,255,0.95)"/>
+        <text x="106" y="162" text-anchor="middle" fill="#0f172a" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="11">${escapeXml(
           founder
         )}</text>
-
-        <!-- Metrics Strip in Sheet -->
-        <line x1="32" y1="198" x2="498" y2="198" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-        
-        <text x="85" y="235" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="26">${escapeXml(
-          String(data.yearsExperience || "10+")
+        <text x="106" y="174" text-anchor="middle" fill="#64748b" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="9">${escapeXml(
+          founderRole
         )}</text>
-        <text x="85" y="258" text-anchor="middle" fill="#ffffff" opacity="0.8" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="10">EXPERIENCE</text>
 
-        <text x="205" y="235" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="26">${escapeXml(
+        <!-- Story Copy in Sheet -->
+        <text x="198" y="64" fill="#ffffff" opacity="0.85" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="800" font-size="12" letter-spacing="1.5">OUR STORY</text>
+        <text x="198" y="96" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="19.5">${escapeXml(
+          aboutHeading.slice(0, 26)
+        )}</text>
+        <text x="198" y="124" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="19.5">${escapeXml(
+          aboutHeading.slice(26, 52) || "CUSTOMER EXCELLENCE"
+        )}</text>
+        <text x="198" y="152" fill="#ffffff" opacity="0.8" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="500" font-size="10.5">Dedicated to expert ${escapeXml(
+          trade.toLowerCase()
+        )} and quality service across ${escapeXml(city)}.</text>
+        
+        <!-- Story Buttons -->
+        <rect x="198" y="166" width="115" height="24" rx="4" fill="rgba(255,255,255,0.2)"/>
+        <text x="255" y="182" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="9">GET A FREE QUOTE →</text>
+        <rect x="322" y="166" width="85" height="24" rx="4" fill="rgba(255,255,255,0.12)"/>
+        <text x="364" y="182" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="9">FOLLOW US</text>
+
+        <!-- 4-Column Metric Ribbon -->
+        <line x1="34" y1="206" x2="506" y2="206" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+        
+        <text x="88" y="244" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="28">${escapeXml(
+          yearsExp
+        )}</text>
+        <text x="88" y="268" text-anchor="middle" fill="#ffffff" opacity="0.85" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="10.5">EXPERIENCE</text>
+
+        <text x="210" y="244" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="28">${escapeXml(
           ratingText
         )}</text>
-        <text x="205" y="258" text-anchor="middle" fill="#ffffff" opacity="0.8" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="10">REVIEWS</text>
+        <text x="210" y="268" text-anchor="middle" fill="#ffffff" opacity="0.85" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="10.5">REVIEWS</text>
 
-        <text x="325" y="235" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="26">1-YEAR</text>
-        <text x="325" y="258" text-anchor="middle" fill="#ffffff" opacity="0.8" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="10">WARRANTY</text>
+        <text x="330" y="244" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="28">1-YEAR</text>
+        <text x="330" y="268" text-anchor="middle" fill="#ffffff" opacity="0.85" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="10.5">GUARANTEE</text>
 
-        <text x="445" y="235" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="26">100%</text>
-        <text x="445" y="258" text-anchor="middle" fill="#ffffff" opacity="0.8" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="10">FOCUS</text>
+        <text x="450" y="244" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="28">100%</text>
+        <text x="450" y="268" text-anchor="middle" fill="#ffffff" opacity="0.85" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="10.5">FOCUS</text>
 
         <!-- Lower Section Content -->
-        <text x="32" y="335" fill="#64748b" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="12" letter-spacing="1">CRAFTSMANSHIP YOU CAN TRUST</text>
-        <text x="32" y="370" fill="#0f172a" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="20">EXPERT ${escapeXml(
-          (data.trade || "LOCAL").toUpperCase()
-        )} SERVICES</text>
-        <text x="32" y="398" fill="#0f172a" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="20">&amp; DEDICATED SUPPORT</text>
+        <text x="34" y="345" fill="#64748b" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="12" letter-spacing="1">CRAFTSMANSHIP YOU CAN TRUST</text>
+        <text x="34" y="380" fill="#0f172a" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="21">EXPERT ${escapeXml(
+          city.toUpperCase()
+        )} ${escapeXml(trade.toUpperCase())} SERVICES</text>
 
         <!-- Badges at bottom of sheet -->
-        <rect x="32" y="420" width="135" height="30" rx="7" fill="#ecfdf5"/>
-        <text x="99" y="440" text-anchor="middle" fill="#047857" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="12.5">✓ Verified Live</text>
+        <rect x="34" y="426" width="140" height="32" rx="8" fill="#ecfdf5"/>
+        <text x="104" y="447" text-anchor="middle" fill="#047857" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="13">✓ Verified Live</text>
 
-        <rect x="375" y="420" width="125" height="30" rx="7" fill="${primaryColor}"/>
-        <text x="437" y="440" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="12.5">Get Quote →</text>
+        <rect x="380" y="426" width="130" height="32" rx="8" fill="${primaryColor}"/>
+        <text x="445" y="447" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="13">Call Now</text>
       </g>
     </g>
   </svg>`;
