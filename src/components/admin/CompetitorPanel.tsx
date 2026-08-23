@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { AlertTriangle, Loader2, Search, TrendingDown } from "lucide-react";
+import { AlertTriangle, ExternalLink, Loader2, Search, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -118,7 +118,22 @@ export function CompetitorPanel({ leadId }: { leadId: string }) {
                   {competitors.rows.map((row) => (
                     <tr key={row.name} className={row.isClient ? "bg-[#f0f3ff] font-bold text-[#533afd]" : "text-[#42506a]"}>
                       <td className="px-3 py-2">
-                        {row.name}
+                        {/* The site is the point of the comparison — being
+                            able to open the competitor beating them is half
+                            of what makes this table useful on a call. */}
+                        {row.website ? (
+                          <a
+                            href={row.website}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 hover:underline"
+                          >
+                            {row.name}
+                            <ExternalLink className="h-3 w-3 shrink-0 opacity-50" />
+                          </a>
+                        ) : (
+                          row.name
+                        )}
                         {row.isClient && <span className="ml-1.5 text-[10px] font-bold">(your lead)</span>}
                       </td>
                       {/* A blank cell is honest. Nothing here is filled in

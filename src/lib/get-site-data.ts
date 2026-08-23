@@ -12,22 +12,22 @@ import type { Lead, Artifact, ScrapeResults, MediaAsset } from "@/types/database
 // link early concluded the whole thing was broken.
 export async function getSiteData(
   leadSlug: string
-): Promise<{ payload: SitePayload; lead: Lead; scrapeResults: ScrapeResults; artifact: Artifact } | null> {
+): Promise<{ payload: SitePayload; lead: Lead; scrapeResults: ScrapeResults; artifact: Artifact; subscription?: { status: string } | null } | null> {
   const admin = createAdminClient();
 
   const { data: lead } = await admin.from("leads").select("*").eq("slug", leadSlug).maybeSingle<Lead>();
   if (!lead) return null;
 
-  const { data: artifact } = await admin.from("artifacts").select("*").eq("lead_id", lead.id).maybeSingle<Artifact>();
-  if (!artifact) return null;
-
-  const { data: scrapeResults } = await admin.from("scrape_results").select("*").eq("lead_id", lead.id).maybeSingle<ScrapeResults>();
-  if (!scrapeResults) return null;
-
-  const { data: mediaAssets } = await admin.from("media_assets").select("*").eq("lead_id", lead.id).returns<MediaAsset[]>();
+  const [{ data: artifact }, { data: scrapeResults }, { data: mediaAssets }, { data: subscription }] = await Promise.all([
+    admin.from("artifacts").select("*").eq("lead_id", lead.id).maybeSingle<Artifact>(),
+    admin.from("scrape_results").select("*").eq("lead_id", lead.id).maybeSingle<ScrapeResults>(),
+    admin.from("media_assets").select("*").eq("lead_id", lead.id).returns<MediaAsset[]>(),
+    admin.from("hosting_subscriptions").select("status").eq("lead_id", lead.id).maybeSingle<{ status: string }>(),
+  ]);
+  if (!artifact || !scrapeResults) return null;
 
   const payload = renderShell(lead, artifact, scrapeResults, mediaAssets ?? []);
-  return { payload, lead, scrapeResults, artifact };
+  return { payload, lead, scrapeResults, artifact, subscription: subscription ?? null };
 }
 
 /** Whether a slug belongs to a real lead, and how far its build has got. */

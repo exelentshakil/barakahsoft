@@ -36,11 +36,17 @@ export function DeliveryEmailComposer({ lead }: { lead: Lead }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ subject, message }),
       });
-      if (!res.ok) throw new Error("Dispatch failed");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "Dispatch failed");
+      }
       setSent(true);
+      if (data.warning) {
+        alert(data.warning);
+      }
       router.refresh();
     } catch (err) {
-      alert("Failed to send delivery email. Check Resend/Brevo API keys.");
+      alert(err instanceof Error ? err.message : "Failed to send delivery email. Check Resend/Brevo API keys.");
     } finally {
       setSending(false);
     }

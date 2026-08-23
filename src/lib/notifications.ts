@@ -60,13 +60,17 @@ export async function sendEmail({
   const resend = getResend();
   if (resend) {
     try {
-      await resend.emails.send({
+      const { data, error } = await resend.emails.send({
         from: fromEmail(),
         to,
         subject,
         html,
         replyTo,
       });
+      if (error) {
+        console.error("[notifications] Resend API error", error);
+        return false;
+      }
       return true;
     } catch (err) {
       console.error("[notifications] Resend dispatch exception", err);

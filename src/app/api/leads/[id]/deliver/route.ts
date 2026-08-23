@@ -1,17 +1,9 @@
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createPortalToken } from "@/lib/portal-token";
+import { sendEmail } from "@/lib/notifications";
 import type { Lead } from "@/types/database";
-
-function getResend() {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return null;
-  return new Resend(key);
-}
-
-const fromEmail = () => process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: leadId } = await params;
@@ -71,25 +63,36 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     </div>
   `;
 
-  const resend = getResend();
-  if (resend) {
-    await resend.emails
-      .send({
-        from: fromEmail(),
-        to: lead.email,
-        subject,
-        html,
-      })
-      .catch((err) => console.error("[deliver] email dispatch failed", err));
+  const hasEmailConfig = Boolean(process.env.BREVO_API_KEY || process.env.RESEND_API_KEY);
+  const emailSent = await sendEmail({
+    to: lead.email,
+    subject,
+    html,
+  });
+
+  if (hasEmailConfig && !emailSent) {
+    return NextResponse.json(
+      { error: "Email delivery failed. Please check your Brevo/Resend API key and verified sender configuration." },
+      { status: 502 }
+    );
   }
 
+  const now = new Date().toISOString();
   await admin
     .from("leads")
     .update({
-      delivered_at: new Date().toISOString(),
+      delivered_at: now,
       status: "delivered",
     })
     .eq("id", leadId);
 
-  return NextResponse.json({ ok: true, delivered_at: new Date().toISOString(), trackingUrl });
+  return NextResponse.json({
+    ok: true,
+    emailSent,
+    delivered_at: now,
+    trackingUrl,
+    warning: !hasEmailConfig
+      ? "No email service configured (missing BREVO_API_KEY / RESEND_API_KEY). You can copy the proposal link directly."
+      : undefined,
+  });
 }

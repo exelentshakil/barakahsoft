@@ -55,8 +55,25 @@ export default async function LeadSitePage({
     );
   }
 
-  const { payload, lead, scrapeResults, artifact } = result;
+  const { payload, lead, scrapeResults, artifact, subscription } = result;
   const operator = await isAdminSession();
+
+  // If client subscription is canceled / unpaid after a month, pause the live site
+  if (subscription?.status === "canceled" && !operator) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#f9f9ff] px-6 py-16 text-center">
+        <div className="w-full max-w-md rounded-2xl border border-[#e5e7f2] bg-white p-8 shadow-sm">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-amber-600 font-bold text-lg">
+            ⏸
+          </div>
+          <h1 className="font-display text-xl font-bold text-[#0d1738]">{payload.businessName}</h1>
+          <p className="mt-2 text-sm leading-relaxed text-[#5b6270]">
+            This website hosting service is currently paused. Please contact BarakahSoft to reactivate your hosting and updates.
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   // If viewing the direct website preview
   if (sParams.view === "preview") {

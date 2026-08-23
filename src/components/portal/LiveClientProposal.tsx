@@ -5,6 +5,7 @@ import type { SitePayload } from "@/components/site-shell/types";
 import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 import { ProposalHeader } from "@/components/portal/sections/ProposalHeader";
 import { ProposalProcessingSkeleton } from "@/components/portal/sections/ProposalProcessingSkeleton";
+import { PendingAutoRefresh } from "@/components/portal/PendingAutoRefresh";
 import { ProposalHero } from "@/components/portal/sections/ProposalHero";
 import { ReportAudit } from "@/components/portal/sections/ReportAudit";
 import { ReportVisibility } from "@/components/portal/sections/ReportVisibility";
@@ -113,7 +114,12 @@ export function LiveClientProposal({
     <div className="min-h-screen bg-[#f9f9ff] text-[#0d1738] font-sans antialiased relative">
       <ProposalHeader businessName={businessName} isPaid={isPaid} isApproved={isApproved} />
 
-      {!isApproved && !isPaid && <ProposalProcessingSkeleton businessName={businessName} />}
+      {!isApproved && !isPaid && (
+        <>
+          <ProposalProcessingSkeleton businessName={businessName} />
+          <PendingAutoRefresh intervalMs={4000} />
+        </>
+      )}
 
       <main className={`mx-auto max-w-5xl px-6 py-12 space-y-16 transition duration-500 ${!isApproved && !isPaid ? "blur-md opacity-40 pointer-events-none select-none" : ""}`}>
         <ProposalHero

@@ -133,6 +133,7 @@ export function AdminLeadWorkspace({
   const router = useRouter();
   const [emailSent, setEmailSent] = useState(Boolean(lead.delivered_at));
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [copiedPortalLink, setCopiedPortalLink] = useState(false);
   const [generatingStripe, setGeneratingStripe] = useState(false);
   const [rescraping, setRescraping] = useState(false);
   const [previewPath, setPreviewPath] = useState("");
@@ -350,11 +351,17 @@ export function AdminLeadWorkspace({
           message: emailBody,
         }),
       });
-      if (!res.ok) throw new Error("Failed");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "The email did not send. Please check your Brevo/Resend API keys.");
+      }
       setEmailSent(true);
+      if (data.warning) {
+        alert(data.warning);
+      }
       router.refresh();
-    } catch {
-      alert("The email did not send. Check the client has a real email address on file, then try again.");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "The email did not send. Check the client has a real email address on file, then try again.");
     } finally {
       setSendingEmail(false);
     }
@@ -856,9 +863,23 @@ export function AdminLeadWorkspace({
               <span>
                 <strong>Goes to:</strong> {email}
               </span>
-              <a href={portalUrl} target="_blank" rel="noreferrer" className="font-bold text-[#533afd] hover:underline">
-                Preview the link they get
-              </a>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(portalUrl);
+                    setCopiedPortalLink(true);
+                    setTimeout(() => setCopiedPortalLink(false), 2000);
+                  }}
+                  className="font-bold text-[#533afd] hover:underline"
+                >
+                  {copiedPortalLink ? "Link copied! ✓" : "Copy proposal link"}
+                </button>
+                <span className="text-[#c7d0fb]">·</span>
+                <a href={portalUrl} target="_blank" rel="noreferrer" className="font-bold text-[#533afd] hover:underline">
+                  Preview the link they get
+                </a>
+              </div>
             </div>
 
             <div className="space-y-3">
