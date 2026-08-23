@@ -189,14 +189,21 @@ export function VisibilityPanel({ leadId, industry }: { leadId: string; industry
               </span>
             </div>
 
-            <div className="flex flex-wrap gap-1.5">
+            {/* A square matrix, because that is what was measured: a grid
+                of points across their area. Flowing the cells into a line
+                threw away the one thing the picture is for -- seeing at a
+                glance which part of the map they are missing from. */}
+            <div
+              className="grid w-fit gap-1.5"
+              style={{ gridTemplateColumns: `repeat(${Math.ceil(Math.sqrt(report.cells.length))}, minmax(0, 1fr))` }}
+            >
               {report.cells.map((cell) => (
                 <button
                   key={cell.area}
                   type="button"
                   onClick={() => setSelected(cell)}
-                  title={cell.area}
-                  className={`h-9 w-9 rounded border text-[11px] font-bold transition hover:scale-105 ${cellColour(cell.rank)}`}
+                  title={`${cell.area} — ${cell.rank ? `ranked #${cell.rank}` : "does not appear"}`}
+                  className={`flex h-10 w-10 items-center justify-center rounded border text-xs font-bold transition hover:scale-105 ${cellColour(cell.rank)}`}
                 >
                   {cell.rank ?? "–"}
                 </button>

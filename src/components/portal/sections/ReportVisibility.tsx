@@ -63,18 +63,40 @@ export function ReportVisibility({
         <span className="rounded-full bg-[#fdeaea] px-3 py-1 text-[#ba1a1a]">Absent from {missing}</span>
       </div>
 
-      <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {cells.map((cell) => (
-          <div key={cell.area} className={`flex items-center justify-between rounded-lg border px-3 py-2.5 ${cellTone(cell.rank)}`}>
-            <span className="flex items-center gap-1.5 text-xs font-semibold">
-              <MapPin className="h-3.5 w-3.5 shrink-0 opacity-70" />
-              {cell.area}
-            </span>
-            <span className="text-xs font-bold tabular-nums">
-              {cell.rank === null ? "Not found" : `#${cell.rank}`}
-            </span>
+      {/* The map, as a map. These are points measured across their area, so
+          they are drawn as a square grid -- a reader sees the shape of
+          where they are missing before they read a single number. */}
+      <div className="mt-5 flex flex-col gap-5 lg:flex-row lg:items-start">
+        <div
+          className="grid w-fit shrink-0 gap-1.5"
+          style={{ gridTemplateColumns: `repeat(${Math.ceil(Math.sqrt(cells.length))}, minmax(0, 1fr))` }}
+        >
+          {cells.map((cell) => (
+            <div
+              key={cell.area}
+              title={`${cell.area} — ${cell.rank ? `ranked #${cell.rank}` : "does not appear"}`}
+              className={`flex h-11 w-11 items-center justify-center rounded-lg border text-sm font-bold tabular-nums ${cellTone(cell.rank)}`}
+            >
+              {cell.rank ?? "–"}
+            </div>
+          ))}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#777588]">Every point we checked</p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {cells.map((cell) => (
+              <span
+                key={cell.area}
+                className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${cellTone(cell.rank)}`}
+              >
+                <MapPin className="h-3 w-3 shrink-0 opacity-70" />
+                {cell.area}
+                <span className="tabular-nums opacity-80">{cell.rank === null ? "not found" : `#${cell.rank}`}</span>
+              </span>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
 
       {topRival && (
