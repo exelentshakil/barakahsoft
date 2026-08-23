@@ -55,6 +55,37 @@ function styleDirective(mood: string): string {
 }
 
 async function requestImage(prompt: string, shape: ImageShape): Promise<Buffer | null> {
+  // 1. Try Google Imagen 3 (GEMINI_API_KEY) for ultra-photorealistic commercial rendering
+  const geminiKey = process.env.GEMINI_API_KEY;
+  if (geminiKey) {
+    try {
+      const aspectRatio = shape === "portrait" ? "3:4" : shape === "square" ? "1:1" : "16:9";
+      const imagenUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict`;
+      const res = await fetch(imagenUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-goog-api-key": geminiKey },
+        body: JSON.stringify({
+          instances: [{ prompt }],
+          parameters: {
+            sampleCount: 1,
+            aspectRatio,
+            outputMimeType: "image/jpeg",
+            personGeneration: "allow_adult",
+          },
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const b64 = data.predictions?.[0]?.bytesBase64Encoded;
+        if (b64) return Buffer.from(b64, "base64");
+      }
+    } catch (err) {
+      console.warn("[image] Imagen 3 attempt failed, falling back to OpenAI", err);
+    }
+  }
+
+  // 2. OpenAI DALL-E / Image Generation
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
 
@@ -68,8 +99,6 @@ async function requestImage(prompt: string, shape: ImageShape): Promise<Buffer |
 
       if (!res.ok) {
         const body = await res.text().catch(() => "");
-        // An unavailable model should fall through the chain; anything else
-        // is a real error worth surfacing once.
         if (res.status === 404 || /model_not_found|does not exist/i.test(body)) continue;
         console.error(`[image] ${model} returned ${res.status}: ${body.slice(0, 300)}`);
         return null;
@@ -82,7 +111,6 @@ async function requestImage(prompt: string, shape: ImageShape): Promise<Buffer |
         return Buffer.from(b64, "base64");
       }
 
-      // Some models return a URL instead of inline base64.
       const url = data.data?.[0]?.url;
       if (url) {
         const img = await fetch(url);
@@ -97,7 +125,7 @@ async function requestImage(prompt: string, shape: ImageShape): Promise<Buffer |
     }
   }
 
-  console.error("[image] no image model available on this key");
+  console.error("[image] no image model available on configured keys");
   return null;
 }
 

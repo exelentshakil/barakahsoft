@@ -146,6 +146,26 @@ export function RefinePanel({ leadId }: { leadId: string }) {
     }
   }
 
+  const [retouchingAll, setRetouchingAll] = useState(false);
+
+  async function handleRetouchAll() {
+    if (!confirm("This will enhance all images across the website with commercial-grade AI photography. Proceed?")) return;
+    setRetouchingAll(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/leads/${leadId}/slots/retouch-all`, {
+        method: "POST",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Retouch failed");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Retouch failed");
+    } finally {
+      setRetouchingAll(false);
+    }
+  }
+
   async function restore(pageKey: string, version: number) {
     setError(null);
     try {
@@ -188,16 +208,29 @@ export function RefinePanel({ leadId }: { leadId: string }) {
   return (
     <Card className="border border-border bg-white shadow-sm">
       <CardContent className="space-y-5 p-6">
-        <div className="flex flex-col gap-1 border-b border-border pb-4">
-          <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#f0f3ff] text-[#533afd]">
-              <ImageIcon className="h-4 w-4" />
-            </span>
-            <h3 className="text-base font-bold text-[#0d1738]">Refine before sending</h3>
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#f0f3ff] text-[#533afd]">
+                <ImageIcon className="h-4 w-4" />
+              </span>
+              <h3 className="text-base font-bold text-[#0d1738]">Refine before sending</h3>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              The generator produced a first draft. Swap in real photos or enhance them with AI for a super premium commercial finish.
+            </p>
           </div>
-          <p className="text-xs text-muted-foreground">
-            The generator produced a first draft. Swap in real photos and this becomes a site worth sending.
-          </p>
+
+          <Button
+            type="button"
+            size="sm"
+            disabled={retouchingAll}
+            onClick={handleRetouchAll}
+            className="gap-1.5 bg-[#0d1738] text-white hover:bg-[#1b2a5c] text-xs font-bold shadow-sm"
+          >
+            {retouchingAll ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 text-amber-400" />}
+            {retouchingAll ? "Retouching All Images..." : "✨ Retouch All Images (AI)"}
+          </Button>
         </div>
 
         {placeholders.length > 0 ? (
