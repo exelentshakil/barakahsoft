@@ -82,6 +82,7 @@ export function buildReportModules(
   const audit = auditCurrentSite({
     facts,
     pagespeedMobile: scrape.pagespeed_mobile,
+    pagespeedDesktop: scrape.pagespeed_desktop,
     businessName: lead.business_name ?? "",
     city,
     services,

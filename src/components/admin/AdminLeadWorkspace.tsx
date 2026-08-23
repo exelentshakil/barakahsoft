@@ -543,10 +543,10 @@ export function AdminLeadWorkspace({
                   <button
                     onClick={() => handleAnalyse("deep")}
                     disabled={rescraping}
-                    title="Reads up to 27 of their pages instead of 2. Slower and costs more, but finds every service and area they mention."
+                    title="Reads up to 25 of their pages instead of 2. Slower and costs more, but it is what finds the page-by-page faults you sell against."
                     className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-semibold text-[#0d1738] hover:bg-[#f0f3ff]"
                   >
-                    Deep crawl · up to 25
+                    Read every page · up to 25
                   </button>
                 </>
               )}

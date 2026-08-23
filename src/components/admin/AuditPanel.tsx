@@ -19,6 +19,8 @@ interface AuditFinding {
   finding: string;
   consequence: string;
   resolution: string;
+  /** The measurement behind the claim, so it can be checked on a call. */
+  evidence?: string;
 }
 
 interface Competitor {
@@ -43,7 +45,17 @@ const SEVERITY_LABEL: Record<string, string> = {
 };
 
 export function AuditPanel({ leadId }: { leadId: string }) {
-  const [audit, setAudit] = useState<{ findings: AuditFinding[]; criticalCount: number; speedScore: number | null; pageCount: number } | null>(null);
+  const [audit, setAudit] = useState<{
+    findings: AuditFinding[];
+    criticalCount: number;
+    warningCount?: number;
+    passCount?: number;
+    score?: number;
+    speedScore: number | null;
+    pageCount: number;
+    pagesChecked?: number;
+    pagesKnown?: number;
+  } | null>(null);
   const [competitors, setCompetitors] = useState<{ query: string; rows: Competitor[] } | null>(null);
   const [analysed, setAnalysed] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -110,22 +122,54 @@ export function AuditPanel({ leadId }: { leadId: string }) {
               Every line is checkable against their own site. This is the conversation, not the report.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2 text-[11px]">
-            {audit.speedScore !== null && (
-              <span className={`rounded-full px-2.5 py-1 font-bold ${audit.speedScore < 50 ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-800"}`}>
-                Mobile speed {audit.speedScore}/100
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {typeof audit.score === "number" && (
+              <span
+                className={`rounded-full px-3 py-1 text-sm font-bold ${
+                  audit.score < 50
+                    ? "bg-red-50 text-red-700"
+                    : audit.score < 80
+                      ? "bg-amber-50 text-amber-800"
+                      : "bg-emerald-50 text-emerald-700"
+                }`}
+              >
+                {audit.score}/100
               </span>
             )}
-            <span className="rounded-full bg-[#f0f3ff] px-2.5 py-1 font-bold text-[#533afd]">
-              {audit.pageCount} page{audit.pageCount === 1 ? "" : "s"}
-            </span>
             {audit.criticalCount > 0 && (
               <span className="rounded-full bg-red-50 px-2.5 py-1 font-bold text-red-700">
                 {audit.criticalCount} critical
               </span>
             )}
+            {(audit.warningCount ?? 0) > 0 && (
+              <span className="rounded-full bg-amber-50 px-2.5 py-1 font-bold text-amber-800">
+                {audit.warningCount} to fix
+              </span>
+            )}
+            {(audit.passCount ?? 0) > 0 && (
+              <span className="rounded-full bg-emerald-50 px-2.5 py-1 font-bold text-emerald-700">
+                {audit.passCount} already fine
+              </span>
+            )}
+            {audit.speedScore !== null && (
+              <span className="rounded-full bg-[#f0f3ff] px-2.5 py-1 font-bold text-[#533afd]">
+                Speed {audit.speedScore}/100
+              </span>
+            )}
           </div>
         </div>
+
+        {/* Most checks below read every crawled page, so a two-page light
+            read produces a thin audit of a site that may have hundreds of
+            pages of problems. That is a fact about the crawl, not the site,
+            and the operator is about to walk a client through it. */}
+        {typeof audit.pagesChecked === "number" && (audit.pagesKnown ?? 0) > audit.pagesChecked && (
+          <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+            <b>Only {audit.pagesChecked} of {audit.pagesKnown} pages were read.</b> Most of these checks look at every
+            page, so this list is thinner than their site really is. Run <b>Read their site · every page</b> in the Lead
+            step for the full picture before you use this on a call.
+          </p>
+        )}
 
         {audit.findings.length === 0 ? (
           <p className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900">
@@ -141,12 +185,21 @@ export function AuditPanel({ leadId }: { leadId: string }) {
                     {f.area}
                   </span>
                 </div>
-                <p className="mt-1.5 text-[11px] leading-relaxed text-[#42506a]">{f.finding}</p>
-                <p className="mt-1.5 text-[11px] leading-relaxed text-[#42506a]">
-                  <b className="text-[#0d1738]">Why it costs them: </b>
-                  {f.consequence}
-                </p>
-                <p className="mt-1.5 border-t border-black/5 pt-1.5 text-[11px] leading-relaxed text-emerald-800">
+                <p className="mt-1.5 text-xs leading-relaxed text-[#42506a]">{f.finding}</p>
+                {f.evidence && (
+                  // The measurement itself, so a claim made on a call can be
+                  // checked while the client is still on it.
+                  <p className="mt-1.5 rounded bg-black/[0.03] px-2 py-1 font-mono text-[10px] leading-relaxed text-[#60778d]">
+                    {f.evidence}
+                  </p>
+                )}
+                {f.consequence && (
+                  <p className="mt-1.5 text-xs leading-relaxed text-[#42506a]">
+                    <b className="text-[#0d1738]">Why it costs them: </b>
+                    {f.consequence}
+                  </p>
+                )}
+                <p className="mt-1.5 border-t border-black/5 pt-1.5 text-xs leading-relaxed text-emerald-800">
                   <b>What we do: </b>
                   {f.resolution}
                 </p>
