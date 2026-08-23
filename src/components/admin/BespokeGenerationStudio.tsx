@@ -227,6 +227,20 @@ export function BespokeGenerationStudio({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [businessName, founder, city, industry, servicesText, heroImage]);
 
+  // A build that died without writing a status leaves its row on "running"
+  // forever, and the Generate button is disabled while a build is running —
+  // so the one action that would clear it is the one action unavailable.
+  // A run that has not touched its row in this long is not running.
+  const STALE_AFTER_MS = 15 * 60 * 1000;
+
+  const isStalled = (job: { status?: string; updated_at?: string } | null | undefined) =>
+    job?.status === "running" &&
+    !!job.updated_at &&
+    Date.now() - new Date(job.updated_at).getTime() > STALE_AFTER_MS;
+
+  const STALLED_MESSAGE =
+    "The last build stopped without finishing — most likely the model returned nothing. Press Generate to start it again.";
+
   // Generation is a multi-minute background job (several model calls plus a
   // critique pass), so the button reports real step progress rather than
   // spinning against a request that would have timed out anyway.
@@ -239,6 +253,13 @@ export function BespokeGenerationStudio({
         if (!job) return;
 
         setProgress({ done: job.pages_done ?? 0, total: job.pages_total ?? 1 });
+
+        if (isStalled(job)) {
+          clearInterval(timer);
+          setGenerating(false);
+          setGenError(STALLED_MESSAGE);
+          return;
+        }
 
         if (job.status === "complete" || job.status === "failed") {
           clearInterval(timer);
@@ -272,6 +293,12 @@ export function BespokeGenerationStudio({
         const res = await fetch(`/api/leads/${lead.id}/generate`);
         const data = await res.json().catch(() => ({}));
         if (cancelled || data.job?.status !== "running") return;
+        // Do not reattach to a corpse — that is what left the button
+        // disabled with no way back.
+        if (isStalled(data.job)) {
+          setGenError(STALLED_MESSAGE);
+          return;
+        }
         setGenerating(true);
         setProgress({ done: data.job.pages_done ?? 0, total: data.job.pages_total ?? 1 });
         timer = pollProgress();
