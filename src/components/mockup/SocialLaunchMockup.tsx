@@ -85,7 +85,7 @@ const BG_THEMES = [
     bgStart: "#4a5a47",
     bgMid: "#334131",
     bgEnd: "#1e271c",
-    cardBg: "#173628",
+    cardBg: "#1b3824",
   },
   {
     id: "sky",
@@ -94,7 +94,7 @@ const BG_THEMES = [
     bgStart: "#75a6c8",
     bgMid: "#48779b",
     bgEnd: "#254c6d",
-    cardBg: "#2c4e6e",
+    cardBg: "#284a68",
   },
   {
     id: "midnight",
@@ -103,7 +103,7 @@ const BG_THEMES = [
     bgStart: "#182845",
     bgMid: "#0f1a2f",
     bgEnd: "#060c18",
-    cardBg: "#142540",
+    cardBg: "#12223a",
   },
   {
     id: "charcoal",
@@ -112,9 +112,61 @@ const BG_THEMES = [
     bgStart: "#30353e",
     bgMid: "#1f2228",
     bgEnd: "#121418",
-    cardBg: "#1f232b",
+    cardBg: "#1c2027",
   },
 ];
+
+// Helper: Convert any remote image to base64 so SVG/Canvas export draws real photos
+async function urlToBase64(url: string | null | undefined): Promise<string | null> {
+  if (!url) return null;
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const c = document.createElement("canvas");
+        c.width = img.naturalWidth || img.width;
+        c.height = img.naturalHeight || img.height;
+        const ctx = c.getContext("2d");
+        if (!ctx) return resolve(null);
+        ctx.drawImage(img, 0, 0);
+        resolve(c.toDataURL("image/png"));
+      } catch {
+        resolve(null);
+      }
+    };
+    img.onerror = () => {
+      // Fallback try with direct fetch
+      fetch(url, { mode: "cors" })
+        .then((res) => res.blob())
+        .then((blob) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(blob);
+        })
+        .catch(() => resolve(null));
+    };
+    img.src = url;
+  });
+}
+
+function wrapWords(text: string, maxCharsPerLine = 22): string[] {
+  if (!text) return [];
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let current = "";
+  for (const w of words) {
+    if ((current + " " + w).trim().length <= maxCharsPerLine) {
+      current = (current + " " + w).trim();
+    } else {
+      if (current) lines.push(current);
+      current = w;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
 
 export function SocialLaunchMockup({
   data,
@@ -146,8 +198,8 @@ export function SocialLaunchMockup({
   const aboutBody =
     data.aboutBody ||
     `Dedicated to providing premium ${trade.toLowerCase()} and expert craftsmanship across ${city} with verified customer satisfaction.`;
-  const founder = data.founderName || "Founder & Team";
-  const founderRole = data.founderTitle || "Founder / CEO";
+  const founder = data.founderName || "Dan Martin";
+  const founderRole = data.founderTitle || "Founder / Operator";
   const ratingText = data.rating ? `${data.rating}★` : "5★";
   const reviewsCountText = data.reviewCount ? `${data.reviewCount}+` : "100+";
   const yearsExp = data.yearsExperience ? `${data.yearsExperience}+` : "10+";
@@ -182,11 +234,11 @@ export function SocialLaunchMockup({
         ctx.font = "900 135px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText(businessShortName.toUpperCase(), width / 2, height * 0.72);
+        ctx.fillText(businessShortName.toUpperCase(), width / 2, format === "story" ? height * 0.76 : height * 0.72);
         ctx.restore();
 
         // Top Dynamic Headline
-        const titleY = format === "story" ? 210 : 160;
+        const titleY = format === "story" ? 220 : 160;
         ctx.save();
         ctx.textAlign = "center";
         ctx.font = "900 68px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
@@ -199,7 +251,14 @@ export function SocialLaunchMockup({
         ctx.restore();
       }
 
-      // 2. Render 3D Composition via SVG
+      // Convert remote images to Base64 so SVG rasterization draws real photos
+      const [photoBase64, logoBase64, heroBase64] = await Promise.all([
+        urlToBase64(featuredCardPhoto),
+        urlToBase64(data.logoUrl),
+        urlToBase64(data.photoUrl || featuredCardPhoto),
+      ]);
+
+      // 2. Render Pixel-Perfect 3D Composition via SVG
       const svgData = generateRealisticMockupSvg({
         data,
         theme,
@@ -218,7 +277,9 @@ export function SocialLaunchMockup({
         ratingText,
         reviewsCountText,
         yearsExp,
-        featuredPhoto: featuredCardPhoto,
+        photoBase64,
+        logoBase64,
+        heroBase64,
       });
 
       const img = new Image();
@@ -267,7 +328,7 @@ export function SocialLaunchMockup({
           </span>
         </div>
 
-        {/* Dynamic Top Header: NEW WEBSITE LAUNCHED / REDESIGN PROPOSED */}
+        {/* Dynamic Top Header */}
         <div className="relative z-10 text-center pt-2 sm:pt-3">
           <h2
             className="text-2xl sm:text-4xl font-black tracking-wider text-white uppercase drop-shadow-[0_8px_18px_rgba(0,0,0,0.55)] font-sans"
@@ -654,7 +715,9 @@ function generateRealisticMockupSvg({
   ratingText,
   reviewsCountText,
   yearsExp,
-  featuredPhoto,
+  photoBase64,
+  logoBase64,
+  heroBase64,
 }: {
   data: MockupData;
   theme: (typeof BG_THEMES)[0];
@@ -673,11 +736,19 @@ function generateRealisticMockupSvg({
   ratingText: string;
   reviewsCountText: string;
   yearsExp: string;
-  featuredPhoto?: string | null;
+  photoBase64?: string | null;
+  logoBase64?: string | null;
+  heroBase64?: string | null;
 }) {
   const isStory = format === "story";
-  const contentYOffset = isStory ? 320 : 180;
+  const contentYOffset = isStory ? 480 : 180;
+  const contentScale = isStory ? "scale(1.12)" : "scale(1.0)";
   const narrative = aboutBody || `Dedicated to expert ${trade.toLowerCase()} and quality craftsmanship across ${city}.`;
+
+  // Intelligently wrap headlines so words are NEVER split in half
+  const heroLines = wrapWords(heroHeading.toUpperCase(), 24);
+  const aboutLines = wrapWords(aboutHeading.toUpperCase(), 22);
+  const narrativeLines = wrapWords(narrative, 34);
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
     <defs>
@@ -696,52 +767,73 @@ function generateRealisticMockupSvg({
         <stop offset="40%" stop-color="#c6cbd4"/>
         <stop offset="100%" stop-color="#9197a3"/>
       </linearGradient>
+      <clipPath id="screenClip">
+        <rect x="18" y="18" width="574" height="364" rx="12" />
+      </clipPath>
+      <clipPath id="photoClip">
+        <rect x="34" y="36" width="144" height="144" rx="18" />
+      </clipPath>
+      <clipPath id="logoClip">
+        <circle cx="56" cy="58" r="14" />
+      </clipPath>
     </defs>
 
-    <g transform="translate(0, ${contentYOffset})">
+    <g transform="translate(0, ${contentYOffset}) ${contentScale}">
       <!-- 1. MACBOOK PRO 3D CHASSIS (LEFT) -->
       <g transform="translate(120, 220) rotate(3) skewY(-8) scale(0.96)" filter="url(#macShadow)">
         <!-- Outer Lid Bezel -->
         <rect x="0" y="0" width="610" height="400" rx="22" fill="url(#lidGrad)" stroke="rgba(255,255,255,0.28)" stroke-width="2.5"/>
         
-        <!-- Screen Glass -->
-        <rect x="18" y="18" width="574" height="364" rx="12" fill="#0b111e"/>
-        
-        <!-- Webpage Nav Header Strip -->
-        <rect x="18" y="18" width="574" height="42" fill="${primaryColor}"/>
-        <circle cx="36" cy="39" r="6.5" fill="rgba(255,255,255,0.4)" />
-        <text x="50" y="44" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="15">${escapeXml(
-          businessShortName
-        )}</text>
-        <text x="570" y="44" text-anchor="end" fill="#ffffff" opacity="0.88" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="700" font-size="11.5">Home  ·  About  ·  Services  ·  Call Now</text>
+        <!-- Screen Glass Content with Clip -->
+        <g clip-path="url(#screenClip)">
+          <!-- Screen Background / Hero Image -->
+          <rect x="18" y="18" width="574" height="364" fill="#0f172a"/>
+          ${
+            heroBase64
+              ? `<image href="${heroBase64}" x="18" y="60" width="574" height="322" preserveAspectRatio="xMidYMid slice" opacity="0.45"/>`
+              : ""
+          }
+          <rect x="18" y="60" width="574" height="322" fill="black" opacity="0.45"/>
+          
+          <!-- Webpage Nav Header Strip -->
+          <rect x="18" y="18" width="574" height="42" fill="${primaryColor}"/>
+          <circle cx="36" cy="39" r="6.5" fill="rgba(255,255,255,0.4)" />
+          <text x="50" y="44" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="15">${escapeXml(
+            businessShortName
+          )}</text>
+          <text x="570" y="44" text-anchor="end" fill="#ffffff" opacity="0.88" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="11.5">Home  ·  About  ·  Services  ·  Call Now</text>
 
-        <!-- Webpage Hero Body on Screen -->
-        <rect x="18" y="60" width="574" height="322" fill="#0f172a"/>
-        <text x="44" y="116" fill="#6ee7b7" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="12.5" letter-spacing="1.5">SERVING ${escapeXml(
-          city.toUpperCase()
-        )}</text>
-        <text x="44" y="152" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="24">${escapeXml(
-          heroHeading.slice(0, 34)
-        )}</text>
-        <text x="44" y="186" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="24">${escapeXml(
-          heroHeading.slice(34, 68) || "EXPERT SERVICES & GUARANTEE"
-        )}</text>
-        
-        <!-- CTA & Rating on Screen -->
-        <rect x="44" y="222" width="165" height="38" rx="8" fill="${primaryColor}"/>
-        <text x="126" y="246" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="13">GET A FREE QUOTE →</text>
-        <text x="230" y="246" fill="#fbbf24" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="14">★★★★★ ${ratingText}</text>
+          <!-- Webpage Hero Body on Screen -->
+          <text x="44" y="112" fill="#6ee7b7" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="12.5" letter-spacing="1.5">SERVING ${escapeXml(
+            city.toUpperCase()
+          )}</text>
+          <text x="44" y="146" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="23">${escapeXml(
+            heroLines[0] || heroHeading
+          )}</text>
+          ${
+            heroLines[1]
+              ? `<text x="44" y="176" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="23">${escapeXml(
+                  heroLines[1]
+                )}</text>`
+              : ""
+          }
+          
+          <!-- CTA & Rating on Screen -->
+          <rect x="44" y="206" width="165" height="38" rx="8" fill="${primaryColor}"/>
+          <text x="126" y="230" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="bold" font-size="13">GET A FREE QUOTE →</text>
+          <text x="230" y="230" fill="#fbbf24" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="bold" font-size="14">★★★★★ ${ratingText}</text>
 
-        <!-- Below Fold Section Preview on Screen -->
-        <rect x="44" y="276" width="522" height="70" rx="8" fill="rgba(255,255,255,0.96)"/>
-        <text x="60" y="298" fill="#64748b" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="9" letter-spacing="1">TRUSTED ACROSS ${escapeXml(
-          city.toUpperCase()
-        )}</text>
-        <text x="60" y="322" fill="#0f172a" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="14">${escapeXml(
-          trade.toUpperCase()
-        )} EXPERTS WITH A REPUTATION FOR EXCELLENCE</text>
-        <rect x="430" y="300" width="120" height="28" rx="6" fill="#0f172a"/>
-        <text x="490" y="318" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="10.5">READ REVIEWS →</text>
+          <!-- Below Fold Section Preview on Screen -->
+          <rect x="44" y="266" width="522" height="74" rx="8" fill="rgba(255,255,255,0.96)"/>
+          <text x="60" y="290" fill="#64748b" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="bold" font-size="9" letter-spacing="1">TRUSTED ACROSS ${escapeXml(
+            city.toUpperCase()
+          )}</text>
+          <text x="60" y="314" fill="#0f172a" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="13.5">${escapeXml(
+            trade.toUpperCase()
+          )} EXPERTS WITH A REPUTATION FOR EXCELLENCE</text>
+          <rect x="430" y="290" width="120" height="28" rx="6" fill="#0f172a"/>
+          <text x="490" y="308" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="bold" font-size="10.5">READ REVIEWS →</text>
+        </g>
 
         <!-- Aluminum Laptop Deck / Base -->
         <path d="M -30,400 L 640,400 L 595,445 L 15,445 Z" fill="url(#deckGrad)" stroke="rgba(255,255,255,0.75)" stroke-width="1.5"/>
@@ -757,68 +849,97 @@ function generateRealisticMockupSvg({
         <rect x="0" y="0" width="540" height="300" rx="28" fill="${primaryColor}"/>
         <rect x="0" y="270" width="540" height="30" fill="${primaryColor}"/>
 
-        <!-- Photo Frame with Name Overlay -->
+        <!-- Real Photo Frame with Clipping -->
         <rect x="34" y="36" width="144" height="144" rx="18" fill="#1e293b" stroke="rgba(255,255,255,0.45)" stroke-width="2"/>
-        <text x="106" y="112" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="34">${escapeXml(
-          founder.slice(0, 2).toUpperCase()
-        )}</text>
-        <rect x="34" y="145" width="144" height="35" rx="4" fill="rgba(255,255,255,0.95)"/>
-        <text x="106" y="162" text-anchor="middle" fill="#0f172a" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="11">${escapeXml(
+        ${
+          photoBase64
+            ? `<g clip-path="url(#photoClip)"><image href="${photoBase64}" x="34" y="36" width="144" height="144" preserveAspectRatio="xMidYMid slice" /></g>`
+            : `<text x="106" y="112" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="34">${escapeXml(
+                founder.slice(0, 2).toUpperCase()
+              )}</text>`
+        }
+
+        <!-- Real Logo Badge Overlay on Photo -->
+        ${
+          logoBase64
+            ? `<g filter="url(#sheetShadow)">
+                <circle cx="56" cy="58" r="15" fill="#ffffff" stroke="rgba(255,255,255,0.8)" stroke-width="1.5" />
+                <g clip-path="url(#logoClip)">
+                  <image href="${logoBase64}" x="42" y="44" width="28" height="28" preserveAspectRatio="xMidYMid meet" />
+                </g>
+              </g>`
+            : ""
+        }
+
+        <!-- Founder Name Tag Overlay on Photo -->
+        <rect x="34" y="145" width="144" height="35" rx="4" fill="rgba(255,255,255,0.96)"/>
+        <text x="106" y="162" text-anchor="middle" fill="#0f172a" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="11">${escapeXml(
           founder
         )}</text>
-        <text x="106" y="174" text-anchor="middle" fill="#64748b" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="9">${escapeXml(
+        <text x="106" y="174" text-anchor="middle" fill="#64748b" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="bold" font-size="9">${escapeXml(
           founderRole
         )}</text>
 
         <!-- Story Copy in Sheet -->
-        <text x="198" y="64" fill="#ffffff" opacity="0.85" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="800" font-size="12" letter-spacing="1.5">OUR STORY</text>
-        <text x="198" y="96" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="19.5">${escapeXml(
-          aboutHeading.slice(0, 26)
+        <text x="198" y="64" fill="#ffffff" opacity="0.85" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="12" letter-spacing="1.5">OUR STORY</text>
+        <text x="198" y="94" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="18.5">${escapeXml(
+          aboutLines[0] || aboutHeading
         )}</text>
-        <text x="198" y="124" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="19.5">${escapeXml(
-          aboutHeading.slice(26, 52) || "CUSTOMER EXCELLENCE"
+        ${
+          aboutLines[1]
+            ? `<text x="198" y="118" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="18.5">${escapeXml(
+                aboutLines[1]
+              )}</text>`
+            : ""
+        }
+        <text x="198" y="146" fill="#ffffff" opacity="0.85" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="500" font-size="10">${escapeXml(
+          narrativeLines[0] || narrative
         )}</text>
-        <text x="198" y="152" fill="#ffffff" opacity="0.8" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="500" font-size="10.5">${escapeXml(
-          narrative.slice(0, 75)
-        )}</text>
+        ${
+          narrativeLines[1]
+            ? `<text x="198" y="159" fill="#ffffff" opacity="0.8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="500" font-size="10">${escapeXml(
+                narrativeLines[1]
+              )}</text>`
+            : ""
+        }
         
         <!-- Story Buttons -->
-        <rect x="198" y="166" width="115" height="24" rx="4" fill="rgba(255,255,255,0.2)"/>
-        <text x="255" y="182" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="9">GET A FREE QUOTE →</text>
-        <rect x="322" y="166" width="85" height="24" rx="4" fill="rgba(255,255,255,0.12)"/>
-        <text x="364" y="182" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="9">FOLLOW US</text>
+        <rect x="198" y="172" width="115" height="24" rx="4" fill="rgba(255,255,255,0.22)"/>
+        <text x="255" y="188" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="bold" font-size="9">GET A FREE QUOTE →</text>
+        <rect x="322" y="172" width="85" height="24" rx="4" fill="rgba(255,255,255,0.14)"/>
+        <text x="364" y="188" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="bold" font-size="9">FOLLOW US</text>
 
         <!-- 4-Column Metric Ribbon -->
         <line x1="34" y1="206" x2="506" y2="206" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
         
-        <text x="88" y="244" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="28">${escapeXml(
+        <text x="88" y="244" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="28">${escapeXml(
           yearsExp
         )}</text>
-        <text x="88" y="268" text-anchor="middle" fill="#ffffff" opacity="0.85" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="10.5">EXPERIENCE</text>
+        <text x="88" y="268" text-anchor="middle" fill="#ffffff" opacity="0.85" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="bold" font-size="10.5">EXPERIENCE</text>
 
-        <text x="210" y="244" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="28">${escapeXml(
+        <text x="210" y="244" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="28">${escapeXml(
           ratingText
         )}</text>
-        <text x="210" y="268" text-anchor="middle" fill="#ffffff" opacity="0.85" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="10.5">REVIEWS</text>
+        <text x="210" y="268" text-anchor="middle" fill="#ffffff" opacity="0.85" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="bold" font-size="10.5">REVIEWS</text>
 
-        <text x="330" y="244" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="28">1-YEAR</text>
-        <text x="330" y="268" text-anchor="middle" fill="#ffffff" opacity="0.85" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="10.5">GUARANTEE</text>
+        <text x="330" y="244" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="28">1-YEAR</text>
+        <text x="330" y="268" text-anchor="middle" fill="#ffffff" opacity="0.85" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="bold" font-size="10.5">GUARANTEE</text>
 
-        <text x="450" y="244" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="28">100%</text>
-        <text x="450" y="268" text-anchor="middle" fill="#ffffff" opacity="0.85" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="10.5">FOCUS</text>
+        <text x="450" y="244" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="28">100%</text>
+        <text x="450" y="268" text-anchor="middle" fill="#ffffff" opacity="0.85" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="bold" font-size="10.5">FOCUS</text>
 
         <!-- Lower Section Content -->
-        <text x="34" y="345" fill="#64748b" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="12" letter-spacing="1">CRAFTSMANSHIP YOU CAN TRUST</text>
-        <text x="34" y="380" fill="#0f172a" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="21">EXPERT ${escapeXml(
+        <text x="34" y="345" fill="#64748b" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="bold" font-size="12" letter-spacing="1">CRAFTSMANSHIP YOU CAN TRUST</text>
+        <text x="34" y="380" fill="#0f172a" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="21">EXPERT ${escapeXml(
           city.toUpperCase()
         )} ${escapeXml(trade.toUpperCase())} SERVICES</text>
 
         <!-- Badges at bottom of sheet -->
         <rect x="34" y="426" width="140" height="32" rx="8" fill="#ecfdf5"/>
-        <text x="104" y="447" text-anchor="middle" fill="#047857" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="13">✓ Verified Live</text>
+        <text x="104" y="447" text-anchor="middle" fill="#047857" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="bold" font-size="13">✓ Verified Live</text>
 
         <rect x="380" y="426" width="130" height="32" rx="8" fill="${primaryColor}"/>
-        <text x="445" y="447" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="13">Call Now</text>
+        <text x="445" y="447" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="bold" font-size="13">Call Now</text>
       </g>
     </g>
   </svg>`;
