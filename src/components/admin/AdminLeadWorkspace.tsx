@@ -69,6 +69,7 @@ import { AuditPanel } from "@/components/admin/AuditPanel";
 import { ApprovalGate } from "@/components/admin/ApprovalGate";
 import { useLeadLive } from "@/hooks/use-lead-live";
 import { PricingManager } from "@/components/admin/PricingManager";
+import { HandoverPanel } from "@/components/admin/HandoverPanel";
 import { EditLeadDialog } from "@/components/admin/EditLeadDialog";
 import { DeleteLeadButton } from "@/components/admin/DeleteLeadButton";
 import { Badge } from "@/components/ui/badge";
@@ -812,6 +813,13 @@ export function AdminLeadWorkspace({
         <TabPanel active={tab === "close"}>
         {/* LINEAR STEP 6: DYNAMIC PRICING MANAGER */}
         <PricingManager leadId={lead.id} currentPricing={pricing} />
+
+        <HandoverPanel
+          leadId={lead.id}
+          businessName={businessName}
+          hasSite={!!artifact?.bespoke_homepage_html}
+          existingRepoUrl={(artifact?.extracted_assets as any)?.github_repo_url ?? null}
+        />
 
         {/* FINAL STEP: CLOSE & STRIPE CHECKOUT DISPATCH */}
         <div className="rounded-2xl bg-[#0d1738] p-7 text-white shadow-md flex flex-col justify-between gap-5 sm:flex-row sm:items-center">

@@ -146,7 +146,15 @@ function footerHtml(payload: SitePayload): string {
       </footer>`;
 }
 
-export async function buildSiteZip(lead: Lead, payload: SitePayload): Promise<Buffer> {
+/**
+ * The site as a file tree.
+ *
+ * Both handover routes read this — the zip download and the push to a
+ * GitHub repository — so a client who takes the repo and a client who takes
+ * the folder receive byte-identical sites. Building the two separately is
+ * how they drift.
+ */
+async function buildSiteTree(lead: Lead, payload: SitePayload): Promise<JSZip> {
   const zip = new JSZip();
   const name = payload.businessName || lead.business_name || lead.slug;
   const tokens = payload.designTokens?.vars ?? {};
@@ -1118,5 +1126,29 @@ export default function Page() {
     );
   }
 
+  return zip;
+}
+
+/** The site as a downloadable folder. */
+export async function buildSiteZip(lead: Lead, payload: SitePayload): Promise<Buffer> {
+  const zip = await buildSiteTree(lead, payload);
   return Buffer.from(await zip.generateAsync({ type: "nodebuffer" }));
+}
+
+export interface SiteFile {
+  path: string;
+  content: string;
+}
+
+/** The same tree, flattened, for anything that writes files somewhere else. */
+export async function buildSiteFiles(lead: Lead, payload: SitePayload): Promise<SiteFile[]> {
+  const zip = await buildSiteTree(lead, payload);
+  const pending: Promise<SiteFile>[] = [];
+
+  zip.forEach((relativePath, entry) => {
+    if (entry.dir) return;
+    pending.push(entry.async("string").then((content) => ({ path: relativePath, content })));
+  });
+
+  return Promise.all(pending);
 }
