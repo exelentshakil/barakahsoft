@@ -115,7 +115,7 @@ export async function listSlots(leadId: string, serviceNames: string[]): Promise
  * Returns the pages that changed. Each one is written through the version
  * recorder, so swapping a photo is undoable exactly like a copy edit.
  */
-async function repointSlot(leadId: string, oldUrl: string, newUrl: string, note: string): Promise<string[]> {
+export async function repointSlot(leadId: string, oldUrl: string, newUrl: string, note: string): Promise<string[]> {
   const admin = createAdminClient();
   const pages = await loadAllPages(leadId);
   const changed: string[] = [];

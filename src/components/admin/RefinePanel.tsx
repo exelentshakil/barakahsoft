@@ -153,13 +153,13 @@ export function RefinePanel({ leadId }: { leadId: string }) {
       const res = await fetch(`/api/leads/${leadId}/slots`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slot: slotKey, subject: caption }),
+        body: JSON.stringify({ slot: slotKey, retouch: true }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Generation failed");
+      if (!res.ok) throw new Error(data.error || "Retouch failed");
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Generation failed");
+      setError(err instanceof Error ? err.message : "Retouch failed");
     } finally {
       setBusySlot(null);
     }

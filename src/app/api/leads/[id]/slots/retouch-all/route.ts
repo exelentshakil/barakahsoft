@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { regenerateSlot } from "@/lib/media/slots";
+import { retouchSlotPhoto } from "@/lib/media/retouch-photo";
 import type { Lead, Artifact } from "@/types/database";
 import type { MediaPlan } from "@/lib/media/plan-media";
 
@@ -29,16 +29,12 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: "No media plan found to retouch" }, { status: 400 });
   }
 
-  const trade = lead.industry || "Home Services";
-  const city = lead.slug || "New York";
-
   const retouched: string[] = [];
   const errors: string[] = [];
 
   for (const item of plan) {
     try {
-      const subject = item.caption || `High-end professional ${trade} work in ${city}`;
-      const result = await regenerateSlot(leadId, item.slot, subject, "dark-premium");
+      const result = await retouchSlotPhoto(leadId, item.slot);
       if (result) {
         retouched.push(item.slot);
       }

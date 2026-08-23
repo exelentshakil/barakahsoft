@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminSession } from "@/lib/is-admin-session";
 import { listSlots, uploadToSlot, regenerateSlot } from "@/lib/media/slots";
+import { retouchSlotPhoto } from "@/lib/media/retouch-photo";
 import { DesignDnaSchema } from "@/lib/design-dna";
 import type { CopyPlan } from "@/lib/generate-copy-plan";
 
@@ -57,9 +58,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const body = await req.json().catch(() => ({}));
   const slotKey = typeof body.slot === "string" ? body.slot : "";
-  const subject = typeof body.subject === "string" ? body.subject.trim() : "";
 
-  if (!slotKey || !subject) {
+  if (!slotKey) {
+    return NextResponse.json({ error: "Provide a slot key" }, { status: 400 });
+  }
+
+  // 1. Direct retouch of the real existing photo in the slot (preserves original composition & crew)
+  if (body.retouch === true) {
+    const result = await retouchSlotPhoto(leadId, slotKey);
+    if (!result) return NextResponse.json({ error: "Photo retouching failed" }, { status: 500 });
+    return NextResponse.json({ ok: true, ...result });
+  }
+
+  const subject = typeof body.subject === "string" ? body.subject.trim() : "";
+  if (!subject) {
     return NextResponse.json({ error: "Describe the image you want for this slot" }, { status: 400 });
   }
 
