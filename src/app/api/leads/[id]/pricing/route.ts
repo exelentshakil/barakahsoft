@@ -26,11 +26,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const existingAssets = (artifact?.extracted_assets ?? {}) as Record<string, unknown>;
 
     const pricingConfig = {
-      model: body.model || "flat", // "flat" | "monthly" | "hybrid"
-      setupPrice: typeof body.setupPrice === "number" ? body.setupPrice : 797,
-      monthlyPrice: typeof body.monthlyPrice === "number" ? body.monthlyPrice : 0,
-      standardValue: typeof body.standardValue === "number" ? body.standardValue : 1597,
-      discountLabel: body.discountLabel || "Save $800 Today",
+      model: body.model || "hybrid", // "flat" | "monthly" | "hybrid"
+      setupPrice: typeof body.setupPrice === "number" ? body.setupPrice : 779,
+      monthlyPrice: typeof body.monthlyPrice === "number" ? body.monthlyPrice : 99,
+      standardValue: typeof body.standardValue === "number" ? body.standardValue : 1897,
+      discountLabel: body.discountLabel || "Save $1,000 Today",
       updated_at: new Date().toISOString(),
       updated_by: user.email,
     };

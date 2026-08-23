@@ -61,9 +61,9 @@ export function LiveClientProposal({
 
   // Dynamic Pricing from Admin Configuration
   const pricingData = (artifact?.extracted_assets?.pricing as any) ?? {};
-  const setupPrice = typeof pricingData.setupPrice === "number" ? pricingData.setupPrice : 797;
-  const monthlyPrice = typeof pricingData.monthlyPrice === "number" ? pricingData.monthlyPrice : 0;
-  const standardValue = typeof pricingData.standardValue === "number" ? pricingData.standardValue : 1597;
+  const setupPrice = typeof pricingData.setupPrice === "number" ? pricingData.setupPrice : 779;
+  const monthlyPrice = typeof pricingData.monthlyPrice === "number" ? pricingData.monthlyPrice : 99;
+  const standardValue = typeof pricingData.standardValue === "number" ? pricingData.standardValue : 1897;
   const discountLabel =
     pricingData.discountLabel ||
     (setupPrice === 0 ? "$0 Setup · Monthly Plan" : "Custom Client Proposal");
@@ -72,7 +72,7 @@ export function LiveClientProposal({
     setupPrice === 0 && monthlyPrice > 0
       ? `$0 Setup · $${monthlyPrice}/mo`
       : setupPrice > 0 && monthlyPrice > 0
-      ? `$${setupPrice} Setup + $${monthlyPrice}/mo`
+      ? `$${setupPrice} setup · $${monthlyPrice}/mo`
       : `$${setupPrice}`;
 
   const launchSteps = [

@@ -25,19 +25,19 @@ export function PricingManager({
 }) {
   const router = useRouter();
   const [model, setModel] = useState<"flat" | "monthly" | "hybrid">(
-    currentPricing?.model || "flat"
+    currentPricing?.model || "hybrid"
   );
   const [setupPrice, setSetupPrice] = useState<number>(
-    currentPricing?.setupPrice ?? 797
+    currentPricing?.setupPrice ?? 779
   );
   const [monthlyPrice, setMonthlyPrice] = useState<number>(
-    currentPricing?.monthlyPrice ?? 0
+    currentPricing?.monthlyPrice ?? 99
   );
   const [standardValue, setStandardValue] = useState<number>(
-    currentPricing?.standardValue ?? 1597
+    currentPricing?.standardValue ?? 1897
   );
   const [discountLabel, setDiscountLabel] = useState<string>(
-    currentPricing?.discountLabel ?? "Save $800 Today"
+    currentPricing?.discountLabel ?? "Save $1,000 Today"
   );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);

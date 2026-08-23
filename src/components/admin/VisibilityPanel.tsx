@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Loader2, MapPin, Search, TrendingDown } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Loader2, MapPin, RotateCcw, Search, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -107,6 +107,18 @@ export function VisibilityPanel({ leadId, industry }: { leadId: string; industry
     }
   }
 
+  // Identify top rival holding the most spots where the lead is absent
+  const topRival = useMemo(() => {
+    if (!report) return null;
+    const holders = new Map<string, number>();
+    for (const cell of report.cells) {
+      if (cell.rank === null && cell.topCompetitor) {
+        holders.set(cell.topCompetitor, (holders.get(cell.topCompetitor) ?? 0) + 1);
+      }
+    }
+    return [...holders.entries()].sort((a, b) => b[1] - a[1])[0] ?? null;
+  }, [report]);
+
   return (
     <Card className="border border-border bg-white shadow-sm">
       <CardContent className="space-y-4 p-6">
@@ -123,9 +135,22 @@ export function VisibilityPanel({ leadId, industry }: { leadId: string; industry
             </p>
           </div>
           {report && (
-            <span className="rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700">
-              Missing in {report.missing} of {report.cells.length}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700">
+                Missing in {report.missing} of {report.cells.length}
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={running}
+                onClick={() => run(report.cells.length)}
+                className="gap-1.5 border-border text-xs font-semibold text-[#0d1738] hover:bg-[#f0f3ff] hover:text-[#533afd]"
+              >
+                {running ? <Loader2 className="h-3.5 w-3.5 animate-spin text-[#533afd]" /> : <RotateCcw className="h-3.5 w-3.5" />}
+                {running ? "Re-measuring..." : "Redo search"}
+              </Button>
+            </div>
           )}
         </div>
 
@@ -173,8 +198,8 @@ export function VisibilityPanel({ leadId, industry }: { leadId: string; industry
         )}
 
         {report && (
-          <div className="space-y-3">
-            <div className="flex flex-wrap gap-3 text-xs">
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-3 text-xs">
               <span className="rounded bg-emerald-50 px-2 py-1 font-semibold text-emerald-800">
                 Top 3 in {report.dominant}
               </span>
@@ -189,56 +214,170 @@ export function VisibilityPanel({ leadId, industry }: { leadId: string; industry
               </span>
             </div>
 
-            {/* A square matrix, because that is what was measured: a grid
-                of points across their area. Flowing the cells into a line
-                threw away the one thing the picture is for -- seeing at a
-                glance which part of the map they are missing from. */}
-            <div
-              className="grid w-fit gap-1.5"
-              style={{ gridTemplateColumns: `repeat(${Math.ceil(Math.sqrt(report.cells.length))}, minmax(0, 1fr))` }}
-            >
-              {report.cells.map((cell) => (
-                <button
-                  key={cell.area}
-                  type="button"
-                  onClick={() => setSelected(cell)}
-                  title={`${cell.area} — ${cell.rank ? `ranked #${cell.rank}` : "does not appear"}`}
-                  className={`flex h-10 w-10 items-center justify-center rounded border text-xs font-bold transition hover:scale-105 ${cellColour(cell.rank)}`}
-                >
-                  {cell.rank ?? "–"}
-                </button>
-              ))}
-            </div>
-
-            {selected && (
-              <div className="rounded-lg border border-border bg-[#fbfbfd] p-3">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-3.5 w-3.5 text-[#533afd]" />
-                  <span className="text-xs font-bold text-[#0d1738]">{selected.area}</span>
-                  <span className="text-[11px] text-muted-foreground">
-                    {selected.rank ? `Ranked #${selected.rank}` : "Does not appear"}
-                  </span>
+            {/* Two-column layout: Map Grid on Left, Rich Details / Inspector on Right */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
+              {/* Left Column: Matrix Grid */}
+              <div className="flex flex-col items-start gap-3 lg:col-span-5">
+                <div className="rounded-xl border border-border/70 bg-[#fbfbfd] p-3.5 shadow-inner">
+                  <div
+                    className="grid gap-1.5"
+                    style={{ gridTemplateColumns: `repeat(${Math.ceil(Math.sqrt(report.cells.length))}, minmax(0, 1fr))` }}
+                  >
+                    {report.cells.map((cell) => {
+                      const isSelected = selected?.area === cell.area;
+                      return (
+                        <button
+                          key={cell.area}
+                          type="button"
+                          onClick={() => setSelected(cell)}
+                          title={`${cell.area} — ${cell.rank ? `Ranked #${cell.rank}` : "Does not appear"}`}
+                          className={`flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg border text-xs font-bold transition-all ${cellColour(
+                            cell.rank
+                          )} ${
+                            isSelected
+                              ? "ring-2 ring-[#533afd] ring-offset-2 scale-105 z-10 font-extrabold shadow-sm"
+                              : "hover:scale-105"
+                          }`}
+                        >
+                          {cell.rank ?? "–"}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-                {selected.topCompetitor && (
-                  <p className="mt-1.5 text-[11px] text-muted-foreground">
-                    <TrendingDown className="mr-1 inline h-3 w-3 text-red-600" />
-                    <b className="text-[#0d1738]">{selected.topCompetitor}</b> holds the top spot here
-                    {selected.ahead.length > 1 ? `, ahead of ${selected.ahead.length - 1} more` : ""}.
-                  </p>
-                )}
-              </div>
-            )}
 
-            <button
-              type="button"
-              onClick={() => {
-                setReport(null);
-                setSelected(null);
-              }}
-              className="text-[11px] font-semibold text-[#533afd] hover:underline"
-            >
-              Measure again at a different size
-            </button>
+                {/* Map Legend */}
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-2.5 w-2.5 rounded bg-emerald-500" />
+                    <span>Top 3</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-2.5 w-2.5 rounded bg-amber-400" />
+                    <span>Visible (4–10)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-2.5 w-2.5 rounded bg-orange-400" />
+                    <span>Visible (11+)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-2.5 w-2.5 rounded bg-red-400" />
+                    <span>Absent</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Interactive Area Details & Insights */}
+              <div className="flex flex-col gap-3 lg:col-span-7">
+                {selected ? (
+                  <div className="rounded-xl border border-[#533afd]/20 bg-[#f9f9ff] p-4 shadow-sm space-y-3">
+                    <div className="flex items-start justify-between gap-2 border-b border-[#533afd]/10 pb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#533afd]/10 text-[#533afd]">
+                          <MapPin className="h-4 w-4" />
+                        </span>
+                        <div>
+                          <h4 className="text-sm font-bold text-[#0d1738]">{selected.area}</h4>
+                          <p className="text-[11px] text-muted-foreground">Local search area</p>
+                        </div>
+                      </div>
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                          selected.rank === null
+                            ? "bg-red-100 text-red-700"
+                            : selected.rank <= 3
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-amber-100 text-amber-800"
+                        }`}
+                      >
+                        {selected.rank ? `Ranked #${selected.rank}` : "Does not appear"}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 text-xs">
+                      {selected.topCompetitor ? (
+                        <div className="rounded-lg border border-border bg-white p-3">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                            Top Competitor
+                          </span>
+                          <p className="mt-1 font-semibold text-[#0d1738] flex items-center gap-1.5">
+                            <TrendingDown className="h-3.5 w-3.5 text-red-500 shrink-0" />
+                            {selected.topCompetitor}
+                          </p>
+                          {selected.ahead && selected.ahead.length > 1 && (
+                            <p className="mt-1 text-[11px] text-muted-foreground">
+                              Holds the top spot ahead of {selected.ahead.length - 1} other competing{" "}
+                              {selected.ahead.length - 1 === 1 ? "business" : "businesses"}.
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-muted-foreground italic">No competitor details recorded for this point.</p>
+                      )}
+
+                      {selected.rank === null ? (
+                        <p className="text-[11px] text-red-700 bg-red-50 rounded-lg p-2.5 font-medium leading-relaxed">
+                          Your lead is completely absent in <strong>{selected.area}</strong>. Potential customers searching here are going directly to competitors.
+                        </p>
+                      ) : selected.rank <= 3 ? (
+                        <p className="text-[11px] text-emerald-800 bg-emerald-50 rounded-lg p-2.5 font-medium leading-relaxed">
+                          Strong presence! Your lead ranks #{selected.rank} in the top 3 spots for <strong>{selected.area}</strong>.
+                        </p>
+                      ) : (
+                        <p className="text-[11px] text-amber-800 bg-amber-50 rounded-lg p-2.5 font-medium leading-relaxed">
+                          Your lead appears at #{selected.rank} in <strong>{selected.area}</strong>, but sits below the prime top-3 local pack.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-border bg-[#fbfbfd] p-4 text-xs space-y-3">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <MapPin className="h-4 w-4 text-[#533afd]" />
+                      <span className="font-semibold text-[#0d1738]">Area Inspector</span>
+                    </div>
+                    <p className="text-[12px] text-muted-foreground leading-relaxed">
+                      Click any square on the map to inspect who holds the top spot in that suburb and where your lead ranks.
+                    </p>
+
+                    {topRival && (
+                      <div className="rounded-lg border border-border/80 bg-white p-3">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                          Leading Rival in Missing Areas
+                        </span>
+                        <p className="mt-1 text-xs text-[#0d1738] leading-snug">
+                          <strong className="text-[#533afd]">{topRival[0]}</strong> holds the #1 spot across{" "}
+                          <strong>{topRival[1]}</strong> of the {report.missing} areas where your lead does not appear.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Action footer */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReport(null);
+                      setSelected(null);
+                    }}
+                    className="text-[11px] font-semibold text-[#533afd] hover:underline"
+                  >
+                    Measure again at a different size
+                  </button>
+                  {selected && (
+                    <button
+                      type="button"
+                      onClick={() => setSelected(null)}
+                      className="text-[11px] text-muted-foreground hover:text-[#0d1738] hover:underline"
+                    >
+                      Clear selection
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </CardContent>

@@ -222,23 +222,23 @@ export function AdminLeadWorkspace({
   );
 
   // Price formatting
-  const setupPrice = pricing?.setupPrice ?? 797;
-  const monthlyPrice = pricing?.monthlyPrice ?? 0;
+  const setupPrice = pricing?.setupPrice ?? 779;
+  const monthlyPrice = pricing?.monthlyPrice ?? 99;
   const priceDisplay =
     setupPrice === 0 && monthlyPrice > 0
       ? `$${monthlyPrice}/mo`
       : setupPrice > 0 && monthlyPrice > 0
-      ? `$${setupPrice} + $${monthlyPrice}/mo`
+      ? `$${setupPrice} setup · $${monthlyPrice}/mo`
       : `$${setupPrice}`;
 
   // Dynamic real-time revenue metrics from actual database leads
   const collectedThisWeek = otherLeads
     .filter((l) => Boolean(l.paid_at) || l.status === "paid" || l.status === "live")
-    .reduce((acc) => acc + 797, 0);
+    .reduce((acc) => acc + 779, 0);
 
   const pendingCloseAmount = otherLeads
     .filter((l) => !l.paid_at && !["paid", "live", "lost"].includes(l.status))
-    .reduce((acc) => acc + 797, 0);
+    .reduce((acc) => acc + 779, 0);
 
   // The job, as five steps in the order they actually happen. `done` is read
   // from real state rather than from where the operator has clicked, so the
@@ -424,7 +424,7 @@ export function AdminLeadWorkspace({
                     <span className="rounded bg-[#f0f3ff] px-1.5 py-0.5 text-xs font-bold text-[#533afd] capitalize">
                       {itemTrade}
                     </span>
-                    <span className="text-sm font-bold text-[#0b8f5b]">$797</span>
+                    <span className="text-sm font-bold text-[#0b8f5b]">$779</span>
                   </div>
 
                   <p className="mt-1.5 truncate text-sm font-bold text-[#0d1738]">

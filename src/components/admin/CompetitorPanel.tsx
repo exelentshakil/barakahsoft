@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { AlertTriangle, ExternalLink, Loader2, Search, TrendingDown } from "lucide-react";
+import { AlertTriangle, ExternalLink, Loader2, RotateCcw, Search, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -79,7 +79,7 @@ export function CompetitorPanel({ leadId }: { leadId: string }) {
             </p>
           </div>
 
-          {!competitors && (
+          {!competitors ? (
             <Button
               type="button"
               disabled={measuring}
@@ -88,6 +88,18 @@ export function CompetitorPanel({ leadId }: { leadId: string }) {
             >
               {measuring ? <Loader2 className="h-4 w-4 animate-spin" /> : <TrendingDown className="h-4 w-4" />}
               {measuring ? "Measuring..." : "Find their competitors"}
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={measuring}
+              onClick={measure}
+              className="gap-2 border-border text-xs font-semibold text-[#0d1738] hover:bg-[#f0f3ff] hover:text-[#533afd]"
+            >
+              {measuring ? <Loader2 className="h-3.5 w-3.5 animate-spin text-[#533afd]" /> : <RotateCcw className="h-3.5 w-3.5" />}
+              {measuring ? "Re-measuring..." : "Redo measurement"}
             </Button>
           )}
         </div>
@@ -101,29 +113,34 @@ export function CompetitorPanel({ leadId }: { leadId: string }) {
 
         {competitors && (
           <>
-            <p className="text-xs text-muted-foreground">
-              Real results for <b className="text-[#0d1738]">&ldquo;{competitors.query}&rdquo;</b>
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">
+                Real results for <b className="text-[#0d1738]">&ldquo;{competitors.query}&rdquo;</b>
+              </p>
+              <span className="text-[11px] text-muted-foreground">
+                {competitors.rows.length - 1} competitors found
+              </span>
+            </div>
             <div className="overflow-x-auto rounded-lg border border-border">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-border bg-[#fbfbfd] text-[10px] uppercase tracking-wide text-muted-foreground">
-                    <th className="px-3 py-2 font-bold">Business</th>
-                    <th className="px-3 py-2 font-bold">Google rating</th>
-                    <th className="px-3 py-2 font-bold">Reviews</th>
-                    <th className="px-3 py-2 font-bold">Mobile speed</th>
+                    <th className="px-3 py-2.5 font-bold">Business</th>
+                    <th className="px-3 py-2.5 font-bold">Google rating</th>
+                    <th className="px-3 py-2.5 font-bold">Reviews</th>
+                    <th className="px-3 py-2.5 font-bold">Mobile speed</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {competitors.rows.map((row) => (
                     <tr key={row.name} className={row.isClient ? "bg-[#f0f3ff] font-bold text-[#533afd]" : "text-[#42506a]"}>
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-2.5">
                         {/* The site is the point of the comparison — being
                             able to open the competitor beating them is half
                             of what makes this table useful on a call. */}
                         {row.website ? (
                           <a
-                            href={row.website}
+                            href={row.website.startsWith("http") ? row.website : `https://${row.website}`}
                             target="_blank"
                             rel="noreferrer"
                             className="inline-flex items-center gap-1 hover:underline"
@@ -138,9 +155,9 @@ export function CompetitorPanel({ leadId }: { leadId: string }) {
                       </td>
                       {/* A blank cell is honest. Nothing here is filled in
                           when it could not be measured. */}
-                      <td className="px-3 py-2 tabular-nums">{row.rating ?? "—"}</td>
-                      <td className="px-3 py-2 tabular-nums">{row.reviewCount ?? "—"}</td>
-                      <td className="px-3 py-2 tabular-nums">{row.speedScore ?? "—"}</td>
+                      <td className="px-3 py-2.5 tabular-nums">{row.rating ?? "—"}</td>
+                      <td className="px-3 py-2.5 tabular-nums">{row.reviewCount ?? "—"}</td>
+                      <td className="px-3 py-2.5 tabular-nums">{row.speedScore ?? "—"}</td>
                     </tr>
                   ))}
                 </tbody>

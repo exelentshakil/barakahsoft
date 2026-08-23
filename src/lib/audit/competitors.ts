@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { searchWithFirecrawl } from "@/lib/scrape/firecrawl";
 import { callPagespeedApi } from "@/lib/google/pagespeed";
-import { callPlacesApi } from "@/lib/google/places";
+import { callPlacesApi, searchNearbyCompetitors, resolveCompetitorWebsite } from "@/lib/google/places";
 
 // The competitor benchmark, on real competitors.
 //
@@ -32,11 +32,13 @@ export interface CompetitorBenchmark {
 }
 
 const NOT_A_COMPETITOR =
-  /(yelp|angi|angieslist|thumbtack|houzz|homeadvisor|bbb\.org|facebook|instagram|linkedin|nextdoor|mapquest|yellowpages|porch|buildzoom|expertise\.com|threebestrated|wikipedia|reddit|indeed)/i;
+  /(yelp|angi|angieslist|thumbtack|houzz|homeadvisor|bbb\.org|facebook|instagram|linkedin|nextdoor|mapquest|yellowpages|yellow-pages|yp\.com|superpages|porch|buildzoom|expertise\.com|threebestrated|wikipedia|reddit|indeed|tripadvisor|glassdoor|google\.com|apple\.com|trustpilot|top10|bestbusinesses|clutch\.co|bark\.com|usnews\.com|forbes\.com)/i;
 
-function hostOf(url: string): string | null {
+function hostOf(url: string | null | undefined): string | null {
+  if (!url) return null;
   try {
-    return new URL(url).hostname.replace(/^www\./, "").toLowerCase();
+    const parsed = new URL(url.startsWith("http") ? url : `https://${url}`);
+    return parsed.hostname.replace(/^www\./, "").toLowerCase();
   } catch {
     return null;
   }
@@ -57,44 +59,74 @@ export async function benchmarkCompetitors(
   if (!trade || !city) return null;
 
   const query = `${trade} in ${city}`;
-  const hits = await searchWithFirecrawl(query, 10);
   const clientHost = hostOf(client.website);
+  const seenHosts = new Set<string>();
+  if (clientHost) seenHosts.add(clientHost);
 
-  const seen = new Set<string>();
-  const candidates = hits
-    .filter((hit) => {
-      if (NOT_A_COMPETITOR.test(hit.url)) return false;
-      const host = hostOf(hit.url);
-      if (!host || host === clientHost || seen.has(host)) return false;
-      seen.add(host);
-      return true;
-    })
-    .slice(0, 4);
+  const competitorRows: CompetitorRow[] = [];
 
-  if (candidates.length === 0) return null;
+  // 1. First priority: Google Places Text Search.
+  // Directly finds real local businesses ranking on Google Maps for this trade/city,
+  // and resolves their verified website URL to ensure 100% accurate match between name & URL.
+  try {
+    const placesHits = await searchNearbyCompetitors(query, undefined, 8);
+    for (const hit of placesHits) {
+      if (competitorRows.length >= 4) break;
+      const website = await resolveCompetitorWebsite(hit.place_id);
+      if (!website) continue;
+      const host = hostOf(website);
+      if (!host || seenHosts.has(host) || NOT_A_COMPETITOR.test(website) || NOT_A_COMPETITOR.test(host)) continue;
+      seenHosts.add(host);
 
-  // Places supplies the review numbers, PageSpeed the speed. Both are free
-  // at this volume and both are checkable by the client.
-  const rows = await Promise.all(
-    candidates.map(async (hit): Promise<CompetitorRow> => {
-      const host = hostOf(hit.url)!;
-      const guessedName = hit.title.split(/[|\-–—]/)[0].trim().slice(0, 60) || host;
-
-      const [places, speed] = await Promise.all([
-        callPlacesApi(guessedName, city).catch(() => null),
-        callPagespeedApi(hit.url).catch(() => null),
-      ]);
-
-      return {
-        name: places?.name ?? guessedName,
-        website: hit.url,
-        rating: places?.rating ?? null,
-        reviewCount: places?.review_count ?? null,
+      const speed = await callPagespeedApi(website).catch(() => null);
+      competitorRows.push({
+        name: hit.name,
+        website,
+        rating: hit.rating,
+        reviewCount: hit.review_count,
         speedScore: typeof speed?.mobile?.score === "number" ? speed.mobile.score : null,
         isClient: false,
-      };
-    })
-  );
+      });
+    }
+  } catch (err) {
+    console.error("[competitors] Places search failed, trying web search fallback", err);
+  }
+
+  // 2. Fallback: Firecrawl web search if Google Places returned fewer than 2 competitors.
+  if (competitorRows.length < 2) {
+    try {
+      const hits = await searchWithFirecrawl(query, 10);
+      for (const hit of hits) {
+        if (competitorRows.length >= 4) break;
+        if (NOT_A_COMPETITOR.test(hit.url)) continue;
+        const host = hostOf(hit.url);
+        if (!host || seenHosts.has(host) || NOT_A_COMPETITOR.test(host)) continue;
+        seenHosts.add(host);
+
+        const guessedName = hit.title.split(/[|\-–—:]/)[0].trim().slice(0, 60) || host;
+        const places = await callPlacesApi(guessedName, city).catch(() => null);
+        const speed = await callPagespeedApi(hit.url).catch(() => null);
+
+        const placesHost = hostOf(places?.website);
+        const isPlacesMatch = Boolean(
+          placesHost && (placesHost === host || host.includes(placesHost) || placesHost.includes(host))
+        );
+
+        competitorRows.push({
+          name: isPlacesMatch && places?.name ? places.name : guessedName,
+          website: isPlacesMatch && places?.website ? places.website : hit.url,
+          rating: isPlacesMatch ? (places?.rating ?? null) : null,
+          reviewCount: isPlacesMatch ? (places?.review_count ?? null) : null,
+          speedScore: typeof speed?.mobile?.score === "number" ? speed.mobile.score : null,
+          isClient: false,
+        });
+      }
+    } catch (err) {
+      console.error("[competitors] Firecrawl search fallback failed", err);
+    }
+  }
+
+  if (competitorRows.length === 0) return null;
 
   const benchmark: CompetitorBenchmark = {
     query,
@@ -107,7 +139,7 @@ export async function benchmarkCompetitors(
         speedScore: client.speedScore,
         isClient: true,
       },
-      ...rows,
+      ...competitorRows,
     ],
     measuredAt: new Date().toISOString(),
   };

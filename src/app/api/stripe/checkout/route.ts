@@ -27,8 +27,8 @@ interface LeadPricing {
 // here deliberately rather than imported from a component: this is the
 // number that gets charged, and it should not change because a UI file was
 // refactored.
-const DEFAULT_SETUP = 797;
-const DEFAULT_MONTHLY = 0;
+const DEFAULT_SETUP = 779;
+const DEFAULT_MONTHLY = 99;
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
   if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
 
   const stripe = getStripe();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const portalBaseUrl = process.env.NEXT_PUBLIC_PORTAL_URL || "https://portal.barakahsoft.com";
   const businessName = lead.business_name || lead.slug;
 
   // The lead-engine tier is our own product on a fixed published price, not
@@ -58,8 +58,8 @@ export async function POST(req: Request) {
       line_items: [{ price: LEAD_ENGINE_PRICE_ID, quantity: 1 }],
       metadata: { lead_id: lead.id, tier: "lead_engine" },
       subscription_data: { metadata: { lead_id: lead.id, tier: "lead_engine" } },
-      success_url: `${siteUrl}/admin/leads/${lead.id}?paid=1`,
-      cancel_url: `${siteUrl}/admin/leads/${lead.id}?paid=0`,
+      success_url: `${portalBaseUrl}/admin/leads/${lead.id}?paid=1`,
+      cancel_url: `${portalBaseUrl}/admin/leads/${lead.id}?paid=0`,
     });
     return NextResponse.json({ url: session.url });
   }
@@ -120,8 +120,8 @@ export async function POST(req: Request) {
       line_items: setup > 0 ? [monthlyLine, buildLine] : [monthlyLine],
       metadata,
       subscription_data: { metadata },
-      success_url: `${siteUrl}/s/${lead.slug}?auth=${createPortalToken(lead.id)}&paid=1`,
-      cancel_url: `${siteUrl}/s/${lead.slug}?auth=${createPortalToken(lead.id)}&paid=0`,
+      success_url: `${portalBaseUrl}/s/${lead.slug}?auth=${createPortalToken(lead.id)}&paid=1`,
+      cancel_url: `${portalBaseUrl}/s/${lead.slug}?auth=${createPortalToken(lead.id)}&paid=0`,
     });
     return NextResponse.json({ url: session.url });
   }
@@ -131,8 +131,8 @@ export async function POST(req: Request) {
     customer_email: lead.email ?? undefined,
     line_items: [buildLine],
     metadata,
-    success_url: `${siteUrl}/s/${lead.slug}?auth=${createPortalToken(lead.id)}&paid=1`,
-    cancel_url: `${siteUrl}/s/${lead.slug}?auth=${createPortalToken(lead.id)}&paid=0`,
+    success_url: `${portalBaseUrl}/s/${lead.slug}?auth=${createPortalToken(lead.id)}&paid=1`,
+    cancel_url: `${portalBaseUrl}/s/${lead.slug}?auth=${createPortalToken(lead.id)}&paid=0`,
   });
 
   return NextResponse.json({ url: session.url });
