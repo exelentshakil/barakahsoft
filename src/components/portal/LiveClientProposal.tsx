@@ -164,6 +164,7 @@ export function LiveClientProposal({
               photoUrl: payload.heroImageUrl || null,
               secondaryPhotoUrl: payload.services?.[0]?.imageUrl || null,
               siteUrl: lead.source_url,
+              headlineMode: isPaid ? "launched" : "proposed",
             }}
             showControls={false}
           />

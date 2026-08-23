@@ -79,7 +79,7 @@ export function SocialMockupPanel({
   // -------------------------------------------------------------
   // Meta Andromeda-Compliant Caption Engine
   // -------------------------------------------------------------
-  const [captionStyle, setCaptionStyle] = useState<"transformation" | "authority" | "contrarian">("transformation");
+  const [captionStyle, setCaptionStyle] = useState<"redesign_proposed" | "concept_teaser" | "transformation" | "authority" | "contrarian">("redesign_proposed");
   const [copied, setCopied] = useState(false);
   const [copiedMotion, setCopiedMotion] = useState(false);
   const [customCaption, setCustomCaption] = useState<string>("");
@@ -90,6 +90,42 @@ export function SocialMockupPanel({
     const cityHashtag = city.replace(/[^a-zA-Z0-9]/g, "");
 
     return {
+      redesign_proposed: `Here is a custom website concept we just designed for ${businessName} in ${city} ⚡
+
+When local homeowners in ${city} search for a trusted ${cleanTrade}, they judge your quality in under 3 seconds.
+
+We took their real-world 5-star reputation and built a bespoke, high-converting digital storefront around it:
+
+• 🚀 Sub-second mobile load time
+• ⭐ Prominent Google Reviews & verified warranty proof
+• 📍 Suburb-by-suburb service routing across ${city}
+• 📞 1-tap estimate funnel engineered for mobile callers
+
+Take a look at the 3D redesign concept above.
+
+Should they make this live? Drop your thoughts below 👇
+
+(If you run a local ${cleanTrade} company and want to see what your site could look like, comment "PREVIEW" or DM us for a free redesign concept).
+
+#${tradeHashtag} #${cityHashtag} #WebDesign #HomeServices #RedesignConcept #BarakahSoft`,
+
+      concept_teaser: `Sneak peek at a new website proposal for ${businessName} 👀
+
+Most ${cleanTrade} websites in ${city} lose 60%+ of their visitors because of slow loading speeds, cluttered menus, and hidden phone numbers.
+
+This concept was engineered from the ground up to do one thing: turn local traffic into booked high-ticket estimates.
+
+Highlights:
+✅ Modern mobile-first architecture
+✅ Instant pricing & guarantee trust signals
+✅ Built specifically for ${city} local search intent
+
+Would you hire a ${cleanTrade} with a website like this? 
+
+Comment "CONCEPT" below if you want us to put together a private redesign for your business.
+
+#LocalBusiness #${tradeHashtag} #${cityHashtag}Business #UIUX #BarakahSoft`,
+
       transformation: `Most local ${cleanTrade} companies don't have a lead problem.
 
 They have a trust leak. 🛑
@@ -97,7 +133,7 @@ They have a trust leak. 🛑
 When someone in ${city} searches for "${cleanTrade} near me", they click 2–3 websites. 
 If your site takes 4+ seconds to load, looks outdated on a phone, or buries your phone number... they bounce straight to your competitor.
 
-Here is the brand new digital storefront we just designed & launched for ${businessName} in ${city}:
+Here is the brand new digital storefront we just designed & proposed for ${businessName} in ${city}:
 
 ⚡ Sub-second mobile loading speed (zero bounce rate)
 ⭐ 5-star Google review & verified reputation integration
@@ -204,7 +240,7 @@ Duration: 6.0 Seconds (Seamless Loop)
     setTimeout(() => setCopiedMotion(false), 2500);
   }
 
-  function handleStyleChange(style: "transformation" | "authority" | "contrarian") {
+  function handleStyleChange(style: "redesign_proposed" | "concept_teaser" | "transformation" | "authority" | "contrarian") {
     setCaptionStyle(style);
     setCustomCaption(generatedCaptions[style]);
   }
@@ -302,8 +338,32 @@ Duration: 6.0 Seconds (Seamless Loop)
                 </Button>
               </div>
 
-              {/* Style Selector Tabs */}
+              {/* Style Selector Tabs (5 Andromeda-Optimized Angles) */}
               <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleStyleChange("redesign_proposed")}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                    captionStyle === "redesign_proposed"
+                      ? "bg-[#533afd] text-white shadow-sm"
+                      : "bg-white text-[#42506a] border border-border hover:bg-[#f0f3ff]"
+                  }`}
+                >
+                  <Sparkles className="h-3.5 w-3.5" /> Concept / Proposed Redesign
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleStyleChange("concept_teaser")}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                    captionStyle === "concept_teaser"
+                      ? "bg-[#533afd] text-white shadow-sm"
+                      : "bg-white text-[#42506a] border border-border hover:bg-[#f0f3ff]"
+                  }`}
+                >
+                  <Zap className="h-3.5 w-3.5" /> Sneak Peek Teaser
+                </button>
+
                 <button
                   type="button"
                   onClick={() => handleStyleChange("transformation")}
@@ -325,7 +385,7 @@ Duration: 6.0 Seconds (Seamless Loop)
                       : "bg-white text-[#42506a] border border-border hover:bg-[#f0f3ff]"
                   }`}
                 >
-                  <Zap className="h-3.5 w-3.5" /> Authority Launch
+                  <Share2 className="h-3.5 w-3.5" /> Official Launch
                 </button>
 
                 <button
