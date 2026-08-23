@@ -10,8 +10,6 @@ import {
   RefreshCw,
   Sliders,
   Type,
-  ExternalLink,
-  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -35,6 +33,7 @@ export interface MockupData {
   founderName?: string | null;
   founderTitle?: string | null;
   aboutHeadline?: string | null;
+  aboutBody?: string | null;
   heroHeadline?: string | null;
   heroSubheadline?: string | null;
   photoUrl?: string | null;
@@ -83,25 +82,37 @@ const BG_THEMES = [
     id: "olive",
     name: "Sage Olive (Ref 1)",
     gradient: "from-[#4a5a47] via-[#334131] to-[#1e271c]",
-    ribbonColor: "#1a3320",
+    bgStart: "#4a5a47",
+    bgMid: "#334131",
+    bgEnd: "#1e271c",
+    cardBg: "#173628",
   },
   {
     id: "sky",
     name: "Azure Sky (Ref 2)",
     gradient: "from-[#75a6c8] via-[#48779b] to-[#254c6d]",
-    ribbonColor: "#284a68",
+    bgStart: "#75a6c8",
+    bgMid: "#48779b",
+    bgEnd: "#254c6d",
+    cardBg: "#2c4e6e",
   },
   {
     id: "midnight",
     name: "Midnight Navy",
     gradient: "from-[#182845] via-[#0f1a2f] to-[#060c18]",
-    ribbonColor: "#12223a",
+    bgStart: "#182845",
+    bgMid: "#0f1a2f",
+    bgEnd: "#060c18",
+    cardBg: "#142540",
   },
   {
     id: "charcoal",
     name: "Studio Charcoal",
     gradient: "from-[#30353e] via-[#1f2228] to-[#121418]",
-    ribbonColor: "#1c2027",
+    bgStart: "#30353e",
+    bgMid: "#1f2228",
+    bgEnd: "#121418",
+    cardBg: "#1f232b",
   },
 ];
 
@@ -123,7 +134,7 @@ export function SocialLaunchMockup({
   const mockupRef = useRef<HTMLDivElement>(null);
 
   const theme = BG_THEMES.find((t) => t.id === themeId) || BG_THEMES[0];
-  const primaryColor = data.brandColor || theme.ribbonColor;
+  const primaryColor = data.brandColor || theme.cardBg;
 
   const businessShortName = data.businessName || "Your Business";
   const city = data.city || "New York";
@@ -131,7 +142,10 @@ export function SocialLaunchMockup({
   const heroHeading =
     data.heroHeadline || `PREMIER ${trade.toUpperCase()} IN ${city.toUpperCase()}`;
   const aboutHeading =
-    data.aboutHeadline || `A PASSION FOR ${trade.toUpperCase()} AND RENOVATION EXCELLENCE`;
+    data.aboutHeadline || `A PASSION FOR ${trade.toUpperCase()} EXCELLENCE`;
+  const aboutBody =
+    data.aboutBody ||
+    `Dedicated to providing premium ${trade.toLowerCase()} and expert craftsmanship across ${city} with verified customer satisfaction.`;
   const founder = data.founderName || "Founder & Team";
   const founderRole = data.founderTitle || "Founder / CEO";
   const ratingText = data.rating ? `${data.rating}★` : "5★";
@@ -139,7 +153,6 @@ export function SocialLaunchMockup({
   const yearsExp = data.yearsExperience ? `${data.yearsExperience}+` : "10+";
 
   const activeHeadline = HEADLINE_OPTIONS.find((h) => h.id === headlineMode) || HEADLINE_OPTIONS[0];
-
   const featuredCardPhoto = selectedPhoto || data.photoUrl || data.secondaryPhotoUrl;
 
   // High-Resolution 1080px Canvas Export (4:5 Feed, 9:16 Story, Transparent PNG)
@@ -154,40 +167,25 @@ export function SocialLaunchMockup({
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      // Draw Background
+      // 1. Background Gradient & Watermark
       if (format !== "transparent") {
         const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
-        if (themeId === "sky") {
-          bgGradient.addColorStop(0, "#75a6c8");
-          bgGradient.addColorStop(0.45, "#48779b");
-          bgGradient.addColorStop(1, "#254c6d");
-        } else if (themeId === "midnight") {
-          bgGradient.addColorStop(0, "#182845");
-          bgGradient.addColorStop(0.45, "#0f1a2f");
-          bgGradient.addColorStop(1, "#060c18");
-        } else if (themeId === "charcoal") {
-          bgGradient.addColorStop(0, "#30353e");
-          bgGradient.addColorStop(0.45, "#1f2228");
-          bgGradient.addColorStop(1, "#121418");
-        } else {
-          // Sage Olive (Exact match to Reference 1)
-          bgGradient.addColorStop(0, "#4a5a47");
-          bgGradient.addColorStop(0.45, "#334131");
-          bgGradient.addColorStop(1, "#1e271c");
-        }
+        bgGradient.addColorStop(0, theme.bgStart);
+        bgGradient.addColorStop(0.45, theme.bgMid);
+        bgGradient.addColorStop(1, theme.bgEnd);
         ctx.fillStyle = bgGradient;
         ctx.fillRect(0, 0, width, height);
 
         // Watermark ghost text behind laptop
         ctx.save();
-        ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
-        ctx.font = "900 140px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.055)";
+        ctx.font = "900 135px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(businessShortName.toUpperCase(), width / 2, height * 0.72);
         ctx.restore();
 
-        // Top Heading (Dynamic with soft glow)
+        // Top Dynamic Headline
         const titleY = format === "story" ? 210 : 160;
         ctx.save();
         ctx.textAlign = "center";
@@ -201,7 +199,7 @@ export function SocialLaunchMockup({
         ctx.restore();
       }
 
-      // Render the complete 3D realistic composition
+      // 2. Render 3D Composition via SVG
       const svgData = generateRealisticMockupSvg({
         data,
         theme,
@@ -214,6 +212,7 @@ export function SocialLaunchMockup({
         trade,
         heroHeading,
         aboutHeading,
+        aboutBody,
         founder,
         founderRole,
         ratingText,
@@ -236,6 +235,7 @@ export function SocialLaunchMockup({
         img.src = url;
       });
 
+      // 3. Trigger Instant Download
       const dataUrl = canvas.toDataURL("image/png");
       const a = document.createElement("a");
       const cleanName = businessShortName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
@@ -252,7 +252,7 @@ export function SocialLaunchMockup({
 
   return (
     <div className={`flex flex-col items-center space-y-4 ${className}`}>
-      {/* 3D Mockup Stage Container (4:5 Aspect Ratio matching references) */}
+      {/* 3D Mockup Stage (4:5 Aspect Ratio matching references) */}
       <div
         ref={mockupRef}
         className={`relative w-full max-w-[560px] aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-b ${theme.gradient} select-none border border-white/15 flex flex-col justify-between p-6 sm:p-8`}
@@ -279,9 +279,9 @@ export function SocialLaunchMockup({
           </h2>
         </div>
 
-        {/* 3D Realistic Composition Stage */}
+        {/* 3D Composition Stage */}
         <div className="relative z-10 w-full flex-1 flex items-center justify-center mt-2 perspective-[1400px]">
-          {/* Ground Soft Ambient Shadow */}
+          {/* Ground Ambient Shadow */}
           <div className="absolute bottom-4 left-6 right-6 h-12 bg-black/50 blur-2xl rounded-full transform scale-x-110 -rotate-2" />
 
           {/* 1. PHOTOREALISTIC 3D MACBOOK (Angled Left 3/4 Perspective) */}
@@ -315,7 +315,7 @@ export function SocialLaunchMockup({
                         transformOrigin: "top left",
                       }}
                     />
-                    {/* Glass Reflection Glare Overlay */}
+                    {/* Glass Reflection Glare */}
                     <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/15 pointer-events-none" />
                   </div>
                 ) : (
@@ -376,12 +376,11 @@ export function SocialLaunchMockup({
                 boxShadow: "0 22px 45px rgba(0,0,0,0.7), 0 2px 4px rgba(255,255,255,0.5) inset",
               }}
             >
-              {/* Center Display Open Notch */}
               <div className="h-1 w-14 sm:w-20 bg-[#7c828e] rounded-full mx-auto" />
             </div>
           </div>
 
-          {/* 2. REALISTIC FLOATING FEATURE SHEET / BROWSER WINDOW (Overlapping Right Foreground) */}
+          {/* 2. REALISTIC FLOATING ABOUT / FOUNDER CARD (Overlapping Right Foreground) */}
           <div
             className="absolute -right-1 sm:-right-3 top-0 sm:top-2 w-[68%] max-w-[310px] rounded-2xl bg-white shadow-2xl border border-white/95 overflow-hidden transition-transform duration-500"
             style={{
@@ -395,7 +394,7 @@ export function SocialLaunchMockup({
             {/* Sheet Main Header with Founder Story & Real Logo */}
             <div className="p-3 sm:p-4 text-white" style={{ backgroundColor: primaryColor }}>
               <div className="flex items-start gap-2.5">
-                {/* Photo with Real Logo & Name Overlay (Exact Match to References) */}
+                {/* Photo with Real Logo & Name Overlay */}
                 <div className="relative h-14 w-14 sm:h-18 sm:w-18 rounded-xl bg-slate-800 overflow-hidden shrink-0 border-2 border-white/40 shadow-md">
                   {featuredCardPhoto ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -410,7 +409,7 @@ export function SocialLaunchMockup({
                     </div>
                   )}
 
-                  {/* Real Logo Overlay Tag */}
+                  {/* Real Logo Overlay Badge */}
                   {data.logoUrl && (
                     <div className="absolute top-1 left-1 h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-white p-0.5 shadow-md flex items-center justify-center border border-white/60">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -433,7 +432,7 @@ export function SocialLaunchMockup({
                     {aboutHeading}
                   </h4>
                   <p className="text-[5.5px] sm:text-[6.5px] text-white/80 line-clamp-2 leading-tight">
-                    Dedicated to providing premium {trade.toLowerCase()} and expert craftsmanship across {city} with verified satisfaction.
+                    {aboutBody}
                   </p>
                   <div className="pt-1 flex items-center gap-1">
                     <span className="rounded bg-white/20 px-1.5 py-0.5 text-[5px] sm:text-[6px] font-bold">
@@ -446,7 +445,7 @@ export function SocialLaunchMockup({
                 </div>
               </div>
 
-              {/* 4-Column Metric Ribbon (Exact Match to References) */}
+              {/* 4-Column Metric Ribbon */}
               <div className="mt-3 pt-2.5 border-t border-white/25 grid grid-cols-4 gap-1 text-center">
                 <div>
                   <span className="block text-[9px] sm:text-[11.5px] font-black">{yearsExp}</span>
@@ -501,7 +500,7 @@ export function SocialLaunchMockup({
       {/* Control Panel for Operator */}
       {showControls && (
         <div className="w-full max-w-[560px] space-y-4 bg-white p-5 rounded-2xl border border-border shadow-sm">
-          {/* 1. Featured Photo Selector from Scraped Photos */}
+          {/* 1. Featured Photo Selector */}
           {data.availablePhotos && data.availablePhotos.length > 0 && (
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
@@ -649,6 +648,7 @@ function generateRealisticMockupSvg({
   trade,
   heroHeading,
   aboutHeading,
+  aboutBody,
   founder,
   founderRole,
   ratingText,
@@ -667,6 +667,7 @@ function generateRealisticMockupSvg({
   trade: string;
   heroHeading: string;
   aboutHeading: string;
+  aboutBody?: string | null;
   founder: string;
   founderRole: string;
   ratingText: string;
@@ -676,6 +677,7 @@ function generateRealisticMockupSvg({
 }) {
   const isStory = format === "story";
   const contentYOffset = isStory ? 320 : 180;
+  const narrative = aboutBody || `Dedicated to expert ${trade.toLowerCase()} and quality craftsmanship across ${city}.`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
     <defs>
@@ -730,7 +732,7 @@ function generateRealisticMockupSvg({
         <text x="126" y="246" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="13">GET A FREE QUOTE →</text>
         <text x="230" y="246" fill="#fbbf24" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="14">★★★★★ ${ratingText}</text>
 
-        <!-- Below Fold Section Preview on Screen (Exact match to Reference 1) -->
+        <!-- Below Fold Section Preview on Screen -->
         <rect x="44" y="276" width="522" height="70" rx="8" fill="rgba(255,255,255,0.96)"/>
         <text x="60" y="298" fill="#64748b" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="bold" font-size="9" letter-spacing="1">TRUSTED ACROSS ${escapeXml(
           city.toUpperCase()
@@ -776,9 +778,9 @@ function generateRealisticMockupSvg({
         <text x="198" y="124" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="19.5">${escapeXml(
           aboutHeading.slice(26, 52) || "CUSTOMER EXCELLENCE"
         )}</text>
-        <text x="198" y="152" fill="#ffffff" opacity="0.8" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="500" font-size="10.5">Dedicated to expert ${escapeXml(
-          trade.toLowerCase()
-        )} and quality service across ${escapeXml(city)}.</text>
+        <text x="198" y="152" fill="#ffffff" opacity="0.8" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="500" font-size="10.5">${escapeXml(
+          narrative.slice(0, 75)
+        )}</text>
         
         <!-- Story Buttons -->
         <rect x="198" y="166" width="115" height="24" rx="4" fill="rgba(255,255,255,0.2)"/>
