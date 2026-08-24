@@ -10,6 +10,7 @@ import {
   ArrowRight,
   BarChart3,
   Bot,
+  Camera,
   Check,
   CheckCircle2,
   ChevronRight,
@@ -62,6 +63,7 @@ import {
   YAxis,
 } from "recharts";
 import type { Lead, LeadStatus, Artifact, ScrapeResults } from "@/types/database";
+import { toBlob } from "html-to-image";
 import { WorkspaceTabs, TabPanel, type WorkspaceStep } from "@/components/admin/WorkspaceTabs";
 import { DeliverySlaTimer } from "@/components/admin/DeliverySlaTimer";
 import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStudio";
@@ -488,6 +490,72 @@ export function AdminLeadWorkspace({
       alert(err instanceof Error ? err.message : "The email did not send. Check the client has a real email address on file, then try again.");
     } finally {
       setSendingEmail(false);
+    }
+  }
+
+  const [capturingSlot, setCapturingSlot] = useState<"hero" | "about" | null>(null);
+  const [capturedSuccess, setCapturedSuccess] = useState<string | null>(null);
+
+  async function captureIframeSection(slot: "hero" | "about") {
+    setCapturingSlot(slot);
+    setCapturedSuccess(null);
+    try {
+      const iframe = document.querySelector<HTMLIFrameElement>(`iframe[title*="${businessName}"]`);
+      const doc = iframe?.contentDocument || iframe?.contentWindow?.document;
+      if (!doc) {
+        throw new Error("Preview frame not ready. Please wait for the preview to load or open the preview page.");
+      }
+
+      let targetEl: HTMLElement | null = null;
+      if (slot === "hero") {
+        targetEl =
+          doc.querySelector<HTMLElement>("#hero") ||
+          doc.querySelector<HTMLElement>("main > section:first-of-type") ||
+          doc.querySelector<HTMLElement>("section");
+      } else {
+        targetEl =
+          doc.querySelector<HTMLElement>("#about") ||
+          doc.querySelector<HTMLElement>("section[class*='about']") ||
+          doc.querySelectorAll<HTMLElement>("section")[1] ||
+          null;
+      }
+
+      if (!targetEl) {
+        throw new Error(`Could not find the ${slot} section element in the preview.`);
+      }
+
+      const blob = await toBlob(targetEl, {
+        pixelRatio: 2,
+        cacheBust: true,
+        backgroundColor: "#ffffff",
+      });
+
+      if (!blob) {
+        throw new Error("Screenshot capture failed.");
+      }
+
+      const file = new File([blob], `${slot}-${Date.now()}.png`, { type: "image/png" });
+      const formData = new FormData();
+      formData.append("slot", slot);
+      formData.append("file", file);
+
+      const res = await fetch(`/api/leads/${lead.id}/mockup`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to save screenshot to Mockup Studio.");
+      }
+
+      setCapturedSuccess(`${slot === "hero" ? "Hero" : "About"} captured to Social Studio ✓`);
+      setTimeout(() => setCapturedSuccess(null), 3500);
+      router.refresh();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to capture screenshot.");
+    } finally {
+      setCapturingSlot(null);
     }
   }
 
@@ -1022,6 +1090,34 @@ export function AdminLeadWorkspace({
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2.5">
+                {/* 1-Click Screenshot Capture to Mockup Studio */}
+                <div className="flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50/70 p-1">
+                  <button
+                    type="button"
+                    disabled={Boolean(capturingSlot)}
+                    onClick={() => captureIframeSection("hero")}
+                    className="inline-flex items-center gap-1 rounded-md bg-white px-2.5 py-1 text-xs font-bold text-indigo-700 shadow-2xs hover:bg-indigo-100 disabled:opacity-60 transition"
+                  >
+                    <Camera className="h-3 w-3" />
+                    {capturingSlot === "hero" ? "Capturing Hero..." : "Capture Hero"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={Boolean(capturingSlot)}
+                    onClick={() => captureIframeSection("about")}
+                    className="inline-flex items-center gap-1 rounded-md bg-white px-2.5 py-1 text-xs font-bold text-indigo-700 shadow-2xs hover:bg-indigo-100 disabled:opacity-60 transition"
+                  >
+                    <Camera className="h-3 w-3" />
+                    {capturingSlot === "about" ? "Capturing About..." : "Capture About"}
+                  </button>
+                </div>
+
+                {capturedSuccess && (
+                  <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg animate-fade-in">
+                    {capturedSuccess}
+                  </span>
+                )}
+
                 <select
                   value={previewPath}
                   onChange={(e) => setPreviewPath(e.target.value)}
