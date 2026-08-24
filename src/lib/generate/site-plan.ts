@@ -124,8 +124,8 @@ function fallbackPlan(brief: SiteBrief, media: MediaPlan): SitePlan {
       kind: "reviews",
       label: "Customer reviews",
       visitorProblem: "Provide credible reassurance from people who have already hired the business.",
-      purpose: "Present real attributed review text in an accessible horizontal slider.",
-      archetype: "full-width review slider with one dominant quote per view",
+      purpose: "Present real attributed review text in an agency-grade equal-height horizontal slider.",
+      archetype: "agency-grade equal-height review slider with 5-star ratings and customer attributions",
       evidence: brief.reviews.map((review) => `${review.author}: ${review.text.slice(0, 100)}`),
       mediaSlot: null,
     });
@@ -137,8 +137,8 @@ function fallbackPlan(brief: SiteBrief, media: MediaPlan): SitePlan {
       kind: "areas",
       label: "Service areas",
       visitorProblem: "Confirm that the visitor's location is covered.",
-      purpose: "Make real service locations easy to scan and useful for local relevance.",
-      archetype: "location field with repeated pin primitive",
+      purpose: "Make real service locations easy to scan and show off service territory coverage with a live map.",
+      archetype: "2-column territory dispatch layout with location badges and live Google Map embed",
       evidence: brief.areas,
       mediaSlot: null,
     });

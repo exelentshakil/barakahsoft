@@ -730,3 +730,120 @@
 .bs-footer-legal-copy p { margin: 0; }
 .bs-footer-legal nav { display: flex; flex-wrap: wrap; gap: 1.25rem; }
 .bs-footer-legal nav a:hover { opacity: 1; text-decoration: underline; }
+
+/* ------------------------------------------------------------- universal reviews slider & equal height cards */
+
+[data-review-slider] {
+  position: relative;
+  width: 100%;
+}
+
+[data-review-track] {
+  display: flex !important;
+  gap: 1.5rem !important;
+  overflow-x: auto !important;
+  scroll-snap-type: x mandatory !important;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  align-items: stretch !important;
+  padding-block: 0.75rem 1.75rem !important;
+  scrollbar-width: none;
+}
+[data-review-track]::-webkit-scrollbar {
+  display: none;
+}
+
+[data-review-track] > * {
+  flex: 0 0 clamp(300px, 42vw, 420px) !important;
+  max-width: 90vw !important;
+  scroll-snap-align: start !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  min-height: 280px !important;
+  height: auto !important;
+  border-radius: var(--bs-radius-lg, 1rem) !important;
+  padding: clamp(1.5rem, 3vw, 2.25rem) !important;
+  background: var(--bs-surface-alt, #f8fafc) !important;
+  border: 1px solid var(--bs-border-color, #e2e8f0) !important;
+  box-shadow: var(--bs-shadow-card, 0 4px 12px rgba(0, 0, 0, 0.05)) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-review-track] > *:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--bs-shadow-lift, 0 10px 24px rgba(0, 0, 0, 0.08)) !important;
+}
+
+[data-review-track] blockquote {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  font-style: normal !important;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+[data-review-track] blockquote p {
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.95rem !important;
+  line-height: 1.65 !important;
+  color: var(--bs-ink, #0f172a) !important;
+  margin-bottom: 1.25rem !important;
+}
+
+[data-review-track] cite {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.5rem;
+  margin-top: auto !important;
+  padding-top: 1rem !important;
+  border-top: 1px solid var(--bs-border-color, #e2e8f0) !important;
+  font-style: normal !important;
+  font-weight: 700 !important;
+  font-size: 0.875rem !important;
+  color: var(--bs-ink, #0f172a) !important;
+}
+
+[data-review-prev],
+[data-review-next] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+  border-radius: 9999px !important;
+  border: 1px solid var(--bs-border-color, #e2e8f0) !important;
+  background: var(--bs-surface, #ffffff) !important;
+  color: var(--bs-ink, #0f172a) !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-review-prev]:hover,
+[data-review-next]:hover {
+  background: var(--bs-primary, #533afd) !important;
+  color: var(--bs-on-primary, #ffffff) !important;
+  border-color: var(--bs-primary, #533afd) !important;
+  transform: scale(1.05);
+}
+
+/* ------------------------------------------------------------- universal interactive territory map */
+
+iframe[src*="google.com/maps"],
+iframe[src*="openstreetmap.org"],
+.bs-map-embed {
+  width: 100% !important;
+  min-height: 380px !important;
+  height: 100% !important;
+  border: 0 !important;
+  border-radius: var(--bs-radius-lg, 1rem) !important;
+  box-shadow: var(--bs-shadow-card, 0 8px 24px rgba(0, 0, 0, 0.08)) !important;
+  display: block !important;
+}
