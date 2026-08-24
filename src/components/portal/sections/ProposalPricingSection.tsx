@@ -1,10 +1,13 @@
 import { CheckCircle2, Sparkles, Tag } from "lucide-react";
+import type { SiteAudit } from "@/lib/audit/site-audit";
 
 interface ProposalPricingSectionProps {
   businessName: string;
   setupPrice: number;
   monthlyPrice: number;
   standardValue: number;
+  scopeItems: string[];
+  audit?: SiteAudit | null;
 }
 
 export function ProposalPricingSection({
@@ -12,6 +15,8 @@ export function ProposalPricingSection({
   setupPrice,
   monthlyPrice,
   standardValue,
+  scopeItems,
+  audit,
 }: ProposalPricingSectionProps) {
   // Each line says the problem it solves rather than the thing we build. A
   // business owner does not want "LocalBusiness schema"; he wants to stop
@@ -34,14 +39,10 @@ export function ProposalPricingSection({
   const parts = [share(0.31), share(0.385), share(0.193), share(0.075), share(0.037)];
   const anchor = parts.reduce((total, part) => total + part, 0);
 
-  const deliverableItems = [
-    { item: "A homepage that leads with your reviews and your real work, instead of burying them", val: parts[0] },
-    { item: "A page for every service and every area you cover, so each job gets found on its own", val: parts[1] },
-    { item: "An AI assistant that answers questions and takes details — including at nine at night", val: parts[2] },
-    { item: "Written so Google and ChatGPT quote you when someone asks about your trade", val: parts[3] },
-    { item: "Fast on a phone, with one-tap calling everywhere your number appears", val: parts[4] },
-    { item: "Your domain, SSL and hosting, set up and looked after", val: null },
-  ];
+  const deliverableItems = scopeItems.map((item, index) => ({
+    item,
+    val: index < parts.length ? parts[index] : null,
+  }));
 
   return (
     <section className="rounded-2xl border-2 border-[#533afd] bg-white p-8 sm:p-10 shadow-sm space-y-8">
@@ -61,10 +62,10 @@ export function ProposalPricingSection({
               anchored at $1297 — curated specifically for" are our words for
               our own pricing. "Anchored" says out loud that the number is an
               anchor, which is the one thing an anchor must not do. */}
-          <h2 className="mt-2 text-3xl font-bold text-[#0d1738]">Putting it live</h2>
+          <h2 className="mt-2 text-3xl font-bold text-[#0d1738]">Putting {businessName} in a stronger position</h2>
           <p className="mt-1.5 max-w-md text-sm leading-relaxed text-[#42506a]">
-            An agency would quote around ${anchor.toLocaleString()} to build this. Here is what is in it, and what you
-            actually pay.
+            This is not a page-count purchase. It is the focused rebuild that fixes the gaps we found and puts your existing
+            reputation to work.
           </p>
         </div>
 
@@ -100,6 +101,20 @@ export function ProposalPricingSection({
           </span>
         </div>
       </div>
+
+      {audit && audit.findings.length > 0 && (
+        <div className="rounded-xl border border-[#f2d38a] bg-[#fffaf0] p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8a5b00]">Why this is built for you</p>
+          <p className="mt-1 text-sm font-semibold text-[#0d1738]">We are solving the problems already costing {businessName} attention.</p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+            {audit.findings.slice(0, 3).map((finding) => (
+              <div key={finding.title} className="rounded-lg border border-[#f2d38a]/70 bg-white px-3 py-2.5 text-xs font-semibold text-[#42506a]">
+                {finding.title}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 text-sm">
         {deliverableItems.map((d) => (
