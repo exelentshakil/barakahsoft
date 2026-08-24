@@ -597,22 +597,22 @@ export function AdminLeadWorkspace({
 
         <TabPanel active={tab === "lead"}>
         {/* LINEAR STEP 1: INBOUND INTAKE & VERIFIED FACTS */}
-        <div className="rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-sm space-y-5">
+        <div className="rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-sm space-y-6">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 border border-indigo-200 text-xs font-black text-indigo-700">
+            <div className="flex items-center gap-3">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-200 text-sm font-black text-indigo-700">
                 1
               </span>
-              <h3 className="font-extrabold text-base text-slate-900">Inbound Lead &amp; Verified Facts</h3>
+              <h3 className="font-extrabold text-lg sm:text-xl text-slate-900">Inbound Lead &amp; Verified Facts</h3>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               {!scrapeResults ? (
                 <button
                   onClick={() => handleAnalyse("light")}
                   disabled={rescraping}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-700 disabled:opacity-60 shadow-sm"
+                  className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-700 disabled:opacity-60 shadow-sm transition"
                 >
-                  <RefreshCw className={`h-3.5 w-3.5 ${rescraping ? "animate-spin" : ""}`} />
+                  <RefreshCw className={`h-4 w-4 ${rescraping ? "animate-spin" : ""}`} />
                   {rescraping ? "Reading their site..." : "Read their site · 2 pages"}
                 </button>
               ) : (
@@ -621,61 +621,61 @@ export function AdminLeadWorkspace({
                     onClick={() => handleRescrape("light")}
                     disabled={rescraping}
                     title="Refresh brand colours, logo, rating and reviews. One page."
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-800 hover:bg-slate-50 transition shadow-xs"
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm font-bold text-slate-800 hover:bg-slate-50 transition shadow-xs"
                   >
-                    <RefreshCw className={`h-3.5 w-3.5 text-indigo-600 ${rescraping ? "animate-spin" : ""}`} />
+                    <RefreshCw className={`h-4 w-4 text-indigo-600 ${rescraping ? "animate-spin" : ""}`} />
                     Refresh · 1 page
                   </button>
                   <button
                     onClick={() => handleAnalyse("deep")}
                     disabled={rescraping}
                     title="Reads up to 25 of their pages instead of 2. Slower and costs more, but it is what finds the page-by-page faults you sell against."
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-800 hover:bg-slate-50 transition shadow-xs"
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm font-bold text-slate-800 hover:bg-slate-50 transition shadow-xs"
                   >
                     Read every page · up to 25
                   </button>
                 </>
               )}
               {scrapeResults && (
-                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-extrabold text-emerald-700 shrink-0">
-                  <ShieldCheck className="h-3.5 w-3.5" /> Verified
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-50 border border-emerald-200 px-3.5 py-1 text-xs sm:text-sm font-extrabold text-emerald-700 shrink-0">
+                  <ShieldCheck className="h-4 w-4" /> Verified
                 </span>
               )}
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3 text-xs leading-relaxed">
-            <div className="rounded-xl bg-slate-50/80 p-4 border border-slate-200/80 space-y-1.5">
-              <span className="font-extrabold uppercase tracking-wider text-slate-500 text-[10px]">Selected Intake Pains</span>
+          <div className="grid gap-5 sm:grid-cols-3 text-sm leading-relaxed">
+            <div className="rounded-xl bg-slate-50/80 p-5 border border-slate-200/80 space-y-2">
+              <span className="font-extrabold uppercase tracking-wider text-slate-500 text-xs">Selected Intake Pains</span>
               {lead.pain_points.length > 0 ? (
-                lead.pain_points.map((p) => <p key={p} className="font-bold text-slate-900">• {p}</p>)
+                lead.pain_points.map((p) => <p key={p} className="font-bold text-slate-900 text-sm">• {p}</p>)
               ) : (
-                <p className="text-slate-500 font-medium">Standard Speed &amp; Conversion Optimization</p>
+                <p className="text-slate-600 font-medium text-sm">Standard Speed &amp; Conversion Optimization</p>
               )}
             </div>
 
-            <div className="rounded-xl bg-slate-50/80 p-4 border border-slate-200/80 space-y-1.5">
-              <span className="font-extrabold uppercase tracking-wider text-slate-500 text-[10px]">Verified Credentials</span>
-              <p className="font-bold text-slate-900">
+            <div className="rounded-xl bg-slate-50/80 p-5 border border-slate-200/80 space-y-2">
+              <span className="font-extrabold uppercase tracking-wider text-slate-500 text-xs">Verified Credentials</span>
+              <p className="font-bold text-slate-900 text-sm">
                 • Google Rating: {reviewCount > 0 ? `${rating} ★ (${reviewCount}+ Reviews)` : "Pending Verification"}
               </p>
-              <p className="font-bold text-slate-900">
+              <p className="font-bold text-slate-900 text-sm">
                 • Location: {city || "Global / Digital"}
               </p>
-              <p className="font-bold text-slate-900">• Operating Business Entity</p>
+              <p className="font-bold text-slate-900 text-sm">• Operating Business Entity</p>
             </div>
 
-            <div className="rounded-xl bg-slate-50/80 p-4 border border-slate-200/80 space-y-1.5">
-              <span className="font-extrabold uppercase tracking-wider text-slate-500 text-[10px]">Extracted Brand Tokens</span>
+            <div className="rounded-xl bg-slate-50/80 p-5 border border-slate-200/80 space-y-2">
+              <span className="font-extrabold uppercase tracking-wider text-slate-500 text-xs">Extracted Brand Tokens</span>
               <div className="mt-1 flex items-center gap-3">
-                <span className="flex items-center gap-1 font-mono text-[11px] font-bold text-slate-800">
-                  <span className="h-3.5 w-3.5 rounded-full border shadow-inner" style={{ backgroundColor: primaryColor }} /> {primaryColor}
+                <span className="flex items-center gap-1.5 font-mono text-xs font-bold text-slate-800 bg-white px-2 py-1 rounded border border-slate-200">
+                  <span className="h-4 w-4 rounded-full border shadow-inner shrink-0" style={{ backgroundColor: primaryColor }} /> {primaryColor}
                 </span>
-                <span className="flex items-center gap-1 font-mono text-[11px] font-bold text-slate-800">
-                  <span className="h-3.5 w-3.5 rounded-full border shadow-inner" style={{ backgroundColor: accentColor }} /> {accentColor}
+                <span className="flex items-center gap-1.5 font-mono text-xs font-bold text-slate-800 bg-white px-2 py-1 rounded border border-slate-200">
+                  <span className="h-4 w-4 rounded-full border shadow-inner shrink-0" style={{ backgroundColor: accentColor }} /> {accentColor}
                 </span>
               </div>
-              <p className="text-[11px] font-bold text-slate-600 pt-1">{logoName}</p>
+              <p className="text-xs font-bold text-slate-600 pt-1">{logoName}</p>
             </div>
           </div>
         </div>

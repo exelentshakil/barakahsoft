@@ -174,6 +174,25 @@ export function SocialLaunchMockup({
   const mockupRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const storyRef = useRef<HTMLDivElement>(null);
+  const screenRef = useRef<HTMLDivElement>(null);
+  const [screenScale, setScreenScale] = useState(0.315);
+
+  // Measure screen container width dynamically to scale the bespoke HTML viewport 100% gapless
+  useEffect(() => {
+    if (!screenRef.current) return;
+    const updateScale = () => {
+      if (screenRef.current) {
+        const width = screenRef.current.clientWidth;
+        if (width > 0) {
+          setScreenScale(width / 1280);
+        }
+      }
+    };
+    updateScale();
+    const observer = new ResizeObserver(updateScale);
+    observer.observe(screenRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   // Synchronize when data props update
   useEffect(() => {
@@ -287,7 +306,8 @@ export function SocialLaunchMockup({
             style={{
               width: "1280px",
               height: "800px",
-              transform: "scale(0.285)",
+              transform: `scale(${screenScale})`,
+              transformOrigin: "top left",
             }}
           >
             {data.bespokeCss && (
@@ -315,7 +335,7 @@ export function SocialLaunchMockup({
             style={{
               width: "1280px",
               height: "800px",
-              transform: "scale(0.285)",
+              transform: `scale(${screenScale})`,
               transformOrigin: "top left",
             }}
           />
@@ -398,7 +418,10 @@ export function SocialLaunchMockup({
           </div>
 
           {/* Screen Inner Display */}
-          <div className="relative aspect-[16/10] w-full rounded-lg bg-[#0e1626] overflow-hidden shadow-inner border border-black/80 flex flex-col">
+          <div
+            ref={screenRef}
+            className="relative aspect-[16/10] w-full rounded-lg bg-[#0e1626] overflow-hidden shadow-inner border border-black/80 flex flex-col"
+          >
             {renderScreenContent()}
           </div>
         </div>
@@ -426,10 +449,10 @@ export function SocialLaunchMockup({
         {/* Sheet Top Notch */}
         <div className="h-1.5 w-12 bg-slate-300 rounded-full mx-auto my-1 opacity-60" />
 
-        {/* Sheet Main Header with Founder Story & Real Logo */}
+        {/* Sheet Main Header with Founder Story */}
         <div className="p-3 sm:p-4 text-white" style={{ backgroundColor: primaryColor }}>
           <div className="flex items-start gap-2.5">
-            {/* Photo with Real Logo & Name Overlay */}
+            {/* Photo */}
             <div className="relative h-14 w-14 sm:h-18 sm:w-18 rounded-xl bg-slate-800 overflow-hidden shrink-0 border-2 border-white/40 shadow-md">
               {featuredCardPhoto ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -442,14 +465,6 @@ export function SocialLaunchMockup({
               ) : (
                 <div className="h-full w-full flex items-center justify-center bg-black/30 text-white font-black text-sm">
                   {founder.slice(0, 2).toUpperCase()}
-                </div>
-              )}
-
-              {/* Real Logo Overlay Badge */}
-              {data.logoUrl && (
-                <div className="absolute top-1 left-1 h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-white p-0.5 shadow-md flex items-center justify-center border border-white/60">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={data.logoUrl} alt="Logo" crossOrigin="anonymous" className="h-full w-full object-contain" />
                 </div>
               )}
 
@@ -467,7 +482,7 @@ export function SocialLaunchMockup({
               <h4 className="text-[8px] sm:text-[10px] font-black leading-snug line-clamp-2 uppercase">
                 {aboutHeading}
               </h4>
-              <p className="text-[5.5px] sm:text-[6.5px] text-white/80 line-clamp-2 leading-tight">
+              <p className="text-[5.5px] sm:text-[6.5px] text-white/85 line-clamp-3 leading-tight">
                 {aboutBody}
               </p>
               <div className="pt-1 flex items-center gap-1">
@@ -537,8 +552,8 @@ export function SocialLaunchMockup({
         }}
       >
         {/* Background Subtle Watermark */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden opacity-10">
-          <span className="font-black text-7xl sm:text-9xl tracking-widest text-white uppercase transform -rotate-12 translate-y-24">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none opacity-[0.065]">
+          <span className="font-black text-5xl sm:text-7xl tracking-widest text-white uppercase text-center max-w-full px-4 transform -rotate-6">
             {businessShortName}
           </span>
         </div>
@@ -566,8 +581,8 @@ export function SocialLaunchMockup({
           className={`w-[540px] h-[960px] bg-gradient-to-b ${theme.gradient} p-8 flex flex-col justify-between items-center relative overflow-hidden`}
         >
           {/* Watermark */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden opacity-10">
-            <span className="font-black text-8xl tracking-widest text-white uppercase transform -rotate-12 translate-y-36">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none opacity-[0.065]">
+            <span className="font-black text-6xl tracking-widest text-white uppercase text-center max-w-full px-4 transform -rotate-6">
               {businessShortName}
             </span>
           </div>

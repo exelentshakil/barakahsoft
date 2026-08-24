@@ -39,13 +39,6 @@ export function extractMockupData({
     payload?.brandColorHsl ||
     "#1b4d3e";
 
-  const logoUrl =
-    (extracted?.branding as any)?.logo ||
-    (facts?.logo_url as string) ||
-    ((facts?.existing_schema as any)?.logo as string) ||
-    payload?.logoUrl ||
-    null;
-
   const rating = (facts?.rating as number) || (payload?.proof?.rating as number) || 5.0;
   const reviewCount = (facts?.review_count as number) || (payload?.proof?.reviewCount as number) || 100;
   const yearsExperience = (facts?.years_in_business as number) || 10;
@@ -75,9 +68,13 @@ export function extractMockupData({
       const aboutContent = aboutSectionMatch[1];
 
       // Extract About image from the homepage section
-      const imgMatch = aboutContent.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
-      if (imgMatch && imgMatch[1] && !imgMatch[1].startsWith("data:image/svg") && !imgMatch[1].includes("icon")) {
-        extractedAboutImg = imgMatch[1];
+      const imgMatches = Array.from(aboutContent.matchAll(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi));
+      for (const match of imgMatches) {
+        const src = match[1];
+        if (src && !src.startsWith("data:image/svg") && !src.includes("icon") && !src.includes("logo")) {
+          extractedAboutImg = src;
+          break;
+        }
       }
 
       // Extract About heading (h2 / h3 / h4)
@@ -87,27 +84,44 @@ export function extractMockupData({
         if (cleanH) extractedAboutHeadline = cleanH;
       }
 
-      // Extract About paragraph body
-      const pMatch = aboutContent.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
-      if (pMatch) {
-        const cleanP = pMatch[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
-        if (cleanP) extractedAboutBody = cleanP;
+      // Extract all paragraphs and select the substantial narrative body text (skip short tags/subtitles < 30 chars)
+      const pMatches = Array.from(aboutContent.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi));
+      const validParagraphs = pMatches
+        .map((m) => m[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim())
+        .filter((p) => p.length >= 30 && !p.toLowerCase().includes("about ") && !p.toLowerCase().startsWith("our story"));
+
+      if (validParagraphs.length > 0) {
+        // Use the first rich narrative paragraph (or first 2 combined if short)
+        extractedAboutBody = validParagraphs.slice(0, 2).join(" ");
+      } else if (pMatches.length > 0) {
+        extractedAboutBody = pMatches[0][1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
       }
     }
   }
 
   // Also check artifact's bespoke_sections if available
-  if (!extractedAboutHeadline && Array.isArray(artifact?.bespoke_sections)) {
+  if ((!extractedAboutHeadline || !extractedAboutBody) && Array.isArray(artifact?.bespoke_sections)) {
     const aboutSec = artifact.bespoke_sections.find((s) => s.id === "about" || s.kind === "about");
     if (aboutSec?.html) {
-      const imgMatch = aboutSec.html.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
-      if (imgMatch && imgMatch[1]) extractedAboutImg = imgMatch[1];
+      if (!extractedAboutImg) {
+        const imgMatch = aboutSec.html.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
+        if (imgMatch && imgMatch[1]) extractedAboutImg = imgMatch[1];
+      }
 
-      const hMatch = aboutSec.html.match(/<h[234][^>]*>([\s\S]*?)<\/h[234]>/i);
-      if (hMatch) extractedAboutHeadline = hMatch[1].replace(/<[^>]+>/g, "").trim();
+      if (!extractedAboutHeadline) {
+        const hMatch = aboutSec.html.match(/<h[234][^>]*>([\s\S]*?)<\/h[234]>/i);
+        if (hMatch) extractedAboutHeadline = hMatch[1].replace(/<[^>]+>/g, "").trim();
+      }
 
-      const pMatch = aboutSec.html.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
-      if (pMatch) extractedAboutBody = pMatch[1].replace(/<[^>]+>/g, "").trim();
+      if (!extractedAboutBody) {
+        const pMatches = Array.from(aboutSec.html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi));
+        const validParagraphs = pMatches
+          .map((m) => m[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim())
+          .filter((p) => p.length >= 30);
+        if (validParagraphs.length > 0) {
+          extractedAboutBody = validParagraphs[0];
+        }
+      }
     }
   }
 
@@ -177,7 +191,7 @@ export function extractMockupData({
     city,
     trade,
     brandColor: brandColorHex,
-    logoUrl,
+    logoUrl: null, // No logo needed per request
     rating,
     reviewCount,
     yearsExperience,

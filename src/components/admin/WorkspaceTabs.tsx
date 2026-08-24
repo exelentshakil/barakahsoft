@@ -3,28 +3,6 @@
 import type { LucideIcon } from "lucide-react";
 import { Check } from "lucide-react";
 
-// The lead workspace as a numbered route, not a wall.
-//
-// Everything in this workspace is one linear job — a lead arrives, a site is
-// built, the evidence is measured, a human approves it, it is sent and paid
-// for — but it rendered as a single 700-line scroll in which the order was
-// implicit and the current position was not visible at all. Someone who has
-// not built the pipeline cannot tell from that page what they are supposed
-// to do next, which is the whole problem this solves.
-//
-// Each step reports whether it is DONE, so the tab strip doubles as the
-// progress record for the lead: the next thing to do is the first step
-// without a tick.
-//
-// IMPORTANT — panels are hidden with CSS, never unmounted. An earlier tabs
-// layout in this file conditionally rendered its children, and the panels
-// mounted inside it never ran at all: the approval gate and domain picker
-// were unreachable, so no lead could be approved. Beyond that, these panels
-// own real live state — the generation studio re-attaches to a running build
-// job on mount, the audit and visibility panels poll, and the realtime hook
-// drives them — and unmounting a tab would silently stop all of it. Hiding
-// keeps every panel alive while only one is on screen.
-
 export interface WorkspaceStep {
   id: string;
   /** Short tab label. */
@@ -47,10 +25,6 @@ export function WorkspaceTabs({
 }) {
   const current = steps.find((s) => s.id === active) ?? steps[0];
 
-  // A step whose id matches no panel renders an empty screen, and the tab
-  // strip looks completely fine while it happens — which is exactly how the
-  // audit and delivery panels went missing once. Shout in development
-  // rather than let a silent blank pass for a working tab.
   if (process.env.NODE_ENV !== "production" && !steps.some((s) => s.id === active)) {
     console.error(
       `[WorkspaceTabs] active tab "${active}" matches no step id (${steps.map((s) => s.id).join(", ")}). Its panel will render blank.`
@@ -58,13 +32,9 @@ export function WorkspaceTabs({
   }
 
   return (
-    <div className="rounded-2xl border border-[#e5e7f2] bg-white p-2 shadow-sm">
-      {/* Two rows of four, never eight across. Eight columns in this panel
-          leaves about forty pixels for the label, which truncated every one
-          of them to "Thei…" and "App…" — a tab nobody can read is a tab
-          nobody presses. */}
+    <div className="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm space-y-2.5">
       <div
-        className="grid grid-cols-2 gap-1 sm:grid-cols-4"
+        className="grid grid-cols-2 gap-1.5 sm:grid-cols-4"
         role="tablist"
         aria-label="Lead delivery steps"
       >
@@ -79,24 +49,26 @@ export function WorkspaceTabs({
               aria-selected={isActive}
               title={step.hint}
               onClick={() => onChange(step.id)}
-              className={`flex min-w-0 items-center gap-2 rounded-xl px-2.5 py-2 text-left transition ${
-                isActive ? "bg-[#533afd] text-white shadow-sm" : "text-[#42506a] hover:bg-[#f0f3ff]"
+              className={`flex min-w-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-all ${
+                isActive
+                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20 font-bold"
+                  : "text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-semibold"
               }`}
             >
               <span
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-bold ${
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-black ${
                   isActive
                     ? "bg-white/20 text-white"
                     : step.done
-                      ? "bg-emerald-50 text-emerald-600"
-                      : "bg-[#f0f3ff] text-[#533afd]"
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-slate-100 text-slate-700"
                 }`}
               >
-                {step.done && !isActive ? <Check className="h-3 w-3" /> : index + 1}
+                {step.done && !isActive ? <Check className="h-3.5 w-3.5" /> : index + 1}
               </span>
-              <span className="flex min-w-0 items-center gap-1.5">
-                <Icon className="h-4 w-4 shrink-0" />
-                <span className="truncate text-sm font-bold">{step.label}</span>
+              <span className="flex min-w-0 items-center gap-2">
+                <Icon className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : "text-slate-500"}`} />
+                <span className="truncate text-sm">{step.label}</span>
               </span>
             </button>
           );
@@ -104,21 +76,16 @@ export function WorkspaceTabs({
       </div>
 
       {current && (
-        <p className="px-2.5 pb-1 pt-2.5 text-[11px] leading-relaxed text-[#60778d]">
-          <span className="font-bold text-[#0d1738]">{current.label}.</span> {current.hint}
-        </p>
+        <div className="rounded-xl bg-slate-50/80 px-3.5 py-2.5 border border-slate-200/60 flex items-start gap-2">
+          <p className="text-xs sm:text-sm leading-relaxed text-slate-600">
+            <strong className="font-bold text-slate-900">{current.label}:</strong> {current.hint}
+          </p>
+        </div>
       )}
     </div>
   );
 }
 
-/**
- * One step's content.
- *
- * Hidden rather than unmounted — see the note above. `hidden` here is
- * Tailwind's display:none, which keeps the subtree mounted and its effects,
- * intervals and subscriptions running.
- */
 export function TabPanel({ active, children }: { active: boolean; children: React.ReactNode }) {
   return (
     <div role="tabpanel" className={active ? "space-y-8" : "hidden"}>
