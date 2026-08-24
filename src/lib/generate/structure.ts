@@ -6,6 +6,7 @@ import {
   STANCE,
   SPACE_STANDARD,
   PSYCHOLOGY_STANDARD,
+  CONVERSION_STANDARD,
   HYGIENE_STANDARD,
   INTERACTION_CONTRACT,
   truthStandard,
@@ -131,6 +132,8 @@ ${SPACE_STANDARD}
 
 ${PSYCHOLOGY_STANDARD}
 
+${CONVERSION_STANDARD}
+
 Name classes descriptively and consistently, block-then-element:
   hero, hero__inner, hero__title, hero__actions
   services, services__grid, service-card, service-card__title
@@ -159,7 +162,7 @@ DESIGN NOTES: three or four sentences describing the visual system you intend â€
       maxTokens: 60000,
       temperature: 0.85,
       system:
-        "You are a senior web designer and conversion copywriter writing production HTML. You never invent facts about a business, and you name classes consistently because someone else is writing the CSS.",
+        "You are a senior web designer, direct-response conversion strategist and copywriter writing production HTML for real local businesses. Diagnose the visitor's buying problem, build one persuasive argument, make the next action obvious, never invent facts, and name classes consistently because another expert writes the CSS.",
     },
     provider
   );

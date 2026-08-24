@@ -11,8 +11,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
 
-  const body = await req.json().catch(() => null);
-  if (!body) return NextResponse.json({ error: "Invalid mockup configuration" }, { status: 400 });
+  const isUpload = req.headers.get("content-type")?.includes("multipart/form-data");
+  const body = isUpload ? null : await req.json().catch(() => null);
+  const form = isUpload ? await req.formData().catch(() => null) : null;
+  if (!body && !form) return NextResponse.json({ error: "Invalid mockup configuration" }, { status: 400 });
 
   const admin = createAdminClient();
 
@@ -25,11 +27,37 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const existingAssets = (artifact?.extracted_assets ?? {}) as Record<string, unknown>;
     const existingMockup = (existingAssets.mockup ?? {}) as Record<string, unknown>;
 
+    let uploadedCapture: { key: "heroCaptureUrl" | "aboutCaptureUrl"; url: string } | null = null;
+    if (form) {
+      const slot = form.get("slot");
+      const file = form.get("file");
+      if ((slot !== "hero" && slot !== "about") || !(file instanceof File)) {
+        return NextResponse.json({ error: "Choose a Hero or About image" }, { status: 400 });
+      }
+      if (!file.type.startsWith("image/") || file.size > 12 * 1024 * 1024) {
+        return NextResponse.json({ error: "Capture must be an image smaller than 12 MB" }, { status: 400 });
+      }
+
+      const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+      const path = `${leadId}/mockup/${slot}-${Date.now()}.${extension}`;
+      const { error: uploadError } = await admin.storage
+        .from("lead-media")
+        .upload(path, Buffer.from(await file.arrayBuffer()), { contentType: file.type, upsert: false });
+      if (uploadError) throw uploadError;
+
+      const { data } = admin.storage.from("lead-media").getPublicUrl(path);
+      uploadedCapture = {
+        key: slot === "hero" ? "heroCaptureUrl" : "aboutCaptureUrl",
+        url: data.publicUrl,
+      };
+    }
+
     const mockupConfig = {
       ...existingMockup,
-      ...(typeof body.themeId === "string" ? { themeId: body.themeId } : {}),
-      ...(typeof body.headlineMode === "string" ? { headlineMode: body.headlineMode } : {}),
-      ...(typeof body.featuredPhotoUrl === "string" ? { featuredPhotoUrl: body.featuredPhotoUrl } : {}),
+      ...(body && typeof body.themeId === "string" ? { themeId: body.themeId } : {}),
+      ...(body && typeof body.headlineMode === "string" ? { headlineMode: body.headlineMode } : {}),
+      ...(body && typeof body.featuredPhotoUrl === "string" ? { featuredPhotoUrl: body.featuredPhotoUrl } : {}),
+      ...(uploadedCapture ? { [uploadedCapture.key]: uploadedCapture.url } : {}),
       updated_at: new Date().toISOString(),
       updated_by: user.email,
     };
@@ -49,7 +77,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     if (artifactError) throw artifactError;
 
-    if (body.featuredPhotoUrl && scrapeResults) {
+    if (body?.featuredPhotoUrl && scrapeResults) {
       const existingFacts = (scrapeResults.facts ?? {}) as Record<string, unknown>;
       const { error: factsError } = await admin
         .from("scrape_results")

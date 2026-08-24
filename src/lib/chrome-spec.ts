@@ -104,7 +104,8 @@ export function buildChromeSpec(dna: DesignDna, inputs: ChromeInputs): ChromeSpe
       sticky: true,
       ctaStyle: dna.mood === "bold-utility" ? "accent" : "solid",
       showPhone: inputs.hasPhone,
-      showRating: inputs.hasReviews,
+      // Ratings belong in proof content, never in the navigation chrome.
+      showRating: false,
       // A dropdown holding one item is worse than a plain link.
       servicesDropdown: inputs.services.length >= 3,
       areasDropdown: inputs.areas.length >= 3,

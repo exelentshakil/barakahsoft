@@ -473,8 +473,8 @@ export function BespokeGenerationStudio({
             </p>
             <div className="mt-2.5 grid gap-2 sm:grid-cols-2">
               {([
-                { id: "openai", name: "OpenAI", note: "The proven default. Every prompt here was tuned against it." },
-                { id: "gemini", name: "Gemini", note: "Untuned on this prompt — compare before trusting a client build to it." },
+                { id: "openai", name: "OpenAI · GPT-5.5 Pro", note: "Newest-first design chain: GPT-5.5 Pro → GPT-5.5 → GPT-5.4 Pro → GPT-5.4." },
+                { id: "gemini", name: "Gemini · Pro Latest", note: "Newest-first design chain: Pro Latest → 3.1 Pro Preview → 3.7 Flash → 3.6 Flash." },
               ] as const).map((option) => (
                 <button
                   key={option.id}

@@ -15,6 +15,7 @@ import {
   Palette,
   Clock,
   Volume2,
+  Upload,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,8 @@ export function SocialMockupPanel({
   const [mockupData, setMockupData] = useState<MockupData>(initialMockupData);
   const [generatingAvatar, setGeneratingAvatar] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [uploadingCapture, setUploadingCapture] = useState<"hero" | "about" | null>(null);
+  const [captureError, setCaptureError] = useState<string | null>(null);
 
   useEffect(() => {
     setMockupData(initialMockupData);
@@ -117,6 +120,26 @@ export function SocialMockupPanel({
       setAvatarError(err instanceof Error ? err.message : "Generation failed");
     } finally {
       setGeneratingAvatar(false);
+    }
+  }
+
+  async function handleCaptureUpload(slot: "hero" | "about", file: File | undefined) {
+    if (!file) return;
+    setUploadingCapture(slot);
+    setCaptureError(null);
+    try {
+      const form = new FormData();
+      form.set("slot", slot);
+      form.set("file", file);
+      const res = await fetch(`/api/leads/${lead.id}/mockup`, { method: "POST", body: form });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(result.error || "Could not upload capture");
+      const key = slot === "hero" ? "heroCaptureUrl" : "aboutCaptureUrl";
+      setMockupData((prev) => ({ ...prev, [key]: result.mockup?.[key] }));
+    } catch (err) {
+      setCaptureError(err instanceof Error ? err.message : "Could not upload capture");
+    } finally {
+      setUploadingCapture(null);
     }
   }
 
@@ -317,6 +340,50 @@ Duration: 6.0 Seconds (Seamless Loop)
           <span className="rounded-full bg-[#f0f3ff] px-2.5 py-1 text-[11px] font-bold text-[#533afd] flex items-center gap-1">
             <Sparkles className="h-3 w-3" /> Ready to Post
           </span>
+        </div>
+
+        <div className="rounded-xl border border-[#c7d0fb] bg-[#fbfaff] p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h4 className="text-xs font-bold text-[#0d1738]">Exact website captures</h4>
+              <p className="mt-0.5 max-w-xl text-[11px] text-muted-foreground">
+                Upload clean desktop screenshots from the preview. Hero should include the menu; About should contain only the full About section. These exact images sync to the client portal and exported poster.
+              </p>
+            </div>
+            <a
+              href={`/s/${lead.slug}?view=preview`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[11px] font-bold text-[#533afd] hover:underline"
+            >
+              Open clean preview
+            </a>
+          </div>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {(["hero", "about"] as const).map((slot) => {
+              const hasCapture = slot === "hero" ? mockupData.heroCaptureUrl : mockupData.aboutCaptureUrl;
+              return (
+                <label key={slot} className="flex cursor-pointer items-center justify-between rounded-lg border border-border bg-white px-3 py-2 hover:border-[#533afd]">
+                  <span>
+                    <span className="block text-xs font-bold capitalize text-[#0d1738]">{slot} capture</span>
+                    <span className="block text-[10px] text-muted-foreground">{hasCapture ? "Uploaded, choose another to replace" : "PNG, JPG or WebP up to 12 MB"}</span>
+                  </span>
+                  <span className="flex items-center gap-1 text-[11px] font-bold text-[#533afd]">
+                    {uploadingCapture === slot ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                    {hasCapture ? "Replace" : "Upload"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="sr-only"
+                    disabled={Boolean(uploadingCapture)}
+                    onChange={(event) => handleCaptureUpload(slot, event.target.files?.[0])}
+                  />
+                </label>
+              );
+            })}
+          </div>
+          {captureError && <p className="mt-2 text-[11px] font-medium text-red-700">{captureError}</p>}
         </div>
 
         {/* 3D Mockup Visual Stage */}

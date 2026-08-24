@@ -85,6 +85,28 @@ LEAD CAPTURE. Never write your own <form>; it has nowhere to submit to. Use data
 
 TRUST ANCHORS. Real reviews, real credentials and real guarantees belong INSIDE the conversion moment — next to the button, not in a section of their own three screens away. Hesitation happens at the point of action, so the reassurance goes there.`;
 
+export const CONVERSION_STANDARD = `CONVERSION STRATEGY — this is a sales page for a real local business, not a digital brochure.
+
+START WITH THE CUSTOMER'S URGENT REALITY. Translate the service into the costly, stressful or inconvenient problem the visitor wants removed. A roofer sells a dry, protected home; an electrician sells safety and reliable power; a salon sells confidence and a dependable result. State that outcome concretely without manufacturing fear, urgency, prices or guarantees.
+
+BUILD ONE ARGUMENT DOWN THE PAGE:
+1. Recognition — name the job, location and desired outcome so the right visitor immediately feels understood.
+2. Risk — show practical consequences of delay only where they are inherent and truthful. Never invent statistics or deadlines.
+3. Resolution — connect the business's real services to those problems in plain language.
+4. Credibility — answer "why these people?" with real experience, reviews, process, images and credentials from the brief.
+5. Friction removal — explain what happens after the enquiry, what information is needed and how easy the next step is. Do not invent response times.
+6. Action — repeat the same primary offer at natural decision points using consistent wording.
+
+WRITE TO BUYING QUESTIONS, NOT SECTION LABELS. Each section should answer one objection: Can they do my job? Do they serve my area? Can I trust them in my home? What happens next? What could go wrong? How do I start? If a section answers none of these, remove it.
+
+MAKE SERVICES BENEFIT-LED BUT SPECIFIC. Name the real service first, then explain the visible result or problem it addresses. Do not turn every service into "peace of mind" and do not claim outcomes the facts cannot support.
+
+USE PROOF AT THE CLAIM IT SUPPORTS. Put a relevant review beside the service or concern it mentions where possible. Numbers need labels and context. Never use decorative star rows, anonymous testimonials, fake trust seals or unsupported metrics.
+
+CALLS TO ACTION MUST COMPLETE A THOUGHT. Prefer specific truthful language such as "Request a roofing estimate" over "Learn more". Keep the primary action's wording stable throughout. A secondary phone action may sit beside it when a real number exists, but it must not compete visually.
+
+COPY DISCIPLINE. Lead with the customer's situation, then the business. Use short paragraphs, concrete nouns and active verbs. Avoid inflated category-leader claims, generic superlatives, marketing jargon, exclamation marks, and sentences a competitor could paste unchanged.`;
+
 export const HYGIENE_STANDARD = `SEMANTIC INTEGRITY. <header> is not yours to write, but <main>, <section>, <article>, <aside>, <figure>, <figcaption>, <blockquote>, <ul>, <dl> all are. Endless nested <div> is forbidden — if a block has a meaning, use the element that carries it. A screen reader and a crawler should be able to read the page structure without the CSS.
 
 Real <h1>/<h2>/<h3> hierarchy that steps down properly. Exactly one <h1>.
@@ -169,11 +191,11 @@ empty.
 
 Then, in whatever order the design direction genuinely calls for:
 - Real trust signals the facts support.
-- Real services each with clear benefits and imagery.
-- A substantive "About / Our Story" section highlighting the founder/team, craftsmanship values, and 4 key statistics.
-- A prominent Reviews section (id="reviews") featuring "★★★★★ 5.0 from Verified Reviews", headline "What Our Customers Say", subheadline "Real feedback from property owners across the area", and a slider/grid of up to 10 customer reviews.
+- Real services each with clear, problem-aware benefits and appropriate imagery.
+- A substantive About / Our Story section (id="about") that establishes who does the work, what they value and why that matters to the customer. On desktop it must be one balanced 5/7 or 6/6 image-and-copy composition, not a tiny portrait beside a wall of text. Keep the copy column concise: eyebrow, strong customer-relevant heading, at most two readable paragraphs, supported proof, and one action. Use only supported statistics; if fewer than three meaningful metrics exist, use no metric ribbon at all. On mobile, stack image then copy with no overlap or clipped content.
+- A prominent Reviews section (id="reviews") only when real review text exists. Quote it verbatim, attribute it, and show the exact verified aggregate rating/count when available. Never hardcode 5.0, five stars, "verified", or a review count. If no review text exists, omit the section rather than manufacturing social proof.
 - Service areas with visual badges/cards.
-- A comprehensive Frequently Asked Questions section (id="faq") with a large clear headline, subheadline, at least 10 high-intent trade questions with clear answers, and a final CTA.
+- A comprehensive Frequently Asked Questions section (id="faq") with 8–12 high-intent buying questions that can be answered from the supplied facts without inventing policy, pricing, timing, warranties or credentials.
 - A closing call to action carrying the real phone number.
 
 Service areas are a specific content type, not a generic text list — give each one a real visual anchor (a location-pin icon, a small map motif, or a distinct card treatment), never bare text in a row. A list of city names with nothing else on the page is the clearest tell of an unfinished section.

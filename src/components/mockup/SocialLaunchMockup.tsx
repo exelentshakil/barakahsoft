@@ -46,6 +46,8 @@ export interface MockupData {
   themeId?: string;
   bespokeHtml?: string | null;
   bespokeCss?: string | null;
+  heroCaptureUrl?: string | null;
+  aboutCaptureUrl?: string | null;
 }
 
 export const HEADLINE_OPTIONS: { id: MockupHeadlineMode; line1: string; line2: string; tag: string }[] = [
@@ -302,6 +304,21 @@ export function SocialLaunchMockup({
   }
 
   const renderScreenContent = () => {
+    if (data.heroCaptureUrl) {
+      return (
+        <div className="relative h-full w-full overflow-hidden bg-white">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={data.heroCaptureUrl}
+            alt={`${businessShortName} homepage hero and navigation`}
+            crossOrigin="anonymous"
+            className="h-full w-full object-cover object-top"
+          />
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />
+        </div>
+      );
+    }
+
     if (data.bespokeHtml) {
       return (
         <div className="relative w-full h-full overflow-hidden bg-white">
@@ -462,6 +479,16 @@ export function SocialLaunchMockup({
           boxShadow: "0 35px 70px -12px rgba(15, 23, 42, 0.45), 0 0 0 1px rgba(0,0,0,0.06)",
         }}
       >
+        {data.aboutCaptureUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={data.aboutCaptureUrl}
+            alt={`${businessShortName} about section`}
+            crossOrigin="anonymous"
+            className="block h-auto w-full"
+          />
+        ) : (
+          <>
         {/* ROW 1: ABOUT US SECTION (White Background) */}
         <div className="p-3 sm:p-4 bg-white space-y-2">
           <div className="flex items-start gap-2.5">
@@ -570,6 +597,8 @@ export function SocialLaunchMockup({
             GET A FREE QUOTE →
           </span>
         </div>
+          </>
+        )}
       </div>
     </div>
   );

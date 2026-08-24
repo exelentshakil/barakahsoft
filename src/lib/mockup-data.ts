@@ -25,6 +25,8 @@ export function extractMockupData({
     themeId?: string;
     headlineMode?: MockupHeadlineMode;
     featuredPhotoUrl?: string;
+    heroCaptureUrl?: string;
+    aboutCaptureUrl?: string;
   } | undefined) ?? {};
 
   const bespokeHtml = artifact?.bespoke_homepage_html || payload?.bespokeHomepageHtml || null;
@@ -230,5 +232,7 @@ export function extractMockupData({
     themeId,
     bespokeHtml,
     bespokeCss,
+    heroCaptureUrl: savedMockup.heroCaptureUrl || null,
+    aboutCaptureUrl: savedMockup.aboutCaptureUrl || null,
   };
 }

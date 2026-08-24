@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, Phone, Star, X } from "lucide-react";
+import { Menu, Phone, X } from "lucide-react";
 import { useQuoteModal } from "@/components/site-shell/QuoteModalProvider";
 import type { ChromeSpec } from "@/lib/chrome-spec";
 import type { SitePayload } from "@/components/site-shell/types";
@@ -123,11 +123,6 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
             <span>
               Need help now? <strong>Call {payload.nap.phone}</strong>
             </span>
-            {nav.showRating && payload.proof.rating && payload.proof.reviewCount && (
-              <span>
-                {payload.proof.rating.toFixed(1)} stars · {payload.proof.reviewCount} Google reviews
-              </span>
-            )}
           </div>
         </div>
       )}
@@ -147,12 +142,6 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
               {logo}
               {nav.archetype !== "minimal" && <nav className="bs-nav-links">{links}</nav>}
               <div className="bs-nav-actions">
-                {nav.showRating && payload.proof.rating && payload.proof.reviewCount && !nav.utilityBar && (
-                  <span className="bs-rating-badge">
-                    <Star className="h-3.5 w-3.5" aria-hidden />
-                    {payload.proof.rating.toFixed(1)} ({payload.proof.reviewCount})
-                  </span>
-                )}
                 {nav.showPhone && payload.nap.phone && (
                   <a href={`tel:${phoneDigits}`} className="bs-nav-phone">
                     <Phone className="h-4 w-4" aria-hidden />

@@ -63,6 +63,7 @@ LAYOUT
 - Content sits in a centred container, max-width around 1200px, with a horizontal gutter that
   scales: 1.25rem on mobile, 2.5rem from desktop. Content must never touch the viewport edge.
 - Mobile first. Every grid collapses to one column and every layout works from 360px up.
+- The About section must feel intentionally balanced: use a 5/7 or 6/6 desktop split with both columns carrying comparable visual weight. Do not shrink the image into an avatar, let copy stretch across an empty half, overlap text and media, or let a metric ribbon dominate the story. Stack cleanly on mobile with media first and natural content height.
 
 ${SPACE_STANDARD}
 
