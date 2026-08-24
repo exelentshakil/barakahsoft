@@ -81,14 +81,6 @@ export function renderShell(
       ? differentiatorSection.body_content
       : "Clear communication, real local service, and a straightforward next step.";
 
-  const rawSectionVariants = artifact.section_variant_selections ?? {};
-  const bespokeDesignPlan = rawSectionVariants.__designPlan && typeof rawSectionVariants.__designPlan === "object"
-    ? rawSectionVariants.__designPlan as Record<string, unknown>
-    : null;
-  const sectionVariants = Object.fromEntries(
-    Object.entries(rawSectionVariants).filter(([key, value]) => key !== "__designPlan" && typeof value === "string")
-  ) as Record<string, string>;
-
   return {
     businessName,
     headline,
@@ -139,8 +131,6 @@ export function renderShell(
     innerPagesBuilt: artifact.inner_pages_built,
     fullSiteBuilt: artifact.full_site_status === "complete",
     leadSlug: lead.slug,
-    sectionVariants,
-    bespokeDesignPlan,
     bespokeHomepageHtml: artifact.bespoke_homepage_html,
     bespokeCss: artifact.bespoke_css ?? null,
     designTokens: artifact.design_tokens ?? null,

@@ -5,24 +5,14 @@ import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 
 export const maxDuration = 120;
 
-// Generates an ultra-photorealistic, high-resolution portrait / avatar of the business owner
-// (e.g. holding blueprints/plans, smiling warmly, authentic craftsmanship) using Google Imagen 3 / Gemini.
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: leadId } = await params;
-
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
 
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "GEMINI_API_KEY is not configured in this environment" },
-      { status: 500 }
-    );
-  }
+  if (!apiKey) return NextResponse.json({ error: "GEMINI_API_KEY is not configured" }, { status: 500 });
 
   const admin = createAdminClient();
   const [{ data: lead }, { data: artifact }, { data: scrape }] = await Promise.all([
@@ -30,172 +20,93 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     admin.from("artifacts").select("*").eq("lead_id", leadId).maybeSingle<Artifact>(),
     admin.from("scrape_results").select("facts").eq("lead_id", leadId).maybeSingle<ScrapeResults>(),
   ]);
-
   if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
 
   const facts = (scrape?.facts as Record<string, unknown> | null) ?? {};
   const businessName = lead.business_name || (facts.business_name as string) || lead.slug;
-  const trade = lead.industry || (facts.industry as string) || "Home Services Contractor";
-  const city = (facts.town as string) || "New York";
-  const founderName = (facts.founder_name as string) || lead.contact_name || "Company Founder";
-
+  const trade = lead.industry || (facts.industry as string) || "home services";
+  const city = (facts.town as string) || (facts.city as string) || "their local area";
+  const founderName = (facts.founder_name as string) || lead.contact_name || "the company owner";
   const body = await req.json().catch(() => ({}));
-  const customPrompt =
-    body.prompt ||
-    `Photorealistic, high-end professional editorial portrait of ${founderName}, the master founder and owner of "${businessName}", a premier ${trade} company in ${city}. The founder is smiling warmly, wearing a clean modern work shirt, holding architectural floor plans and blueprints on a bright residential renovation job site. Cinematic natural lighting, 8k resolution, authentic craftsmanship, crisp focus, shallow depth of field, award-winning commercial photography.`;
+  const customPrompt = body.prompt ||
+    `Photorealistic professional editorial portrait representing ${founderName} of ${businessName}, a ${trade} business serving ${city}. On-site, natural expression, clean work clothing, authentic trade context, natural directional light, crisp commercial photography, no text, no logos.`;
 
   try {
     let imageBuffer: Buffer | null = null;
-
-    // 1. Try Google Imagen 3 via Generative Language API
-    if (apiKey) {
-      const imagenModels = [
-        "imagen-3.0-generate-002",
-        "imagen-3.0-fast-generate-001",
-        "imagegeneration@006",
-      ];
-
-      for (const modelName of imagenModels) {
-        try {
-          const imagenUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:predict`;
-          const res = await fetch(imagenUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-goog-api-key": apiKey,
-            },
-            body: JSON.stringify({
-              instances: [{ prompt: customPrompt }],
-              parameters: {
-                sampleCount: 1,
-                aspectRatio: "1:1",
-                outputMimeType: "image/jpeg",
-                personGeneration: "allow_adult",
-              },
-            }),
-          });
-
-          if (res.ok) {
-            const data = await res.json();
-            const base64Bytes = data.predictions?.[0]?.bytesBase64Encoded;
-            if (base64Bytes) {
-              imageBuffer = Buffer.from(base64Bytes, "base64");
-              break;
-            }
-          }
-        } catch (err) {
-          console.warn(`[generate-avatar] ${modelName} failed`, err);
-        }
-      }
-    }
-
-    // 2. Fallback to OpenAI DALL-E 3 / HD image generation if Imagen 3 is restricted
-    if (!imageBuffer && process.env.OPENAI_API_KEY) {
+    for (const model of ["imagen-3.0-generate-002", "imagen-3.0-fast-generate-001", "imagegeneration@006"]) {
       try {
-        const openaiRes = await fetch("https://api.openai.com/v1/images/generations", {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:predict`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-          },
+          headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
           body: JSON.stringify({
-            model: "dall-e-3",
-            prompt: customPrompt,
-            size: "1024x1024",
-            quality: "hd",
-            n: 1,
+            instances: [{ prompt: customPrompt }],
+            parameters: { sampleCount: 1, aspectRatio: "1:1", outputMimeType: "image/jpeg", personGeneration: "allow_adult" },
           }),
         });
-
-        if (openaiRes.ok) {
-          const openaiData = await openaiRes.json();
-          const imgUrl = openaiData.data?.[0]?.url;
-          if (imgUrl) {
-            const dl = await fetch(imgUrl);
-            if (dl.ok) {
-              imageBuffer = Buffer.from(await dl.arrayBuffer());
-            }
-          }
-        } else {
-          console.error(`[generate-avatar] OpenAI returned ${openaiRes.status}`);
+        if (!res.ok) continue;
+        const data = await res.json();
+        const encoded = data.predictions?.[0]?.bytesBase64Encoded;
+        if (encoded) {
+          imageBuffer = Buffer.from(encoded, "base64");
+          break;
         }
-      } catch (err) {
-        console.error("[generate-avatar] OpenAI fallback error", err);
+      } catch (error) {
+        console.warn(`[generate-avatar] ${model} failed`, error);
       }
     }
 
-    if (!imageBuffer) {
-      return NextResponse.json(
-        {
-          error:
-            "Could not generate portrait. Please verify your GEMINI_API_KEY / OPENAI_API_KEY permissions or upload an image directly.",
-        },
-        { status: 502 }
-      );
+    if (!imageBuffer && process.env.OPENAI_API_KEY) {
+      const res = await fetch("https://api.openai.com/v1/images/generations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+        body: JSON.stringify({ model: "dall-e-3", prompt: customPrompt, size: "1024x1024", quality: "hd", n: 1 }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const imageUrl = data.data?.[0]?.url;
+        if (imageUrl) {
+          const download = await fetch(imageUrl);
+          if (download.ok) imageBuffer = Buffer.from(await download.arrayBuffer());
+        }
+      }
     }
 
-    // Upload to Supabase Storage in lead-media
+    if (!imageBuffer) return NextResponse.json({ error: "Could not generate portrait" }, { status: 502 });
+
     const storagePath = `${leadId}/generated-avatars/founder-${Date.now()}.jpg`;
     const { error: uploadError } = await admin.storage
       .from("lead-media")
-      .upload(storagePath, imageBuffer, {
-        contentType: "image/jpeg",
-        upsert: true,
-      });
+      .upload(storagePath, imageBuffer, { contentType: "image/jpeg", upsert: false });
+    if (uploadError) throw uploadError;
 
-    if (uploadError) {
-      console.error("[generate-avatar] storage upload failed", uploadError);
-      return NextResponse.json({ error: "Storage upload failed" }, { status: 500 });
-    }
-
-    const { data: publicUrlData } = admin.storage
-      .from("lead-media")
-      .getPublicUrl(storagePath);
-
+    const { data: publicUrlData } = admin.storage.from("lead-media").getPublicUrl(storagePath);
     const publicUrl = publicUrlData.publicUrl;
-
-    // Record into media_assets and update artifact extracted_assets
-    await admin.from("media_assets").insert({
+    const { error: mediaError } = await admin.from("media_assets").insert({
       lead_id: leadId,
       storage_path: storagePath,
       public_url: publicUrl,
-      source: "generated-avatar",
+      source: "generated",
       slot_hint: "about-owner",
       storage_mode: "copied",
+      generation_prompt: customPrompt,
     });
-
-    const existingExtracted = ((artifact?.extracted_assets as Record<string, unknown> | null) ?? {});
-    const updatedExtracted = {
-      ...existingExtracted,
-      founder_photo_url: publicUrl,
-      about_image_url: publicUrl,
-    };
+    if (mediaError) throw mediaError;
 
     if (artifact) {
-      await admin
+      const existing = (artifact.extracted_assets as Record<string, unknown> | null) ?? {};
+      const { error } = await admin
         .from("artifacts")
-        .update({ extracted_assets: updatedExtracted, last_edited_at: new Date().toISOString() })
+        .update({
+          extracted_assets: { ...existing, founder_photo_url: publicUrl, about_image_url: publicUrl },
+          last_edited_at: new Date().toISOString(),
+        })
         .eq("lead_id", leadId);
+      if (error) throw error;
     }
 
-    // Also update scrape_results facts
-    await admin
-      .from("scrape_results")
-      .update({
-        facts: {
-          ...facts,
-          founder_photo_url: publicUrl,
-        },
-      })
-      .eq("lead_id", leadId);
-
-    return NextResponse.json({
-      ok: true,
-      url: publicUrl,
-      founderName,
-    });
-  } catch (err) {
-    console.error("[generate-avatar] failed", err);
+    return NextResponse.json({ ok: true, url: publicUrl, founderName });
+  } catch (error) {
+    console.error("[generate-avatar] failed", error);
     return NextResponse.json({ error: "Avatar generation failed" }, { status: 500 });
   }
 }

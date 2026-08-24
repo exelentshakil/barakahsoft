@@ -82,7 +82,7 @@ const ALLOWED_ATTRIBUTES = {
 const ALLOWED_SCHEMES = ["http", "https", "tel", "mailto", "#"];
 
 // header/footer/nav are removed WITH their content, not unwrapped. The real
-// MegaMenu and PremiumFooter are rendered around this markup by
+// BespokeNav and BespokeFooter are rendered around this markup by
 // BespokeHomepage; a model-authored nav produced a visible double header
 // whose links pointed at pages that may not exist.
 const STRIPPED_WITH_CONTENT = ["script", "style", "textarea", "option", "header", "footer", "nav", "form", "input", "iframe"];

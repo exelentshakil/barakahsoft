@@ -18,7 +18,7 @@ export type LeadStatus =
   | "paid"
   | "live";
 
-export type MediaAssetSource = "site" | "gbp" | "unsplash" | "pexels" | "upload" | "generated-video";
+export type MediaAssetSource = "site" | "gbp" | "unsplash" | "pexels" | "upload" | "generated";
 
 export interface Account {
   id: string;
@@ -228,6 +228,8 @@ export interface BuildJob {
   error_message: string | null;
   updated_at: string;
 }
+
+export type { GenerationCandidate, VisualQaStatus, VisualQaReport } from "@/lib/visual-qa";
 
 export interface ClosePlanStep {
   id: string;

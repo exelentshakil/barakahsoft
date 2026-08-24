@@ -13,8 +13,6 @@ import {
   BookOpen,
   Film,
   Palette,
-  Clock,
-  Volume2,
   Upload,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,6 +25,7 @@ import {
 } from "@/components/mockup/SocialLaunchMockup";
 import type { Lead, Artifact } from "@/types/database";
 import { extractMockupData } from "@/lib/mockup-data";
+import type { SocialCaptionAngle, SocialContent } from "@/lib/social-content";
 
 export function SocialMockupPanel({
   lead,
@@ -48,19 +47,38 @@ export function SocialMockupPanel({
   }, [lead, artifact, facts]);
 
   const [mockupData, setMockupData] = useState<MockupData>(initialMockupData);
-  const [generatingAvatar, setGeneratingAvatar] = useState(false);
-  const [avatarError, setAvatarError] = useState<string | null>(null);
   const [uploadingCapture, setUploadingCapture] = useState<"hero" | "about" | null>(null);
   const [captureError, setCaptureError] = useState<string | null>(null);
+  const savedSocialContent = (((artifact?.extracted_assets as Record<string, unknown> | null)?.mockup as Record<string, unknown> | undefined)?.socialContent ?? null) as SocialContent | null;
+  const savedSocialMotion = (((artifact?.extracted_assets as Record<string, unknown> | null)?.mockup as Record<string, unknown> | undefined)?.socialMotion ?? null) as { status?: string; videoUrl?: string; error?: string } | null;
+  const [socialContent, setSocialContent] = useState<SocialContent | null>(savedSocialContent);
+  const [socialMotion, setSocialMotion] = useState(savedSocialMotion);
+  const [generatingSocial, setGeneratingSocial] = useState(false);
+  const [startingMotion, setStartingMotion] = useState(false);
+  const [socialError, setSocialError] = useState<string | null>(null);
 
   useEffect(() => {
     setMockupData(initialMockupData);
   }, [initialMockupData]);
 
+  useEffect(() => {
+    setSocialContent(savedSocialContent);
+    setSocialMotion(savedSocialMotion);
+  }, [artifact]);
+
+  useEffect(() => {
+    if (!socialMotion || !["starting", "generating"].includes(socialMotion.status || "")) return;
+    const timer = setInterval(async () => {
+      const res = await fetch(`/api/leads/${lead.id}/social-motion`);
+      const result = await res.json().catch(() => ({}));
+      if (res.ok) setSocialMotion(result.motion);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [lead.id, socialMotion?.status]);
+
   async function saveMockupConfig(update: {
     themeId?: string;
     headlineMode?: MockupHeadlineMode;
-    featuredPhotoUrl?: string;
   }) {
     try {
       await fetch(`/api/leads/${lead.id}/mockup`, {
@@ -71,14 +89,6 @@ export function SocialMockupPanel({
     } catch (err) {
       console.error("[mockup] auto-save failed", err);
     }
-  }
-
-  function handleSelectPhoto(url: string) {
-    setMockupData((prev) => ({
-      ...prev,
-      photoUrl: url,
-    }));
-    saveMockupConfig({ featuredPhotoUrl: url });
   }
 
   function handleThemeChange(themeId: string) {
@@ -95,32 +105,6 @@ export function SocialMockupPanel({
       headlineMode: mode,
     }));
     saveMockupConfig({ headlineMode: mode });
-  }
-
-  async function handleGenerateAvatar() {
-    setGeneratingAvatar(true);
-    setAvatarError(null);
-    try {
-      const res = await fetch(`/api/leads/${lead.id}/generate-avatar`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.url) {
-        throw new Error(data.error || "Could not generate owner portrait");
-      }
-      setMockupData((prev) => ({
-        ...prev,
-        photoUrl: data.url,
-        availablePhotos: [data.url, ...(prev.availablePhotos || [])],
-      }));
-      saveMockupConfig({ featuredPhotoUrl: data.url });
-    } catch (err) {
-      setAvatarError(err instanceof Error ? err.message : "Generation failed");
-    } finally {
-      setGeneratingAvatar(false);
-    }
   }
 
   async function handleCaptureUpload(slot: "hero" | "about", file: File | undefined) {
@@ -144,10 +128,9 @@ export function SocialMockupPanel({
   }
 
   const businessName = mockupData.businessName;
-  const city = mockupData.city || "New York";
+  const city = mockupData.city || "the local area";
   const trade = mockupData.trade || "Home Services";
   const brandColorHex = mockupData.brandColor || "#1b4d3e";
-  const reviewCount = mockupData.reviewCount || 100;
 
   // Panel View Tabs: Captions | Motion Guidelines | Moodboard
   const [activeTab, setActiveTab] = useState<"caption" | "motion" | "moodboard">("caption");
@@ -155,154 +138,48 @@ export function SocialMockupPanel({
   // -------------------------------------------------------------
   // Meta Andromeda-Compliant Caption Engine
   // -------------------------------------------------------------
-  const [captionStyle, setCaptionStyle] = useState<"redesign_proposed" | "concept_teaser" | "transformation" | "authority" | "contrarian">("redesign_proposed");
+  const [captionStyle, setCaptionStyle] = useState<SocialCaptionAngle>("redesign_proposed");
   const [copied, setCopied] = useState(false);
   const [copiedMotion, setCopiedMotion] = useState(false);
   const [customCaption, setCustomCaption] = useState<string>("");
 
-  const generatedCaptions = useMemo(() => {
-    const cleanTrade = trade.toLowerCase();
-    const tradeHashtag = trade.replace(/[^a-zA-Z0-9]/g, "");
-    const cityHashtag = city.replace(/[^a-zA-Z0-9]/g, "");
+  const generatedCaptions = socialContent?.captions;
+  const activeCaption = customCaption || generatedCaptions?.[captionStyle] || "Generate a fact-grounded content kit to create captions for this lead.";
+  const motionScriptPrompt = socialContent
+    ? `${socialContent.motion.title}\n\nCREATIVE DIRECTION\n${socialContent.motion.creativeDirection}\n\nVOICEOVER\n${socialContent.motion.voiceover}\n\nEDITOR BRIEF\n${socialContent.motion.editorBrief}\n\nVEO PROMPT\n${socialContent.motion.veoPrompt}`
+    : "Generate the content kit to create a lead-specific motion brief, voiceover and Veo prompt.";
 
-    return {
-      redesign_proposed: `Here is a custom website concept we just designed for ${businessName} in ${city} ⚡
+  async function handleGenerateSocial() {
+    setGeneratingSocial(true);
+    setSocialError(null);
+    try {
+      const res = await fetch(`/api/leads/${lead.id}/social-content`, { method: "POST" });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok || !result.content) throw new Error(result.error || "Could not generate social content");
+      setSocialContent(result.content);
+      setSocialMotion({ status: "needs-generation" });
+      setCustomCaption("");
+    } catch (error) {
+      setSocialError(error instanceof Error ? error.message : "Could not generate social content");
+    } finally {
+      setGeneratingSocial(false);
+    }
+  }
 
-When local homeowners in ${city} search for a trusted ${cleanTrade}, they judge your quality in under 3 seconds.
-
-We took their real-world 5-star reputation and built a bespoke, high-converting digital storefront around it:
-
-• 🚀 Sub-second mobile load time
-• ⭐ Prominent Google Reviews & verified warranty proof
-• 📍 Suburb-by-suburb service routing across ${city}
-• 📞 1-tap estimate funnel engineered for mobile callers
-
-Take a look at the 3D redesign concept above.
-
-Should they make this live? Drop your thoughts below 👇
-
-(If you run a local ${cleanTrade} company and want to see what your site could look like, comment "PREVIEW" or DM us for a free redesign concept).
-
-#${tradeHashtag} #${cityHashtag} #WebDesign #HomeServices #RedesignConcept #BarakahSoft`,
-
-      concept_teaser: `Sneak peek at a new website proposal for ${businessName} 👀
-
-Most ${cleanTrade} websites in ${city} lose 60%+ of their visitors because of slow loading speeds, cluttered menus, and hidden phone numbers.
-
-This concept was engineered from the ground up to do one thing: turn local traffic into booked high-ticket estimates.
-
-Highlights:
-✅ Modern mobile-first architecture
-✅ Instant pricing & guarantee trust signals
-✅ Built specifically for ${city} local search intent
-
-Would you hire a ${cleanTrade} with a website like this? 
-
-Comment "CONCEPT" below if you want us to put together a private redesign for your business.
-
-#LocalBusiness #${tradeHashtag} #${cityHashtag}Business #UIUX #BarakahSoft`,
-
-      transformation: `Most local ${cleanTrade} companies don't have a lead problem.
-
-They have a trust leak. 🛑
-
-When someone in ${city} searches for "${cleanTrade} near me", they click 2–3 websites. 
-If your site takes 4+ seconds to load, looks outdated on a phone, or buries your phone number... they bounce straight to your competitor.
-
-Here is the brand new digital storefront we just designed & proposed for ${businessName} in ${city}:
-
-⚡ Sub-second mobile loading speed (zero bounce rate)
-⭐ 5-star Google review & verified reputation integration
-📍 Dedicated neighbourhood routes across ${city}
-📱 One-tap instant quote booking engineered for mobile callers
-
-The result? Visitors immediately recognize them as the #1 category leader before even picking up the phone.
-
-Drop a comment below with "SITE" or send us a DM if you want a free custom redesign concept for your trade business. 🚀
-
-.
-.
-#${tradeHashtag} #${cityHashtag}Business #LocalSEO #WebDesign #HomeServices #BarakahSoft`,
-
-      authority: `🚨 NEW WEBSITE LAUNCH: ${businessName} (${city}) 🚨
-
-${businessName} already had the craftsmanship and ${reviewCount > 0 ? `${reviewCount}+ 5-star customer reviews` : "an outstanding reputation"} to back it up.
-
-What they needed was a high-converting digital storefront that matched their real-world caliber.
-
-Here’s what we engineered into their new build:
-✅ Custom modern design built specifically for high-ticket ${cleanTrade} jobs
-✅ Crystal-clear pricing transparency & trust signals
-✅ Fast-loading mobile architecture built on Next.js
-✅ Local search visibility optimized to dominate ${city}
-
-When quality craftsmanship meets conversion-first design, you stop competing on price and start winning the best jobs in town.
-
-Want to see what your business would look like with a modern makeover? 
-👉 Comment "PREVIEW" or DM us your website URL for a complimentary redesign concept.
-
-#WebDesign #${tradeHashtag} #BusinessGrowth #${cityHashtag} #BarakahSoft`,
-
-      contrarian: `Stop spending money on Facebook ads or Google LSA if your website looks like it was built in 2014. 📉
-
-Here is what actually happens:
-You pay $40–$100 for a local homeowner to click your ad.
-They land on a slow, cluttered site with unclickable phone numbers.
-They get confused, hit "Back", and call the next business on Google Maps.
-
-Fix the bucket before pouring in more water. 🪣
-
-We just rebuilt the complete web presence for ${businessName} in ${city}.
-Everything is built around one single metric: turning high-intent local visitors into booked estimates.
-
-Take a look at the live concept mockup above 👆
-
-If you run a local ${cleanTrade} or home service company and want to fix your conversion leaks, comment "AUDIT" below and we'll send you a private speed & website breakdown.
-
-#ConversionRate #DigitalMarketing #${tradeHashtag} #${cityHashtag}WebDesign #BarakahSoft`,
-    };
-  }, [businessName, city, trade, reviewCount]);
-
-  const activeCaption = customCaption || generatedCaptions[captionStyle];
-
-  const motionScriptPrompt = useMemo(() => {
-    return `=== AFTER EFFECTS / PREMIERE MOTION DESIGN BRIEF ===
-Project: 3D Website Launch Reel for ${businessName} (${trade} in ${city})
-Format: 1080x1920 (9:16 Reel/Story) & 1080x1350 (4:5 Feed)
-Frame Rate: 60 FPS
-Duration: 6.0 Seconds (Seamless Loop)
-
---- 1. TIMELINE & KEYFRAME STORYBOARD ---
-• 0.0s – 1.2s (Hook & 3D Parallax Entry):
-  - 3D Camera zoom-in from Scale 112% -> 100% with easing (easeOutQuart).
-  - Background gradient subtle pulse.
-  - Headline "NEW WEBSITE LAUNCHED" punches in with subtle kinetic drop-shadow blur (0 -> 18px).
-  - Floating Card enters with slight Y-axis offset (+30px -> 0px) and Z-axis rotation (-4° -> -2°).
-
-• 1.2s – 2.8s (UI Highlight & Feature Shine):
-  - Linear light sweep / glass reflection shines diagonally across the MacBook screen.
-  - "Verified 5.0★ Google Reviews" badge on the floating sheet pops up with slight overshoot bounce (Scale 95% -> 105% -> 100%).
-  - Subtle floating card levitation loop using After Effects expression: transform.position + [0, Math.sin(time*3)*8].
-
-• 2.8s – 4.5s (Trust Numbers Counter & Focus):
-  - Trust metrics (100+ Reviews, 1-Year Warranty, 100% Guaranteed) illuminate sequentially with a 0.1s stagger.
-  - Floating card tilts gently to show 3D depth and shadow separation.
-
-• 4.5s – 6.0s (CTA & Seamless Loop):
-  - "Comment 'SITE' or DM for Free Concept" banner pulses at bottom with smooth glow.
-  - Camera glides back to original position to create a seamless infinite loop.
-
---- 2. SOUND DESIGN / SFX CUES ---
-• 0.0s: Crisp cinematic whoosh + subtle low-end impact.
-• 1.4s: Clean metallic UI chime / shimmer effect across screen.
-• 4.8s: Satisfying Shopify-style double cash chime on CTA prompt.
-
---- 3. COLOR & ASSET ASSETS ---
-• Primary Brand Hex: ${brandColorHex}
-• Accent Highlight: #10B981 (Emerald) / #F59E0B (Amber Gold)
-• Base Metals: Dark Titanium Aluminum (#1A1A1A & #C5C8CF)
-• Font: Bold Modern Geometric Sans-Serif (SF Pro Display / Montserrat / Inter Black)`;
-  }, [businessName, trade, city, brandColorHex]);
+  async function handleGenerateMotion() {
+    setStartingMotion(true);
+    setSocialError(null);
+    try {
+      const res = await fetch(`/api/leads/${lead.id}/social-motion`, { method: "POST" });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(result.error || "Could not start motion generation");
+      setSocialMotion(result.motion || { status: "starting" });
+    } catch (error) {
+      setSocialError(error instanceof Error ? error.message : "Could not start motion generation");
+    } finally {
+      setStartingMotion(false);
+    }
+  }
 
   function handleCopy() {
     navigator.clipboard.writeText(activeCaption);
@@ -316,9 +193,9 @@ Duration: 6.0 Seconds (Seamless Loop)
     setTimeout(() => setCopiedMotion(false), 2500);
   }
 
-  function handleStyleChange(style: "redesign_proposed" | "concept_teaser" | "transformation" | "authority" | "contrarian") {
+  function handleStyleChange(style: SocialCaptionAngle) {
     setCaptionStyle(style);
-    setCustomCaption(generatedCaptions[style]);
+    setCustomCaption(generatedCaptions?.[style] || "");
   }
 
   return (
@@ -337,10 +214,18 @@ Duration: 6.0 Seconds (Seamless Loop)
               High-converting 3D perspective mockup asset + AI-generated Facebook/Instagram captions engineered for Meta&apos;s Andromeda algorithm + Motion Design storyboard.
             </p>
           </div>
-          <span className="rounded-full bg-[#f0f3ff] px-2.5 py-1 text-[11px] font-bold text-[#533afd] flex items-center gap-1">
-            <Sparkles className="h-3 w-3" /> Ready to Post
-          </span>
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleGenerateSocial}
+            disabled={generatingSocial}
+            className="gap-1.5 bg-[#533afd] text-xs font-bold text-white hover:bg-[#432bd9]"
+          >
+            {generatingSocial ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            {generatingSocial ? "Gemini is directing..." : socialContent ? "Regenerate content kit" : "Generate content kit"}
+          </Button>
         </div>
+        {socialError && <p className="rounded-lg bg-red-50 p-3 text-[11px] font-medium text-red-700">{socialError}</p>}
 
         <div className="rounded-xl border border-[#c7d0fb] bg-[#fbfaff] p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -391,7 +276,6 @@ Duration: 6.0 Seconds (Seamless Loop)
           <SocialLaunchMockup
             data={mockupData}
             showControls={true}
-            onSelectPhoto={handleSelectPhoto}
             onThemeChange={handleThemeChange}
             onHeadlineModeChange={handleHeadlineModeChange}
           />
@@ -446,8 +330,8 @@ Duration: 6.0 Seconds (Seamless Loop)
                     <Zap className="h-3.5 w-3.5" />
                   </span>
                   <div>
-                    <h4 className="text-sm font-bold text-[#0d1738]">Meta Andromeda Caption Generator</h4>
-                    <p className="text-[11px] text-muted-foreground">Engineered for high dwell-time hooks & comment-trigger CTAs</p>
+                    <h4 className="text-sm font-bold text-[#0d1738]">Fact-grounded Meta content</h4>
+                    <p className="text-[11px] text-muted-foreground">Gemini 3.1 Pro writes each angle from the lead&apos;s real facts and current project stage</p>
                   </div>
                 </div>
 
@@ -455,6 +339,7 @@ Duration: 6.0 Seconds (Seamless Loop)
                   type="button"
                   size="sm"
                   onClick={handleCopy}
+                  disabled={!socialContent}
                   className={`gap-1.5 font-bold text-xs shadow-sm transition ${
                     copied ? "bg-[#0b8f5b] text-white hover:bg-[#0b8f5b]" : "bg-[#533afd] text-white hover:bg-[#432bd9]"
                   }`}
@@ -511,7 +396,7 @@ Duration: 6.0 Seconds (Seamless Loop)
                       : "bg-white text-[#42506a] border border-border hover:bg-[#f0f3ff]"
                   }`}
                 >
-                  <Share2 className="h-3.5 w-3.5" /> Official Launch
+                  <Share2 className="h-3.5 w-3.5" /> Design Authority
                 </button>
 
                 <button
@@ -523,7 +408,7 @@ Duration: 6.0 Seconds (Seamless Loop)
                       : "bg-white text-[#42506a] border border-border hover:bg-[#f0f3ff]"
                   }`}
                 >
-                  <BookOpen className="h-3.5 w-3.5" /> Contrarian / Ad Fix
+                  <BookOpen className="h-3.5 w-3.5" /> Contrarian Design View
                 </button>
               </div>
 
@@ -563,78 +448,52 @@ Duration: 6.0 Seconds (Seamless Loop)
                     <Film className="h-3.5 w-3.5" />
                   </span>
                   <div>
-                    <h4 className="text-sm font-bold text-[#0d1738]">After Effects & Reel Motion Guidelines</h4>
-                    <p className="text-[11px] text-muted-foreground">Step-by-step keyframes, camera motions & sound cues for 60 FPS viral reels</p>
+                    <h4 className="text-sm font-bold text-[#0d1738]">Motion film and voiceover direction</h4>
+                    <p className="text-[11px] text-muted-foreground">A lead-specific storyboard unifying the exact captures, moodboard, native audio and final CTA</p>
                   </div>
                 </div>
 
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleCopyMotion}
-                  className={`gap-1.5 font-bold text-xs shadow-sm transition ${
-                    copiedMotion ? "bg-[#0b8f5b] text-white hover:bg-[#0b8f5b]" : "bg-[#0d1738] text-white hover:bg-[#1b2a5c]"
-                  }`}
-                >
-                  {copiedMotion ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                  {copiedMotion ? "Motion Brief Copied! ✓" : "Copy AE Prompt / Brief"}
-                </Button>
-              </div>
-
-              {/* Storyboard Breakdown Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                <div className="rounded-xl border border-border bg-white p-4 space-y-2">
-                  <div className="flex items-center justify-between text-[#533afd] font-bold">
-                    <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> 0.0s – 1.5s</span>
-                    <span className="rounded bg-[#f0f3ff] px-1.5 py-0.5 text-[10px]">Hook Entry</span>
-                  </div>
-                  <h5 className="font-bold text-[#0d1738]">3D Camera Push & Title Punch</h5>
-                  <p className="text-muted-foreground text-[11px] leading-relaxed">
-                    Camera glides forward (112% → 100%). Title &apos;NEW WEBSITE LAUNCHED&apos; drops with kinetic impact blur. Floating sheet enters on Y-axis with <code>easeOutQuart</code>.
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-border bg-white p-4 space-y-2">
-                  <div className="flex items-center justify-between text-[#533afd] font-bold">
-                    <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> 1.5s – 3.8s</span>
-                    <span className="rounded bg-[#f0f3ff] px-1.5 py-0.5 text-[10px]">Feature Spotlight</span>
-                  </div>
-                  <h5 className="font-bold text-[#0d1738]">Glass Shimmer & Metric Pops</h5>
-                  <p className="text-muted-foreground text-[11px] leading-relaxed">
-                    Diagonal light sweep wipes across MacBook screen. 5.0★ Google Reviews & Guarantee badges bounce in with micro-overshoot. Floating sheet floats on continuous sine wave.
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-border bg-white p-4 space-y-2">
-                  <div className="flex items-center justify-between text-[#533afd] font-bold">
-                    <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> 3.8s – 6.0s</span>
-                    <span className="rounded bg-[#f0f3ff] px-1.5 py-0.5 text-[10px]">CTA Loop</span>
-                  </div>
-                  <h5 className="font-bold text-[#0d1738]">Comment Trigger & Loop Return</h5>
-                  <p className="text-muted-foreground text-[11px] leading-relaxed">
-                    Bottom prompt pulses: &apos;Comment SITE for your free concept&apos;. Layer angles reset smoothly to frame 0 for an infinite, seamless loop.
-                  </p>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleCopyMotion}
+                    disabled={!socialContent}
+                    className="gap-1.5 text-xs font-bold"
+                  >
+                    {copiedMotion ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                    {copiedMotion ? "Copied" : "Copy editor brief"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleGenerateMotion}
+                    disabled={!socialContent || startingMotion || ["starting", "generating"].includes(socialMotion?.status || "")}
+                    className="gap-1.5 bg-[#0d1738] text-xs font-bold text-white hover:bg-[#1b2a5c]"
+                  >
+                    {(startingMotion || ["starting", "generating"].includes(socialMotion?.status || "")) ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Film className="h-3.5 w-3.5" />}
+                    {["starting", "generating"].includes(socialMotion?.status || "") ? "Veo generating..." : socialMotion?.videoUrl ? "Regenerate video" : "Generate video + voiceover"}
+                  </Button>
                 </div>
               </div>
 
-              {/* Sound Design Blueprint */}
-              <div className="rounded-xl border border-[#e5e7f2] bg-white p-4 space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#533afd] flex items-center gap-1.5">
-                  <Volume2 className="h-3.5 w-3.5" /> Sound Design / SFX Cue List
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
-                  <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
-                    <strong className="text-[#0d1738] block">0.0s: Low Riser + Whoosh</strong>
-                    <span className="text-muted-foreground">Deep cinematic bass drop on camera push</span>
-                  </div>
-                  <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
-                    <strong className="text-[#0d1738] block">1.5s: Mechanical UI Tick</strong>
-                    <span className="text-muted-foreground">Crisp shimmer as screen light sweeps</span>
-                  </div>
-                  <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
-                    <strong className="text-[#0d1738] block">4.8s: Double Order Chime</strong>
-                    <span className="text-muted-foreground">Shopify-style high harmonic cash chime</span>
-                  </div>
+              {socialMotion?.error && <p className="rounded-lg bg-red-50 p-3 text-[11px] font-medium text-red-700">{socialMotion.error}</p>}
+              {socialMotion?.videoUrl && (
+                <div className="rounded-xl border border-border bg-[#0d1738] p-3">
+                  <video src={socialMotion.videoUrl} controls playsInline className="mx-auto max-h-[520px] rounded-lg" />
+                  <a href={socialMotion.videoUrl} download className="mt-2 block text-center text-xs font-bold text-white hover:underline">Download vertical MP4 with native voiceover</a>
+                </div>
+              )}
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="rounded-xl border border-border bg-white p-4">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#533afd]">Creative direction</span>
+                  <p className="mt-2 text-xs leading-relaxed text-[#42506a]">{socialContent?.motion.creativeDirection || "Generate the content kit to create this direction."}</p>
+                </div>
+                <div className="rounded-xl border border-border bg-white p-4">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#533afd]">Voiceover script</span>
+                  <p className="mt-2 text-xs leading-relaxed text-[#0d1738]">{socialContent?.motion.voiceover || "The factual voiceover will appear here."}</p>
                 </div>
               </div>
 
@@ -662,7 +521,7 @@ Duration: 6.0 Seconds (Seamless Loop)
                 </span>
                 <div>
                   <h4 className="text-sm font-bold text-[#0d1738]">Visual Moodboard & Creative Aesthetic</h4>
-                  <p className="text-[11px] text-muted-foreground">High-end Apple-grade product photography aesthetic tailored to {businessName}</p>
+                  <p className="text-[11px] text-muted-foreground">Gemini-directed visual system tailored to {businessName} and the motion film</p>
                 </div>
               </div>
 
@@ -670,60 +529,35 @@ Duration: 6.0 Seconds (Seamless Loop)
               <div className="space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Color Palette Hierarchy</span>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                  <div className="rounded-xl border border-border bg-white p-3 space-y-2">
-                    <div className="h-12 rounded-lg shadow-inner" style={{ backgroundColor: brandColorHex }} />
-                    <div>
-                      <strong className="block text-[#0d1738]">Primary Brand</strong>
-                      <span className="font-mono text-[10px] text-muted-foreground">{brandColorHex}</span>
+                  {(socialContent?.moodboard.palette || [brandColorHex]).map((color, index) => (
+                    <div key={`${color}-${index}`} className="rounded-xl border border-border bg-white p-3 space-y-2">
+                      <div className="h-12 rounded-lg shadow-inner" style={{ backgroundColor: color }} />
+                      <span className="font-mono text-[10px] text-muted-foreground">{color}</span>
                     </div>
-                  </div>
-
-                  <div className="rounded-xl border border-border bg-white p-3 space-y-2">
-                    <div className="h-12 rounded-lg shadow-inner bg-[#10B981]" />
-                    <div>
-                      <strong className="block text-[#0d1738]">Verified Emerald</strong>
-                      <span className="font-mono text-[10px] text-muted-foreground">#10B981</span>
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-border bg-white p-3 space-y-2">
-                    <div className="h-12 rounded-lg shadow-inner bg-[#1A1A1A]" />
-                    <div>
-                      <strong className="block text-[#0d1738]">Titanium Slate</strong>
-                      <span className="font-mono text-[10px] text-muted-foreground">#1A1A1A</span>
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-border bg-white p-3 space-y-2">
-                    <div className="h-12 rounded-lg shadow-inner bg-[#F59E0B]" />
-                    <div>
-                      <strong className="block text-[#0d1738]">Rating Gold</strong>
-                      <span className="font-mono text-[10px] text-muted-foreground">#F59E0B</span>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
 
               {/* Aesthetic Pillars */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1">
                 <div className="rounded-xl border border-border bg-white p-4 space-y-1">
-                  <strong className="text-[#0d1738] block font-bold">1. Studio Lighting</strong>
+                  <strong className="text-[#0d1738] block font-bold">Art direction</strong>
                   <p className="text-muted-foreground text-[11px] leading-relaxed">
-                    Soft top-left directional key light (45° angle) with deep diffused contact shadows underneath the aluminum chassis.
+                    {socialContent?.moodboard.artDirection || "Generate the content kit to establish a lead-specific art direction."}
                   </p>
                 </div>
 
                 <div className="rounded-xl border border-border bg-white p-4 space-y-1">
-                  <strong className="text-[#0d1738] block font-bold">2. 3D Depth Layering</strong>
+                  <strong className="text-[#0d1738] block font-bold">Lighting and texture</strong>
                   <p className="text-muted-foreground text-[11px] leading-relaxed">
-                    Background watermark + Angled MacBook (-18° Y) + Hovering floating card (+40px Z-depth) creates high perceived value.
+                    {socialContent ? `${socialContent.moodboard.lighting} ${socialContent.moodboard.texture}` : "Lighting and texture direction will appear here."}
                   </p>
                 </div>
 
                 <div className="rounded-xl border border-border bg-white p-4 space-y-1">
-                  <strong className="text-[#0d1738] block font-bold">3. Typography Power</strong>
+                  <strong className="text-[#0d1738] block font-bold">Typography</strong>
                   <p className="text-muted-foreground text-[11px] leading-relaxed">
-                    Ultra-bold condensed uppercase sans-serif headers paired with clean tabular numbers to instantly convey authority.
+                    {socialContent?.moodboard.typography || "Typography direction will appear here."}
                   </p>
                 </div>
               </div>

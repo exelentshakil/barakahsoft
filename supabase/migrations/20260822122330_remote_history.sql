@@ -1,0 +1,2 @@
+-- Production migration history placeholder. The schema change is represented
+-- by the numbered migrations retained in this repository.

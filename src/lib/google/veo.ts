@@ -9,7 +9,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // generates it) -- the "no audio" requirement is instead satisfied by
 // rendering the resulting <video> muted, which is also what real browsers
 // require for autoplay anyway.
-const VEO_MODEL = "veo-3.1-lite-generate-preview";
+const VEO_MODEL = process.env.VEO_MODEL?.trim() || "veo-3.1-lite-generate-preview";
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
 function apiKeyOrNull(): string | null {
@@ -27,9 +27,9 @@ export type VeoFailureReason = "no_api_key" | "no_billing" | "quota" | "timeout"
 export function classifyVeoError(status: number | null, body: string): VeoFailureReason {
   if (status === 401 || status === 403) return "no_billing";
   if (status === 429) return "quota";
-  if (status === null) return "network";
   if (/quota|resource_exhausted/i.test(body)) return "quota";
   if (/permission|billing|not enabled/i.test(body)) return "no_billing";
+  if (status === null) return "network";
   return "unknown";
 }
 
@@ -47,6 +47,13 @@ export function buildHeroVideoPrompt(industryLabel: string, town: string | null,
 
 // Kicks off the long-running job, returns the operation name to poll.
 export async function startHeroVideoGeneration(prompt: string): Promise<{ operationName: string | null; reason: VeoFailureReason | null }> {
+  return startVideoGeneration(prompt, "16:9");
+}
+
+export async function startVideoGeneration(
+  prompt: string,
+  aspectRatio: "16:9" | "9:16" = "9:16"
+): Promise<{ operationName: string | null; reason: VeoFailureReason | null }> {
   const apiKey = apiKeyOrNull();
   if (!apiKey) return { operationName: null, reason: "no_api_key" };
 
@@ -56,7 +63,7 @@ export async function startHeroVideoGeneration(prompt: string): Promise<{ operat
       headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
       body: JSON.stringify({
         instances: [{ prompt }],
-        parameters: { aspectRatio: "16:9", resolution: "720p", durationSeconds: 8 },
+        parameters: { aspectRatio, resolution: "720p", durationSeconds: 8 },
       }),
     });
     if (!res.ok) {
@@ -106,6 +113,15 @@ export async function checkHeroVideoOperation(operationName: string): Promise<{ 
 // Storage folder + a media_assets row, same convention photo-waterfall.ts
 // uses for images. Returns the public URL, or a reason on any failure.
 export async function storeHeroVideo(leadId: string, videoUri: string): Promise<{ publicUrl: string | null; reason: VeoFailureReason | null }> {
+  return storeGeneratedVideo(leadId, videoUri, "hero-video", "generated-video");
+}
+
+export async function storeGeneratedVideo(
+  leadId: string,
+  videoUri: string,
+  slotHint: string,
+  folder: string
+): Promise<{ publicUrl: string | null; reason: VeoFailureReason | null }> {
   const apiKey = apiKeyOrNull();
   if (!apiKey) return { publicUrl: null, reason: "no_api_key" };
 
@@ -118,21 +134,22 @@ export async function storeHeroVideo(leadId: string, videoUri: string): Promise<
     const contentType = res.headers.get("content-type") || "video/mp4";
     const buffer = Buffer.from(await res.arrayBuffer());
 
-    const path = `${leadId}/generated-video/hero-${Date.now()}.mp4`;
+    const path = `${leadId}/${folder}/${slotHint}-${Date.now()}.mp4`;
     const admin = createAdminClient();
     const { error: uploadError } = await admin.storage.from("lead-media").upload(path, buffer, { contentType, upsert: false });
     if (uploadError) throw uploadError;
 
     const { data } = admin.storage.from("lead-media").getPublicUrl(path);
 
-    await admin.from("media_assets").insert({
+    const { error: mediaError } = await admin.from("media_assets").insert({
       lead_id: leadId,
       storage_path: path,
       public_url: data.publicUrl,
-      source: "generated-video",
-      slot_hint: "hero-video",
+      source: "generated",
+      slot_hint: slotHint,
       storage_mode: "copied",
     });
+    if (mediaError) throw mediaError;
 
     return { publicUrl: data.publicUrl, reason: null };
   } catch (err) {

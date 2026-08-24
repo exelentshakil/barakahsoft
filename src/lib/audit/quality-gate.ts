@@ -374,7 +374,7 @@ export function verifyHomepage(
   }
 
   const h1s = html.match(/<h1\b/gi)?.length ?? 0;
-  if (h1s > 1) add("warning", "hierarchy", `${h1s} <h1> elements; exactly one should carry the promise.`);
+  if (h1s !== 1) add("blocker", "hierarchy", `${h1s} <h1> elements; exactly one must carry the promise.`);
   if ((html.match(/<h2\b/gi)?.length ?? 0) < 3) {
     add("warning", "hierarchy", "Fewer than three <h2> sections — the page is likely thin.");
   }
@@ -476,6 +476,10 @@ export function verifyHomepage(
       "composition",
       `${sections.length} sections share only ${sectionClasses.size} distinct block class(es) — they are likely to look alike.`
     );
+  }
+
+  if (!/\bid=["']about["']/i.test(html)) {
+    add("blocker", "composition", "The page has no id=\"about\" story section, so the navigation and trust narrative are incomplete.");
   }
 
   // An image used twice reads as a stock page.

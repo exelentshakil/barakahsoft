@@ -7,6 +7,8 @@ import {
   SPACE_STANDARD,
   PSYCHOLOGY_STANDARD,
   CONVERSION_STANDARD,
+  PREMIUM_COMPOSITION_STANDARD,
+  aboutDirectionFor,
   HYGIENE_STANDARD,
   INTERACTION_CONTRACT,
   truthStandard,
@@ -134,6 +136,12 @@ ${PSYCHOLOGY_STANDARD}
 
 ${CONVERSION_STANDARD}
 
+${PREMIUM_COMPOSITION_STANDARD}
+
+ABOUT DIRECTION FOR THIS LEAD
+${aboutDirectionFor(`${brief.businessName}|${brief.industry}|${brief.city}`)}
+Execute this direction using only the real media and facts supplied. It is selected per lead specifically to prevent every generated About section from becoming the same template.
+
 Name classes descriptively and consistently, block-then-element:
   hero, hero__inner, hero__title, hero__actions
   services, services__grid, service-card, service-card__title
@@ -152,7 +160,7 @@ ${
     : ""
 }
 Reply in EXACTLY this format:
-DESIGN NOTES: three or four sentences describing the visual system you intend — the hero treatment, how sections alternate, where the accent colour lands, what carries the eye down the page. The stylesheet pass reads this.
+DESIGN NOTES: six to ten sentences defining the complete composition plan: section order and archetype, quiet/focal/reset colour cadence, recurring graphic primitive, hero focal hierarchy, About execution, image framing, density changes, mobile transformation, and how the closing CTA resolves the opening. The stylesheet pass and release critic read this.
 ---PAGE---
 <the HTML body fragment, no markdown fences>`;
 

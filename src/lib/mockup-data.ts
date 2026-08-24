@@ -24,7 +24,6 @@ export function extractMockupData({
   const savedMockup = (extracted?.mockup as {
     themeId?: string;
     headlineMode?: MockupHeadlineMode;
-    featuredPhotoUrl?: string;
     heroCaptureUrl?: string;
     aboutCaptureUrl?: string;
   } | undefined) ?? {};
@@ -33,28 +32,27 @@ export function extractMockupData({
   const bespokeCss = artifact?.bespoke_css || payload?.bespokeCss || null;
 
   const businessName = lead.business_name || (facts?.business_name as string) || payload?.businessName || lead.slug;
-  const city = (facts?.town as string) || (facts?.city as string) || "New York";
-  const trade = lead.industry || (facts?.industry as string) || payload?.services?.[0]?.h2 || "Contractor";
+  const city = (facts?.town as string) || (facts?.city as string) || "";
+  const trade = lead.industry || (facts?.industry as string) || payload?.services?.[0]?.h2 || "Home services";
   const brandColorHex =
     (facts?.brand_color_hex as string) ||
     (extracted?.brand_color_hex as string) ||
     payload?.brandColorHsl ||
     "#1b4d3e";
 
-  const rating = (facts?.rating as number) || (payload?.proof?.rating as number) || 5.0;
-  const reviewCount = (facts?.review_count as number) || (payload?.proof?.reviewCount as number) || 27;
-  const yearsExperience = (facts?.years_in_business as number) || 10;
-  const founderName = (facts?.founder_name as string) || lead.contact_name || "Dan Martin";
-  const founderTitle = "Founder / Operator";
+  const rating = (facts?.rating as number) || (payload?.proof?.rating as number) || null;
+  const reviewCount = (facts?.review_count as number) || (payload?.proof?.reviewCount as number) || null;
+  const yearsExperience = (facts?.years_in_business as number) || null;
+  const founderName = (facts?.founder_name as string) || lead.contact_name || null;
+  const founderTitle = founderName ? "Founder / Operator" : null;
 
   const phone =
     ((facts.nap as { phones?: string[] })?.phones ?? []).find((p) => /\d{7,}/.test(p.replace(/\D/g, ""))) ||
     payload?.nap?.phone ||
     lead.phone ||
-    "(888) 687-9175";
+    null;
 
   // 1. Extract Copy & Imagery Directly from the Homepage's About Section
-  let extractedAboutImg: string | null = null;
   let extractedAboutEyebrow: string | null = null;
   let extractedAboutHeadline: string | null = null;
   let extractedAboutBody: string | null = null;
@@ -75,16 +73,6 @@ export function extractMockupData({
 
     if (aboutSectionMatch) {
       const aboutContent = aboutSectionMatch[1];
-
-      // Extract About image from the homepage section
-      const imgMatches = Array.from(aboutContent.matchAll(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi));
-      for (const match of imgMatches) {
-        const src = match[1];
-        if (src && !src.startsWith("data:image/svg") && !src.includes("icon") && !src.includes("logo")) {
-          extractedAboutImg = src;
-          break;
-        }
-      }
 
       // Extract About eyebrow
       const eyebrowMatch =
@@ -120,11 +108,6 @@ export function extractMockupData({
   if ((!extractedAboutHeadline || !extractedAboutBody) && Array.isArray(artifact?.bespoke_sections)) {
     const aboutSec = artifact.bespoke_sections.find((s) => s.id === "about" || s.kind === "about");
     if (aboutSec?.html) {
-      if (!extractedAboutImg) {
-        const imgMatch = aboutSec.html.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
-        if (imgMatch && imgMatch[1]) extractedAboutImg = imgMatch[1];
-      }
-
       if (!extractedAboutHeadline) {
         const hMatch = aboutSec.html.match(/<h[234][^>]*>([\s\S]*?)<\/h[234]>/i);
         if (hMatch) extractedAboutHeadline = hMatch[1].replace(/<[^>]+>/g, "").trim();
@@ -155,7 +138,7 @@ export function extractMockupData({
   const aboutHeadline =
     extractedAboutHeadline ||
     copyPlanAbout?.heading ||
-    `Dan Martin’s roofing team works where New York roofs are hardest to ignore.`;
+    `Meet the team behind ${businessName}.`;
 
   const aboutEyebrow =
     extractedAboutEyebrow ||
@@ -166,39 +149,6 @@ export function extractMockupData({
     copyPlanAbout?.body ||
     payload?.differentiator ||
     `${businessName} is a licensed and insured ${trade.toLowerCase()} serving ${city}. The work covers premium craftsmanship, inspections, repairs and full replacements with verified customer satisfaction.`;
-
-  // 2. Auto-Select the About / Team Photo
-  const primaryAboutTeamPhoto =
-    savedMockup.featuredPhotoUrl ||
-    extractedAboutImg ||
-    (extracted?.about_image_url as string) ||
-    (facts?.founder_photo_url as string) ||
-    (facts?.team_photo_url as string) ||
-    null;
-
-  const photos = (facts?.site_photos as { url?: string }[] | undefined) ?? [];
-  const gbpPhotos = (facts?.gbp_photo_urls as string[] | undefined) ?? [];
-
-  // Construct available photos list putting the About / Team photo FIRST
-  const availablePhotos: string[] = Array.from(
-    new Set(
-      [
-        primaryAboutTeamPhoto,
-        extractedAboutImg,
-        (facts?.founder_photo_url as string),
-        extracted?.about_image_url as string,
-        (facts?.team_photo_url as string),
-        extracted?.hero_image_url as string,
-        payload?.heroImageUrl,
-        payload?.proof?.imageUrl,
-        ...gbpPhotos,
-        ...photos.map((p) => p.url).filter(Boolean),
-        ...(payload?.services?.map((s) => s.imageUrl).filter(Boolean) as string[] ?? []),
-      ].filter(Boolean) as string[]
-    )
-  );
-
-  const currentFeaturedPhoto = primaryAboutTeamPhoto || availablePhotos[0] || null;
 
   const previewUrl = `/s/${lead.slug}?view=preview`;
 
@@ -223,9 +173,6 @@ export function extractMockupData({
     aboutBody,
     heroHeadline,
     phone,
-    photoUrl: currentFeaturedPhoto,
-    secondaryPhotoUrl: availablePhotos[1] || currentFeaturedPhoto,
-    availablePhotos,
     siteUrl: lead.source_url,
     previewUrl,
     headlineMode,

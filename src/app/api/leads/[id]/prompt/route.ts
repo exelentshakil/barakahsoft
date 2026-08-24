@@ -13,6 +13,9 @@ import {
   TYPE_STANDARD,
   SPACE_STANDARD,
   PSYCHOLOGY_STANDARD,
+  CONVERSION_STANDARD,
+  PREMIUM_COMPOSITION_STANDARD,
+  aboutDirectionFor,
   HYGIENE_STANDARD,
   INTERACTION_CONTRACT,
   truthStandard,
@@ -148,6 +151,13 @@ Name classes descriptively and consistently, block-then-element:
   services, services__grid, service-card, service-card__title
 
 ${PSYCHOLOGY_STANDARD}
+
+${CONVERSION_STANDARD}
+
+${PREMIUM_COMPOSITION_STANDARD}
+
+ABOUT DIRECTION FOR THIS LEAD
+${aboutDirectionFor(`${brief.businessName}|${brief.industry}|${brief.city}`)}
 
 ═══ HOW TO WRITE THE STYLESHEET ═══
 ${COLOUR_STANDARD}

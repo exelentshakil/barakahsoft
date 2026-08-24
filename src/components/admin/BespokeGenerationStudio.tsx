@@ -110,6 +110,7 @@ export function BespokeGenerationStudio({
   const [genError, setGenError] = useState<string | null>(null);
   const [genWarnings, setGenWarnings] = useState<string[]>([]);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [visualQa, setVisualQa] = useState<{ attempt: number; visual_status: string } | null>(null);
 
   // Only true while a scrape is genuinely running. This previously also
   // matched any lead that simply had no scrape yet, so a brand-new lead
@@ -124,6 +125,7 @@ export function BespokeGenerationStudio({
   // spend is on a lead that may never reply.
   async function handleBuildRest() {
     setGenerating(true);
+    setVisualQa(null);
     setGenError(null);
     setGenWarnings([]);
     try {
@@ -144,6 +146,7 @@ export function BespokeGenerationStudio({
   async function handleGenerate(e: React.FormEvent) {
     e.preventDefault();
     setGenerating(true);
+    setVisualQa(null);
     setGenError(null);
     setGenWarnings([]);
     try {
@@ -250,6 +253,7 @@ export function BespokeGenerationStudio({
         const res = await fetch(`/api/leads/${lead.id}/generate`);
         const data = await res.json().catch(() => ({}));
         const job = data.job;
+        setVisualQa(data.visualQa ?? null);
         if (!job) return;
 
         setProgress({ done: job.pages_done ?? 0, total: job.pages_total ?? 1 });
@@ -292,6 +296,7 @@ export function BespokeGenerationStudio({
       try {
         const res = await fetch(`/api/leads/${lead.id}/generate`);
         const data = await res.json().catch(() => ({}));
+        setVisualQa(data.visualQa ?? null);
         if (cancelled || data.job?.status !== "running") return;
         // Do not reattach to a corpse — that is what left the button
         // disabled with no way back.
@@ -473,8 +478,8 @@ export function BespokeGenerationStudio({
             </p>
             <div className="mt-2.5 grid gap-2 sm:grid-cols-2">
               {([
-                { id: "openai", name: "OpenAI · GPT-5.5 Pro", note: "Newest-first design chain: GPT-5.5 Pro → GPT-5.5 → GPT-5.4 Pro → GPT-5.4." },
-                { id: "gemini", name: "Gemini · Pro Latest", note: "Newest-first design chain: Pro Latest → 3.1 Pro Preview → 3.7 Flash → 3.6 Flash." },
+                { id: "openai", name: "OpenAI · GPT-5.6", note: "Flagship design chain: GPT-5.6 → GPT-5.5 Pro → GPT-5.5 → GPT-5.4 Pro." },
+                { id: "gemini", name: "Gemini · 3.1 Pro", note: "Design-first chain: 3.1 Pro Preview → Pro Latest → 3.7 Flash → 3.6 Flash." },
               ] as const).map((option) => (
                 <button
                   key={option.id}
@@ -513,9 +518,15 @@ export function BespokeGenerationStudio({
             <div className="space-y-1.5 rounded-md border border-[#533afd]/20 bg-[#f9f9ff] p-3">
               <div className="flex items-center justify-between text-[11px] font-semibold text-[#0d1738]">
                 <span>
-                  {progress.done === 0
-                    ? "Designing the homepage — this is the slow, high-effort pass"
-                    : `Building pages — ${progress.done} of ${progress.total} complete`}
+                  {visualQa?.visual_status === "queued"
+                    ? `Waiting for local visual QA — candidate ${visualQa.attempt}`
+                    : visualQa?.visual_status === "running"
+                      ? `Rendering desktop, tablet and mobile — candidate ${visualQa.attempt}`
+                      : visualQa?.visual_status === "failed"
+                        ? `Revising after rendered visual QA — candidate ${visualQa.attempt}`
+                        : progress.done === 0
+                          ? "Designing the homepage — this is the slow, high-effort pass"
+                          : `Building pages — ${progress.done} of ${progress.total} complete`}
                 </span>
                 <span className="text-muted-foreground">
                   {Math.round((progress.done / Math.max(progress.total, 1)) * 100)}%
@@ -528,7 +539,7 @@ export function BespokeGenerationStudio({
                 />
               </div>
               <p className="text-[10px] text-muted-foreground">
-                The homepage is saved first, so you can review and send it while the inner pages finish.
+                A candidate is saved only after its source checks and rendered visual review pass.
               </p>
             </div>
           )}

@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminSession } from "@/lib/is-admin-session";
 import { inngest } from "@/inngest/client";
 import { buildSiteBrief, briefReadiness, type BriefOverrides } from "@/lib/build-site-brief";
+import { visualQaEnabled } from "@/lib/visual-qa";
 import type { Lead, ScrapeResults } from "@/types/database";
 
 // The Studio's generate button.
@@ -125,12 +126,23 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (!(await isAdminSession())) return NextResponse.json({ error: "Not authorised" }, { status: 401 });
 
   const admin = createAdminClient();
-  const { data: job } = await admin
-    .from("build_jobs")
-    .select("status, pages_done, pages_total, error_message, updated_at")
-    .eq("lead_id", leadId)
-    .eq("stage", "bespoke")
-    .maybeSingle();
+  const [{ data: job }, visualQa] = await Promise.all([
+    admin
+      .from("build_jobs")
+      .select("status, pages_done, pages_total, error_message, updated_at")
+      .eq("lead_id", leadId)
+      .eq("stage", "bespoke")
+      .maybeSingle(),
+    visualQaEnabled()
+      ? admin
+          .from("generation_candidates")
+          .select("id, attempt, visual_status, visual_report, created_at")
+          .eq("lead_id", leadId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
 
-  return NextResponse.json({ job: job ?? null });
+  return NextResponse.json({ job: job ?? null, visualQa: visualQa.data ?? null });
 }

@@ -19,10 +19,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const admin = createAdminClient();
 
   try {
-    const [{ data: artifact }, { data: scrapeResults }] = await Promise.all([
-      admin.from("artifacts").select("extracted_assets").eq("lead_id", leadId).maybeSingle(),
-      admin.from("scrape_results").select("facts").eq("lead_id", leadId).maybeSingle(),
-    ]);
+    const { data: artifact } = await admin
+      .from("artifacts")
+      .select("extracted_assets")
+      .eq("lead_id", leadId)
+      .maybeSingle();
 
     const existingAssets = (artifact?.extracted_assets ?? {}) as Record<string, unknown>;
     const existingMockup = (existingAssets.mockup ?? {}) as Record<string, unknown>;
@@ -56,7 +57,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       ...existingMockup,
       ...(body && typeof body.themeId === "string" ? { themeId: body.themeId } : {}),
       ...(body && typeof body.headlineMode === "string" ? { headlineMode: body.headlineMode } : {}),
-      ...(body && typeof body.featuredPhotoUrl === "string" ? { featuredPhotoUrl: body.featuredPhotoUrl } : {}),
       ...(uploadedCapture ? { [uploadedCapture.key]: uploadedCapture.url } : {}),
       updated_at: new Date().toISOString(),
       updated_by: user.email,
@@ -76,21 +76,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       .eq("lead_id", leadId);
 
     if (artifactError) throw artifactError;
-
-    if (body?.featuredPhotoUrl && scrapeResults) {
-      const existingFacts = (scrapeResults.facts ?? {}) as Record<string, unknown>;
-      const { error: factsError } = await admin
-        .from("scrape_results")
-        .update({
-          facts: {
-            ...existingFacts,
-            founder_photo_url: body.featuredPhotoUrl,
-          },
-        })
-        .eq("lead_id", leadId);
-
-      if (factsError) throw factsError;
-    }
 
     return NextResponse.json({ ok: true, mockup: mockupConfig });
   } catch (err) {

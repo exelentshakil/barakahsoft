@@ -19,7 +19,7 @@ export interface GeminiCallOptions {
 // A chain rather than one id, for the same reason openai-client keeps one:
 // the day a model is retired, generation degrades to the next instead of
 // taking the feature down.
-const BEST_CHAIN = ["gemini-pro-latest", "gemini-3.1-pro-preview", "gemini-3.7-flash", "gemini-3.6-flash"];
+const BEST_CHAIN = ["gemini-3.1-pro-preview", "gemini-pro-latest", "gemini-3.7-flash", "gemini-3.6-flash"];
 
 export function bestGeminiChain(): string[] {
   const pinned = process.env.GEMINI_MODEL_BEST?.trim();

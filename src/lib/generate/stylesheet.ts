@@ -40,7 +40,7 @@ Write the complete stylesheet for the page below.
 This page was designed by someone who described their intent as:
 "${designNotes || "A premium, conversion-focused homepage."}"
 
-Your job is to make it look like an expensive agency built it. Not decorated — designed. Confident spacing, a real type scale, deliberate contrast between sections, and restraint.
+Your job is to make it look like an expensive agency built it. Not decorated — designed as one cohesive canvas. Execute the stated colour cadence, composition changes, recurring graphic primitive, confident spacing, real type scale and controlled contrast.
 
 ═══ THE TOKENS — already defined on the page root. Use var() and never a literal colour ═══
 ${tokenList}
@@ -63,7 +63,7 @@ LAYOUT
 - Content sits in a centred container, max-width around 1200px, with a horizontal gutter that
   scales: 1.25rem on mobile, 2.5rem from desktop. Content must never touch the viewport edge.
 - Mobile first. Every grid collapses to one column and every layout works from 360px up.
-- The About section must feel intentionally balanced: use a 5/7 or 6/6 desktop split with both columns carrying comparable visual weight. Do not shrink the image into an avatar, let copy stretch across an empty half, overlap text and media, or let a metric ribbon dominate the story. Stack cleanly on mobile with media first and natural content height.
+- The About section must execute the specific archetype in the design notes with comparable visual mass between story, media and proof. Do not reduce authentic imagery to an avatar, stretch copy across dead space, or let metrics dominate the story. Preserve its hierarchy on mobile with natural content height.
 
 ${SPACE_STANDARD}
 
@@ -103,7 +103,7 @@ The application sets a data-state attribute on the form as it submits, so:
 WHAT MAKES IT LOOK EXPENSIVE
 - Consistency. The same radius, the same shadow, the same spacing step throughout.
 - Restraint. Two type sizes per section, not five. One accent, not four.
-- Alternating section grounds so the page has rhythm rather than being one flat wall.
+- Planned quiet/focal/reset section grounds so the page has rhythm without mechanical zebra striping.
 - Detail where the eye lands: the hero, the primary button, the first card in a grid.
 ${
   previousFailures

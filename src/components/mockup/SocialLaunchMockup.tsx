@@ -37,9 +37,6 @@ export interface MockupData {
   heroHeadline?: string | null;
   heroSubheadline?: string | null;
   phone?: string | null;
-  photoUrl?: string | null;
-  secondaryPhotoUrl?: string | null;
-  availablePhotos?: string[];
   siteUrl?: string | null;
   previewUrl?: string | null;
   headlineMode?: MockupHeadlineMode;
@@ -163,20 +160,17 @@ export function SocialLaunchMockup({
   data,
   showControls = true,
   className = "",
-  onSelectPhoto,
   onThemeChange,
   onHeadlineModeChange,
 }: {
   data: MockupData;
   showControls?: boolean;
   className?: string;
-  onSelectPhoto?: (url: string) => void;
   onThemeChange?: (themeId: string) => void;
   onHeadlineModeChange?: (mode: MockupHeadlineMode) => void;
 }) {
   const [themeId, setThemeId] = useState(data.themeId || "sky");
   const [headlineMode, setHeadlineMode] = useState<MockupHeadlineMode>(data.headlineMode || "launched");
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(data.photoUrl || data.secondaryPhotoUrl || null);
   const [downloading, setDownloading] = useState<string | null>(null);
 
   const mockupRef = useRef<HTMLDivElement>(null);
@@ -213,12 +207,6 @@ export function SocialLaunchMockup({
     }
   }, [data.headlineMode]);
 
-  useEffect(() => {
-    if (data.photoUrl && data.photoUrl !== selectedPhoto) {
-      setSelectedPhoto(data.photoUrl);
-    }
-  }, [data.photoUrl]);
-
   const theme = BG_THEMES.find((t) => t.id === themeId) || BG_THEMES[0];
   const primaryColor = data.brandColor || theme.ribbonBg;
 
@@ -234,14 +222,11 @@ export function SocialLaunchMockup({
   const aboutBody =
     data.aboutBody ||
     `${businessShortName} provides expert ${trade.toLowerCase()} and dependable performance across ${city}. Our team delivers personalized service and craftsmanship from start to finish.`;
-  const founder = data.founderName || "Dan Martin";
-  const founderRole = data.founderTitle || `CEO of ${businessShortName}`;
-  const ratingText = data.rating ? `${data.rating}★` : "5.0★";
-  const reviewsCountText = data.reviewCount ? `${data.reviewCount}+` : "200+";
-  const yearsExp = data.yearsExperience ? `${data.yearsExperience}+` : "10+";
+  const ratingText = data.rating ? `${data.rating}★` : null;
+  const reviewsCountText = data.reviewCount ? String(data.reviewCount) : null;
+  const yearsExp = data.yearsExperience ? `${data.yearsExperience}+` : null;
 
   const activeHeadline = HEADLINE_OPTIONS.find((h) => h.id === headlineMode) || HEADLINE_OPTIONS[0];
-  const featuredCardPhoto = selectedPhoto || data.photoUrl || data.secondaryPhotoUrl;
 
   async function prepareElementForExport(element: HTMLElement) {
     const images = Array.from(element.querySelectorAll("img"));
@@ -372,7 +357,6 @@ export function SocialLaunchMockup({
         <div
           className="absolute inset-0 opacity-45 bg-cover bg-center"
           style={{
-            backgroundImage: data.photoUrl ? `url(${data.photoUrl})` : undefined,
             backgroundColor: primaryColor,
           }}
         />
@@ -393,7 +377,7 @@ export function SocialLaunchMockup({
               GET A FREE QUOTE →
             </span>
             <span className="text-[5.5px] sm:text-[6.5px] text-amber-400 font-bold">
-              ★★★★★ {ratingText}
+              {ratingText ? `${ratingText} customer rating` : businessShortName}
             </span>
           </div>
         </div>
@@ -489,52 +473,18 @@ export function SocialLaunchMockup({
           />
         ) : (
           <>
-        {/* ROW 1: ABOUT US SECTION (White Background) */}
-        <div className="p-3 sm:p-4 bg-white space-y-2">
-          <div className="flex items-start gap-2.5">
-            {/* Left: Founder / Team Photo + Name Badge */}
-            <div className="w-[42%] shrink-0 space-y-0">
-              <div className="relative aspect-[4/3] w-full rounded-lg bg-slate-100 overflow-hidden border border-slate-200 shadow-sm">
-                {featuredCardPhoto ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={featuredCardPhoto}
-                    alt={founder}
-                    crossOrigin="anonymous"
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center bg-slate-800 text-white font-black text-sm">
-                    {founder.slice(0, 2).toUpperCase()}
-                  </div>
-                )}
-              </div>
-
-              {/* Founder / Owner Label Banner */}
-              <div
-                className="w-full text-white p-1 rounded-b-md text-center shadow-xs"
-                style={{ backgroundColor: primaryColor }}
-              >
-                <span className="block text-[5.5px] sm:text-[6.5px] font-black uppercase tracking-wider truncate">
-                  {founder}
-                </span>
-                <span className="block text-[4px] sm:text-[5px] text-white/85 truncate">
-                  {founderRole}
-                </span>
-              </div>
-            </div>
-
-            {/* Right: Story Headline & Body */}
-            <div className="min-w-0 flex-1 space-y-1">
+        {/* Factual fallback used only until an exact About capture is uploaded. */}
+        <div className="p-4 sm:p-5 bg-white space-y-3">
+            <div className="space-y-1.5">
               <div className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-1.5 py-0.5 border border-slate-200/80">
                 <span className="text-[5px] sm:text-[6px] font-extrabold uppercase tracking-wider text-slate-700">
                   {aboutEyebrow}
                 </span>
               </div>
-              <h4 className="text-[7.5px] sm:text-[9.5px] font-black leading-tight text-slate-900 line-clamp-2">
+               <h4 className="text-[10px] sm:text-[13px] font-black leading-tight text-slate-900 line-clamp-3">
                 {aboutHeading}
               </h4>
-              <p className="text-[5px] sm:text-[6px] text-slate-600 font-normal line-clamp-3 leading-snug">
+               <p className="text-[6px] sm:text-[7px] text-slate-600 font-normal line-clamp-4 leading-relaxed">
                 {aboutBody}
               </p>
               <div className="pt-0.5">
@@ -546,39 +496,32 @@ export function SocialLaunchMockup({
                 </span>
               </div>
             </div>
-          </div>
         </div>
 
         {/* ROW 2: FULL-WIDTH SOLID METRIC RIBBON BAND */}
-        <div
-          className="px-3 py-2 text-white grid grid-cols-4 gap-1 text-center border-y border-white/20 shadow-inner"
+        {(yearsExp || reviewsCountText || ratingText) && <div
+          className="px-3 py-2 text-white grid grid-cols-3 gap-1 text-center border-y border-white/20 shadow-inner"
           style={{ backgroundColor: primaryColor }}
         >
-          <div>
+          {yearsExp && <div>
             <span className="block text-[8.5px] sm:text-[11px] font-black tracking-tight">{yearsExp}</span>
             <span className="block text-[4px] sm:text-[5px] uppercase font-bold text-white/80 tracking-wider">
               Experience
             </span>
-          </div>
-          <div>
+          </div>}
+          {reviewsCountText && <div>
             <span className="block text-[8.5px] sm:text-[11px] font-black tracking-tight">{reviewsCountText}</span>
             <span className="block text-[4px] sm:text-[5px] uppercase font-bold text-white/80 tracking-wider">
               Reviews
             </span>
-          </div>
-          <div>
+          </div>}
+          {ratingText && <div>
             <span className="block text-[8.5px] sm:text-[11px] font-black tracking-tight">{ratingText}</span>
             <span className="block text-[4px] sm:text-[5px] uppercase font-bold text-white/80 tracking-wider">
               Avg Rating
             </span>
-          </div>
-          <div>
-            <span className="block text-[8.5px] sm:text-[11px] font-black tracking-tight">1-Yr</span>
-            <span className="block text-[4px] sm:text-[5px] uppercase font-bold text-white/80 tracking-wider">
-              Warranty
-            </span>
-          </div>
-        </div>
+          </div>}
+        </div>}
 
         {/* ROW 3: SECONDARY SERVICE / CRAFTSMANSHIP SNIPPET */}
         <div className="p-2.5 sm:p-3 bg-[#fafafc] flex items-center justify-between gap-2">
@@ -682,46 +625,7 @@ export function SocialLaunchMockup({
       {/* Control Panel for Operator */}
       {showControls && (
         <div className="w-full max-w-[560px] space-y-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          {/* 1. Featured Photo Selector */}
-          {data.availablePhotos && data.availablePhotos.length > 0 && (
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                  <ImageIcon className="h-3.5 w-3.5 text-indigo-600" /> Featured Card Photo
-                </span>
-                <span className="text-[10px] text-slate-500 font-semibold">
-                  Pick the best hero / team shot
-                </span>
-              </div>
-              <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                {data.availablePhotos.slice(0, 8).map((url, idx) => (
-                  <button
-                    key={url}
-                    type="button"
-                    onClick={() => {
-                      setSelectedPhoto(url);
-                      onSelectPhoto?.(url);
-                    }}
-                    className={`relative h-12 w-12 shrink-0 rounded-lg overflow-hidden border-2 transition ${
-                      featuredCardPhoto === url
-                        ? "border-indigo-600 scale-105 shadow-md ring-2 ring-indigo-500/20"
-                        : "border-slate-200 opacity-70 hover:opacity-100"
-                    }`}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={url} alt={`Option ${idx + 1}`} className="h-full w-full object-cover" />
-                    {featuredCardPhoto === url && (
-                      <span className="absolute top-0.5 right-0.5 h-3 w-3 bg-indigo-600 rounded-full flex items-center justify-center text-white text-[8px]">
-                        ✓
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 2. Headline Wording Switcher */}
+          {/* 1. Headline Wording Switcher */}
           <div className="space-y-1.5 pt-1 border-t border-slate-100">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
