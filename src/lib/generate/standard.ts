@@ -55,29 +55,28 @@ body. A third family is clutter, and the tokens already name both.
 - text-wrap: balance on headings, pretty on paragraphs.
 - Uppercase labels get letter-spacing; body text never does.`;
 
-export const SPACE_STANDARD = `SPACE IS THE PRODUCT. This is what separates an expensive page from an adequate one.
-  Grid                       12 columns on desktop, a fluid 4-column feel on mobile
-  Section vertical padding   96px to 128px on desktop, via clamp so it scales down cleanly
-  Container padding          24px to 32px
-  At least 40% of any screen stays empty. Whitespace is what steers the eye to the offer;
-  a crowded page hides its own call to action.
+export const SPACE_STANDARD = `SPACE IS THE PRODUCT. This is what separates an expensive agency build from a cluttered template.
+  Desktop Container          Centered at max-width 1200px (or 1240px) with margin-inline: auto and generous padding
+  Section vertical padding   96px to 140px on desktop (clamp(5rem, 8vw, 8rem)), scaling cleanly down to mobile
+  Whitespace Rule            At least 40% to 50% of any desktop screen stays empty breathing room.
+                             A crowded, cluttered page hides its own value and destroys trust.
 
-CARD GRIDS. Spacing between siblings in a grid or flex row comes from \`gap\` on the parent,
-always. A negative margin on a card to "pull" it against its neighbour is what makes two cards
-overlap or collide edge-to-edge — it has shipped broken before and is never the right tool here.
+DESKTOP CLUTTER PREVENTION & GRID ARCHITECTURE:
+- CARD GRIDS: Strictly 2 or 3 columns maximum on desktop (e.g. repeat(3, minmax(0, 1fr)) or repeat(2, minmax(0, 1fr))).
+  NEVER cram 4, 5 or 6 narrow cards in a single horizontal row on desktop.
+- CARD PADDING: Cards must feel spacious and premium with generous internal padding (min 2rem / 32px),
+  clean subtle borders, and 1.5rem to 2.5rem gap between cards.
+- MEASURE & LINE LENGTH: Never stretch copy across the whole width of a desktop monitor.
+  Headings get max-width: 24ch–28ch; section intros and body text get max-width: 58ch–66ch.
+- HERO ON DESKTOP: Clean 2-column asymmetric split (left: crisp value proposition, primary action,
+  and 2-3 short proof tags; right: clean framed image, cutout or compact lead card).
+  Never clutter the hero with 4 different boxes or stacked competing forms.
+- CARDS IN ONE GRID ARE THE SAME SHAPE AS EACH OTHER: Either every card in a grid carries an
+  image or none of them does — never some. Cards in a grid carry identical internal structure.
+- Spacing between siblings comes from \`gap\` on the parent grid/flex, never negative margins.
 
-CARDS IN ONE GRID ARE THE SAME SHAPE AS EACH OTHER. Either every card in a grid carries an
-image or none of them does — never some. A row where two cards have photographs and the third
-does not is the single most common way generated output looks unfinished: the cards end up
-different heights, the images sit at different points, and the eye reads the gap as a mistake
-rather than a design. If you have images for only some of the services, put the images in a
-separate feature block and give the service grid an icon or a rule instead. Cards in a grid
-also carry the same blocks in the same order — if one has an eyebrow, a title, a paragraph and
-a link, they all do, even where a line is shorter.
-
-TOUCH. Every interactive element is at least 44px tall on mobile. A button a thumb misses is
-a conversion lost, and small tap targets are the clearest tell that a page was designed on a
-desktop and never tried on a phone.`;
+TOUCH & MOBILE:
+- Every interactive element is at least 44px tall. Mobile is a clean 1-column redesign, not a squished desktop.`;
 
 export const PSYCHOLOGY_STANDARD = `F-SHAPED READING. Western readers sweep left along the top, then down the left margin. Put the promise, the proof and the primary action on those lines. A call to action floated right in the middle of a section is a call to action nobody sees.
 

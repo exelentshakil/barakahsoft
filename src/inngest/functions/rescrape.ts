@@ -55,8 +55,24 @@ export const rescrapeLead = inngest.createFunction(
         // Only overwrite what was actually re-read. A light refresh must
         // never blank the crawled page inventory it did not look at.
         const facts: Record<string, unknown> = { ...existing.facts };
-        if (branding.colors?.primary) facts.brand_color_hex = branding.colors.primary;
-        if (branding.images?.logo) facts.logo_url = branding.images.logo;
+        if (branding.colors?.primary) {
+          facts.brand_color_hex = branding.colors.primary;
+          facts.colors = {
+            ...(facts.colors as object),
+            primary: branding.colors.primary,
+            ...(branding.colors.secondary ? { secondary: branding.colors.secondary } : {}),
+            ...(branding.colors.accent ? { accent: branding.colors.accent } : {}),
+          };
+        }
+        if (branding.logo || branding.images?.logo) {
+          facts.logo_url = branding.logo || branding.images?.logo;
+        }
+        if (Object.keys(branding).length > 0) {
+          facts.branding = {
+            ...((facts.branding as object) ?? {}),
+            ...branding,
+          };
+        }
         if (places?.rating) facts.rating = places.rating;
         if (places?.review_count) facts.review_count = places.review_count;
         if (places?.reviews) facts.reviews = places.reviews;

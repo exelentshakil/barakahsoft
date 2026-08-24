@@ -82,7 +82,9 @@ export async function scrapeBusiness(
   const fcColors = fcBranding.colors || {};
   const primaryHex = fcColors.primary || logoColor.brandColorHex || "#533AFD";
   const accentHex = fcColors.accent || "#FFD12D";
-  const logoUrl = fcBranding.images?.logo || logoColor.logoUrl || null;
+  const secondaryHex = fcColors.secondary || "#0D1738";
+  const logoUrl = fcBranding.logo || fcBranding.images?.logo || logoColor.logoUrl || null;
+  const brandFontFamily = fcBranding.typography?.fontFamilies?.primary || fcBranding.fonts?.[0]?.family || font.googleFontFamily || null;
 
   const facts = {
     business_name: places?.name ?? siteName ?? businessNameHint ?? null,
@@ -115,10 +117,20 @@ export async function scrapeBusiness(
     colors: {
       primary: primaryHex,
       accent: accentHex,
-      secondary: fcColors.secondary || "#0D1738",
+      secondary: secondaryHex,
+      background: fcColors.background || "#FFFFFF",
+      textPrimary: fcColors.textPrimary || "#0F172A",
+      textSecondary: fcColors.textSecondary || "#475569",
     },
-    branding: fcBranding,
-    font,
+    branding: {
+      ...fcBranding,
+      logo: logoUrl,
+      brandFontFamily,
+    },
+    font: {
+      ...font,
+      googleFontFamily: brandFontFamily || font.googleFontFamily,
+    },
     site_photos: captionedSitePhotos.slice(0, 30),
     site_video: siteVideo,
     gbp_photo_urls: gbpPhotoUrls,

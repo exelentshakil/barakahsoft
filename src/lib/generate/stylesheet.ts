@@ -60,9 +60,12 @@ EVERY class in that markup needs a rule. An unstyled element is a visible defect
 
 LAYOUT
 - Modern CSS: grid and flex with gap. No floats, no margin hacks.
-- Content sits in a centred container, max-width around 1200px, with a horizontal gutter that
-  scales: 1.25rem on mobile, 2.5rem from desktop. Content must never touch the viewport edge.
-- Mobile first. Every grid collapses to one column and every layout works from 360px up.
+- Content sits in a centred container, max-width around 1200px (1240px max), with a horizontal gutter:
+  1.25rem on mobile, 2.5rem on desktop. Content must never touch the viewport edge.
+- Mobile first. Every grid collapses cleanly to 1 column on mobile and expands to a maximum of 2 or 3 columns on desktop.
+  NEVER render 4 or 5 cramped columns on desktop for service cards or testimonials.
+- Section vertical padding: clamp(4.5rem, 7.5vw, 7.5rem) so desktop view has elite breathing room and never feels cluttered.
+- Text measure limits: max-width: 26ch on major headings, max-width: 60ch–66ch on body copy and section subtitles.
 - The About section must execute the specific archetype in the design notes with comparable visual mass between story, media and proof. Do not reduce authentic imagery to an avatar, stretch copy across dead space, or let metrics dominate the story. Preserve its hierarchy on mobile with natural content height.
 - About and proof images use object-fit: cover with an explicit aspect-ratio; never set both an arbitrary fixed width and fixed height that distorts the source.
 - Long credentials such as “Licensed and insured” are not equal numeric stats. Give reassurance copy enough width or move it to a separate trust line so it cannot stack into a tall narrow column.

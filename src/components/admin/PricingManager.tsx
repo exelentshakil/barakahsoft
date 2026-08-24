@@ -229,67 +229,74 @@ export function PricingManager({
             </div>
           </div>
 
-          {/* Detailed Inputs */}
-          <div className="grid gap-3 sm:grid-cols-4">
-            <div>
-              <Label htmlFor="pricing-model" className="text-xs">Model</Label>
-              <select
-                id="pricing-model"
-                value={model}
-                onChange={(e) => setModel(e.target.value as any)}
-                className="mt-1 h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
-              >
-                <option value="flat">Flat One-Time</option>
-                <option value="monthly">Monthly Subscription</option>
-                <option value="hybrid">Setup + Monthly</option>
-              </select>
+          {/* Detailed Inputs Collapsible */}
+          <div className="rounded-lg border border-border/80 bg-muted/20 p-3.5 space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-bold text-foreground">Advanced Proposal Overrides &amp; Scope</Label>
+              <span className="text-[11px] text-muted-foreground">Adjust numbers or deliverables only if custom quote needed</span>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-4">
+              <div>
+                <Label htmlFor="pricing-model" className="text-xs">Model</Label>
+                <select
+                  id="pricing-model"
+                  value={model}
+                  onChange={(e) => setModel(e.target.value as any)}
+                  className="mt-1 h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
+                >
+                  <option value="flat">Flat One-Time</option>
+                  <option value="monthly">Monthly Subscription</option>
+                  <option value="hybrid">Setup + Monthly</option>
+                </select>
+              </div>
+
+              <div>
+                <Label htmlFor="setup-price" className="text-xs">Setup Fee ($)</Label>
+                <Input
+                  id="setup-price"
+                  type="number"
+                  value={setupPrice}
+                  onChange={(e) => setSetupPrice(Number(e.target.value))}
+                  className="mt-1 h-8 text-xs"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="monthly-price" className="text-xs">Monthly ($)</Label>
+                <Input
+                  id="monthly-price"
+                  type="number"
+                  value={monthlyPrice}
+                  onChange={(e) => setMonthlyPrice(Number(e.target.value))}
+                  className="mt-1 h-8 text-xs"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="standard-val" className="text-xs">Value Anchor ($)</Label>
+                <Input
+                  id="standard-val"
+                  type="number"
+                  value={standardValue}
+                  onChange={(e) => setStandardValue(Number(e.target.value))}
+                  className="mt-1 h-8 text-xs"
+                />
+              </div>
             </div>
 
             <div>
-              <Label htmlFor="setup-price" className="text-xs">Setup Fee ($)</Label>
-              <Input
-                id="setup-price"
-                type="number"
-                value={setupPrice}
-                onChange={(e) => setSetupPrice(Number(e.target.value))}
-                className="mt-1 h-8 text-xs"
+              <Label htmlFor="pricing-scope" className="text-xs">Client-facing scope bullets</Label>
+              <textarea
+                id="pricing-scope"
+                value={scopeItems.join("\n")}
+                onChange={(e) => setScopeItems(e.target.value.split("\n").slice(0, 10))}
+                placeholder="One deliverable per line"
+                rows={5}
+                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-xs leading-relaxed"
               />
+              <p className="mt-1 text-[11px] text-muted-foreground">One line becomes one bullet in the client checkout. Keep every claim specific and deliverable.</p>
             </div>
-
-            <div>
-              <Label htmlFor="monthly-price" className="text-xs">Monthly ($)</Label>
-              <Input
-                id="monthly-price"
-                type="number"
-                value={monthlyPrice}
-                onChange={(e) => setMonthlyPrice(Number(e.target.value))}
-                className="mt-1 h-8 text-xs"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="standard-val" className="text-xs">Value Anchor ($)</Label>
-              <Input
-                id="standard-val"
-                type="number"
-                value={standardValue}
-                onChange={(e) => setStandardValue(Number(e.target.value))}
-                className="mt-1 h-8 text-xs"
-              />
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="pricing-scope" className="text-xs">Client-facing scope bullets</Label>
-            <textarea
-              id="pricing-scope"
-              value={scopeItems.join("\n")}
-              onChange={(e) => setScopeItems(e.target.value.split("\n").slice(0, 10))}
-              placeholder="One deliverable per line"
-              rows={6}
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-xs leading-relaxed"
-            />
-            <p className="mt-1 text-[11px] text-muted-foreground">One line becomes one bullet in the client checkout. Keep every claim specific and deliverable.</p>
           </div>
 
           <div className="flex items-center justify-between pt-1">

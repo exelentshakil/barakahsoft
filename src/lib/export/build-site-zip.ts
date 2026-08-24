@@ -104,9 +104,9 @@ function footerHtml(payload: SitePayload): string {
   const services =
     payload.services.length > 0
       ? `<div>
-              <p class="bs-footer-heading">Services</p>
+              <p class="bs-footer-heading">Core Services</p>
               <div class="bs-footer-list">
-                ${payload.services.map((s) => `<a href="#${esc(s.slug)}">${esc(s.h2)}</a>`).join("\n                ")}
+                ${payload.services.map((s) => `<a href="#${esc(s.slug || "services")}">${esc(s.h2)}</a>`).join("\n                ")}
               </div>
             </div>`
       : "";
@@ -114,7 +114,7 @@ function footerHtml(payload: SitePayload): string {
   const areas =
     payload.areas.length > 0
       ? `<div>
-              <p class="bs-footer-heading">Service areas</p>
+              <p class="bs-footer-heading">Service Areas</p>
               <div class="bs-footer-list">
                 ${payload.areas.map((a) => `<span>${esc(a.h2)}</span>`).join("\n                ")}
               </div>
@@ -122,22 +122,39 @@ function footerHtml(payload: SitePayload): string {
       : "";
 
   const logo = payload.logoUrl
-    ? `<img src="${esc(payload.logoUrl)}" alt="${esc(payload.businessName)}" />`
-    : `<span>${esc(payload.businessName)}</span>`;
+    ? `<div class="bs-footer-logo-badge"><img src="${esc(payload.logoUrl)}" alt="${esc(payload.businessName)}" /></div>`
+    : `<span class="bs-footer-brand-text">${esc(payload.businessName)}</span>`;
+
+  const bio = payload.differentiator || `${esc(payload.businessName)} is dedicated to providing high-quality restoration, rapid emergency response, and verified craftsmanship.`;
 
   return `<footer class="bs-footer">
         <div class="bs-footer-inner">
-          <div class="bs-footer-cols bs-footer-cols-3">
-            <div>
-              <a href="/" class="bs-logo">${logo}</a>
-              <div class="bs-footer-list">
-                ${phone ? `<a href="tel:${esc(digits)}">${esc(phone)}</a>` : ""}
-                ${payload.nap.email ? `<a href="mailto:${esc(payload.nap.email)}">${esc(payload.nap.email)}</a>` : ""}
-                ${payload.nap.address ? `<span>${esc(payload.nap.address)}</span>` : ""}
+          <div class="bs-footer-cols bs-footer-cols-4">
+            <div class="bs-footer-col-brand">
+              <a href="/" class="bs-logo bs-footer-logo">${logo}</a>
+              <p class="bs-footer-desc">${esc(bio)}</p>
+              <div class="bs-footer-badges">
+                <span class="bs-footer-badge">24/7 Emergency Service</span>
+                <span class="bs-footer-badge">Licensed &amp; Insured</span>
+              </div>
+              <div class="bs-footer-list bs-footer-contact">
+                ${phone ? `<a href="tel:${esc(digits)}" class="bs-footer-contact-link">${esc(phone)}</a>` : ""}
+                ${payload.nap.email ? `<a href="mailto:${esc(payload.nap.email)}" class="bs-footer-contact-link">${esc(payload.nap.email)}</a>` : ""}
+                ${payload.nap.address ? `<span class="bs-footer-contact-link">${esc(payload.nap.address)}</span>` : ""}
               </div>
             </div>
             ${services}
             ${areas}
+            <div>
+              <p class="bs-footer-heading">Useful Links</p>
+              <div class="bs-footer-list">
+                <a href="/">Home</a>
+                <a href="#about">About Us</a>
+                <a href="#faq">FAQ</a>
+                <a href="#contact">Contact Us</a>
+                <a href="#contact">Request Quote</a>
+              </div>
+            </div>
           </div>
           <div class="bs-footer-legal">
             <p>&copy; ${year} ${esc(payload.businessName)}. All rights reserved.</p>

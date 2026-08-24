@@ -1,20 +1,83 @@
 export interface FirecrawlBranding {
+  colorScheme?: "light" | "dark" | string;
+  logo?: string;
   colors?: {
     primary?: string;
     secondary?: string;
     accent?: string;
     background?: string;
+    textPrimary?: string;
+    textSecondary?: string;
+    link?: string;
+    success?: string;
+    warning?: string;
+    error?: string;
+    [key: string]: string | undefined;
+  };
+  fonts?: Array<{
+    family: string;
+    [key: string]: unknown;
+  }>;
+  typography?: {
+    fontFamilies?: {
+      primary?: string;
+      heading?: string;
+      code?: string;
+      secondary?: string;
+      [key: string]: string | undefined;
+    };
+    fontSizes?: {
+      h1?: string;
+      h2?: string;
+      h3?: string;
+      body?: string;
+      [key: string]: string | undefined;
+    };
+    fontWeights?: {
+      regular?: number;
+      medium?: number;
+      bold?: number;
+      [key: string]: number | undefined;
+    };
+    lineHeights?: Record<string, string>;
+  };
+  spacing?: {
+    baseUnit?: number;
+    borderRadius?: string;
+    padding?: string;
+    margins?: string;
+    [key: string]: unknown;
+  };
+  components?: {
+    buttonPrimary?: {
+      background?: string;
+      textColor?: string;
+      borderRadius?: string;
+      [key: string]: unknown;
+    };
+    buttonSecondary?: {
+      background?: string;
+      textColor?: string;
+      borderColor?: string;
+      borderRadius?: string;
+      [key: string]: unknown;
+    };
+    input?: Record<string, unknown>;
+    icons?: Record<string, unknown>;
   };
   images?: {
     logo?: string;
     favicon?: string;
     ogImage?: string;
+    [key: string]: string | undefined;
   };
-  typography?: {
-    fontFamilies?: {
-      primary?: string;
-      secondary?: string;
-    };
+  animations?: Record<string, unknown>;
+  layout?: Record<string, unknown>;
+  personality?: {
+    tone?: string;
+    energy?: string;
+    targetAudience?: string;
+    [key: string]: string | undefined;
   };
 }
 

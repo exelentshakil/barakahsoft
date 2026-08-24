@@ -54,7 +54,18 @@ export function findRelevantPages(facts: Facts, matchHint?: string | null, limit
   return scored.slice(0, limit).map((s) => s.page);
 }
 
-const BASE_FACT_KEYS = ["business_name", "town", "rating", "review_count", "hours", "nap"];
+const BASE_FACT_KEYS = [
+  "business_name",
+  "town",
+  "rating",
+  "review_count",
+  "hours",
+  "nap",
+  "brand_color_hex",
+  "colors",
+  "branding",
+  "font",
+];
 
 // Real, always-populated fields (see scrapeBusiness in src/lib/scrape/index.ts)
 // plus real content from the matched page and any existing on-site JSON-LD —

@@ -98,9 +98,9 @@ export function ProposalHero({
               crisp?.push(["set", "message:text", [chatContext]]);
               crisp?.push(["do", "chat:open"]);
             }}
-            className="inline-flex items-center gap-2 rounded-md bg-[#0b8f5b] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#09744a]"
+            className="inline-flex items-center gap-2 rounded-md bg-[#0b8f5b] px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#09744a]"
           >
-            Talk through the best fit <MessageCircle className="h-4 w-4" />
+            Claim Your Launch Spot · 100% Risk-Free <MessageCircle className="h-4 w-4" />
           </button>
         )}
       </div>

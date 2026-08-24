@@ -16,6 +16,7 @@ import { ProposalDecisionBox } from "@/components/portal/sections/ProposalDecisi
 import { ProposalCheckoutModal } from "@/components/portal/sections/ProposalCheckoutModal";
 import { ProposalFooter } from "@/components/portal/sections/ProposalFooter";
 import { ProposalAbout } from "@/components/portal/sections/ProposalAbout";
+import { ReportBrandIdentity } from "@/components/portal/sections/ReportBrandIdentity";
 import { SocialLaunchMockup } from "@/components/mockup/SocialLaunchMockup";
 import { extractMockupData } from "@/lib/mockup-data";
 import { buildOfferOptions, type OfferOption } from "@/lib/audit/lead-value";
@@ -183,6 +184,15 @@ export function LiveClientProposal({
             />
           </div>
         </section>
+
+        {/* Brand Identity & Visual DNA audit extracted from lead */}
+        <ReportBrandIdentity
+          businessName={businessName}
+          branding={(facts.branding as any) ?? null}
+          brandColorHex={payload.brandColorHsl || (facts.brand_color_hex as string) || null}
+          logoUrl={payload.logoUrl}
+          fontFamily={payload.fontFamily}
+        />
 
         {/* Modules render only when there is measured data behind them AND
             they apply to this kind of business. A national agency does not
