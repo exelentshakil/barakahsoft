@@ -86,18 +86,20 @@ export function ProposalWebsitePreview({
           }`}
         >
           {/* Browser Address Bar */}
-          <div className="flex h-10 items-center justify-between border-b border-[#e5e7f2] bg-[#f8f9fc] px-4 text-xs text-[#777588]">
-            <div className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#ff6b6b]" />
-              <span className="h-2.5 w-2.5 rounded-full bg-[#ffd166]" />
-              <span className="h-2.5 w-2.5 rounded-full bg-[#5dd39e]" />
+          <div className="flex h-9 sm:h-10 items-center justify-between border-b border-[#e5e7f2] bg-[#f8f9fc] px-3 sm:px-4 text-xs text-[#777588] gap-2">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-[#ff6b6b]" />
+              <span className="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-[#ffd166]" />
+              <span className="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-[#5dd39e]" />
             </div>
-            <div className="flex items-center gap-1.5 rounded-md bg-white px-3 py-1 text-[11px] font-mono text-slate-600 border border-slate-200">
-              <span className="text-[#0b8f5b] font-bold">🔒 https://</span>
-              <span>{businessName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com</span>
+
+            <div className="flex min-w-0 items-center gap-1 rounded-md bg-white px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-[11px] font-mono text-slate-600 border border-slate-200 shadow-2xs">
+              <span className="text-[#0b8f5b] font-bold shrink-0">🔒 https://</span>
+              <span className="truncate">{businessName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com</span>
             </div>
-            <span className="text-[10px] font-bold text-[#533afd] uppercase tracking-wider">
-              {viewport === "mobile" ? "Mobile 390px" : "1200px Desktop"}
+
+            <span className="hidden xs:inline-block text-[9px] sm:text-[10px] font-bold text-[#533afd] uppercase tracking-wider shrink-0">
+              {viewport === "mobile" ? "Mobile" : "Desktop"}
             </span>
           </div>
 
