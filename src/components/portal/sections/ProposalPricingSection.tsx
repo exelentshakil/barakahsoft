@@ -10,6 +10,8 @@ interface ProposalPricingSectionProps {
   audit?: SiteAudit | null;
   offers: OfferOption[];
   recommendedOfferId?: OfferOption["id"];
+  selectedOfferId: OfferOption["id"];
+  onSelectOffer: (offerId: OfferOption["id"]) => void;
 }
 
 export function ProposalPricingSection({
@@ -20,6 +22,8 @@ export function ProposalPricingSection({
   audit,
   offers,
   recommendedOfferId,
+  selectedOfferId,
+  onSelectOffer,
 }: ProposalPricingSectionProps) {
   return (
     <section className="rounded-2xl border-2 border-[#533afd] bg-white p-8 sm:p-10 shadow-sm space-y-8">
@@ -96,30 +100,27 @@ export function ProposalPricingSection({
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             {offers.map((offer) => {
               const recommended = offer.id === recommendedOfferId;
+              const selected = offer.id === selectedOfferId;
+              const included = recommended && scopeItems.length > 0 ? scopeItems : offer.scopeItems;
               return (
-                <div key={offer.id} className={`relative rounded-xl border p-4 ${recommended ? "border-[#533afd] bg-[#f0f3ff] shadow-sm" : "border-[#e5e7f2] bg-[#f9f9ff]"}`}>
+                <button
+                  key={offer.id}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => onSelectOffer(offer.id)}
+                  className={`relative rounded-xl border p-4 text-left transition hover:-translate-y-0.5 hover:border-[#533afd] ${selected ? "border-[#533afd] bg-[#f0f3ff] shadow-sm ring-2 ring-[#533afd]/15" : "border-[#e5e7f2] bg-[#f9f9ff]"}`}
+                >
                   {recommended && <span className="absolute -top-2.5 left-3 rounded-full bg-[#533afd] px-2.5 py-1 text-[10px] font-bold text-white">Recommended</span>}
                   <h3 className="text-sm font-bold text-[#0d1738]">{offer.label}</h3>
                   <p className="mt-2 text-xl font-black text-[#533afd]">${offer.setupPrice}{offer.monthlyPrice > 0 ? <span className="text-xs font-bold text-[#42506a]"> + ${offer.monthlyPrice}/mo</span> : <span className="text-xs font-bold text-[#42506a]"> one time</span>}</p>
-                  <p className="mt-2 text-xs leading-relaxed text-[#42506a]">{offer.description}</p>
-                </div>
+                  <p className="mt-2 text-xs leading-relaxed text-[#42506a]">{offer.description} Includes: {included.join("; ")}</p>
+                  <span className={`mt-3 inline-block text-[10px] font-bold ${selected ? "text-[#533afd]" : "text-[#777588]"}`}>{selected ? "Selected plan" : "Select this plan"}</span>
+                </button>
               );
             })}
           </div>
         </div>
       )}
-
-      <div className="grid gap-4 sm:grid-cols-2 text-sm">
-        {scopeItems.map((item) => (
-          <div key={item} className="flex items-start justify-between gap-3 rounded-lg border border-[#e5e7f2] p-4 bg-[#f9f9ff]">
-            <div className="flex items-start gap-2.5">
-              <CheckCircle2 className="h-4 w-4 shrink-0 text-[#0b8f5b] mt-0.5" />
-              <span className="font-medium text-[#0d1738] text-xs sm:text-sm">{item}</span>
-            </div>
-            <span className="shrink-0 text-[11px] font-bold text-[#533afd]">Included</span>
-          </div>
-        ))}
-      </div>
     </section>
   );
 }

@@ -74,7 +74,7 @@ export function ProposalDecisionBox({
             onClick={onOpenCheckout}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md bg-[#533afd] px-8 py-4 text-base font-bold text-white shadow-md transition hover:bg-[#432bd9]"
           >
-            Start my recommended plan ({priceFormattedLabel}) <ArrowRight className="h-5 w-5" />
+            Start my selected plan ({priceFormattedLabel}) <ArrowRight className="h-5 w-5" />
           </button>
         )}
         <a

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe, LEAD_ENGINE_PRICE_ID } from "@/lib/stripe";
 import { createPortalToken } from "@/lib/portal-token";
+import { buildOfferOptions, type OfferOption } from "@/lib/audit/lead-value";
 
 // Checkout, priced from the offer the operator actually set for this lead.
 //
@@ -36,9 +37,10 @@ export async function POST(req: Request) {
   if (!lead_id) return NextResponse.json({ error: "lead_id is required" }, { status: 400 });
 
   const admin = createAdminClient();
-  const [{ data: lead }, { data: artifact }] = await Promise.all([
+  const [{ data: lead }, { data: artifact }, { data: scrape }] = await Promise.all([
     admin.from("leads").select("id, slug, business_name, email").eq("id", lead_id).single(),
-    admin.from("artifacts").select("extracted_assets").eq("lead_id", lead_id).maybeSingle(),
+    admin.from("artifacts").select("extracted_assets, funnel_pages").eq("lead_id", lead_id).maybeSingle(),
+    admin.from("scrape_results").select("facts").eq("lead_id", lead_id).maybeSingle(),
   ]);
   if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
 
@@ -65,8 +67,20 @@ export async function POST(req: Request) {
   }
 
   const pricing = ((artifact?.extracted_assets as Record<string, unknown> | null)?.pricing ?? {}) as LeadPricing;
-  const setup = typeof pricing.setupPrice === "number" ? pricing.setupPrice : DEFAULT_SETUP;
-  const monthly = typeof pricing.monthlyPrice === "number" ? pricing.monthlyPrice : DEFAULT_MONTHLY;
+  const extracted = (artifact?.extracted_assets ?? {}) as Record<string, unknown>;
+  const savedOffers = Array.isArray(extracted.pricing && (extracted.pricing as Record<string, unknown>).offerOptions)
+    ? (extracted.pricing as Record<string, unknown>).offerOptions as OfferOption[]
+    : null;
+  const facts = (scrape?.facts ?? {}) as Record<string, unknown>;
+  const serviceCount = Array.isArray(artifact?.funnel_pages)
+    ? artifact.funnel_pages.filter((page: { kind?: string }) => page.kind === "service").length
+    : Array.isArray(facts.derived_services) ? facts.derived_services.length : 0;
+  const generatedOffers = savedOffers ?? buildOfferOptions(serviceCount + 1, lead.business_name || "your business");
+  const requestedOffer = typeof body.offer_id === "string"
+    ? generatedOffers.find((offer) => offer.id === body.offer_id)
+    : null;
+  const setup = requestedOffer?.setupPrice ?? (typeof pricing.setupPrice === "number" ? pricing.setupPrice : DEFAULT_SETUP);
+  const monthly = requestedOffer?.monthlyPrice ?? (typeof pricing.monthlyPrice === "number" ? pricing.monthlyPrice : DEFAULT_MONTHLY);
 
   if (setup <= 0 && monthly <= 0) {
     return NextResponse.json(
@@ -107,6 +121,7 @@ export async function POST(req: Request) {
   const metadata = {
     lead_id: lead.id,
     tier: monthly > 0 ? "hosting" : "website",
+    offer_id: requestedOffer?.id ?? "custom",
     setup_price: String(setup),
     monthly_price: String(monthly),
   };
