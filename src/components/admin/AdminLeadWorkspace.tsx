@@ -191,7 +191,8 @@ export function AdminLeadWorkspace({
   const colors = (facts.colors as { primary?: string; accent?: string } | undefined) || {};
   const primaryColor = colors.primary || (artifact?.extracted_assets as any)?.branding?.colors?.primary || "#533AFD";
   const accentColor = colors.accent || (artifact?.extracted_assets as any)?.branding?.colors?.accent || "#FFD12D";
-  const logoName = (artifact?.extracted_assets as any)?.branding?.logo || facts.logo_url ? "Logo Active" : "Pending";
+  const resolvedLogo = (artifact?.extracted_assets as any)?.branding?.logo || (artifact?.extracted_assets as any)?.logo_url || facts.logo_url || (facts.branding as any)?.images?.logo || (facts.branding as any)?.logo || null;
+  const logoName = resolvedLogo ? "Brand Logo Verified" : "Logo Pending";
 
   const proof = (facts.proof as { rating?: number; reviewCount?: number } | undefined) || {};
   const rating = proof.rating || 5.0;
@@ -947,17 +948,42 @@ export function AdminLeadWorkspace({
               <p className="font-bold text-slate-900 text-sm">• Operating Business Entity</p>
             </div>
 
-            <div className="rounded-xl bg-slate-50/80 p-5 border border-slate-200/80 space-y-2">
-              <span className="font-extrabold uppercase tracking-wider text-slate-500 text-xs">Extracted Brand Tokens</span>
-              <div className="mt-1 flex items-center gap-3">
-                <span className="flex items-center gap-1.5 font-mono text-xs font-bold text-slate-800 bg-white px-2 py-1 rounded border border-slate-200">
+            <div className="rounded-xl bg-slate-50/80 p-5 border border-slate-200/80 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="font-extrabold uppercase tracking-wider text-slate-500 text-xs">Extracted Brand Tokens</span>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  {logoName}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1.5 font-mono text-xs font-bold text-slate-800 bg-white px-2 py-1 rounded border border-slate-200 shadow-2xs">
                   <span className="h-4 w-4 rounded-full border shadow-inner shrink-0" style={{ backgroundColor: primaryColor }} /> {primaryColor}
                 </span>
-                <span className="flex items-center gap-1.5 font-mono text-xs font-bold text-slate-800 bg-white px-2 py-1 rounded border border-slate-200">
+                <span className="flex items-center gap-1.5 font-mono text-xs font-bold text-slate-800 bg-white px-2 py-1 rounded border border-slate-200 shadow-2xs">
                   <span className="h-4 w-4 rounded-full border shadow-inner shrink-0" style={{ backgroundColor: accentColor }} /> {accentColor}
                 </span>
               </div>
-              <p className="text-xs font-bold text-slate-600 pt-1">{logoName}</p>
+
+              {resolvedLogo && (
+                <div className="mt-2 flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-2.5 shadow-2xs">
+                  <div className="flex h-10 w-24 items-center justify-center rounded bg-slate-50 border border-slate-100 p-1 shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={resolvedLogo}
+                      alt={businessName}
+                      className="max-h-full max-w-full object-contain"
+                      onError={(e) => (e.currentTarget.style.display = "none")}
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-slate-800 truncate">{businessName}</p>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#0b8f5b]">
+                      <CheckCircle2 className="h-3 w-3" /> Brand Asset Ready
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
