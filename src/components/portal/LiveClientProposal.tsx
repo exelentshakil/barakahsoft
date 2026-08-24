@@ -16,6 +16,7 @@ import { ProposalDecisionBox } from "@/components/portal/sections/ProposalDecisi
 import { ProposalCheckoutModal } from "@/components/portal/sections/ProposalCheckoutModal";
 import { ProposalFooter } from "@/components/portal/sections/ProposalFooter";
 import { ProposalAbout } from "@/components/portal/sections/ProposalAbout";
+import { ProposalWebsitePreview } from "@/components/portal/sections/ProposalWebsitePreview";
 import { ReportBrandIdentity } from "@/components/portal/sections/ReportBrandIdentity";
 import { SocialLaunchMockup } from "@/components/mockup/SocialLaunchMockup";
 import { extractMockupData } from "@/lib/mockup-data";
@@ -161,6 +162,13 @@ export function LiveClientProposal({
         />
 
         <ProposalAbout data={mockupData} />
+
+        {/* Interactive Responsive Website Preview (Desktop / Mobile + Current Site Comparison) */}
+        <ProposalWebsitePreview
+          businessName={businessName}
+          leadSlug={lead.slug}
+          sourceUrl={lead.source_url}
+        />
 
         {/* 3D Website Redesign Showcase Mockup */}
         <section className="flex flex-col items-center space-y-6">
