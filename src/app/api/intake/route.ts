@@ -5,7 +5,7 @@ import { fireMetaCapiEvent } from "@/lib/meta-pixel-server";
 import { isPersonaSlug } from "@/lib/personas";
 import { isLeadProblem } from "@/lib/lead-problems";
 import { inngest } from "@/inngest/client";
-import { generateUniqueDomainSlug } from "@/lib/domain-slug";
+import { generateUniqueDomainSlug, normaliseWebsiteHost } from "@/lib/domain-slug";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -15,6 +15,21 @@ export async function POST(req: Request) {
 
   try {
     const admin = createAdminClient();
+    const submittedHost = normaliseWebsiteHost(String(body.source_url));
+    if (submittedHost) {
+      const { data: existingLeads } = await admin
+        .from("leads")
+        .select("id, source_url")
+        .not("status", "eq", "lost")
+        .ilike("source_url", `%${submittedHost}%`);
+      const duplicate = existingLeads?.find((existing) => normaliseWebsiteHost(existing.source_url) === submittedHost);
+      if (duplicate) {
+        return NextResponse.json(
+          { error: "You have already submitted this website. We are reviewing it now. Please try a different website.", duplicate: true },
+          { status: 409 }
+        );
+      }
+    }
     const slug = await generateUniqueDomainSlug(admin, body.source_url);
 
     const { data: lead, error } = await admin

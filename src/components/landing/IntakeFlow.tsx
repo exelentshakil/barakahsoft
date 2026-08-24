@@ -24,6 +24,7 @@ export function IntakeFlow({ ctaLabel }: { ctaLabel: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [duplicate, setDuplicate] = useState(false);
 
   async function submitLead(event: React.FormEvent) {
     event.preventDefault();
@@ -37,7 +38,14 @@ export function IntakeFlow({ ctaLabel }: { ctaLabel: string }) {
         body: JSON.stringify({ source_url: url, persona: persona || null, pain_points: [], name, email, phone, tcpa_consent: tcpaConsent, event_id: eventId }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Something went wrong — please try again.");
+      if (!response.ok) {
+        if (data.duplicate) {
+          setModalOpen(false);
+          setDuplicate(true);
+          return;
+        }
+        throw new Error(data.error || "Something went wrong — please try again.");
+      }
       trackPixelEvent("Lead", eventId, { content_name: "managed_lead_engine_qualification" });
       setModalOpen(false);
       setSuccess(true);
@@ -50,6 +58,10 @@ export function IntakeFlow({ ctaLabel }: { ctaLabel: string }) {
 
   if (success) {
     return <div className="mx-auto mt-8 flex max-w-lg flex-col items-center gap-2 rounded-2xl border border-border bg-card p-6 text-center shadow-card"><CheckCircle2 className="h-8 w-8 text-success" /><p className="font-medium">We&apos;re reviewing your business.</p><p className="text-sm text-muted-foreground">Expect a text or email with the next step, usually within 48 hours.</p></div>;
+  }
+
+  if (duplicate) {
+    return <div className="mx-auto mt-8 max-w-lg rounded-2xl border border-primary/20 bg-card p-6 text-center shadow-card"><p className="font-medium">You have already submitted this website.</p><p className="mt-1 text-sm text-muted-foreground">We are reviewing it now. Please try a different website if you want to submit another business.</p></div>;
   }
 
   return (

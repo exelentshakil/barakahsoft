@@ -24,6 +24,7 @@ export function RedesignIntakeFlow() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [duplicate, setDuplicate] = useState(false);
 
   function begin(event: React.FormEvent) {
     event.preventDefault();
@@ -48,7 +49,14 @@ export function RedesignIntakeFlow() {
         body: JSON.stringify({ source_url: url, source: "home", help_needed: helpNeeded, anything_else: anythingElse, name, email, phone, tcpa_consent: consent, event_id: eventId }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Something went wrong — please try again.");
+      if (!response.ok) {
+        if (data.duplicate) {
+          setOpen(false);
+          setDuplicate(true);
+          return;
+        }
+        throw new Error(data.error || "Something went wrong — please try again.");
+      }
       trackPixelEvent("Lead", eventId, { content_name: "free_homepage_redesign" });
       setOpen(false);
       setSuccess(true);
@@ -60,6 +68,7 @@ export function RedesignIntakeFlow() {
   }
 
   if (success) return <div className="mx-auto mt-7 flex max-w-xl items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-left"><CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-emerald-600" /><div><p className="font-bold text-[#07284d]">Your lead-machine audit is in motion.</p><p className="mt-1 text-sm text-[#60778d]">We&apos;ll send your private report link after we map the gaps, competitors, and call opportunities.</p></div></div>;
+  if (duplicate) return <div className="mx-auto mt-7 max-w-xl rounded-xl border border-[#c7d0fb] bg-[#f0f3ff] p-5 text-left"><p className="font-bold text-[#07284d]">You have already submitted this website.</p><p className="mt-1 text-sm text-[#60778d]">We are reviewing it now. Please try a different website if you want to submit another business.</p></div>;
 
   return (
     <div className="w-full">

@@ -29,6 +29,16 @@ export function cleanDomainSlug(url: string): string {
   }
 }
 
+/** Compares websites by hostname so protocol, www, query strings, and hashes do not create duplicates. */
+export function normaliseWebsiteHost(url: string): string | null {
+  try {
+    const value = /^https?:\/\//i.test(url.trim()) ? url.trim() : `https://${url.trim()}`;
+    return new URL(value).hostname.replace(/^www\./i, "").toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
 export async function generateUniqueDomainSlug(
   admin: SupabaseClient,
   url: string
