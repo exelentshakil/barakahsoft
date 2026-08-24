@@ -32,10 +32,10 @@ Judge the rendered result, not whether you would personally choose another style
 Scoring:
 - 90-100: exceptional and immediately sellable.
 - 82-89: strong enough to release, with only minor warnings.
-- 70-81: credible but visibly below the premium reference bar; reject.
-- Below 70: substantial redesign required.
+- 50-81: a usable first draft that should be shown for operator refinement, but not marked as a final visual pass.
+- Below 50: substantial redesign required before the draft is useful.
 
-Every blocker must describe an observable visual defect and a concrete correction. Do not create blockers from unsupported assumptions. passes may be true only when score >= 82 and blockers is empty.
+Every blocker must describe an observable visual defect and a concrete correction. Do not create blockers from unsupported assumptions. passes may be true only when score >= 82 and blockers is empty; a score from 50-81 should put concrete improvements in warnings unless there is actual clipping, overlap, illegibility or broken interaction.
 
 Return JSON only:
 {

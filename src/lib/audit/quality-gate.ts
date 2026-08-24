@@ -37,6 +37,27 @@ function textOf(html: string): string {
     .trim();
 }
 
+function normalizedText(html: string): string {
+  const codePoint = (raw: string, radix: number, fallback: string) => {
+    const value = parseInt(raw, radix);
+    return Number.isInteger(value) && value >= 0 && value <= 0x10ffff ? String.fromCodePoint(value) : fallback;
+  };
+  return textOf(html)
+    .replace(/&(amp|quot|apos|lt|gt|nbsp);/gi, (entity, name: string) => ({
+      amp: "&",
+      quot: '"',
+      apos: "'",
+      lt: "<",
+      gt: ">",
+      nbsp: " ",
+    })[name.toLowerCase()] ?? entity)
+    .replace(/&#(\d+);/g, (entity, value: string) => codePoint(value, 10, entity))
+    .replace(/&#x([0-9a-f]+);/gi, (entity, value: string) => codePoint(value, 16, entity))
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
 /** Top-level bands, so each can be checked for substance individually. */
 function topLevelSections(html: string): string[] {
   const out: string[] = [];
@@ -391,6 +412,22 @@ export function verifyHomepage(
   if (ctas === 0) add("blocker", "cta", "The page has no call-to-action button at all.");
   else if (ctas < 3) add("blocker", "cta", `Only ${ctas} call(s) to action across the whole page. A visitor should never scroll back to act.`);
 
+  const primaryLabel = brief.intent.primaryLabel.replace(/\s+/g, " ").trim().toLowerCase();
+  const inconsistentPrimaryActions = [...html.matchAll(/<(a|button)\b([^>]*)>([\s\S]*?)<\/\1>/gi)].filter(
+    ([, , attrs, inner]) =>
+      textOf(inner).toLowerCase() === primaryLabel &&
+      !/\bclass=["'][^"']*\bsite-cta--primary\b/i.test(attrs)
+  );
+  if (inconsistentPrimaryActions.length > 0) {
+    add("blocker", "cta-system", `${inconsistentPrimaryActions.length} primary action(s) do not use the shared site-cta--primary treatment.`);
+  }
+  const inconsistentPrimaryLabels = [...html.matchAll(/<(a|button)\b([^>]*)>([\s\S]*?)<\/\1>/gi)].filter(
+    ([, , attrs, inner]) => /\bsite-cta--primary\b/i.test(attrs) && normalizedText(inner) !== primaryLabel
+  );
+  if (inconsistentPrimaryLabels.length > 0) {
+    add("blocker", "cta-system", `${inconsistentPrimaryLabels.length} primary action(s) use wording other than "${brief.intent.primaryLabel}".`);
+  }
+
   if (brief.phone && !/href="tel:/i.test(html)) {
     add("blocker", "cta", "The business has a phone number and the page contains no tel: link.");
   }
@@ -429,6 +466,36 @@ export function verifyHomepage(
   }
   if (brief.reviews.length === 0 && /<blockquote/i.test(html)) {
     add("blocker", "truth", "The page shows a testimonial and no real review text was available.");
+  }
+  if (brief.reviews.length > 0) {
+    const reviewSection = sections.find((section) => /\bid=["']reviews["']/i.test(section)) ?? "";
+    if (!reviewSection) {
+      add("blocker", "reviews", "Real review text exists but the page has no id=\"reviews\" section.");
+    } else {
+      if (!/data-review-slider/i.test(reviewSection) || !/data-review-track/i.test(reviewSection)) {
+        add("blocker", "reviews", "The reviews section is not an accessible horizontal slider.");
+      }
+      if (!/data-review-prev/i.test(reviewSection) || !/data-review-next/i.test(reviewSection)) {
+        add("blocker", "reviews", "The review slider is missing previous/next controls.");
+      }
+
+      const supplied = brief.reviews.map((review) => ({
+        quote: normalizedText(review.text),
+        author: normalizedText(review.author),
+      }));
+      const matched = new Set<number>();
+      const blocks = [...reviewSection.matchAll(/<blockquote\b[^>]*>([\s\S]*?)<\/blockquote>/gi)];
+      for (const block of blocks) {
+        const citation = block[1].match(/<cite\b[^>]*>([\s\S]*?)<\/cite>/i)?.[1] ?? "";
+        const quote = normalizedText(block[1].replace(/<cite\b[\s\S]*?<\/cite>/gi, "")).replace(/^[“\"]|[”\"]$/g, "").trim();
+        const author = normalizedText(citation);
+        const index = supplied.findIndex((review, reviewIndex) => !matched.has(reviewIndex) && review.quote === quote && review.author === author);
+        if (index >= 0) matched.add(index);
+      }
+      if (matched.size !== brief.reviews.length) {
+        add("blocker", "truth", "Every supplied review must appear once with verbatim text and its supplied author in a <cite>.");
+      }
+    }
   }
 
   // ---- Services --------------------------------------------------------
@@ -480,6 +547,12 @@ export function verifyHomepage(
 
   if (!/\bid=["']about["']/i.test(html)) {
     add("blocker", "composition", "The page has no id=\"about\" story section, so the navigation and trust narrative are incomplete.");
+  }
+  if (brief.founder) {
+    const about = sections.find((section) => /\bid=["']about["']/i.test(section)) ?? "";
+    if (about && !textOf(about).toLowerCase().includes(brief.founder.toLowerCase())) {
+      add("blocker", "about", `The supplied owner name (${brief.founder}) is absent from the About section.`);
+    }
   }
 
   // An image used twice reads as a stock page.

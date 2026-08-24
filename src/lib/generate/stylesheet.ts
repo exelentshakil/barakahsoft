@@ -52,7 +52,7 @@ Mood: ${dna.mood} · Rhythm: ${dna.layout.sectionRhythm} · Geometry: ${dna.geom
 Motifs to actually build in CSS: ${dna.motifs.join("; ") || "none specified"}
 
 ═══ THE MARKUP YOU ARE STYLING ═══
-${html.slice(0, 55000)}
+${html.slice(0, 90000)}
 
 ═══ WHAT THE STYLESHEET MUST DO ═══
 

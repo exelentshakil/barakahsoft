@@ -29,6 +29,7 @@ export function bestGeminiChain(): string[] {
 // Every current model tops out here. Asking for more is a 400, so the
 // request is clamped rather than rejected.
 const MAX_OUTPUT_TOKENS = 65536;
+const REQUEST_TIMEOUT_MS = 150_000;
 
 function isModelUnavailable(status: number, body: string): boolean {
   if (status === 404) return true;
@@ -78,7 +79,12 @@ export async function callGemini(
     try {
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${candidate}:generateContent?key=${apiKey}`,
-        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(requestBody) }
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        }
       );
 
       if (!res.ok) {
@@ -109,7 +115,8 @@ export async function callGemini(
       console.log(`[gemini] ${candidate} ok — ${text.length} chars`);
       return text.trim();
     } catch (err) {
-      console.error(`[gemini] network error on "${candidate}" —`, err);
+      const timedOut = err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
+      console.error(timedOut ? `[gemini] "${candidate}" timed out after ${REQUEST_TIMEOUT_MS / 1000}s` : `[gemini] network error on "${candidate}" —`, timedOut ? "" : err);
       return null;
     }
   }

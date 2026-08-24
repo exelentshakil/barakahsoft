@@ -6,7 +6,8 @@ import {
   type InnerPageRequest,
   type SiteBrief,
 } from "@/lib/generate-bespoke-site";
-import { generateStructure } from "@/lib/generate/structure";
+import { generateStructureBatch, type GeneratedSection } from "@/lib/generate/structure";
+import { generateSitePlan, sectionBatches } from "@/lib/generate/site-plan";
 import { generateStylesheet } from "@/lib/generate/stylesheet";
 import { critiqueHomepage, type PremiumCritique } from "@/lib/generate/critique";
 import type { GenerationProvider } from "@/lib/generate/model";
@@ -178,10 +179,9 @@ export const bespokeGenerate = inngest.createFunction(
 
     await bumpProgress(admin, lead_id, 1);
 
-    // No separate copy pass. It cost two minutes forty and wrote blind to
-    // layout; the single generation pass now writes the words and arranges
-    // them together. Navigation and footer come from the classified
-    // services, which are the business's real ones.
+    // Navigation and footer come from the classified services, which are the
+    // business's real ones. The strategy pass below plans problems and
+    // sections, while each section batch writes copy in its actual layout.
     const serviceNames = brief.services.slice(0, MAX_SERVICE_PAGES);
 
     await step.run("plan-chrome", async () => {
@@ -195,6 +195,12 @@ export const bespokeGenerate = inngest.createFunction(
     });
 
     await bumpProgress(admin, lead_id, 2);
+
+    const sitePlan = await step.run("plan-site", async () => {
+      const plan = await generateSitePlan(brief, dna, media, provider);
+      await admin.from("artifacts").update({ copy_plan: plan }).eq("lead_id", lead_id);
+      return plan;
+    });
 
     // funnel_pages drives the mega menu, the footer and sitemap.xml. It is
     // structure, not prose, so it needs the real service names rather than a
@@ -233,94 +239,72 @@ export const bespokeGenerate = inngest.createFunction(
         .eq("lead_id", lead_id);
     });
 
-    // Three passes: structure and words, then a stylesheet written for
-    // exactly that markup, then verification.
-    //
-    // The stylesheet is the change that lifts the ceiling. Composing from a
-    // fixed class vocabulary capped layout at whatever had been pre-built —
-    // content came out strong and the arrangement did not. A model that
-    // names its own classes and then writes their rules has no such limit,
-    // and the old failure of a class resolving to nothing cannot happen
-    // when the same run produces both.
-    //
-    // Interactions are NOT generated. They come from a reviewed runtime in
-    // the application, requested through data attributes, because arbitrary
-    // script on a client's public domain is not a risk worth taking for
-    // motion.
-    const MAX_ATTEMPTS = 4;
-    let accepted: { html: string; css: string; rationale: string; visualReport: VisualQaReport | null } | null = null;
-    let lastReport: ReturnType<typeof verifyHomepage> | null = null;
-    let lastCritique: PremiumCritique | null = null;
-    let lastVisualReport: VisualQaReport | null = null;
-    let failures: string | undefined;
-
+    // Generate the researched plan in small section batches, then style the
+    // assembled page once. A local CSS or visual preference no longer throws
+    // away good copy and starts four complete homepage builds from scratch.
     const gateTokens = compileDesignTokens(dna, {
       colourSource: loaded.artifact?.colour_source,
       clientBrandHex: (loaded.scrapeResults.facts as Record<string, unknown>)?.brand_color_hex as string | null,
     });
-
-    for (let attempt = 1; attempt <= MAX_ATTEMPTS && !accepted; attempt++) {
-      const structure = await step.run(`structure-${attempt}`, async () => {
-        const result = await generateStructure(brief, dna, media, knownPaths, failures, provider);
+    const generatedSections: GeneratedSection[] = [];
+    const batches = sectionBatches(sitePlan.sections);
+    for (let index = 0; index < batches.length; index++) {
+      const batch = batches[index];
+      const generated = (await step.run(`structure-batch-${index + 1}`, async () => {
+        await touchProgress(admin, lead_id);
+        const result = await generateStructureBatch(brief, dna, media, knownPaths, sitePlan, batch, provider);
         if (!result) {
-          // Naming the provider matters: this said "[openai]" whatever was
-          // actually used, so a failing Gemini build sent whoever read it
-          // to the wrong logs entirely.
-          const used = provider ?? "openai";
           throw new Error(
-            `Structure generation returned nothing from ${used}. Check the [${used}] log line — it says whether the model was unavailable, returned empty content, or produced output that was empty once sanitized.`
+            `Section batch ${index + 1} returned incomplete markup from ${provider ?? "openai"}. The previous live page was preserved.`
           );
         }
         return result;
-      });
+      })) as GeneratedSection[];
+      generatedSections.push(...generated);
+    }
 
-      const stylesheet = await step.run(`stylesheet-${attempt}`, async () => {
-        const result = await generateStylesheet(structure.html, structure.designNotes, dna, gateTokens, failures, provider);
-        if (!result) {
-          throw new Error(
-            "Stylesheet generation returned nothing usable. An unstyled page is not shippable, so this fails rather than falling back."
-          );
-        }
-        return result;
-      });
+    const composedHtml = generatedSections.map((section) => section.html).join("\n");
+    const stylesheet = await step.run("stylesheet", async () => {
+      await touchProgress(admin, lead_id);
+      const result = await generateStylesheet(composedHtml, sitePlan.designNotes, dna, gateTokens, undefined, provider);
+      if (!result) {
+        throw new Error("Stylesheet generation returned nothing usable. The previous live page was preserved.");
+      }
+      return result;
+    });
 
-      const checked = await step.run(`verify-${attempt}`, async () => {
-        const html = sanitizeBespokeHtml(structure.html);
-        // The stylesheet is verified alongside the markup: most of what makes
-        // a page read as expensive lives in the CSS, not the HTML.
-        return { html, report: verifyHomepage(html, brief, gateTokens, stylesheet.css) };
-      });
+    const checked = await step.run("verify", async () => {
+      const html = sanitizeBespokeHtml(composedHtml);
+      return { html, report: verifyHomepage(html, brief, gateTokens, stylesheet.css) };
+    });
+    if (!checked.report.passes) {
+      throw new Error(`The composed homepage failed deterministic release checks. The previous live page was preserved.\n${checked.report.constraints}`);
+    }
 
-      lastReport = checked.report;
+    // One practical creative-director pass after all sections and CSS exist.
+    // Its observations are refinement notes, not a reason to regenerate good
+    // sections wholesale. Deterministic source and browser defects still gate.
+    const critique = (await step.run("creative-director", async () => {
+      await touchProgress(admin, lead_id);
+      const result = await critiqueHomepage(checked.html, stylesheet.css, brief, dna, provider ?? "openai");
+      return result ?? {
+        passes: false,
+        blockers: ["The creative-director review was unavailable; inspect the generated candidate manually."],
+        warnings: [],
+      } satisfies PremiumCritique;
+    })) as PremiumCritique;
 
-      const critique = await step.run(`creative-director-${attempt}`, async () => {
-        const result = await critiqueHomepage(checked.html, stylesheet.css, brief, dna, provider ?? "openai");
-        if (!result) {
-          return {
-            passes: false,
-            blockers: ["The creative-director review did not return a valid release decision. Generate a fresh candidate."],
-            warnings: [],
-          } satisfies PremiumCritique;
-        }
-        return result;
-      });
-      lastCritique = critique;
-
-      if (checked.report.passes && critique.passes) {
-        if (!visualQaEnabled()) {
-          accepted = { html: checked.html, css: stylesheet.css, rationale: structure.designNotes, visualReport: null };
-          break;
-        }
-
-        const candidate = (await step.run(`queue-visual-qa-${attempt}`, async () => {
+    let visualReport: VisualQaReport | null = null;
+    if (visualQaEnabled()) {
+      const candidate = (await step.run("queue-visual-qa", async () => {
           const { data, error } = await admin
             .from("generation_candidates")
             .insert({
               lead_id,
-              attempt,
+              attempt: 1,
               html: checked.html,
               css: stylesheet.css,
-              rationale: structure.designNotes,
+              rationale: sitePlan.designNotes,
               context: {
                 businessName: brief.businessName,
                 industry: brief.industry,
@@ -330,118 +314,83 @@ export const bespokeGenerate = inngest.createFunction(
                 verifiedReviewProof:
                   brief.rating && brief.reviewCount ? `${brief.rating} from ${brief.reviewCount} reviews` : "none",
                 intendedDirection: {
-                  mood: dna.mood,
-                  layout: dna.layout,
-                  motifs: dna.motifs,
-                  rationale: dna.rationale,
-                  candidateNotes: structure.designNotes,
-                },
-              },
-              source_report: checked.report,
+                   mood: dna.mood,
+                   layout: dna.layout,
+                   motifs: dna.motifs,
+                   rationale: dna.rationale,
+                   candidateNotes: sitePlan.designNotes,
+                   sectionPlan: sitePlan.sections,
+                 },
+               },
+               source_report: checked.report,
               creative_report: critique,
             })
             .select("*")
             .single<GenerationCandidate>();
-          if (error || !data) throw new Error(`Could not queue visual QA: ${error?.message ?? "no candidate returned"}`);
-          return data;
-        })) as GenerationCandidate;
+           if (error || !data) throw new Error(`Could not queue visual QA: ${error?.message ?? "no candidate returned"}`);
+           return data;
+      })) as GenerationCandidate;
 
-        // Polling is deliberate here. A worker can finish in the short gap
-        // between inserting the row and registering waitForEvent, losing the
-        // event and stranding an already-reviewed candidate. Inngest sleeps
-        // are durable and consume no active Vercel compute; the only server
-        // work is one small database read every thirty seconds.
-        let reviewed: GenerationCandidate | null = null;
-        for (let poll = 1; poll <= 30; poll++) {
-          await step.sleep(`wait-for-visual-qa-${attempt}-${poll}`, "30s");
-          reviewed = (await step.run(`poll-visual-qa-${attempt}-${poll}`, async () => {
-            const { data, error } = await admin
-              .from("generation_candidates")
-              .select("*")
+      let reviewed: GenerationCandidate | null = null;
+      for (let poll = 1; poll <= 30; poll++) {
+        await step.sleep(`wait-for-visual-qa-${poll}`, "30s");
+        reviewed = (await step.run(`poll-visual-qa-${poll}`, async () => {
+             const { data, error } = await admin
+               .from("generation_candidates")
+               .select("*")
               .eq("id", candidate.id)
               .single<GenerationCandidate>();
-            if (error || !data) throw new Error(`Could not poll visual QA result: ${error?.message ?? "candidate missing"}`);
-            return data;
-          })) as GenerationCandidate;
-          if (!["queued", "running"].includes(reviewed.visual_status)) break;
-        }
+             if (error || !data) throw new Error(`Could not poll visual QA result: ${error?.message ?? "candidate missing"}`);
+             return data;
+        })) as GenerationCandidate;
+        if (!["queued", "running"].includes(reviewed.visual_status)) break;
+      }
 
-        if (!reviewed || ["queued", "running"].includes(reviewed.visual_status)) {
-          const timedOut = await step.run(`timeout-visual-qa-${attempt}`, async () => {
-            const { data, error } = await admin
-              .from("generation_candidates")
-              .update({ visual_status: "timed_out", completed_at: new Date().toISOString() })
+      if (!reviewed || ["queued", "running"].includes(reviewed.visual_status)) {
+        const timedOut = await step.run("timeout-visual-qa", async () => {
+             const { data, error } = await admin
+               .from("generation_candidates")
+               .update({ visual_status: "timed_out", completed_at: new Date().toISOString() })
               .eq("id", candidate.id)
               .in("visual_status", ["queued", "running"])
               .select("id")
               .maybeSingle();
-            if (error) throw new Error(`Could not time out visual QA: ${error.message}`);
-            return Boolean(data);
-          });
-          if (timedOut) {
-            throw new Error(
-              `Visual QA worker did not complete candidate ${candidate.id} within 15 minutes. The previous live page was preserved.`
-            );
-          }
+             if (error) throw new Error(`Could not time out visual QA: ${error.message}`);
+             return Boolean(data);
+        });
+        if (timedOut) {
+          throw new Error(`Visual QA worker did not complete candidate ${candidate.id} within 15 minutes. The previous live page was preserved.`);
+        }
 
-          // Completion won the race after the final poll but before the
-          // guarded timeout update. Re-read rather than discarding a result
-          // that is already terminal.
-          reviewed = (await step.run(`load-raced-visual-qa-${attempt}`, async () => {
-            const { data, error } = await admin
-              .from("generation_candidates")
-              .select("*")
+        reviewed = (await step.run("load-raced-visual-qa", async () => {
+             const { data, error } = await admin
+               .from("generation_candidates")
+               .select("*")
               .eq("id", candidate.id)
               .single<GenerationCandidate>();
-            if (error || !data) throw new Error(`Could not load completed visual QA: ${error?.message ?? "candidate missing"}`);
-            return data;
-          })) as GenerationCandidate;
-        }
-
-        if (reviewed.visual_status === "error") {
-          throw new Error(
-            `Visual QA worker failed for candidate ${candidate.id}: ${reviewed.visual_report?.error ?? "unknown worker error"}. The previous live page was preserved.`
-          );
-        }
-
-        lastVisualReport = reviewed.visual_report;
-        if (reviewed.visual_status === "passed" && reviewed.visual_report?.passes) {
-          accepted = {
-            html: checked.html,
-            css: stylesheet.css,
-            rationale: structure.designNotes,
-            visualReport: reviewed.visual_report,
-          };
-          break;
-        }
+             if (error || !data) throw new Error(`Could not load completed visual QA: ${error?.message ?? "candidate missing"}`);
+             return data;
+        })) as GenerationCandidate;
       }
 
-      failures = [
-        checked.report.constraints,
-        ...critique.blockers.map((blocker) => `- Creative director: ${blocker}`),
-        ...(lastVisualReport?.deterministic.findings ?? [])
-          .filter((finding) => finding.severity === "blocker")
-          .map((finding) => `- Rendered browser QA (${finding.viewport ?? "all"}): ${finding.detail}`),
-        ...(lastVisualReport?.critique?.blockers ?? []).map((blocker) => `- Rendered visual critic: ${blocker}`),
-      ].filter(Boolean).join("\n");
-      console.warn(`[generate] attempt ${attempt} rejected:\n${failures}`);
+      if (reviewed.visual_status === "error") {
+        throw new Error(`Visual QA worker failed for candidate ${candidate.id}: ${reviewed.visual_report?.error ?? "unknown worker error"}. The previous live page was preserved.`);
+      }
+      visualReport = reviewed.visual_report;
+      const visualScore = visualReport?.critique?.score ?? 0;
+      const visualBlockers = visualReport?.critique?.blockers ?? [];
+      if (!visualReport?.deterministic.passes || visualScore < 50 || visualBlockers.length > 0) {
+        const reasons = [
+          ...(visualReport?.deterministic.findings ?? []).filter((finding) => finding.severity === "blocker").map((finding) => finding.detail),
+          ...(visualReport?.critique?.blockers ?? []),
+        ].join("\n");
+        throw new Error(`The rendered page is not yet usable (creative score ${visualScore}/100). The previous live page was preserved.\n${reasons}`);
+      }
     }
 
-    if (!accepted) {
-      const reasons = [
-        lastReport?.constraints,
-        ...(lastCritique?.blockers ?? []).map((blocker) => `- ${blocker}`),
-        ...(lastVisualReport?.deterministic.findings ?? [])
-          .filter((finding) => finding.severity === "blocker")
-          .map((finding) => `- ${finding.detail}`),
-        ...(lastVisualReport?.critique?.blockers ?? []).map((blocker) => `- ${blocker}`),
-      ].filter(Boolean).join("\n");
-      throw new Error(`No homepage candidate cleared the release gates after ${MAX_ATTEMPTS} attempts. The previous live page was preserved.\n${reasons}`);
-    }
-
-    const homepage = accepted;
+    const homepage = { html: checked.html, css: stylesheet.css, rationale: sitePlan.designNotes, visualReport };
     const homepageHtml = homepage.html;
-    const verdict = lastReport!;
+    const verdict = checked.report;
 
     await step.run("save-homepage", async () => {
       await writeLivePage(lead_id, HOME_KEY, homepageHtml, "generated", homepage.rationale);
@@ -451,19 +400,30 @@ export const bespokeGenerate = inngest.createFunction(
       await admin
         .from("artifacts")
         .update({
-          bespoke_rationale: homepage.rationale,
+           bespoke_rationale: homepage.rationale,
+           bespoke_sections: generatedSections.map((section) => ({
+             id: section.id,
+             kind: section.kind,
+             label: section.label,
+             html: sanitizeBespokeHtml(section.html),
+             locked: false,
+           })),
           // Kept so the operator can see what the critic caught, rather than
           // trusting that it ran.
           // Stored so the operator sees exactly what the gate found rather
           // than trusting that it ran.
           qa_notes: [
             ...verdict.findings.map((f) => `[${f.severity}] ${f.check}: ${f.detail}`),
-            ...(lastCritique?.warnings ?? []).map((warning) => `[warning] creative-director: ${warning}`),
+            ...critique.blockers.map((blocker) => `[refine] creative-director: ${blocker}`),
+            ...critique.warnings.map((warning) => `[warning] creative-director: ${warning}`),
             ...(homepage.visualReport?.deterministic.findings ?? []).map(
               (finding) => `[${finding.severity}] rendered-${finding.check}: ${finding.detail}`
             ),
             ...(homepage.visualReport?.critique?.warnings ?? []).map(
               (warning) => `[warning] visual-critic: ${warning}`
+            ),
+            ...(homepage.visualReport?.critique?.blockers ?? []).map(
+              (blocker) => `[refine] visual-critic: ${blocker}`
             ),
             ...(homepage.visualReport?.critique
               ? [`[score] visual-critic: ${homepage.visualReport.critique.score}/100 — ${homepage.visualReport.critique.summary}`]
@@ -509,7 +469,19 @@ function buildLocationPairs(services: string[], areas: string[]): { service: str
 }
 
 async function bumpProgress(admin: ReturnType<typeof createAdminClient>, leadId: string, done: number) {
-  await admin.from("build_jobs").update({ pages_done: done }).eq("lead_id", leadId).eq("stage", "bespoke");
+  await admin
+    .from("build_jobs")
+    .update({ pages_done: done, updated_at: new Date().toISOString() })
+    .eq("lead_id", leadId)
+    .eq("stage", "bespoke");
+}
+
+async function touchProgress(admin: ReturnType<typeof createAdminClient>, leadId: string) {
+  await admin
+    .from("build_jobs")
+    .update({ updated_at: new Date().toISOString() })
+    .eq("lead_id", leadId)
+    .eq("stage", "bespoke");
 }
 
 /**

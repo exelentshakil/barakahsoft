@@ -65,6 +65,7 @@ function modelCandidates(override?: string[]): string[] {
 }
 
 const DEFAULT_MAX_TOKENS = 32000;
+const REQUEST_TIMEOUT_MS = 150_000;
 
 interface CallOptions {
   images?: OpenAIImagePart[];
@@ -204,9 +205,11 @@ export async function callOpenAI(prompt: string, options: CallOptions = {}): Pro
             Authorization: `Bearer ${apiKey}`,
           },
           body: JSON.stringify(buildBody(prompt, options, attempt)),
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         });
       } catch (err) {
-        console.error("[openai] network error —", err);
+        const timedOut = err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
+        console.error(timedOut ? `[openai] ${model} timed out after ${REQUEST_TIMEOUT_MS / 1000}s` : "[openai] network error —", timedOut ? "" : err);
         return null;
       }
 

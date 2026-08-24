@@ -187,6 +187,24 @@ export function BespokeRuntime({ leadSlug }: { leadSlug: string }) {
       items.forEach((item, index) => item.setAttribute("data-open", index === 0 ? "true" : "false"));
     });
 
+    // ---- Review sliders -------------------------------------------------
+    // All quotes remain in the document and the track remains swipeable when
+    // script is off. These controls only add predictable previous/next steps.
+    root.querySelectorAll<HTMLElement>("[data-review-slider]").forEach((slider) => {
+      const track = slider.querySelector<HTMLElement>("[data-review-track]");
+      if (!track) return;
+      const move = (direction: number) => {
+        const card = track.firstElementChild as HTMLElement | null;
+        track.scrollBy({ left: direction * (card?.offsetWidth ?? track.clientWidth), behavior: reduceMotion ? "auto" : "smooth" });
+      };
+      const onClick = (event: Event) => {
+        if ((event.target as HTMLElement).closest("[data-review-prev]")) move(-1);
+        if ((event.target as HTMLElement).closest("[data-review-next]")) move(1);
+      };
+      slider.addEventListener("click", onClick);
+      cleanups.push(() => slider.removeEventListener("click", onClick));
+    });
+
     // ---- Bar charts -----------------------------------------------------
     // Drawn from data attributes into elements that already contain their
     // own labels and values as text. No library, no external request.

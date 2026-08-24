@@ -2,6 +2,7 @@ import { callBestModel, type GenerationProvider } from "@/lib/generate/model";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
 import type { DesignDna } from "@/lib/design-dna";
 import type { MediaPlan } from "@/lib/media/plan-media";
+import type { PlannedSection, SitePlan } from "@/lib/generate/site-plan";
 import {
   STANCE,
   SPACE_STANDARD,
@@ -12,23 +13,9 @@ import {
   HYGIENE_STANDARD,
   INTERACTION_CONTRACT,
   truthStandard,
-  PAGE_SHAPE,
 } from "@/lib/generate/standard";
 
 export { INTERACTION_CONTRACT };
-
-// Pass one: the page itself — structure and words together.
-//
-// Copy and layout are decided in the same call because they are the same
-// decision: a headline's length constrains a hero, and a section's shape
-// determines how much can be said in it. Splitting them, which this
-// codebase tried, produced strong copy arranged badly.
-//
-// What changed here is that the model now names its own classes. It used to
-// compose from a fixed vocabulary, which capped layout quality at whatever
-// had been pre-built — content came out good and the arrangement did not.
-// The stylesheet pass writes rules for exactly these class names, so the
-// old failure mode of a class resolving to nothing cannot occur.
 
 function factsBlock(brief: SiteBrief): string {
   const lines: string[] = [
@@ -39,97 +26,104 @@ function factsBlock(brief: SiteBrief): string {
   if (brief.founder) lines.push(`Owner: ${brief.founder}`);
   if (brief.phone) lines.push(`Phone (verbatim, in tel: links): ${brief.phone}`);
   if (brief.email) lines.push(`Email: ${brief.email}`);
-
   lines.push(
     brief.rating && brief.reviewCount
-      ? `Google: ${brief.rating} stars from ${brief.reviewCount} reviews — verified, lead with it`
-      : `NO verified rating exists. Never mention ratings, stars or review counts.`
+      ? `Google: ${brief.rating} stars from ${brief.reviewCount} reviews — verified`
+      : "NO verified aggregate rating exists. Never mention ratings, stars or review counts."
   );
   lines.push(
     brief.licensedInsured
-      ? `They state on their own site that they are licensed and insured — you may say so.`
-      : `No licensing or insurance claim exists. Never claim licensed, insured, bonded or certified.`
+      ? "They state on their own site that they are licensed and insured — you may say so."
+      : "No licensing or insurance claim exists. Never claim licensed, insured, bonded or certified."
   );
-  lines.push(`Their real services:\n${brief.services.map((s) => `  - ${s}`).join("\n")}`);
-
+  lines.push(`Their real services:\n${brief.services.map((service) => `  - ${service}`).join("\n")}`);
   lines.push(
     brief.reviews.length > 0
-      ? `Real reviews — quote verbatim or not at all:\n${brief.reviews.map((r) => `  "${r.text.slice(0, 260)}" — ${r.author}`).join("\n")}`
-      : `No review text available. Include no testimonials of any kind.`
+      ? `Real reviews — quote verbatim or not at all:\n${brief.reviews.map((review) => `  "${review.text}" — ${review.author}`).join("\n")}`
+      : "No review text available. Include no testimonials of any kind."
   );
-
   lines.push(`\nScraped from their current site:\n${brief.factsDigest.slice(0, 5000)}`);
   return lines.join("\n");
 }
 
-export interface StructureResult {
+export interface GeneratedSection {
+  id: string;
+  kind: PlannedSection["kind"];
+  label: string;
   html: string;
-  /** What the model intended, so the stylesheet pass builds the same page. */
-  designNotes: string;
 }
 
-export async function generateStructure(
+function parseSections(raw: string, batch: PlannedSection[]): GeneratedSection[] | null {
+  const cleaned = raw.replace(/^```(?:html)?\s*/i, "").replace(/```\s*$/i, "").trim();
+  const generated: GeneratedSection[] = [];
+  for (const section of batch) {
+    const escaped = section.id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const match = cleaned.match(new RegExp(`<!--\\s*SECTION:${escaped}\\s*-->([\\s\\S]*?)<!--\\s*\\/SECTION:${escaped}\\s*-->`, "i"));
+    const html = match?.[1]?.trim();
+    const rootId = html?.match(/^<section\b[^>]*\bid=["']([^"']+)["']/i)?.[1];
+    if (!html || rootId !== section.id || html.replace(/<[^>]+>/g, " ").trim().length < 80) return null;
+    generated.push({ id: section.id, kind: section.kind, label: section.label, html });
+  }
+  return generated;
+}
+
+export async function generateStructureBatch(
   brief: SiteBrief,
   dna: DesignDna,
   media: MediaPlan,
   knownPaths: string[],
-  previousFailures?: string,
+  plan: SitePlan,
+  batch: PlannedSection[],
   provider: GenerationProvider = "openai"
-): Promise<StructureResult | null> {
+): Promise<GeneratedSection[] | null> {
   const prompt = `${STANCE}
 
-Write the complete homepage for a real ${brief.industry} business in ${brief.city}.
+Write only the assigned homepage sections for a real ${brief.industry} business in ${brief.city}. Other batches are being written separately, so follow the shared plan and contracts exactly. Do not write or repeat sections outside this batch.
 
-The owner opens this page and decides in about four seconds whether you are better than whoever built their current site. Make committed decisions — a timid page of evenly-spaced identical cards is the failure to avoid.
-
-This is pass one of two. You write the HTML and the words. A second pass writes a bespoke stylesheet for exactly the class names you choose, so name them clearly and describe your intent.
-
-═══ THE BUSINESS — every claim comes from here and nowhere else ═══
+═══ GROUNDED BUSINESS FACTS — every claim comes from here ═══
 ${factsBlock(brief)}
 
-═══ WHAT THIS PAGE IS FOR ═══
 Primary action: ${brief.intent.primaryLabel}
 ${brief.intent.guidance}
 ${brief.intent.secondaryLabel ? `Secondary action: ${brief.intent.secondaryLabel}` : ""}
-${
-  brief.intent.primary !== "call-now" && brief.intent.primary !== "shop"
-    ? `\nThis business converts on a quote, booking, enquiry or consultation. Build a real data-lead-form INSIDE THE HERO SECTION itself, above the fold — see INTERACTIONS below for its exact shape. A visible form outperforms a button that opens one; do not settle for the button here. Every OTHER repeat of "${brief.intent.primaryLabel}" further down the page (a sticky element, a closing section, a service card) uses data-open-quote-modal instead, so the full form is not rebuilt at every decision point.`
-    : brief.intent.secondary && brief.intent.secondary !== "call-now" && brief.intent.secondary !== "shop"
-      ? `\nThe secondary "${brief.intent.secondaryLabel}" action opens the real lead form: put data-open-quote-modal on that button. Do not write a <form> for it.`
-      : ""
-}
+${brief.painInstructions.length ? `Owner-reported problems this page must solve:\n${brief.painInstructions.map((item) => `- ${item}`).join("\n")}` : ""}
 
-${
-  brief.painInstructions.length > 0
-    ? `═══ WHAT THE OWNER SAID IS WRONG — the page must visibly fix each ═══\n${brief.painInstructions.map((p) => `- ${p}`).join("\n")}`
-    : ""
-}
+═══ APPROVED PAGE RESEARCH AND PLAN ═══
+Diagnosis: ${plan.diagnosis}
+Composition: ${plan.designNotes}
+Recurring graphic primitive: ${plan.recurringPrimitive}
+Complete ordered page:
+${plan.sections.map((section, index) => `${index + 1}. ${section.id} [${section.kind}] — ${section.archetype}; solves: ${section.visitorProblem}; purpose: ${section.purpose}`).join("\n")}
 
-═══ DESIGN DIRECTION — from a best-in-class site in this trade ═══
-Mood: ${dna.mood} · Rhythm: ${dna.layout.sectionRhythm} · Hero: ${dna.layout.heroTreatment}
-Services as: ${dna.layout.serviceLayout} · Proof as: ${dna.layout.proofStyle}
-Geometry: ${dna.geometry.radius} corners, ${dna.geometry.elevation} elevation
-Type: ${dna.typography.displayFamily} display, ${dna.typography.bodyFamily} body, ${dna.typography.scale} scale
-Build these motifs rather than gesturing at them: ${dna.motifs.join("; ") || "none specified"}
-Why the reference reads premium: ${dna.rationale}
+THIS BATCH ONLY:
+${JSON.stringify(batch, null, 2)}
 
-═══ IMAGES — only these URLs. Any other src is deleted ═══
-${
-  media.length > 0
-    ? media.map((m) => `[${m.slot}] ${m.url}\n    shows: ${m.caption}`).join("\n")
-    : "None. Build with type, colour and layout alone, and make that a deliberate editorial choice rather than a page with holes in it. Output no <img> tags."
-}
-${media.length > 0 ? "This list is deliberately incomplete for some services — do not assume one exists per service. If a service, feature or card has no matching slot above, do not force an image+text split layout onto it; give it a text-forward or icon-led treatment matching the visual weight of its siblings, not an empty gap where an image should be." : ""}
+═══ ONE DESIGN SYSTEM ACROSS EVERY BATCH ═══
+- Every section root is <section id="the-plan-id" class="site-section descriptive-section-class"> and contains a site-shell wrapper.
+- Every repetition of the primary action uses the exact text "${brief.intent.primaryLabel}" and classes "site-cta site-cta--primary". Do not invent another primary button class, colour or label.
+- Secondary actions use "site-cta site-cta--secondary" and remain visually subordinate.
+- Shared components keep shared classes across sections. Use descriptive block__element classes only for section-specific composition.
+- Keep generous whitespace and clear separation between content groups. Do not fill empty space with extra cards, badges or copy.
+- The About section must visibly balance authentic imagery or brand treatment, ${brief.founder ? `owner identity (${brief.founder})` : "business identity"}, concise story and supported trust evidence. Never shrink imagery to an avatar or stretch copy across dead space. Do not invent a logo, owner title, years of experience or metric.
+- If this batch contains reviews, build one accessible slider: the section has data-review-slider, a viewport with data-review-track, one semantic blockquote per supplied review, and previous/next buttons with data-review-prev and data-review-next plus aria-labels. Inside each blockquote, put the verbatim quote in a <p> and its supplied author in a <cite>. JavaScript-off fallback remains horizontally scrollable.
+- If this batch contains FAQ, use the reviewed accordion data attributes from the interaction contract.
+- No adjacent section may copy the same skeleton. Follow the planned archetypes and colour cadence, but leave all visual styling to the stylesheet pass.
+
+═══ DESIGN DIRECTION ═══
+Mood: ${dna.mood}; rhythm: ${dna.layout.sectionRhythm}; hero: ${dna.layout.heroTreatment}; services: ${dna.layout.serviceLayout}; proof: ${dna.layout.proofStyle}
+Motifs: ${dna.motifs.join("; ") || "none specified"}
+Why it works: ${dna.rationale}
+
+═══ AVAILABLE IMAGES — exact URLs only, each at most once on the whole page ═══
+${media.length ? media.map((item) => `[${item.slot}] ${item.url}\nshows: ${item.caption}`).join("\n") : "None. Output no img tags."}
+Only use media slots assigned to this batch's plan entries. Every image needs width, height, meaningful alt, and lazy loading except the hero.
 
 ═══ LINKS THAT EXIST ═══
-${knownPaths.map((p) => `  ${p}`).join("\n")}
-Anything else becomes an on-page anchor. Give each service block an id of its slug.
-${brief.phone ? `Phone links: tel:${brief.phone.replace(/[^\d+]/g, "")}` : ""}
+${knownPaths.join("\n")}
+Anything else becomes an on-page anchor. ${brief.phone ? `Phone links use tel:${brief.phone.replace(/[^\d+]/g, "")}.` : ""}
 
-═══ HOW TO WRITE THE MARKUP ═══
 ${HYGIENE_STANDARD}
 
-The stylesheet pass builds to this geometry, so structure the markup so it is possible:
 ${SPACE_STANDARD}
 
 ${PSYCHOLOGY_STANDARD}
@@ -140,49 +134,26 @@ ${PREMIUM_COMPOSITION_STANDARD}
 
 ABOUT DIRECTION FOR THIS LEAD
 ${aboutDirectionFor(`${brief.businessName}|${brief.industry}|${brief.city}`)}
-Execute this direction using only the real media and facts supplied. It is selected per lead specifically to prevent every generated About section from becoming the same template.
-
-Name classes descriptively and consistently, block-then-element:
-  hero, hero__inner, hero__title, hero__actions
-  services, services__grid, service-card, service-card__title
-The stylesheet pass styles exactly what you name, so be consistent — do not invent three names for the same kind of thing.
-
 
 ${INTERACTION_CONTRACT}
 
 ${truthStandard(brief.rating, brief.reviewCount)}
 
-═══ WHAT THE PAGE MUST DO ═══
-${PAGE_SHAPE}
 ${
-  previousFailures
-    ? `\n═══ A PREVIOUS ATTEMPT WAS REJECTED ═══\nThis is a fresh build, not a repair. Just make sure none of these are true of yours:\n${previousFailures}\n`
-    : ""
+  brief.intent.primary !== "call-now" && brief.intent.primary !== "shop"
+    ? `If this batch contains the hero, put one real data-lead-form inside it. Every later primary CTA uses data-open-quote-modal.`
+    : brief.intent.secondary && brief.intent.secondary !== "call-now" && brief.intent.secondary !== "shop"
+      ? `The secondary action uses data-open-quote-modal.`
+      : ""
 }
-Reply in EXACTLY this format:
-DESIGN NOTES: six to ten sentences defining the complete composition plan: section order and archetype, quiet/focal/reset colour cadence, recurring graphic primitive, hero focal hierarchy, About execution, image framing, density changes, mobile transformation, and how the closing CTA resolves the opening. The stylesheet pass and release critic read this.
----PAGE---
-<the HTML body fragment, no markdown fences>`;
 
-  const raw = await callBestModel(
-    prompt,
-    {
-      maxTokens: 60000,
-      temperature: 0.85,
-      system:
-        "You are a senior web designer, direct-response conversion strategist and copywriter writing production HTML for real local businesses. Diagnose the visitor's buying problem, build one persuasive argument, make the next action obvious, never invent facts, and name classes consistently because another expert writes the CSS.",
-    },
-    provider
-  );
+Reply with every assigned section exactly once, in batch order, using these exact delimiters and no prose or markdown fences:
+${batch.map((section) => `<!-- SECTION:${section.id} -->\n<section id="${section.id}" class="site-section ...">...</section>\n<!-- /SECTION:${section.id} -->`).join("\n")}`;
 
-  if (!raw) return null;
-
-  const trimmed = raw.replace(/^```(?:html)?\s*/i, "").replace(/```\s*$/i, "").trim();
-  const match = trimmed.match(/^DESIGN NOTES:\s*([\s\S]*?)\n+---PAGE---\s*\n/i);
-  const designNotes = match ? match[1].trim() : "";
-  const html = match ? trimmed.slice(match[0].length).trim() : trimmed;
-
-  if (!html || html.replace(/<[^>]+>/g, "").trim().length < 400) return null;
-
-  return { html, designNotes };
+  const raw = await callBestModel(prompt, {
+    maxTokens: 16000,
+    temperature: 0.65,
+    system: "You are a senior web designer, conversion strategist and copywriter producing grounded semantic HTML. You execute an approved plan, preserve one shared component system across batches, and never invent facts.",
+  }, provider);
+  return raw ? parseSections(raw, batch) : null;
 }
