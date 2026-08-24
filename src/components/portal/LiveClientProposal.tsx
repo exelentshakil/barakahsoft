@@ -192,6 +192,7 @@ export function LiveClientProposal({
           brandColorHex={payload.brandColorHsl || (facts.brand_color_hex as string) || null}
           logoUrl={payload.logoUrl}
           fontFamily={payload.fontFamily}
+          designTokens={payload.designTokens}
         />
 
         {/* Modules render only when there is measured data behind them AND
