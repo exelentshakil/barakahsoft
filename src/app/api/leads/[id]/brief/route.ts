@@ -37,6 +37,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   assign("city", typeof body.city === "string" ? body.city : undefined);
   assign("industry", typeof body.industry === "string" ? body.industry : undefined);
   assign("hero_cutout", typeof body.heroImage === "string" ? body.heroImage : undefined);
+  assign("logo_url", typeof body.logoUrl === "string" ? body.logoUrl : undefined);
+  assign("footer_logo_url", typeof body.footerLogoUrl === "string" ? body.footerLogoUrl : undefined);
   assign("services_list", Array.isArray(body.services) ? body.services.filter(Boolean) : undefined);
   assign("areas_list", Array.isArray(body.areas) ? body.areas.filter(Boolean) : undefined);
 
@@ -48,6 +50,22 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     .eq("lead_id", leadId);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Update derived areas on scrape results so renderShell and location templates get the full list
+  if (Array.isArray(body.areas) && body.areas.length > 0) {
+    const { data: scrapeRow } = await admin
+      .from("scrape_results")
+      .select("facts")
+      .eq("lead_id", leadId)
+      .maybeSingle<{ facts: Record<string, unknown> }>();
+    if (scrapeRow?.facts) {
+      const updatedFacts = {
+        ...scrapeRow.facts,
+        derived_areas: body.areas.filter(Boolean),
+      };
+      await admin.from("scrape_results").update({ facts: updatedFacts }).eq("lead_id", leadId);
+    }
+  }
 
   // Industry lives on the lead too — the leads table is what the pipeline
   // list and the persona classifier read.

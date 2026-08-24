@@ -95,7 +95,9 @@ generous padding, real weight, a considered hover.
 
 THE LEAD FORM, if the markup contains [data-lead-form]
 This is the conversion mechanism and it must look like the most valuable thing
-on the page — not a bare stack of browser-default inputs. Style the fields
+on the page — not a bare stack of browser-default inputs. On desktop, any callback/contact
+section containing [data-lead-form] must be a 2-column balanced grid with copy/contact info
+on the left and the form card on the right (never a centered floating orphan form). Style the fields
 themselves: real height (44px minimum), token borders, a clear :focus-visible
 state, and a submit button matching the primary call to action above.
 The application sets a data-state attribute on the form as it submits, so:

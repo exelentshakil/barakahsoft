@@ -61,6 +61,7 @@ export interface SitePayload {
   googleReviewsUrl: string | null;
   brandColorHsl: string | null;
   logoUrl: string | null;
+  footerLogoUrl?: string | null;
   fontFamily: string | null;
   fontStylesheetUrl: string | null;
   innerPagesBuilt: boolean;

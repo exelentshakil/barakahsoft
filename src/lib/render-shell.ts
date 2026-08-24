@@ -168,6 +168,7 @@ export function renderShell(
       : null,
     brandColorHsl: (facts.brand_color_hsl as string) ?? null,
     logoUrl: (facts.logo_url as string) ?? null,
+    footerLogoUrl: (artifact.extracted_assets?.footer_logo_url as string) || (facts.logo_url as string) || null,
     // Keep the delivered system visually consistent. Client fonts are useful
     // as research signals, but arbitrary scraped font imports made pages feel
     // inconsistent and occasionally broke the intended hierarchy.

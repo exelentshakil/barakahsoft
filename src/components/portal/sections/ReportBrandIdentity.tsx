@@ -65,17 +65,38 @@ export function ReportBrandIdentity({
   return (
     <section className="rounded-2xl border border-[#c7d0fb] bg-white p-6 sm:p-10 shadow-sm space-y-8">
       {/* Header — Human, Outcome-Focused (Hormozi / Creative Agency Style) */}
-      <div className="border-b border-[#e5e7f2] pb-5">
-        <div className="flex items-center gap-2">
-          <span className="flex h-2.5 w-2.5 rounded-full bg-[#533afd] animate-pulse" />
-          <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
-            Brand Identity &amp; Digital Foundation
-          </span>
+      <div className="border-b border-[#e5e7f2] pb-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="flex h-2.5 w-2.5 rounded-full bg-[#533afd] animate-pulse" />
+              <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
+                Brand Identity &amp; Digital Foundation
+              </span>
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight text-[#0d1738] sm:text-3xl">
+              Preserving Your Reputation · Upgrading What Converts
+            </h2>
+          </div>
+
+          {/* Prominent Logo & Verified Footprint Badge on Top */}
+          <div className="flex items-center gap-3 rounded-xl border border-[#c7d0fb] bg-[#f9f9ff] p-3 shrink-0 shadow-2xs">
+            {logo ? (
+              <div className="flex h-12 w-28 items-center justify-center rounded-lg bg-white p-1.5 border border-slate-200/80 shadow-xs">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={logo} alt={businessName} className="max-h-full max-w-full object-contain" />
+              </div>
+            ) : null}
+            <div className="text-left">
+              <p className="text-xs font-bold text-[#0d1738] truncate max-w-[140px]">{businessName}</p>
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0b8f5b]">
+                <CheckCircle2 className="h-3 w-3" /> Manually Audited
+              </span>
+            </div>
+          </div>
         </div>
-        <h2 className="mt-2 text-2xl font-bold tracking-tight text-[#0d1738] sm:text-3xl">
-          Preserving Your Reputation · Upgrading What Converts
-        </h2>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[#42506a]">
+
+        <p className="max-w-3xl text-sm leading-relaxed text-[#42506a]">
           We did the heavy lifting before touching a single line of code. We audited your real color palette,
           logo assets, typography, core services, and local territory — then rebuilt the entire customer journey to capture more calls and quote requests.
         </p>

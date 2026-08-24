@@ -50,6 +50,7 @@ export function BespokeGenerationStudio({
   // and because whatever is in here overrides the classified list at
   // generation time, those went straight onto the client's homepage.
   const classifiedServices = Array.isArray(facts.derived_services) ? (facts.derived_services as string[]) : [];
+  const classifiedAreas = Array.isArray(facts.derived_areas) ? (facts.derived_areas as string[]) : [];
 
   // Extract previously saved generated assets from Supabase
   const extracted = (artifact?.extracted_assets as any) || {};
@@ -57,33 +58,34 @@ export function BespokeGenerationStudio({
   const defaultBusinessName = extracted.business_name || schema.name || (typeof facts.business_name === "string" ? facts.business_name : null) || lead.business_name || "";
   const defaultFounder = extracted.founder_name || schema.founder?.name || lead.contact_name || "";
   const defaultLogo = extracted.branding?.logo || schema.logo || (typeof facts.logo_url === "string" ? facts.logo_url : "") || "";
+  const defaultFooterLogo = extracted.footer_logo_url || "";
   const defaultHero = extracted.hero_cutout || primaryScrapedPhoto || "";
   const defaultCity = extracted.city || (schema.address?.addressLocality ? `${schema.address.addressLocality}, ${schema.address.addressRegion || ""}`.trim() : typeof facts.town === "string" ? facts.town : "");
   const defaultIndustry = extracted.industry || lead.industry || (typeof facts.industry === "string" ? facts.industry : "");
 
-  // No hardcoded fallback list. A previous version defaulted to a fixed
-  // electrician service list, which meant a roofer or a salon whose scrape
-  // was thin silently received an electrician's services -- one of the two
-  // root causes of "bespoke" sites that looked identical.
-  // An operator edit wins, then the classified list. Nothing else — a guess
-  // in this box becomes a claim on the client's homepage.
   const defaultServices = Array.isArray(extracted.services_list) && extracted.services_list.length > 0
     ? extracted.services_list.join("\n")
     : classifiedServices.join("\n");
+
+  const defaultAreas = Array.isArray(extracted.areas_list) && extracted.areas_list.length > 0
+    ? extracted.areas_list.join("\n")
+    : classifiedAreas.join("\n");
 
   const [businessName, setBusinessName] = useState(defaultBusinessName);
   const [founder, setFounder] = useState(defaultFounder);
   const [heroImage, setHeroImage] = useState(defaultHero);
   const [logoUrl, setLogoUrl] = useState(defaultLogo);
+  const [footerLogoUrl, setFooterLogoUrl] = useState(defaultFooterLogo);
   const [city, setCity] = useState(defaultCity);
   const [industry, setIndustry] = useState(defaultIndustry);
   const [servicesText, setServicesText] = useState(defaultServices);
+  const [areasText, setAreasText] = useState(defaultAreas);
   const [primaryColor, setPrimaryColor] = useState(extracted.branding?.colors?.primary || (facts.colors as any)?.primary || "#533AFD");
   // useState initialisers run once. Analysis finishes minutes later and
   // refreshes these props, but the fields kept their original empty values —
   // so the brief looked unpopulated until the operator reloaded by hand.
   // Fields the operator has actually typed in are never overwritten.
-  const dataSignature = `${defaultBusinessName}|${defaultCity}|${defaultIndustry}|${defaultServices}`;
+  const dataSignature = `${defaultBusinessName}|${defaultCity}|${defaultIndustry}|${defaultServices}|${defaultAreas}`;
   const lastSignature = useRef(dataSignature);
   const touched = useRef(false);
 
@@ -96,9 +98,11 @@ export function BespokeGenerationStudio({
     setCity(defaultCity);
     setIndustry(defaultIndustry);
     setServicesText(defaultServices);
+    setAreasText(defaultAreas);
     setFounder(defaultFounder);
     setHeroImage(defaultHero);
     setLogoUrl(defaultLogo);
+    setFooterLogoUrl(defaultFooterLogo);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataSignature]);
   const [accentColor, setAccentColor] = useState(extracted.branding?.colors?.accent || (facts.colors as any)?.accent || "#FFD12D");
@@ -155,6 +159,11 @@ export function BespokeGenerationStudio({
         .map((s: string) => s.trim())
         .filter(Boolean);
 
+      const areas = (areasText || "")
+        .split("\n")
+        .map((s: string) => s.trim())
+        .filter(Boolean);
+
       const res = await fetch(`/api/leads/${lead.id}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -162,9 +171,12 @@ export function BespokeGenerationStudio({
           businessName,
           founder,
           heroImage,
+          logoUrl,
+          footerLogoUrl,
           city,
           industry,
           services,
+          areas,
           // Phone and email are deliberately NOT defaulted to a placeholder.
           // A generated page with someone else's phone number on it is worse
           // than one with no phone number at all.
@@ -191,8 +203,8 @@ export function BespokeGenerationStudio({
   // The brief autosaves. It was previously only sent alongside a generate
   // request and never written back, so "Exact Industry" and "Core Services"
   // came back empty on every reload -- typed, used once, lost.
-  const briefRef = useRef({ businessName, founder, city, industry, servicesText, heroImage });
-  briefRef.current = { businessName, founder, city, industry, servicesText, heroImage };
+  const briefRef = useRef({ businessName, founder, city, industry, servicesText, areasText, heroImage, logoUrl, footerLogoUrl });
+  briefRef.current = { businessName, founder, city, industry, servicesText, areasText, heroImage, logoUrl, footerLogoUrl };
 
   const [briefSaved, setBriefSaved] = useState<"idle" | "saving" | "saved">("idle");
 
@@ -213,7 +225,10 @@ export function BespokeGenerationStudio({
           city: b.city,
           industry: b.industry,
           heroImage: b.heroImage,
+          logoUrl: b.logoUrl,
+          footerLogoUrl: b.footerLogoUrl,
           services: b.servicesText.split("\n").map((x: string) => x.trim()).filter(Boolean),
+          areas: b.areasText.split("\n").map((x: string) => x.trim()).filter(Boolean),
         }),
       });
       setBriefSaved("saved");
@@ -228,7 +243,7 @@ export function BespokeGenerationStudio({
     const timer = setTimeout(saveBrief, 1200);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [businessName, founder, city, industry, servicesText, heroImage]);
+  }, [businessName, founder, city, industry, servicesText, areasText, heroImage, logoUrl, footerLogoUrl]);
 
   // A build that died without writing a status leaves its row on "running"
   // forever, and the Generate button is disabled while a build is running —
@@ -450,16 +465,41 @@ export function BespokeGenerationStudio({
                 />
               </div>
 
-              <div className="sm:col-span-2 lg:col-span-3">
-                <Label htmlFor="gen-services" className="text-xs font-bold">Core Services / Products (1 per line)</Label>
-                <Textarea
-                  id="gen-services"
-                  rows={5}
-                  value={servicesText}
-                  onChange={(e) => { markTouched(); setServicesText(e.target.value); }}
-                  className="mt-1 text-xs bg-[#f9f9ff] font-sans"
-                  placeholder="One real service per line, taken from the client&apos;s own site"
+              <div>
+                <Label htmlFor="gen-footer-logo" className="text-xs font-bold">Footer Logo URL (Transparent / Optional)</Label>
+                <Input
+                  id="gen-footer-logo"
+                  value={footerLogoUrl}
+                  onChange={(e) => { markTouched(); setFooterLogoUrl(e.target.value); }}
+                  className="mt-1 h-8 text-xs bg-[#f9f9ff]"
+                  placeholder="https://.../logo-white.png"
                 />
+              </div>
+
+              <div className="sm:col-span-2 lg:col-span-3 grid sm:grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="gen-services" className="text-xs font-bold">Core Services / Products (1 per line)</Label>
+                  <Textarea
+                    id="gen-services"
+                    rows={6}
+                    value={servicesText}
+                    onChange={(e) => { markTouched(); setServicesText(e.target.value); }}
+                    className="mt-1 text-xs bg-[#f9f9ff] font-sans"
+                    placeholder="One real service per line (e.g. Water extraction, Mold remediation...)"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="gen-areas" className="text-xs font-bold">Service Areas / Locations (1 per line)</Label>
+                  <Textarea
+                    id="gen-areas"
+                    rows={6}
+                    value={areasText}
+                    onChange={(e) => { markTouched(); setAreasText(e.target.value); }}
+                    className="mt-1 text-xs bg-[#f9f9ff] font-sans"
+                    placeholder="One location per line (e.g. Las Vegas, NV, Henderson, NV, Summerlin, NV...)"
+                  />
+                </div>
               </div>
             </div>
           )}

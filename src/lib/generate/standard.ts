@@ -159,17 +159,16 @@ NO <style> and NO <script> — both are stripped. NO inline style attributes for
 
 export const INTERACTION_CONTRACT = `INTERACTIONS — the page gets motion and behaviour by requesting it with data attributes. A reviewed script in the application implements these. Do not write <script> tags; they are stripped.
 
-  data-lead-form                a real, working lead-capture form. Use it in the hero itself for
-                                any business that converts on a quote, booking, enquiry or
-                                consultation — a visible form above the fold outperforms a
-                                button that opens one, and this one is already validated and
-                                wired to email the business owner for real. Field names are
-                                fixed, everything else about how it looks is yours:
+  data-lead-form                a real, working lead-capture form. Use it in the hero or in a dedicated callback section.
+                                DESKTOP LAYOUT REQUIREMENT: Any section containing [data-lead-form] MUST be a balanced 2-column layout on desktop:
+                                - Left Column (50%-55%): Eyebrow label, strong outcome headline (e.g. "Prefer a direct callback?"), reassuring narrative description, direct click-to-call phone link, and 24/7 emergency badge.
+                                - Right Column (45%-50%): The clean, card-styled form.
+                                NEVER throw a naked form alone in an empty row without left-side copy and trust context to balance the desktop layout.
+                                Field names are fixed:
                                   name="name"      text, required
                                   name="phone"     tel, required unless email is also present
                                   name="email"     email, include it whenever it fits
-                                  name="service"   a <select> built from this business's real
-                                                   services (optional)
+                                  name="service"   a <select> built from this business's real services (optional)
                                 One submit <button>. Also include one empty element inside the
                                 form marked data-lead-form-message for the submit/success/error
                                 text the application will write into it. Do not add onsubmit,

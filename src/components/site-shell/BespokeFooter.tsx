@@ -136,10 +136,10 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
             {/* Col 1: Brand, Bio, Contact, Trust, Socials */}
             <div className="bs-footer-col-brand">
               <a href={siteHref(payload)} className="bs-logo bs-footer-logo">
-                {payload.logoUrl ? (
+                {payload.footerLogoUrl || payload.logoUrl ? (
                   <div className="bs-footer-logo-badge">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={payload.logoUrl} alt={payload.businessName} />
+                    <img src={payload.footerLogoUrl || payload.logoUrl || ""} alt={payload.businessName} />
                   </div>
                 ) : (
                   <span className="bs-footer-brand-text">{payload.businessName}</span>
