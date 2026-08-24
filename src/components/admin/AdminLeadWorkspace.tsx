@@ -603,14 +603,16 @@ export function AdminLeadWorkspace({
               <CircleDollarSign className="h-4 w-4" /> Ask for payment · {priceDisplay}
             </button>
 
-            <EditLeadDialog
-              leadId={lead.id}
-              businessName={lead.business_name}
-              sourceUrl={lead.source_url}
-              facebookPixelId={lead.facebook_pixel_id}
-              googleSiteVerification={lead.google_site_verification}
-            />
-            <DeleteLeadButton leadId={lead.id} />
+            <div className="flex shrink-0 items-center rounded-xl border border-slate-200 bg-white">
+              <EditLeadDialog
+                leadId={lead.id}
+                businessName={lead.business_name}
+                sourceUrl={lead.source_url}
+                facebookPixelId={lead.facebook_pixel_id}
+                googleSiteVerification={lead.google_site_verification}
+              />
+              <DeleteLeadButton leadId={lead.id} />
+            </div>
           </div>
         </div>
 
