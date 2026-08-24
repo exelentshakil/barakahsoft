@@ -13,11 +13,12 @@ import { Button } from "@/components/ui/button";
 import { toPng } from "html-to-image";
 
 export type MockupHeadlineMode =
-  | "proposed" // "REDESIGN PROPOSED"
-  | "concept"  // "WEBSITE CONCEPT READY"
-  | "upgrade"  // "HIGH-PERFORMANCE REDESIGN"
-  | "preview"  // "PRIVATE DESIGN PREVIEW"
-  | "launched"; // "NEW WEBSITE LAUNCHED"
+  | "proposed" // "REDESIGN CONCEPT"
+  | "concept"  // "WEBSITE CONCEPT"
+  | "upgrade"  // "HIGH PERFORMANCE"
+  | "preview"  // "PRIVATE DESIGN"
+  | "rebuild"  // "BRAND REBUILD"
+  | "launched"; // "NEW WEBSITE"
 
 export interface MockupData {
   businessName: string;
@@ -50,40 +51,56 @@ export interface MockupData {
 export const HEADLINE_OPTIONS: { id: MockupHeadlineMode; line1: string; line2: string; tag: string }[] = [
   {
     id: "launched",
-    line1: "NEW WEBSITE",
-    line2: "LAUNCHED",
-    tag: "Official Launch (Ref)",
+    line1: "NEW",
+    line2: "WEBSITE",
+    tag: "Official Launch",
   },
   {
     id: "proposed",
     line1: "REDESIGN",
-    line2: "PROPOSED",
+    line2: "CONCEPT",
     tag: "Proposal Stage",
   },
   {
     id: "concept",
-    line1: "WEBSITE CONCEPT",
-    line2: "READY",
+    line1: "WEBSITE",
+    line2: "CONCEPT",
     tag: "Concept Review",
   },
   {
     id: "upgrade",
-    line1: "HIGH-PERFORMANCE",
-    line2: "REDESIGN",
+    line1: "HIGH",
+    line2: "PERFORMANCE",
     tag: "Authority Pitch",
   },
   {
     id: "preview",
-    line1: "PRIVATE DESIGN",
-    line2: "PREVIEW",
+    line1: "PRIVATE",
+    line2: "DESIGN",
     tag: "VIP Teaser",
+  },
+  {
+    id: "rebuild",
+    line1: "BRAND",
+    line2: "REBUILD",
+    tag: "Brand Upgrade",
   },
 ];
 
 export const BG_THEMES = [
   {
+    id: "midnight",
+    name: "Midnight Navy",
+    gradient: "from-[#0a1128] via-[#001f54] to-[#034078]",
+    bgStart: "#0a1128",
+    bgMid: "#001f54",
+    bgEnd: "#034078",
+    watermarkColor: "rgba(255, 255, 255, 0.08)",
+    ribbonBg: "#001f54",
+  },
+  {
     id: "sky",
-    name: "Azure Sky (Exact Ref)",
+    name: "Azure Sky",
     gradient: "from-[#6fa6cb] via-[#94bedc] to-[#c7dfef]",
     bgStart: "#6fa6cb",
     bgMid: "#94bedc",
@@ -92,34 +109,64 @@ export const BG_THEMES = [
     ribbonBg: "#2b4c6f",
   },
   {
-    id: "olive",
-    name: "Sage Olive",
-    gradient: "from-[#4a5a47] via-[#334131] to-[#1e271c]",
-    bgStart: "#4a5a47",
-    bgMid: "#334131",
-    bgEnd: "#1e271c",
+    id: "emerald",
+    name: "Emerald Obsidian",
+    gradient: "from-[#064e3b] via-[#022c22] to-[#01140f]",
+    bgStart: "#064e3b",
+    bgMid: "#022c22",
+    bgEnd: "#01140f",
     watermarkColor: "rgba(255, 255, 255, 0.08)",
-    ribbonBg: "#1b3824",
+    ribbonBg: "#064e3b",
   },
   {
-    id: "midnight",
-    name: "Midnight Navy",
-    gradient: "from-[#182845] via-[#0f1a2f] to-[#060c18]",
-    bgStart: "#182845",
-    bgMid: "#0f1a2f",
-    bgEnd: "#060c18",
+    id: "royal",
+    name: "Royal Amethyst",
+    gradient: "from-[#311042] via-[#1f0b2b] to-[#12041d]",
+    bgStart: "#311042",
+    bgMid: "#1f0b2b",
+    bgEnd: "#12041d",
     watermarkColor: "rgba(255, 255, 255, 0.08)",
-    ribbonBg: "#12223a",
+    ribbonBg: "#311042",
+  },
+  {
+    id: "sunset",
+    name: "Sunset Titanium",
+    gradient: "from-[#7c2d12] via-[#431407] to-[#1c1917]",
+    bgStart: "#7c2d12",
+    bgMid: "#431407",
+    bgEnd: "#1c1917",
+    watermarkColor: "rgba(255, 255, 255, 0.08)",
+    ribbonBg: "#7c2d12",
   },
   {
     id: "charcoal",
     name: "Studio Charcoal",
-    gradient: "from-[#30353e] via-[#1f2228] to-[#121418]",
-    bgStart: "#30353e",
-    bgMid: "#1f2228",
-    bgEnd: "#121418",
+    gradient: "from-[#1e2229] via-[#14171d] to-[#0b0d10]",
+    bgStart: "#1e2229",
+    bgMid: "#14171d",
+    bgEnd: "#0b0d10",
     watermarkColor: "rgba(255, 255, 255, 0.08)",
-    ribbonBg: "#1c2027",
+    ribbonBg: "#1e2229",
+  },
+  {
+    id: "olive",
+    name: "Sage Olive",
+    gradient: "from-[#364634] via-[#243023] to-[#182217]",
+    bgStart: "#364634",
+    bgMid: "#243023",
+    bgEnd: "#182217",
+    watermarkColor: "rgba(255, 255, 255, 0.08)",
+    ribbonBg: "#364634",
+  },
+  {
+    id: "cobalt",
+    name: "Electric Cobalt",
+    gradient: "from-[#1e40af] via-[#1e3a8a] to-[#0f172a]",
+    bgStart: "#1e40af",
+    bgMid: "#1e3a8a",
+    bgEnd: "#0f172a",
+    watermarkColor: "rgba(255, 255, 255, 0.08)",
+    ribbonBg: "#1e40af",
   },
 ];
 
