@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Globe, Search, CheckCircle2, Loader2 } from "lucide-react";
+import { Globe, Search, CheckCircle2, Loader2, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,8 +48,24 @@ export function DomainManager({ lead }: { lead: Lead }) {
   const [showContactForm, setShowContactForm] = useState(false);
   const [contact, setContact] = useState({ ...emptyContact, companyName: lead.business_name ?? "" });
   const [buying, setBuying] = useState(false);
+  const [launching, setLaunching] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
+
+  async function launchSite() {
+    setLaunching(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/leads/${lead.id}/go-live`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not launch site");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not launch site");
+    } finally {
+      setLaunching(false);
+    }
+  }
 
   async function saveByod(e: React.FormEvent) {
     e.preventDefault();
@@ -121,8 +137,13 @@ export function DomainManager({ lead }: { lead: Lead }) {
             {lead.domain_source && <Badge variant="outline">{lead.domain_source === "purchased" ? "Purchased via us" : "Client-owned"}</Badge>}
           </div>
           <p className="text-xs text-muted-foreground">
-            {lead.live_at ? `Live since ${new Date(lead.live_at).toLocaleDateString()}` : "Will attach automatically once payment completes."}
+            {lead.live_at ? `Live since ${new Date(lead.live_at).toLocaleDateString()}` : "Attached after payment; waiting for final operator launch approval."}
           </p>
+          {!lead.live_at && lead.paid_at && (
+            <Button type="button" size="sm" className="mt-2 gap-1.5" onClick={launchSite} disabled={launching}>
+              <Rocket className="h-3.5 w-3.5" /> {launching ? "Launching..." : "Go live after final QA"}
+            </Button>
+          )}
         </CardContent>
       </Card>
     );

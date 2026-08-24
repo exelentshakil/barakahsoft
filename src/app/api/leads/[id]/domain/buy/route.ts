@@ -49,9 +49,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: `Domain purchased but failed to save — attach ${domain} to lead ${id} manually` }, { status: 500 });
   }
 
-  if (lead.paid_at) {
-    await inngest.send({ name: "stripe/invoice.paid", data: { lead_id: id } }).catch((err) => console.error("[domain/buy] re-trigger go-live failed", err));
-  }
+  if (lead.paid_at) await inngest.send({ name: "stripe/invoice.paid", data: { lead_id: id } }).catch((err) => console.error("[domain/buy] re-trigger production event failed", err));
 
   return NextResponse.json({ ok: true, price: price.purchasePrice });
 }

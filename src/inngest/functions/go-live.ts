@@ -4,12 +4,9 @@ import { addDomainToProject } from "@/lib/vercel";
 
 // go_live — ProvisionGoLive (plan §5), fan-out sibling to
 // rebuild-inner-pages.ts on the same "stripe/invoice.paid" event. Domain
-// attach is best-effort: leads.custom_domain is set by the operator during
-// the sales call (PRD "you register/manage it if they don't have one, or
-// handle DNS cutover if they do" — zero technical burden on the client,
-// but that means a human step, not something this function can invent).
-// If it's not set yet, this just leaves the lead ready for a manual
-// go-live once the operator has a domain to attach.
+// Payment starts production work. Going live remains a deliberate operator
+// action after content, DNS, and final QA are complete; payment alone must
+// never publish an unfinished site.
 export const goLive = inngest.createFunction(
   { id: "go-live" },
   { event: "stripe/invoice.paid" },
@@ -33,7 +30,7 @@ export const goLive = inngest.createFunction(
         console.error(`[go-live] failed to attach domain ${lead.custom_domain} for lead ${lead_id} — ${result.error}`);
         return;
       }
-      await admin.from("leads").update({ live_at: new Date().toISOString(), status: "live" }).eq("id", lead_id);
+      console.log(`[go-live] domain attached for paid lead ${lead_id}; waiting for operator launch approval`);
     });
 
     return { lead_id };

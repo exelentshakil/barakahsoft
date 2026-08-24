@@ -25,8 +25,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 // PATCH { domain } -- "bring your own domain": the client already owns
 // one, the operator just enters it. If the lead already paid (go-live.ts
 // already ran and skipped because custom_domain was empty at the time),
-// re-fire the same event so it actually attaches the domain now instead
-// of leaving the lead stuck live-forever-pending.
+// re-fire the production event so it attaches the domain now. Publishing
+// still requires the operator's explicit final launch action.
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
@@ -46,9 +46,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     .single();
   if (error || !lead) return NextResponse.json({ error: error?.message ?? "Could not save domain" }, { status: 500 });
 
-  if (lead.paid_at) {
-    await inngest.send({ name: "stripe/invoice.paid", data: { lead_id: id } }).catch((err) => console.error("[domain] re-trigger go-live failed", err));
-  }
+  if (lead.paid_at) await inngest.send({ name: "stripe/invoice.paid", data: { lead_id: id } }).catch((err) => console.error("[domain] re-trigger production event failed", err));
 
   return NextResponse.json({ ok: true });
 }
