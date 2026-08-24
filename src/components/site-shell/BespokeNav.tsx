@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, Phone, X } from "lucide-react";
+import { ArrowRight, ChevronDown, MapPin, Menu, Phone, Sparkles, X } from "lucide-react";
 import { useQuoteModal } from "@/components/site-shell/QuoteModalProvider";
 import type { ChromeSpec } from "@/lib/chrome-spec";
 import { homepageAnchor, siteHref, type SiteNavItem, type SitePayload } from "@/components/site-shell/types";
@@ -13,9 +13,7 @@ import { homepageAnchor, siteHref, type SiteNavItem, type SitePayload } from "@/
 // nav is how a site ends up with a beautiful menu pointing at four pages
 // that were never built.
 //
-// Styled entirely in the lead's own design tokens. The previous header used
-// the app's shadcn tokens while the page body used the lead's, so the frame
-// and the page it framed were visibly two different designs.
+// Styled entirely in the lead's own design tokens.
 
 export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: ChromeSpec }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -23,8 +21,24 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
   const openQuoteModal = useQuoteModal();
 
   const { nav } = spec;
-  const services = payload.navigation.services;
-  const areas = payload.navigation.areas;
+  const services = payload.navigation.services.length > 0
+    ? payload.navigation.services
+    : payload.services.map((s) => ({
+        slug: s.slug || "services",
+        label: s.h2,
+        description: s.body_content,
+        path: `/services/${s.slug}`,
+      }));
+
+  const areas = payload.navigation.areas.length > 0
+    ? payload.navigation.areas
+    : payload.areas.map((a) => ({
+        slug: a.slug || "areas",
+        label: a.h2,
+        description: a.body_content,
+        path: `/areas/${a.slug}`,
+      }));
+
   const phoneDigits = payload.nap.phone?.replace(/[^\d+]/g, "") ?? "";
 
   const logo = (
@@ -52,8 +66,7 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
     </button>
   );
 
-  // A dropdown holding one item is worse than a plain link, so the spec
-  // decides whether these are panels or single links at all.
+  // Modern Multi-Column Mega Menu Panel
   const dropdown = (
     kind: "services" | "areas",
     label: string,
@@ -64,25 +77,70 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
       onMouseEnter={() => setOpenPanel(kind)}
       onMouseLeave={() => setOpenPanel(null)}
     >
-      <button type="button" className="bs-nav-link">
-        {label}
+      <button type="button" className="bs-nav-link bs-nav-link-dropdown">
+        <span>{label}</span>
+        <ChevronDown className="h-3.5 w-3.5 opacity-60 transition-transform duration-200" />
       </button>
       {openPanel === kind && (
-        <div className={`bs-nav-panel ${nav.archetype === "mega" ? "bs-nav-panel-wide" : ""}`}>
-          {items.map((item) => (
-            <a
-              key={item.slug}
-              href={siteHref(payload, item.path)}
-              className="bs-nav-panel-item"
-            >
-              <span>
-                <span className="bs-nav-panel-title">{item.label}</span>
-                {item.description && (
-                  <span className="bs-nav-panel-desc">{item.description.slice(0, 88)}</span>
-                )}
+        <div className="bs-nav-panel bs-nav-panel-mega">
+          <div className="bs-nav-mega-grid">
+            <div className="bs-nav-mega-links">
+              <div className="bs-nav-mega-header">
+                <span className="bs-nav-mega-kicker">
+                  {kind === "services" ? "Core Services" : "Coverage Locations"}
+                </span>
+                <span className="text-[11px] opacity-60">
+                  {items.length} {kind === "services" ? "offerings" : "coverage zones"}
+                </span>
+              </div>
+              <div className={`bs-nav-mega-cols ${items.length > 4 ? "bs-nav-mega-cols-2" : "bs-nav-mega-cols-1"}`}>
+                {items.map((item) => (
+                  <a
+                    key={item.slug}
+                    href={siteHref(payload, item.path)}
+                    className="bs-nav-panel-item"
+                  >
+                    {kind === "areas" ? (
+                      <MapPin className="h-4 w-4 text-[var(--bs-primary)] shrink-0 mt-0.5" />
+                    ) : (
+                      <span className="h-2 w-2 rounded-full bg-[var(--bs-primary)] shrink-0 mt-1.5" />
+                    )}
+                    <span className="min-w-0">
+                      <span className="bs-nav-panel-title">{item.label}</span>
+                      {item.description ? (
+                        <span className="bs-nav-panel-desc">{item.description.slice(0, 72)}</span>
+                      ) : null}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Right Side Featured Promo Card in Mega Menu */}
+            <div className="bs-nav-mega-featured">
+              <span className="bs-nav-featured-badge">
+                <Sparkles className="h-3 w-3" /> 24/7 Rapid Response
               </span>
-            </a>
-          ))}
+              <p className="bs-nav-featured-title">Need Immediate On-Site Help?</p>
+              <p className="bs-nav-featured-desc">
+                Certified technicians are ready for emergency dispatch and fast estimates.
+              </p>
+              <div className="bs-nav-featured-actions">
+                {payload.nap.phone && (
+                  <a href={`tel:${phoneDigits}`} className="bs-btn bs-btn-primary bs-btn-sm w-full text-center">
+                    <Phone className="mr-1.5 inline h-3.5 w-3.5" /> Call {payload.nap.phone}
+                  </a>
+                )}
+                <button
+                  type="button"
+                  onClick={openQuoteModal}
+                  className="bs-btn bs-btn-ghost bs-btn-sm w-full text-center"
+                >
+                  Request Fast Quote →
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -90,16 +148,20 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
 
   const links = (
     <>
-      {nav.servicesDropdown && services.length >= 2
+      {services.length >= 2
         ? dropdown("services", "Services", services)
         : payload.services.length > 0 && (
             <a href={homepageAnchor(payload, "services")} className="bs-nav-link">
               Services
             </a>
           )}
-      {nav.areasDropdown && areas.length >= 2 ? dropdown("areas", "Service areas", areas) : payload.areas.length > 0 && (
-        <a href={homepageAnchor(payload, "areas")} className="bs-nav-link">Service areas</a>
-      )}
+      {areas.length >= 2
+        ? dropdown("areas", "Service Areas", areas)
+        : payload.areas.length > 0 && (
+            <a href={homepageAnchor(payload, "areas")} className="bs-nav-link">
+              Service Areas
+            </a>
+          )}
       <a href={payload.bespokePages.about && payload.innerPagesBuilt ? siteHref(payload, "/about") : homepageAnchor(payload, "about")} className="bs-nav-link">
         About
       </a>
@@ -163,8 +225,8 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
 
         {mobileOpen && (
           <nav className="bs-nav-mobile">
-            {payload.services.length > 0 && <span className="bs-nav-mobile-heading">Services</span>}
-            {services.length > 0 ? services.map((service) => (
+            {services.length > 0 && <span className="bs-nav-mobile-heading">Services</span>}
+            {services.map((service) => (
               <a
                 key={service.slug}
                 href={siteHref(payload, service.path)}
@@ -172,19 +234,12 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
               >
                 {service.label}
               </a>
-            )) : payload.services.length > 0 && (
-              <a href={homepageAnchor(payload, "services")} onClick={() => setMobileOpen(false)}>View services</a>
-            )}
-            {/* Area names are always derivable from the scrape, but the
-                /areas routes only exist once phase 2 has built them. The
-                spec is the single source of truth for whether they may be
-                linked -- listing them here unconditionally put dead links
-                in the mobile menu while the desktop menu correctly hid
-                them. */}
-            {payload.areas.length > 0 && (
+            ))}
+
+            {areas.length > 0 && (
               <>
                 <span className="bs-nav-mobile-heading">Service areas</span>
-                {areas.length > 0 ? areas.map((area) => (
+                {areas.map((area) => (
                   <a
                     key={area.slug}
                     href={siteHref(payload, area.path)}
@@ -192,9 +247,7 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
                   >
                     {area.label}
                   </a>
-                )) : (
-                  <a href={homepageAnchor(payload, "areas")} onClick={() => setMobileOpen(false)}>View service areas</a>
-                )}
+                ))}
               </>
             )}
             <span className="bs-nav-mobile-heading">More</span>

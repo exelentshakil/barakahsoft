@@ -79,20 +79,18 @@ export function renderShell(
   const hasGeneratedPage = (key: string) => artifact.inner_pages_built && Boolean(artifact.bespoke_pages?.[key]?.trim());
   const navigation = {
     services: services
-      .filter((service) => hasGeneratedPage(`services/${service.slug}`))
       .map((service) => ({
         slug: service.slug,
         label: service.h2,
         description: service.body_content,
-        path: `/services/${service.slug}`,
+        path: hasGeneratedPage(`services/${service.slug}`) ? `/services/${service.slug}` : `#${service.slug || "services"}`,
       })),
     areas: areas
-      .filter((area) => hasGeneratedPage(`areas/${area.slug}`))
       .map((area) => ({
         slug: area.slug,
         label: area.h2,
         description: area.body_content,
-        path: `/areas/${area.slug}`,
+        path: hasGeneratedPage(`areas/${area.slug}`) ? `/areas/${area.slug}` : `#areas`,
       })),
   };
   const locationServices = resolvedSections.filter((s) => s.kind === "location-service");
