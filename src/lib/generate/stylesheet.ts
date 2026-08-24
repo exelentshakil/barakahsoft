@@ -58,7 +58,7 @@ ${html.slice(0, 90000)}
 
 EVERY class in that markup needs a rule. An unstyled element is a visible defect, and there is no fallback stylesheet behind you.
 
-LAYOUT
+LAYOUT & MASTER SECTIONS
 - Modern CSS: grid and flex with gap. No floats, no margin hacks.
 - Content sits in a centred container, max-width around 1200px (1240px max), with a horizontal gutter:
   1.25rem on mobile, 2.5rem on desktop. Content must never touch the viewport edge.
@@ -66,7 +66,14 @@ LAYOUT
   NEVER render 4 or 5 cramped columns on desktop for service cards or testimonials.
 - Section vertical padding: clamp(4.5rem, 7.5vw, 7.5rem) so desktop view has elite breathing room and never feels cluttered.
 - Text measure limits: max-width: 26ch on major headings, max-width: 60ch–66ch on body copy and section subtitles.
-- The About section must execute the specific archetype in the design notes with comparable visual mass between story, media and proof. Do not reduce authentic imagery to an avatar, stretch copy across dead space, or let metrics dominate the story. Preserve its hierarchy on mobile with natural content height.
+- HERO SECTION STYLING:
+  * 2-column balanced grid on desktop (55% left / 45% right).
+  * Left: Eyebrow label, massive bold heading (clamp(2.75rem, 4.5vw, 4.25rem)), clear subheadline, above-the-fold lead form or dual CTAs, and trust proof badges.
+  * Right: Framed hero image with border-radius (rounded-2xl or rounded-3xl), subtle 1px border, deep drop shadow (0 20px 50px rgba(0,0,0,0.12)), and an inset or floating brand-accent caption pill.
+- ABOUT SECTION STYLING (3-TIER LAYERED MASTERPIECE):
+  * Tier 1: Asymmetric split with a framed documentary team/work photograph on the left and an editorial story block on the right (with eyebrow, headline, 2 paragraphs, 4px solid left-border guarantee box, and primary action buttons).
+  * Tier 2: Full-width solid metric ribbon band with 3-4 high-contrast stats (Experience, Projects, Rating, Satisfaction) in --bs-primary or dark surface.
+  * Tier 3: Subtle secondary craftsmanship/capability snippet strip.
 - About and proof images use object-fit: cover with an explicit aspect-ratio; never set both an arbitrary fixed width and fixed height that distorts the source.
 - Long credentials such as “Licensed and insured” are not equal numeric stats. Give reassurance copy enough width or move it to a separate trust line so it cannot stack into a tall narrow column.
 - Every .site-cta--primary has one identical fill, text pairing, radius, weight, padding and hover/focus treatment everywhere. Use --bs-primary with --bs-on-primary. Do not recolour it by section.

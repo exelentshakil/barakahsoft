@@ -9,7 +9,8 @@ import {
   PSYCHOLOGY_STANDARD,
   CONVERSION_STANDARD,
   PREMIUM_COMPOSITION_STANDARD,
-  aboutDirectionFor,
+  MASTER_HERO_STANDARD,
+  MASTER_ABOUT_STANDARD,
   HYGIENE_STANDARD,
   INTERACTION_CONTRACT,
   truthStandard,
@@ -132,6 +133,10 @@ Only use media slots assigned to this batch's plan entries. Every image needs wi
 ${knownPaths.join("\n")}
 Anything else becomes an on-page anchor. ${brief.phone ? `Phone links use tel:${brief.phone.replace(/[^\d+]/g, "")}.` : ""}
 
+${MASTER_HERO_STANDARD}
+
+${MASTER_ABOUT_STANDARD}
+
 ${HYGIENE_STANDARD}
 
 ${SPACE_STANDARD}
@@ -141,9 +146,6 @@ ${PSYCHOLOGY_STANDARD}
 ${CONVERSION_STANDARD}
 
 ${PREMIUM_COMPOSITION_STANDARD}
-
-ABOUT DIRECTION FOR THIS LEAD
-${aboutDirectionFor(`${brief.businessName}|${brief.industry}|${brief.city}`)}
 
 ${INTERACTION_CONTRACT}
 

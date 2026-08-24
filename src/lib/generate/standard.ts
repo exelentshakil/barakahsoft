@@ -133,20 +133,50 @@ SECTION QUALITY. Every section needs a strong headline, a visual idea and a conv
 
 MOBILE IS A REDESIGN, NOT A COLLAPSE. Preserve hierarchy and colour rhythm at 360px. Reorder media before copy where it improves comprehension, remove decorative overlap, keep natural content height, and ensure no type, metric, form or image crop becomes cramped.`;
 
-const ABOUT_DIRECTIONS = [
-  "Founder editorial: a substantial portrait or on-site image with a caption rail, concise narrative, supported proof and one action. Use asymmetric balance rather than a generic half-and-half card.",
-  "Project-led story: a large real work image anchors the section while the company story, values and relevant proof sit in an offset editorial panel. This is about the people through their work, not a stock biography.",
-  "Team panorama: a wide authentic team or vehicle image creates the top or side mass, followed by a restrained story column and a compact supported metric band. Avoid floating card clutter.",
-  "Craft/process collage: use two different real images only when both are available and semantically relevant, with one dominant and one supporting crop. Thread the story between them using captions and a single action.",
-  "Text-led manifesto: when no authentic people image exists, use strong typography, a short founder/company statement, a pull quote drawn from supplied facts, and a branded structural graphic. Never invent a portrait or signature.",
-  "Framed profile: place authentic founder/team imagery inside a distinctive brand-colour frame or caption block, balanced by a compact story and supported proof tiles. The frame is the graphic motif, not decorative badges.",
-  "Story plus evidence: lead with a customer-relevant story headline and two short paragraphs, then pair one meaningful image with a horizontal strip of only verified facts. The evidence should feel integrated, not bolted on.",
-] as const;
+export const MASTER_HERO_STANDARD = `═══ HERO SECTION — THE UNMISSABLE HIGH-CONVERTING MASTERPIECE ═══
+Every hero section must look like a high-end $20,000 bespoke agency build with clear visual hierarchy and balanced mass:
+
+DESKTOP SILHOUETTE (2-Column Balanced Grid, 55% / 45%):
+1. LEFT COLUMN — The Value Stack & Immediate Conversion Anchor:
+   - Eyebrow Tag: A sleek uppercase label preceded by a subtle brand accent line (e.g., "— PROPERTY DAMAGE RESTORATION IN LAS VEGAS").
+   - Massive Typographic Headline: Bold, commanding font-display face (clamp(2.75rem, 4.5vw, 4.25rem)) directly addressing the urgent customer problem (e.g., "Help for water, fire, mold and property damage in Las Vegas").
+   - Outcome-Driven Subhead: 1-2 readable sentences connecting real services to relief and peace of mind.
+   - Conversion Action (Above the Fold):
+     * For Quote/Booking/Consultation businesses: Include a styled above-the-fold lead capture form ([data-lead-form]) with clean 44px+ inputs and high-contrast submit button matching --bs-primary.
+     * For Emergency/Call-First businesses: High-contrast Primary Button (e.g., "Call (702) 213-5972") paired with a Secondary "Request a callback" button ([data-open-quote-modal]) and a 24/7 dispatch reassurance text ("Open 24 hours, every day").
+   - Trust Proof Strip: Real Google review rating badge with ★★★★★ stars, verified review count, "Licensed & Insured" reassurance badge, and "Locally Owned" pill.
+
+2. RIGHT COLUMN — Framed Hero Visual with Inset Caption:
+   - High-resolution hero image or owner cutout set inside an elegant frame with generous border-radius (rounded-2xl / rounded-3xl), subtle 1px border, and deep ambient drop shadow (box-shadow: 0 20px 50px rgba(0,0,0,0.12)).
+   - Inset or floating caption pill in the brand accent color along the bottom edge (e.g., "Property restoration work in progress in Las Vegas").
+   - Image must use object-fit: cover with explicit aspect-ratio (e.g. 4/3 or 1/1) and loading="eager" fetchpriority="high".
+
+NEVER output a bare text wall without photography, never center-align a generic brochure paragraph, and never leave the hero without immediate trust proof and action targets.`;
+
+export const MASTER_ABOUT_STANDARD = `═══ ABOUT / OUR STORY SECTION — THE 3-TIER LAYERED MASTERPIECE ═══
+The About section (id="about") is the ultimate credibility builder where a visitor decides whether to trust the people behind the business:
+
+3-TIER LAYERED STRUCTURE:
+1. TIER 1 — Top Story & Authentic Profile Split:
+   - LEFT: Substantial real photograph of the founder, team, or on-site work vehicle inside a rounded-2xl container with a documentary caption rail along the bottom (e.g., "Property damage restoration calls for careful coordination from the first conversation onward.").
+   - RIGHT:
+     * Numbered Section Eyebrow (e.g., "— 05 ABOUT").
+     * Authoritative Customer-Relevant Headline (e.g., "A real name behind the restoration work" or "Built on Craftsmanship & Local Values").
+     * 2 concise, compelling paragraphs establishing who does the work, their standards, and why local homeowners trust them in their properties.
+     * "Licensed and Insured" Trust Box: A clean badge card with a 4px solid brand-colored left border.
+     * Primary & Secondary Action Group: High-contrast call button + "Request a callback" button.
+
+2. TIER 2 — Full-Width Solid Metric Ribbon Band:
+   - A full-width contrast ribbon band (in brand primary or dark surface) spanning 3 to 4 bold verified statistics:
+     [Years in Business / Decades of Experience] · [Jobs / Projects Completed] · [4.9★ Average Google Rating] · [100% Satisfaction / Guarantee].
+
+3. TIER 3 — Secondary Craftsmanship / Capability Snippet:
+   - A subtle horizontal card underneath reinforcing residential and commercial capabilities across all service territories.
+
+NEVER reduce the founder/team to a tiny circular avatar, never stretch copy across empty dead space, and never invent fake bios or unverified statistics.`;
 
 export function aboutDirectionFor(seed: string): string {
-  let hash = 0;
-  for (const char of seed) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  return ABOUT_DIRECTIONS[hash % ABOUT_DIRECTIONS.length];
+  return MASTER_ABOUT_STANDARD;
 }
 
 export const HYGIENE_STANDARD = `SEMANTIC INTEGRITY. <header> is not yours to write, but <main>, <section>, <article>, <aside>, <figure>, <figcaption>, <blockquote>, <ul>, <dl> all are. Endless nested <div> is forbidden — if a block has a meaning, use the element that carries it. A screen reader and a crawler should be able to read the page structure without the CSS.
