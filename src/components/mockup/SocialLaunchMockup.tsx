@@ -50,6 +50,12 @@ export interface MockupData {
 
 export const HEADLINE_OPTIONS: { id: MockupHeadlineMode; line1: string; line2: string; tag: string }[] = [
   {
+    id: "launched",
+    line1: "NEW WEBSITE",
+    line2: "LAUNCHED",
+    tag: "Official Launch (Ref)",
+  },
+  {
     id: "proposed",
     line1: "REDESIGN",
     line2: "PROPOSED",
@@ -73,32 +79,28 @@ export const HEADLINE_OPTIONS: { id: MockupHeadlineMode; line1: string; line2: s
     line2: "PREVIEW",
     tag: "VIP Teaser",
   },
-  {
-    id: "launched",
-    line1: "NEW WEBSITE",
-    line2: "LAUNCHED",
-    tag: "Official Launch",
-  },
 ];
 
 export const BG_THEMES = [
   {
+    id: "sky",
+    name: "Azure Sky (Exact Ref)",
+    gradient: "from-[#6fa6cb] via-[#94bedc] to-[#c7dfef]",
+    bgStart: "#6fa6cb",
+    bgMid: "#94bedc",
+    bgEnd: "#c7dfef",
+    watermarkColor: "rgba(30, 64, 95, 0.14)",
+    ribbonBg: "#2b4c6f",
+  },
+  {
     id: "olive",
-    name: "Sage Olive (Ref 1)",
+    name: "Sage Olive",
     gradient: "from-[#4a5a47] via-[#334131] to-[#1e271c]",
     bgStart: "#4a5a47",
     bgMid: "#334131",
     bgEnd: "#1e271c",
-    cardBg: "#1b3824",
-  },
-  {
-    id: "sky",
-    name: "Azure Sky (Ref 2)",
-    gradient: "from-[#75a6c8] via-[#48779b] to-[#254c6d]",
-    bgStart: "#75a6c8",
-    bgMid: "#48779b",
-    bgEnd: "#254c6d",
-    cardBg: "#284a68",
+    watermarkColor: "rgba(255, 255, 255, 0.08)",
+    ribbonBg: "#1b3824",
   },
   {
     id: "midnight",
@@ -107,7 +109,8 @@ export const BG_THEMES = [
     bgStart: "#182845",
     bgMid: "#0f1a2f",
     bgEnd: "#060c18",
-    cardBg: "#12223a",
+    watermarkColor: "rgba(255, 255, 255, 0.08)",
+    ribbonBg: "#12223a",
   },
   {
     id: "charcoal",
@@ -116,11 +119,12 @@ export const BG_THEMES = [
     bgStart: "#30353e",
     bgMid: "#1f2228",
     bgEnd: "#121418",
-    cardBg: "#1c2027",
+    watermarkColor: "rgba(255, 255, 255, 0.08)",
+    ribbonBg: "#1c2027",
   },
 ];
 
-// Helper: Convert any remote image to base64 via internal proxy so Canvas/html-to-image exports draw real photos reliably
+// Helper: Convert remote image to base64 proxy for reliable html-to-image export
 async function urlToBase64(url: string | null | undefined): Promise<string | null> {
   if (!url) return null;
   if (url.startsWith("data:")) return url;
@@ -147,7 +151,7 @@ async function urlToBase64(url: string | null | undefined): Promise<string | nul
       });
     }
   } catch {
-    // Fallback ignored
+    // Ignore fallback
   }
 
   return null;
@@ -168,8 +172,8 @@ export function SocialLaunchMockup({
   onThemeChange?: (themeId: string) => void;
   onHeadlineModeChange?: (mode: MockupHeadlineMode) => void;
 }) {
-  const [themeId, setThemeId] = useState(data.themeId || "olive");
-  const [headlineMode, setHeadlineMode] = useState<MockupHeadlineMode>(data.headlineMode || "proposed");
+  const [themeId, setThemeId] = useState(data.themeId || "sky");
+  const [headlineMode, setHeadlineMode] = useState<MockupHeadlineMode>(data.headlineMode || "launched");
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(data.photoUrl || data.secondaryPhotoUrl || null);
   const [downloading, setDownloading] = useState<string | null>(null);
 
@@ -179,7 +183,6 @@ export function SocialLaunchMockup({
   const screenRef = useRef<HTMLDivElement>(null);
   const [screenScale, setScreenScale] = useState(0.315);
 
-  // Measure screen container width dynamically to scale the bespoke HTML viewport 100% gapless
   useEffect(() => {
     if (!screenRef.current) return;
     const updateScale = () => {
@@ -196,7 +199,6 @@ export function SocialLaunchMockup({
     return () => observer.disconnect();
   }, []);
 
-  // Synchronize when data props update
   useEffect(() => {
     if (data.themeId && data.themeId !== themeId) {
       setThemeId(data.themeId);
@@ -216,7 +218,7 @@ export function SocialLaunchMockup({
   }, [data.photoUrl]);
 
   const theme = BG_THEMES.find((t) => t.id === themeId) || BG_THEMES[0];
-  const primaryColor = data.brandColor || theme.cardBg;
+  const primaryColor = data.brandColor || theme.ribbonBg;
 
   const businessShortName = data.businessName || "Your Business";
   const city = data.city || "New York";
@@ -224,21 +226,21 @@ export function SocialLaunchMockup({
   const heroHeading =
     data.heroHeadline || `PREMIER ${trade.toUpperCase()} IN ${city.toUpperCase()}`;
   const aboutEyebrow =
-    data.aboutEyebrow || `ABOUT ${businessShortName.toUpperCase()}`;
+    data.aboutEyebrow || `BUILT ON CRAFTSMANSHIP & VALUES`;
   const aboutHeading =
-    data.aboutHeadline || `Dan Martin’s roofing team works where New York roofs are hardest to ignore.`;
+    data.aboutHeadline || `About Our Local ${trade} Company In ${city}`;
   const aboutBody =
     data.aboutBody ||
-    `${businessShortName} is a licensed and insured ${trade.toLowerCase()} serving ${city}. The work covers roof repair, replacement, inspections and emergency craftsmanship with verified customer satisfaction.`;
+    `${businessShortName} provides expert ${trade.toLowerCase()} and dependable performance across ${city}. Our team delivers personalized service and craftsmanship from start to finish.`;
   const founder = data.founderName || "Dan Martin";
-  const ratingText = data.rating ? `${data.rating}` : "5.0";
-  const reviewsCountText = data.reviewCount ? `${data.reviewCount}` : "27";
-  const phoneText = data.phone || "(888) 687-9175";
+  const founderRole = data.founderTitle || `CEO of ${businessShortName}`;
+  const ratingText = data.rating ? `${data.rating}★` : "5.0★";
+  const reviewsCountText = data.reviewCount ? `${data.reviewCount}+` : "200+";
+  const yearsExp = data.yearsExperience ? `${data.yearsExperience}+` : "10+";
 
   const activeHeadline = HEADLINE_OPTIONS.find((h) => h.id === headlineMode) || HEADLINE_OPTIONS[0];
   const featuredCardPhoto = selectedPhoto || data.photoUrl || data.secondaryPhotoUrl;
 
-  // Pre-load all remote images as base64 before export to guarantee pixel-perfect zero-CORS capture
   async function prepareElementForExport(element: HTMLElement) {
     const images = Array.from(element.querySelectorAll("img"));
     await Promise.all(
@@ -253,7 +255,6 @@ export function SocialLaunchMockup({
     );
   }
 
-  // Pixel-Perfect High-Resolution Export
   async function downloadImage(format: "feed" | "story" | "transparent") {
     setDownloading(format);
     try {
@@ -274,7 +275,7 @@ export function SocialLaunchMockup({
       await prepareElementForExport(targetEl);
 
       const cleanName = businessShortName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      const pixelRatio = format === "feed" ? 2.25 : format === "story" ? 2.0 : 2.5;
+      const pixelRatio = format === "feed" ? 2.5 : format === "story" ? 2.0 : 2.5;
 
       const dataUrl = await toPng(targetEl, {
         pixelRatio,
@@ -322,7 +323,7 @@ export function SocialLaunchMockup({
             />
           </div>
           {/* Glass Reflection Glare */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/15 pointer-events-none z-10" />
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none z-10" />
         </div>
       );
     }
@@ -343,14 +344,14 @@ export function SocialLaunchMockup({
             }}
           />
           {/* Glass Reflection Glare */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/15 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />
         </div>
       );
     }
 
     return (
-      /* Fallback High-Fidelity Website Viewport */
-      <div className="relative flex-1 bg-slate-900 p-2.5 sm:p-3.5 flex flex-col justify-between text-white overflow-hidden">
+      /* High-Fidelity Website Viewport Fallback */
+      <div className="relative flex-1 bg-slate-900 p-3 sm:p-4 flex flex-col justify-between text-white overflow-hidden">
         <div
           className="absolute inset-0 opacity-45 bg-cover bg-center"
           style={{
@@ -400,121 +401,173 @@ export function SocialLaunchMockup({
   const render3DStage = () => (
     <div
       ref={stageRef}
-      className="relative z-10 w-full flex-1 flex items-center justify-center mt-2 perspective-[1400px]"
+      className="relative z-10 w-full flex-1 flex items-center justify-center mt-2 perspective-[1500px]"
     >
-      {/* Ground Ambient Shadow */}
-      <div className="absolute bottom-4 left-6 right-6 h-12 bg-black/50 blur-2xl rounded-full transform scale-x-110 -rotate-2" />
+      {/* Soft Ground Contact Shadow Under Laptop */}
+      <div className="absolute bottom-2 sm:bottom-4 left-4 sm:left-8 right-4 sm:right-8 h-12 sm:h-16 bg-slate-900/45 blur-2xl rounded-full transform scale-x-115 -rotate-2" />
 
-      {/* 1. PHOTOREALISTIC 3D MACBOOK (Angled Left 3/4 Perspective) */}
+      {/* 1. REALISTIC 3D MACBOOK PRO (Angled Left 3/4 Perspective) */}
       <div
-        className="relative w-[88%] max-w-[450px] transition-transform duration-500"
+        className="relative w-[90%] max-w-[460px] transition-transform duration-500"
         style={{
-          transform: "rotateY(-18deg) rotateX(14deg) rotateZ(3deg) translateY(12px)",
+          transform: "rotateY(-16deg) rotateX(12deg) rotateZ(2deg) translateY(14px)",
           transformStyle: "preserve-3d",
         }}
       >
-        {/* Screen Glass & Aluminum Bezel */}
-        <div className="relative rounded-t-2xl bg-[#14161a] p-2 sm:p-2.5 pb-3 sm:pb-4 shadow-2xl border border-white/25 ring-1 ring-black/70">
-          {/* Screen Top Camera Notch */}
-          <div className="absolute top-1 left-1/2 -translate-x-1/2 h-1.5 w-10 bg-[#000] rounded-b-md z-20 flex items-center justify-center">
-            <span className="h-0.5 w-0.5 rounded-full bg-[#1e293b]" />
+        {/* Screen Bezel & Glass Lid */}
+        <div className="relative rounded-t-2xl bg-[#0f1217] p-2 sm:p-2.5 pb-3.5 sm:pb-4 shadow-2xl border border-white/30 ring-1 ring-black/80">
+          {/* Top Center Camera Notch */}
+          <div className="absolute top-1 left-1/2 -translate-x-1/2 h-1.5 w-12 bg-black rounded-b-md z-20 flex items-center justify-center">
+            <span className="h-0.5 w-0.5 rounded-full bg-[#334155]" />
           </div>
 
-          {/* Screen Inner Display */}
+          {/* Screen Display Inner Frame */}
           <div
             ref={screenRef}
-            className="relative aspect-[16/10] w-full rounded-lg bg-[#0e1626] overflow-hidden shadow-inner border border-black/80 flex flex-col"
+            className="relative aspect-[16/10] w-full rounded-lg bg-[#0e1626] overflow-hidden shadow-inner border border-black/90 flex flex-col"
           >
             {renderScreenContent()}
           </div>
         </div>
 
-        {/* Aluminum Keyboard Deck & Chassis Base */}
+        {/* Aluminum Laptop Deck & Ports (Silver MacBook Pro Style) */}
         <div
-          className="relative h-4 sm:h-5 w-[108%] -left-[4%] rounded-b-2xl bg-gradient-to-b from-[#e3e6ec] via-[#c6cbd4] to-[#999fa9] shadow-2xl border-t border-white/90 flex items-center justify-center"
+          className="relative h-4 sm:h-5 w-[108%] -left-[4%] rounded-b-2xl bg-gradient-to-b from-[#e8ecf2] via-[#ced3dc] to-[#a2a8b4] shadow-2xl border-t border-white/95 flex items-center justify-between px-3"
           style={{
             transform: "rotateX(56deg) translateZ(-4px)",
-            boxShadow: "0 22px 45px rgba(0,0,0,0.7), 0 2px 4px rgba(255,255,255,0.5) inset",
+            boxShadow: "0 24px 50px rgba(0,0,0,0.55), 0 2px 4px rgba(255,255,255,0.7) inset",
           }}
         >
-          <div className="h-1 w-14 sm:w-20 bg-[#7c828e] rounded-full mx-auto" />
+          {/* Left Ports (MagSafe + Thunderbolt) */}
+          <div className="flex items-center gap-1 opacity-70">
+            <span className="h-1 w-1.5 rounded-xs bg-slate-600" />
+            <span className="h-0.5 w-1 rounded-xs bg-slate-600" />
+          </div>
+
+          {/* Center Thumb Groove */}
+          <div className="h-1 w-16 sm:w-24 bg-[#7a818d] rounded-full mx-auto" />
+
+          {/* Right Ports */}
+          <div className="flex items-center gap-1 opacity-70">
+            <span className="h-0.5 w-1 rounded-xs bg-slate-600" />
+          </div>
         </div>
       </div>
 
-      {/* 2. EXACT ABOUT SECTION FLOATING CARD (Overlapping Right Foreground Matching Homepage) */}
+      {/* 2. FLOATING WEBSITE ABOUT & METRIC SHEET (Exact Match to Reference Poster) */}
       <div
-        className="absolute -right-1 sm:-right-3 top-0 sm:top-2 w-[72%] max-w-[340px] rounded-2xl bg-white shadow-2xl border border-white/95 overflow-hidden transition-transform duration-500 p-3 sm:p-4 text-slate-900 space-y-2.5"
+        className="absolute -right-2 sm:-right-4 top-[-10px] sm:top-[-4px] w-[78%] max-w-[365px] rounded-2xl bg-white shadow-2xl border border-slate-200/90 overflow-hidden transition-transform duration-500"
         style={{
-          transform: "rotateY(-12deg) rotateX(8deg) rotateZ(-2.5deg) translateZ(50px)",
-          boxShadow: "0 28px 55px -10px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0,0,0,0.06)",
+          transform: "rotateY(-12deg) rotateX(8deg) rotateZ(-2deg) translateZ(65px)",
+          boxShadow: "0 35px 70px -12px rgba(15, 23, 42, 0.45), 0 0 0 1px rgba(0,0,0,0.06)",
         }}
       >
-        {/* Sheet Top Subtle Notch */}
-        <div className="h-1 w-10 bg-slate-200 rounded-full mx-auto -mt-1 opacity-70" />
+        {/* ROW 1: ABOUT US SECTION (White Background) */}
+        <div className="p-3 sm:p-4 bg-white space-y-2">
+          <div className="flex items-start gap-2.5">
+            {/* Left: Founder / Team Photo + Name Badge */}
+            <div className="w-[42%] shrink-0 space-y-0">
+              <div className="relative aspect-[4/3] w-full rounded-lg bg-slate-100 overflow-hidden border border-slate-200 shadow-sm">
+                {featuredCardPhoto ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={featuredCardPhoto}
+                    alt={founder}
+                    crossOrigin="anonymous"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center bg-slate-800 text-white font-black text-sm">
+                    {founder.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+              </div>
 
-        <div className="flex items-start gap-2.5">
-          {/* Photo */}
-          <div className="space-y-1 shrink-0">
-            <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-xl bg-slate-100 overflow-hidden border border-slate-200 shadow-sm">
-              {featuredCardPhoto ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={featuredCardPhoto}
-                  alt={founder}
-                  crossOrigin="anonymous"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="h-full w-full flex items-center justify-center bg-slate-800 text-white font-black text-sm">
-                  {founder.slice(0, 2).toUpperCase()}
-                </div>
-              )}
+              {/* Founder / Owner Label Banner */}
+              <div
+                className="w-full text-white p-1 rounded-b-md text-center shadow-xs"
+                style={{ backgroundColor: primaryColor }}
+              >
+                <span className="block text-[5.5px] sm:text-[6.5px] font-black uppercase tracking-wider truncate">
+                  {founder}
+                </span>
+                <span className="block text-[4px] sm:text-[5px] text-white/85 truncate">
+                  {founderRole}
+                </span>
+              </div>
             </div>
-            <p className="text-[5px] sm:text-[6px] text-slate-400 font-medium text-center truncate max-w-[90px]">
-              Rooftop work in close urban conditions
-            </p>
-          </div>
 
-          <div className="min-w-0 flex-1 space-y-1">
-            <span className="text-[6.5px] sm:text-[7.5px] uppercase font-black tracking-wider text-red-600 block">
-              {aboutEyebrow}
+            {/* Right: Story Headline & Body */}
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-1.5 py-0.5 border border-slate-200/80">
+                <span className="text-[5px] sm:text-[6px] font-extrabold uppercase tracking-wider text-slate-700">
+                  {aboutEyebrow}
+                </span>
+              </div>
+              <h4 className="text-[7.5px] sm:text-[9.5px] font-black leading-tight text-slate-900 line-clamp-2">
+                {aboutHeading}
+              </h4>
+              <p className="text-[5px] sm:text-[6px] text-slate-600 font-normal line-clamp-3 leading-snug">
+                {aboutBody}
+              </p>
+              <div className="pt-0.5">
+                <span
+                  className="inline-block rounded px-2 py-0.5 text-[5px] sm:text-[6px] font-bold text-white shadow-xs"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  GET A FREE QUOTE →
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ROW 2: FULL-WIDTH SOLID METRIC RIBBON BAND */}
+        <div
+          className="px-3 py-2 text-white grid grid-cols-4 gap-1 text-center border-y border-white/20 shadow-inner"
+          style={{ backgroundColor: primaryColor }}
+        >
+          <div>
+            <span className="block text-[8.5px] sm:text-[11px] font-black tracking-tight">{yearsExp}</span>
+            <span className="block text-[4px] sm:text-[5px] uppercase font-bold text-white/80 tracking-wider">
+              Experience
             </span>
-            <h4 className="text-[8.5px] sm:text-[10.5px] font-black leading-tight text-slate-950 line-clamp-2">
-              {aboutHeading}
-            </h4>
-            <p className="text-[5.5px] sm:text-[6.8px] text-slate-600 font-normal line-clamp-3 leading-snug">
-              {aboutBody}
+          </div>
+          <div>
+            <span className="block text-[8.5px] sm:text-[11px] font-black tracking-tight">{reviewsCountText}</span>
+            <span className="block text-[4px] sm:text-[5px] uppercase font-bold text-white/80 tracking-wider">
+              Reviews
+            </span>
+          </div>
+          <div>
+            <span className="block text-[8.5px] sm:text-[11px] font-black tracking-tight">{ratingText}</span>
+            <span className="block text-[4px] sm:text-[5px] uppercase font-bold text-white/80 tracking-wider">
+              Avg Rating
+            </span>
+          </div>
+          <div>
+            <span className="block text-[8.5px] sm:text-[11px] font-black tracking-tight">1-Yr</span>
+            <span className="block text-[4px] sm:text-[5px] uppercase font-bold text-white/80 tracking-wider">
+              Warranty
+            </span>
+          </div>
+        </div>
+
+        {/* ROW 3: SECONDARY SERVICE / CRAFTSMANSHIP SNIPPET */}
+        <div className="p-2.5 sm:p-3 bg-[#fafafc] flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <h5 className="text-[6.5px] sm:text-[8px] font-black text-slate-900 leading-tight truncate">
+              Professional Residential &amp; Commercial {trade} Services
+            </h5>
+            <p className="text-[4.5px] sm:text-[5.5px] text-slate-500 truncate">
+              Providing craftsmanship and dependable performance across {city}.
             </p>
           </div>
-        </div>
-
-        {/* 4-Box Metrics Grid (matching exact site design) */}
-        <div className="grid grid-cols-2 gap-1 rounded-lg border border-slate-200/90 bg-slate-50/70 p-1.5">
-          <div className="border-b border-r border-slate-200/70 pb-1 pr-1">
-            <span className="block text-[4.5px] sm:text-[5.5px] font-extrabold text-slate-500 uppercase">Google Rating</span>
-            <span className="block text-[8px] sm:text-[10px] font-black text-slate-900">{ratingText}</span>
-          </div>
-          <div className="border-b border-slate-200/70 pb-1 pl-1">
-            <span className="block text-[4.5px] sm:text-[5.5px] font-extrabold text-slate-500 uppercase">Verified Reviews</span>
-            <span className="block text-[8px] sm:text-[10px] font-black text-slate-900">{reviewsCountText}</span>
-          </div>
-          <div className="border-r border-slate-200/70 pt-1 pr-1">
-            <span className="block text-[4.5px] sm:text-[5.5px] font-extrabold text-slate-500 uppercase">Availability</span>
-            <span className="block text-[8px] sm:text-[10px] font-black text-slate-900">24/7</span>
-          </div>
-          <div className="pt-1 pl-1">
-            <span className="block text-[4.5px] sm:text-[5.5px] font-extrabold text-slate-500 uppercase">Named Service Areas</span>
-            <span className="block text-[8px] sm:text-[10px] font-black text-slate-900">4</span>
-          </div>
-        </div>
-
-        {/* Dual CTA Buttons */}
-        <div className="flex items-center gap-1.5 pt-0.5">
-          <span className="rounded bg-red-600 px-2 py-1 text-[5.5px] sm:text-[7px] font-bold text-white shadow-xs">
-            Get a free quote
-          </span>
-          <span className="rounded border border-slate-300 bg-white px-2 py-1 text-[5.5px] sm:text-[7px] font-bold text-slate-800 shadow-xs truncate">
-            Call {phoneText}
+          <span
+            className="shrink-0 rounded px-2 py-1 text-[5px] sm:text-[6px] font-bold text-white shadow-xs"
+            style={{ backgroundColor: primaryColor }}
+          >
+            GET A FREE QUOTE →
           </span>
         </div>
       </div>
@@ -523,26 +576,32 @@ export function SocialLaunchMockup({
 
   return (
     <div className={`flex flex-col items-center space-y-4 ${className}`}>
-      {/* 3D Mockup Stage (4:5 Aspect Ratio matching visible UI) */}
+      {/* 3D Mockup Stage (4:5 Aspect Ratio matching reference image exactly) */}
       <div
         ref={mockupRef}
-        className={`relative w-full max-w-[560px] aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-b ${theme.gradient} select-none border border-white/15 flex flex-col justify-between p-6 sm:p-8`}
+        className={`relative w-full max-w-[560px] aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-b ${theme.gradient} select-none border border-white/20 flex flex-col justify-between p-6 sm:p-8`}
         style={{
-          boxShadow: "0 35px 70px -15px rgba(0, 0, 0, 0.65), inset 0 1px 2px rgba(255,255,255,0.3)",
+          boxShadow: "0 35px 75px -15px rgba(15, 23, 42, 0.45), inset 0 1px 2px rgba(255,255,255,0.5)",
         }}
       >
-        {/* Background Subtle Watermark */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none opacity-[0.065]">
-          <span className="font-black text-5xl sm:text-7xl tracking-widest text-white uppercase text-center max-w-full px-4 transform -rotate-6">
+        {/* Background Watermark Text Behind MacBook */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none">
+          <span
+            className="font-black text-6xl sm:text-8xl tracking-widest uppercase text-center max-w-full px-4 transform translate-y-36"
+            style={{ color: theme.watermarkColor }}
+          >
             {businessShortName}
           </span>
         </div>
 
-        {/* Dynamic Top Header */}
-        <div className="relative z-10 text-center pt-2 sm:pt-3">
+        {/* Big 3D Headline at Top */}
+        <div className="relative z-10 text-center pt-2 sm:pt-4">
           <h2
-            className="text-2xl sm:text-4xl font-black tracking-wider text-white uppercase drop-shadow-[0_8px_18px_rgba(0,0,0,0.55)] font-sans"
-            style={{ textShadow: "0 4px 20px rgba(0,0,0,0.45)" }}
+            className="text-3xl sm:text-5xl font-black tracking-wider text-white uppercase font-sans"
+            style={{
+              textShadow: "0 8px 24px rgba(24, 48, 77, 0.45), 0 2px 6px rgba(0,0,0,0.3)",
+              letterSpacing: "0.05em",
+            }}
           >
             {activeHeadline.line1}
             <br />
@@ -561,17 +620,22 @@ export function SocialLaunchMockup({
           className={`w-[540px] h-[960px] bg-gradient-to-b ${theme.gradient} p-8 flex flex-col justify-between items-center relative overflow-hidden`}
         >
           {/* Watermark */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none opacity-[0.065]">
-            <span className="font-black text-6xl tracking-widest text-white uppercase text-center max-w-full px-4 transform -rotate-6">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none">
+            <span
+              className="font-black text-7xl tracking-widest uppercase text-center max-w-full px-4 transform translate-y-48"
+              style={{ color: theme.watermarkColor }}
+            >
               {businessShortName}
             </span>
           </div>
 
           {/* Dynamic Top Header */}
-          <div className="relative z-10 text-center pt-8">
+          <div className="relative z-10 text-center pt-10">
             <h2
-              className="text-4xl font-black tracking-wider text-white uppercase drop-shadow-[0_8px_18px_rgba(0,0,0,0.55)] font-sans"
-              style={{ textShadow: "0 4px 20px rgba(0,0,0,0.45)" }}
+              className="text-4xl sm:text-5xl font-black tracking-wider text-white uppercase font-sans"
+              style={{
+                textShadow: "0 8px 24px rgba(24, 48, 77, 0.45), 0 2px 6px rgba(0,0,0,0.3)",
+              }}
             >
               {activeHeadline.line1}
               <br />
@@ -588,15 +652,15 @@ export function SocialLaunchMockup({
 
       {/* Control Panel for Operator */}
       {showControls && (
-        <div className="w-full max-w-[560px] space-y-4 bg-white p-5 rounded-2xl border border-border shadow-sm">
+        <div className="w-full max-w-[560px] space-y-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
           {/* 1. Featured Photo Selector */}
           {data.availablePhotos && data.availablePhotos.length > 0 && (
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#0d1738] flex items-center gap-1.5">
-                  <ImageIcon className="h-3.5 w-3.5 text-[#533afd]" /> Featured Card Photo
+                <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                  <ImageIcon className="h-3.5 w-3.5 text-indigo-600" /> Featured Card Photo
                 </span>
-                <span className="text-[10px] text-muted-foreground font-semibold">
+                <span className="text-[10px] text-slate-500 font-semibold">
                   Pick the best hero / team shot
                 </span>
               </div>
@@ -611,14 +675,14 @@ export function SocialLaunchMockup({
                     }}
                     className={`relative h-12 w-12 shrink-0 rounded-lg overflow-hidden border-2 transition ${
                       featuredCardPhoto === url
-                        ? "border-[#533afd] scale-105 shadow-md ring-2 ring-[#533afd]/20"
-                        : "border-border opacity-70 hover:opacity-100"
+                        ? "border-indigo-600 scale-105 shadow-md ring-2 ring-indigo-500/20"
+                        : "border-slate-200 opacity-70 hover:opacity-100"
                     }`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={url} alt={`Option ${idx + 1}`} className="h-full w-full object-cover" />
                     {featuredCardPhoto === url && (
-                      <span className="absolute top-0.5 right-0.5 h-3 w-3 bg-[#533afd] rounded-full flex items-center justify-center text-white text-[8px]">
+                      <span className="absolute top-0.5 right-0.5 h-3 w-3 bg-indigo-600 rounded-full flex items-center justify-center text-white text-[8px]">
                         ✓
                       </span>
                     )}
@@ -629,13 +693,13 @@ export function SocialLaunchMockup({
           )}
 
           {/* 2. Headline Wording Switcher */}
-          <div className="space-y-1.5 pt-1 border-t border-border/70">
+          <div className="space-y-1.5 pt-1 border-t border-slate-100">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#0d1738] flex items-center gap-1.5">
-                <Type className="h-3.5 w-3.5 text-[#533afd]" /> Poster Headline Style
+              <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                <Type className="h-3.5 w-3.5 text-indigo-600" /> Poster Headline Style
               </span>
-              <span className="text-[10px] text-muted-foreground font-semibold">
-                Match stage (Proposed vs Launched)
+              <span className="text-[10px] text-slate-500 font-semibold">
+                Match stage (Launched vs Proposed)
               </span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
@@ -649,21 +713,21 @@ export function SocialLaunchMockup({
                   }}
                   className={`rounded-lg px-2.5 py-1.5 text-left border transition text-xs ${
                     headlineMode === h.id
-                      ? "border-[#533afd] bg-[#f0f3ff] text-[#533afd] font-bold shadow-sm"
-                      : "border-border bg-white text-[#42506a] hover:bg-slate-50"
+                      ? "border-indigo-600 bg-indigo-50 text-indigo-700 font-bold shadow-xs"
+                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
                   }`}
                 >
                   <span className="block font-bold truncate">{h.line1}</span>
-                  <span className="text-[10px] text-muted-foreground block">{h.tag}</span>
+                  <span className="text-[10px] text-slate-500 block">{h.tag}</span>
                 </button>
               ))}
             </div>
           </div>
 
           {/* 3. Theme Background Switcher */}
-          <div className="flex items-center justify-between pt-1 border-t border-border/70">
-            <span className="text-xs font-bold text-[#0d1738] flex items-center gap-1.5">
-              <Sliders className="h-3.5 w-3.5 text-[#533afd]" /> Background Palette (Reference Match)
+          <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+            <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+              <Sliders className="h-3.5 w-3.5 text-indigo-600" /> Background Palette
             </span>
             <div className="flex items-center gap-1.5">
               {BG_THEMES.map((t) => (
@@ -676,7 +740,7 @@ export function SocialLaunchMockup({
                   }}
                   title={t.name}
                   className={`h-5 w-5 rounded-full bg-gradient-to-br ${t.gradient} transition ring-offset-1 ${
-                    themeId === t.id ? "ring-2 ring-[#533afd] scale-110" : "hover:scale-105 opacity-80"
+                    themeId === t.id ? "ring-2 ring-indigo-600 scale-110 shadow-sm" : "hover:scale-105 opacity-80"
                   }`}
                 />
               ))}
@@ -684,13 +748,13 @@ export function SocialLaunchMockup({
           </div>
 
           {/* 4. High-Res Export Buttons */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-border/70">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-slate-100">
             <Button
               type="button"
               size="sm"
               disabled={Boolean(downloading)}
               onClick={() => downloadImage("feed")}
-              className="gap-1.5 bg-[#533afd] text-white hover:bg-[#432bd9] text-xs font-bold"
+              className="gap-1.5 bg-indigo-600 text-white hover:bg-indigo-700 text-xs font-bold shadow-sm"
             >
               {downloading === "feed" ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
               {downloading === "feed" ? "Generating..." : "FB & Insta (4:5)"}
@@ -702,7 +766,7 @@ export function SocialLaunchMockup({
               variant="outline"
               disabled={Boolean(downloading)}
               onClick={() => downloadImage("story")}
-              className="gap-1.5 text-xs font-bold text-[#0d1738] hover:bg-[#f0f3ff] hover:text-[#533afd]"
+              className="gap-1.5 text-xs font-bold text-slate-800 hover:bg-slate-50"
             >
               {downloading === "story" ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <ImageIcon className="h-3.5 w-3.5" />}
               {downloading === "story" ? "Generating..." : "Story / Reel (9:16)"}
@@ -715,15 +779,15 @@ export function SocialLaunchMockup({
               disabled={Boolean(downloading)}
               onClick={() => downloadImage("transparent")}
               title="Transparent 3D Mockup layer for Adobe After Effects or Photoshop"
-              className="gap-1.5 text-xs font-bold text-[#0d1738] hover:bg-[#f0f3ff] hover:text-[#533afd]"
+              className="gap-1.5 text-xs font-bold text-slate-800 hover:bg-slate-50"
             >
               {downloading === "transparent" ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Layers className="h-3.5 w-3.5" />}
               {downloading === "transparent" ? "Exporting..." : "After Effects (PNG)"}
             </Button>
           </div>
 
-          <p className="text-[11px] text-muted-foreground text-center">
-            💡 <strong>1-Click High-Res PNG Export</strong> — captures the exact visible 3D composition for social media or video editors.
+          <p className="text-[11px] text-slate-500 text-center">
+            💡 <strong>1-Click High-Res PNG Export</strong> — matches the studio reference composition for Facebook, Instagram, and motion graphics.
           </p>
         </div>
       )}
