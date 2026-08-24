@@ -159,6 +159,14 @@ export function PricingManager({
                   setMonthlyPrice(0);
                   setStandardValue(1297);
                   setDiscountLabel("Founding Launch Offer");
+                  setScopeItems([
+                    `Custom homepage redesign tailored for ${businessName}`,
+                    `${pageCount || 5} core service pages based on your real offerings`,
+                    "Lead capture, quote request & click-to-call flow",
+                    "LocalBusiness JSON-LD schema & technical SEO foundation",
+                    "Responsive visual assets with custom footer & logo badge integration",
+                    "100% client-owned website files with 2-4 week launch support",
+                  ]);
                 }}
                 className={`rounded-lg border p-2.5 text-center transition ${
                   model === "flat" && setupPrice === 597 && monthlyPrice === 0
@@ -178,6 +186,14 @@ export function PricingManager({
                   setMonthlyPrice(0);
                   setStandardValue(1997);
                   setDiscountLabel("Recommended Launch Offer");
+                  setScopeItems([
+                    `Custom homepage redesign tailored for ${businessName}`,
+                    `${pageCount || 8} dedicated service & location pages based on real offerings`,
+                    "Speed-engineered performance (95+ Google PageSpeed on mobile)",
+                    "Lead capture, click-to-call, and callback flow",
+                    "Full LocalBusiness SEO schema, OpenGraph cards & sitemap structure",
+                    "100% client-owned website files with white-glove launch support",
+                  ]);
                 }}
                 className={`rounded-lg border p-2.5 text-center transition ${
                   model === "flat" && setupPrice === 997 && monthlyPrice === 0
@@ -197,6 +213,14 @@ export function PricingManager({
                   setMonthlyPrice(0);
                   setStandardValue(2497);
                   setDiscountLabel("Complete Launch Offer");
+                  setScopeItems([
+                    `Full ${pageCount || 10}-page core website architecture for ${businessName}`,
+                    "Dedicated service pages for all offerings + local area combinations",
+                    "Speed-engineered performance (95+ Google PageSpeed on mobile)",
+                    "Custom lead capture forms, click-to-call, and inquiry alerts",
+                    "Full LocalBusiness SEO schema, OpenGraph cards & sitemap structure",
+                    "100% client-owned website files with white-glove launch support",
+                  ]);
                 }}
                 className={`rounded-lg border p-2.5 text-center transition ${
                   model === "flat" && setupPrice === 1297
@@ -216,6 +240,14 @@ export function PricingManager({
                   setMonthlyPrice(149);
                   setStandardValue(2497);
                   setDiscountLabel("Managed Growth Offer");
+                  setScopeItems([
+                    `Full ${pageCount || 10}-page core website rebuild tailored for ${businessName}`,
+                    "Dedicated service & territory pages based on your real offerings",
+                    "Global high-speed edge hosting, SSL & automated weekly backups",
+                    "Ongoing security monitoring, maintenance & monthly content updates",
+                    "AI lead assistant with instant SMS/Email inquiry alerts",
+                    "100% client-owned website files (cancel anytime without penalty)",
+                  ]);
                 }}
                 className={`rounded-lg border p-2.5 text-center transition ${
                   model === "hybrid" && setupPrice === 497 && monthlyPrice === 149

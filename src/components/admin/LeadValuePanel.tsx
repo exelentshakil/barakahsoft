@@ -52,6 +52,7 @@ export function LeadValuePanel({ leadId, value }: { leadId: string; value: LeadV
     if (!value) return;
     setApplying(true);
     setError(null);
+    const matchedOffer = value.offers.find((o) => o.id === value.suggested.offerId) || value.offers[1];
     try {
       const res = await fetch(`/api/leads/${leadId}/pricing`, {
         method: "POST",
@@ -61,6 +62,8 @@ export function LeadValuePanel({ leadId, value }: { leadId: string; value: LeadV
           setupPrice: value.suggested.setupPrice,
           monthlyPrice: value.suggested.monthlyPrice,
           standardValue: value.suggested.standardValue,
+          discountLabel: value.suggested.label,
+          scopeItems: matchedOffer?.scopeItems ?? [],
           offerOptions: value.offers,
           offerId: value.suggested.offerId,
         }),

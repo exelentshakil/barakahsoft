@@ -61,7 +61,14 @@ export function buildOfferOptions(corePageCount: number, businessName = "your bu
       setupPrice: 295,
       monthlyPrice: 0,
       standardValue: 595,
-      scopeItems: [`Homepage and up to ${Math.min(5, pages)} core pages for ${businessName}`, "Mobile conversion and click-to-call flow", "One revision round and client-owned files"],
+      scopeItems: [
+        `Custom homepage redesign tailored for ${businessName}`,
+        `Up to ${Math.min(5, pages)} core service pages based on your real offerings`,
+        "Mobile conversion optimization & click-to-call flow",
+        "Verified Google review badges and trust integration",
+        "LocalBusiness schema foundation for local search",
+        "100% client-owned website files & source assets",
+      ],
     },
     {
       id: "growth",
@@ -70,7 +77,14 @@ export function buildOfferOptions(corePageCount: number, businessName = "your bu
       setupPrice: 597,
       monthlyPrice: 0,
       standardValue: 1297,
-      scopeItems: [`Homepage and up to ${Math.min(10, pages)} core service pages`, "Lead capture, callback flow, and local SEO foundation", "One revision round and domain launch support"],
+      scopeItems: [
+        `Custom homepage redesign tailored for ${businessName}`,
+        `Up to ${Math.min(10, pages)} dedicated service & location pages`,
+        "Lead capture, quote request & instant callback routing",
+        "LocalBusiness JSON-LD schema & technical SEO foundation",
+        "Responsive branding with custom footer & logo badge integration",
+        "100% client-owned website files with 2-4 week launch support",
+      ],
     },
     {
       id: "complete",
@@ -79,7 +93,14 @@ export function buildOfferOptions(corePageCount: number, businessName = "your bu
       setupPrice: 997,
       monthlyPrice: 0,
       standardValue: 1997,
-      scopeItems: [`Full ${pages}-page core website rebuild for ${businessName}`, "Service and location structure based on your real offering", "Technical SEO, conversion QA, and 2-4 week launch support"],
+      scopeItems: [
+        `Full ${pages}-page core website architecture for ${businessName}`,
+        "Dedicated service pages for all offerings + local area combinations",
+        "Speed-engineered performance (95+ Google PageSpeed on mobile)",
+        "Custom lead capture forms, click-to-call, and inquiry alerts",
+        "Full LocalBusiness SEO schema, OpenGraph cards & sitemap structure",
+        "100% client-owned website files with white-glove launch support",
+      ],
     },
     {
       id: "managed",
@@ -88,7 +109,14 @@ export function buildOfferOptions(corePageCount: number, businessName = "your bu
       setupPrice: 295,
       monthlyPrice: 149,
       standardValue: 2497,
-      scopeItems: [`Full ${pages}-page core website rebuild`, "Managed hosting, maintenance, and conversion updates", "AI lead assistant with fair-use limits and human escalation"],
+      scopeItems: [
+        `Full ${pages}-page core website rebuild tailored for ${businessName}`,
+        "Dedicated service & territory pages based on your real offerings",
+        "Global high-speed edge hosting, SSL & automated weekly backups",
+        "Ongoing security monitoring, maintenance & monthly content updates",
+        "AI lead assistant with instant SMS/Email notifications",
+        "100% client-owned website files (cancel anytime without penalty)",
+      ],
     },
   ];
 }
