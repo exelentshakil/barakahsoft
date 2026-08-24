@@ -15,6 +15,7 @@ import {
   ChevronRight,
   CircleDollarSign,
   Clock3,
+  Copy,
   CreditCard,
   ExternalLink,
   Eye,
@@ -943,7 +944,7 @@ export function AdminLeadWorkspace({
               <span>
                 <strong>Goes to:</strong> {email}
               </span>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
                   onClick={() => {
@@ -951,13 +952,28 @@ export function AdminLeadWorkspace({
                     setCopiedPortalLink(true);
                     setTimeout(() => setCopiedPortalLink(false), 2000);
                   }}
-                  className="font-bold text-[#533afd] hover:underline"
+                  className="inline-flex items-center gap-1 font-bold text-[#533afd] hover:underline"
                 >
-                  {copiedPortalLink ? "Link copied! ✓" : "Copy proposal link"}
+                  <Copy className="h-3.5 w-3.5" />
+                  {copiedPortalLink ? "Copied! ✓" : "Copy Client Link"}
                 </button>
                 <span className="text-[#c7d0fb]">·</span>
-                <a href={portalUrl} target="_blank" rel="noreferrer" className="font-bold text-[#533afd] hover:underline">
-                  Preview the link they get
+                <a
+                  href={`/s/${lead.slug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 font-semibold text-[#533afd] hover:underline"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" /> View Proposal Portal
+                </a>
+                <span className="text-[#c7d0fb]">·</span>
+                <a
+                  href={`/s/${lead.slug}?view=preview`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 font-semibold text-[#533afd] hover:underline"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" /> View Website Directly
                 </a>
               </div>
             </div>
