@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   Sparkles,
   Share2,
@@ -13,16 +13,19 @@ import {
   BookOpen,
   Film,
   Palette,
-  Layers,
-  Volume2,
   Clock,
-  Video,
+  Volume2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { SocialLaunchMockup, type MockupData } from "@/components/mockup/SocialLaunchMockup";
+import {
+  SocialLaunchMockup,
+  type MockupData,
+  type MockupHeadlineMode,
+} from "@/components/mockup/SocialLaunchMockup";
 import type { Lead, Artifact } from "@/types/database";
+import { extractMockupData } from "@/lib/mockup-data";
 
 export function SocialMockupPanel({
   lead,
@@ -33,45 +36,63 @@ export function SocialMockupPanel({
   artifact: Artifact | null;
   facts: Record<string, unknown> | null;
 }) {
-  const extracted = (artifact?.extracted_assets as Record<string, unknown> | null) ?? {};
-  const photos = (facts?.site_photos as { url?: string }[] | undefined) ?? [];
-  const gbpPhotos = (facts?.gbp_photo_urls as string[] | undefined) ?? [];
+  const initialMockupData = useMemo(() => {
+    return extractMockupData({
+      lead,
+      artifact,
+      scrapeResults: null,
+      facts,
+      isPaid: Boolean(lead.paid_at) || lead.status === "paid" || lead.status === "live",
+    });
+  }, [lead, artifact, facts]);
 
-  // Combine all real photos into a deduplicated list
-  const availablePhotos: string[] = Array.from(
-    new Set(
-      [
-        ...gbpPhotos,
-        ...photos.map((p) => p.url).filter(Boolean),
-        extracted?.hero_image_url as string,
-        extracted?.about_image_url as string,
-      ].filter(Boolean) as string[]
-    )
-  );
-
-  const photoUrl = availablePhotos[0] || null;
-  const secondaryPhotoUrl = availablePhotos[1] || availablePhotos[0] || null;
-
-  const logoUrl =
-    (extracted?.branding as any)?.logo ||
-    (facts?.logo_url as string) ||
-    ((facts?.existing_schema as any)?.logo as string) ||
-    null;
-
-  const businessName = lead.business_name || (facts?.business_name as string) || lead.slug;
-  const city = (facts?.town as string) || "New York";
-  const trade = lead.industry || (facts?.industry as string) || "Home Services";
-  const brandColorHex = (facts?.brand_color_hex as string) || (extracted?.brand_color_hex as string) || "#1b4d3e";
-  const rating = (facts?.rating as number) || 5.0;
-  const reviewCount = (facts?.review_count as number) || 100;
-  const previewUrl = `/s/${lead.slug}?view=preview`;
-
+  const [mockupData, setMockupData] = useState<MockupData>(initialMockupData);
   const [generatingAvatar, setGeneratingAvatar] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
-  const [currentFeaturedPhoto, setCurrentFeaturedPhoto] = useState<string | null>(
-    (facts?.founder_photo_url as string) || (extracted?.about_image_url as string) || photoUrl
-  );
-  const [photosList, setPhotosList] = useState<string[]>(availablePhotos);
+
+  useEffect(() => {
+    setMockupData(initialMockupData);
+  }, [initialMockupData]);
+
+  async function saveMockupConfig(update: {
+    themeId?: string;
+    headlineMode?: MockupHeadlineMode;
+    featuredPhotoUrl?: string;
+  }) {
+    try {
+      await fetch(`/api/leads/${lead.id}/mockup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(update),
+      });
+    } catch (err) {
+      console.error("[mockup] auto-save failed", err);
+    }
+  }
+
+  function handleSelectPhoto(url: string) {
+    setMockupData((prev) => ({
+      ...prev,
+      photoUrl: url,
+    }));
+    saveMockupConfig({ featuredPhotoUrl: url });
+  }
+
+  function handleThemeChange(themeId: string) {
+    setMockupData((prev) => ({
+      ...prev,
+      themeId,
+    }));
+    saveMockupConfig({ themeId });
+  }
+
+  function handleHeadlineModeChange(mode: MockupHeadlineMode) {
+    setMockupData((prev) => ({
+      ...prev,
+      headlineMode: mode,
+    }));
+    saveMockupConfig({ headlineMode: mode });
+  }
 
   async function handleGenerateAvatar() {
     setGeneratingAvatar(true);
@@ -86,8 +107,12 @@ export function SocialMockupPanel({
       if (!res.ok || !data.url) {
         throw new Error(data.error || "Could not generate owner portrait");
       }
-      setCurrentFeaturedPhoto(data.url);
-      setPhotosList((prev) => [data.url, ...prev]);
+      setMockupData((prev) => ({
+        ...prev,
+        photoUrl: data.url,
+        availablePhotos: [data.url, ...(prev.availablePhotos || [])],
+      }));
+      saveMockupConfig({ featuredPhotoUrl: data.url });
     } catch (err) {
       setAvatarError(err instanceof Error ? err.message : "Generation failed");
     } finally {
@@ -95,64 +120,11 @@ export function SocialMockupPanel({
     }
   }
 
-  const copyPlan = (artifact?.copy_plan as any) ?? {};
-  const aboutSection = copyPlan.sections?.find((s: any) => s.id === "about");
-
-  let heroHeadline = copyPlan.headline || "";
-  let aboutHeadline = aboutSection?.heading || "";
-  let aboutBody = aboutSection?.body || "";
-
-  // Extract real live copy directly from the generated homepage HTML if present
-  if (artifact?.bespoke_homepage_html) {
-    const html = artifact.bespoke_homepage_html;
-    const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
-    if (h1Match) {
-      const cleanH1 = h1Match[1].replace(/<[^>]+>/g, "").trim();
-      if (cleanH1) heroHeadline = cleanH1;
-    }
-
-    const aboutMatch = html.match(/<section[^>]*id=["']about["'][^>]*>([\s\S]*?)<\/section>/i);
-    if (aboutMatch) {
-      const aboutContent = aboutMatch[1];
-      const h2Match = aboutContent.match(/<h[23][^>]*>([\s\S]*?)<\/h[23]>/i);
-      if (h2Match) {
-        const cleanH2 = h2Match[1].replace(/<[^>]+>/g, "").trim();
-        if (cleanH2) aboutHeadline = cleanH2;
-      }
-      const pMatch = aboutContent.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
-      if (pMatch) {
-        const cleanP = pMatch[1].replace(/<[^>]+>/g, "").trim();
-        if (cleanP) aboutBody = cleanP;
-      }
-    }
-  }
-
-  if (!heroHeadline) heroHeadline = `PREMIER ${trade.toUpperCase()} IN ${city.toUpperCase()}`;
-  if (!aboutHeadline) aboutHeadline = `A PASSION FOR ${trade.toUpperCase()} EXCELLENCE`;
-  if (!aboutBody) {
-    aboutBody = `Dedicated to providing premium ${trade.toLowerCase()} and expert craftsmanship across ${city} with verified customer satisfaction.`;
-  }
-
-  const mockupData: MockupData = {
-    businessName,
-    city,
-    trade,
-    brandColor: brandColorHex,
-    logoUrl,
-    rating,
-    reviewCount,
-    yearsExperience: (facts?.years_in_business as number) || 10,
-    founderName: (facts?.founder_name as string) || lead.contact_name || "Dan Martin",
-    founderTitle: "Founder / Operator",
-    aboutHeadline,
-    aboutBody,
-    heroHeadline,
-    photoUrl: currentFeaturedPhoto,
-    secondaryPhotoUrl: photosList[1] || currentFeaturedPhoto,
-    availablePhotos: photosList,
-    siteUrl: lead.source_url,
-    previewUrl,
-  };
+  const businessName = mockupData.businessName;
+  const city = mockupData.city || "New York";
+  const trade = mockupData.trade || "Home Services";
+  const brandColorHex = mockupData.brandColor || "#1b4d3e";
+  const reviewCount = mockupData.reviewCount || 100;
 
   // Panel View Tabs: Captions | Motion Guidelines | Moodboard
   const [activeTab, setActiveTab] = useState<"caption" | "motion" | "moodboard">("caption");
@@ -352,7 +324,9 @@ Duration: 6.0 Seconds (Seamless Loop)
           <SocialLaunchMockup
             data={mockupData}
             showControls={true}
-            onSelectPhoto={(url) => setCurrentFeaturedPhoto(url)}
+            onSelectPhoto={handleSelectPhoto}
+            onThemeChange={handleThemeChange}
+            onHeadlineModeChange={handleHeadlineModeChange}
           />
         </div>
 
@@ -693,5 +667,3 @@ Duration: 6.0 Seconds (Seamless Loop)
     </Card>
   );
 }
-
-

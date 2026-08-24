@@ -15,7 +15,8 @@ import { ProposalPricingSection } from "@/components/portal/sections/ProposalPri
 import { ProposalDecisionBox } from "@/components/portal/sections/ProposalDecisionBox";
 import { ProposalCheckoutModal } from "@/components/portal/sections/ProposalCheckoutModal";
 import { ProposalFooter } from "@/components/portal/sections/ProposalFooter";
-import { SocialLaunchMockup, type MockupData } from "@/components/mockup/SocialLaunchMockup";
+import { SocialLaunchMockup } from "@/components/mockup/SocialLaunchMockup";
+import { extractMockupData } from "@/lib/mockup-data";
 
 interface LiveClientProposalProps {
   lead: Lead;
@@ -83,6 +84,14 @@ export function LiveClientProposal({
     { label: "Website live", complete: Boolean(lead.live_at) || lead.status === "live", detail: lead.live_at ? "Live on the connected domain" : "Follows QA and domain setup" },
   ];
 
+  const mockupData = extractMockupData({
+    lead,
+    artifact,
+    scrapeResults,
+    payload,
+    isPaid,
+  });
+
   async function handleCheckout() {
     setCheckoutLoading(true);
     try {
@@ -148,29 +157,11 @@ export function LiveClientProposal({
             </p>
           </div>
 
-          <div className="w-full flex justify-center">
+          <div className="w-full flex justify-center py-2">
             <SocialLaunchMockup
-              data={{
-                businessName,
-                city: ((scrapeResults?.facts as Record<string, unknown> | null)?.town as string) || null,
-                trade: lead.industry || payload.services?.[0]?.h2 || "Services",
-                brandColor: ((scrapeResults?.facts as Record<string, unknown> | null)?.brand_color_hex as string) || "#1b4d3e",
-                logoUrl: ((scrapeResults?.facts as any)?.logo_url as string) || null,
-                rating: typeof rating === "number" ? rating : typeof rating === "string" ? parseFloat(rating) : 5.0,
-                reviewCount: typeof reviewCount === "number" ? reviewCount : typeof reviewCount === "string" ? parseInt(reviewCount, 10) : 100,
-                yearsExperience: ((scrapeResults?.facts as any)?.years_in_business as number) || 10,
-                founderName: ((scrapeResults?.facts as any)?.founder_name as string) || lead.contact_name || "Dan Martin",
-                founderTitle: "Founder / Operator",
-                aboutHeadline: (artifact?.copy_plan as any)?.sections?.find((s: any) => s.id === "about")?.heading || `A PASSION FOR ${(lead.industry || "QUALITY").toUpperCase()} EXCELLENCE`,
-                aboutBody: (artifact?.copy_plan as any)?.sections?.find((s: any) => s.id === "about")?.body || `Dedicated to providing premium ${(lead.industry || "services").toLowerCase()} and expert craftsmanship across ${((scrapeResults?.facts as any)?.town as string) || "your area"}.`,
-                heroHeadline: payload.headline || `PREMIER ${(lead.industry || "SERVICES").toUpperCase()}`,
-                photoUrl: ((scrapeResults?.facts as any)?.founder_photo_url as string) || payload.heroImageUrl || ((scrapeResults?.facts as any)?.site_photos?.[0]?.url as string) || null,
-                secondaryPhotoUrl: ((scrapeResults?.facts as any)?.site_photos?.[1]?.url as string) || payload.services?.[0]?.imageUrl || null,
-                siteUrl: lead.source_url,
-                previewUrl: `/s/${lead.slug}?view=preview`,
-                headlineMode: isPaid ? "launched" : "proposed",
-              }}
+              data={mockupData}
               showControls={false}
+              className="w-full max-w-[620px]"
             />
           </div>
         </section>

@@ -106,13 +106,24 @@ function HeaderStat({
   suffix?: string;
   tone?: "good" | "bad" | "neutral";
 }) {
-  const colour = tone === "bad" ? "text-red-600" : tone === "good" ? "text-[#0b8f5b]" : "text-[#0d1738]";
+  const colour =
+    tone === "bad"
+      ? "text-rose-600"
+      : tone === "good"
+      ? "text-emerald-700"
+      : "text-slate-900";
+  const bgBadge =
+    tone === "bad"
+      ? "bg-rose-50/80 border-rose-200"
+      : tone === "good"
+      ? "bg-emerald-50/80 border-emerald-200"
+      : "bg-slate-50 border-slate-200/80";
   return (
-    <div className="min-w-0">
-      <p className="truncate text-xs font-semibold text-[#777588]">{label}</p>
-      <p className={`mt-0.5 text-xl font-bold tabular-nums ${colour}`}>
+    <div className={`min-w-0 rounded-xl p-3.5 border transition shadow-sm ${bgBadge}`}>
+      <p className="truncate text-[11px] font-extrabold text-slate-600 uppercase tracking-wider">{label}</p>
+      <p className={`mt-1 text-2xl font-black tabular-nums tracking-tight ${colour}`}>
         {value}
-        {suffix && <span className="text-sm font-semibold text-[#777588]">{suffix}</span>}
+        {suffix && <span className="text-xs font-bold text-slate-500 ml-1">{suffix}</span>}
       </p>
     </div>
   );
@@ -396,14 +407,14 @@ export function AdminLeadWorkspace({
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[300px_1fr]">
+    <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
       {/* 1. LEFT ASIDE: INBOUND LEAD ORDERS & WEEKLY PULSE */}
       <aside className="space-y-6">
-        <div className="rounded-xl border border-[#e5e7f2] bg-white p-4 space-y-3">
-          <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-2">
-            <span className="text-sm font-bold text-[#0d1738]">Your leads</span>
-            <span className="rounded-full bg-[#f0f3ff] px-2 py-0.5 text-xs font-bold text-[#533afd]">
-              {otherLeads.length} open
+        <div className="rounded-2xl border border-slate-200/90 bg-white p-4 space-y-3 shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 px-1">
+            <span className="text-sm font-extrabold text-slate-900 tracking-tight">Your Pipeline</span>
+            <span className="rounded-full bg-indigo-50 border border-indigo-200/60 px-2.5 py-0.5 text-xs font-black text-indigo-700">
+              {otherLeads.length} leads
             </span>
           </div>
 
@@ -415,37 +426,37 @@ export function AdminLeadWorkspace({
                 <Link
                   key={item.id}
                   href={`/admin/leads/${item.id}`}
-                  className={`block rounded-lg p-3 transition border ${
+                  className={`block rounded-xl p-3.5 transition border ${
                     isSelected
-                      ? "bg-[#f0f3ff] border-[#533afd] shadow-sm ring-1 ring-[#533afd]"
-                      : "bg-white hover:bg-slate-50 border-[#e5e7f2]"
+                      ? "bg-indigo-50/70 border-2 border-indigo-600 shadow-md ring-2 ring-indigo-500/10"
+                      : "bg-white hover:bg-slate-50 border-slate-200/80 hover:border-slate-300"
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="rounded bg-[#f0f3ff] px-1.5 py-0.5 text-xs font-bold text-[#533afd] capitalize">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-slate-700">
                       {itemTrade}
                     </span>
-                    <span className="text-sm font-bold text-[#0b8f5b]">$779</span>
+                    <span className="text-xs font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">$779</span>
                   </div>
 
-                  <p className="mt-1.5 truncate text-sm font-bold text-[#0d1738]">
+                  <p className="mt-2 truncate text-sm font-black text-slate-900 leading-tight">
                     {item.business_name || item.slug}
                   </p>
-                  <p className="truncate text-xs text-[#777588]">{item.contact_name || item.source_url}</p>
+                  <p className="truncate text-xs font-medium text-slate-500 mt-0.5">{item.contact_name || item.source_url}</p>
 
-                  <div className="mt-2 flex items-center justify-between text-xs">
+                  <div className="mt-2.5 flex items-center justify-between text-xs pt-2 border-t border-slate-100">
                     <span
-                      className={`font-semibold capitalize ${
+                      className={`font-black text-[11px] uppercase tracking-wider ${
                         item.status === "paid"
-                          ? "text-[#0b8f5b]"
+                          ? "text-emerald-700"
                           : item.status === "delivered" || item.status === "qa_approved"
-                          ? "text-[#533afd]"
-                          : "text-amber-600"
+                          ? "text-indigo-600"
+                          : "text-amber-700"
                       }`}
                     >
                       {STATUS_LABEL[item.status] ?? item.status}
                     </span>
-                    <ChevronRight className="h-3 w-3 text-[#777588]" />
+                    <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
                   </div>
 
                   <div className="mt-2">
@@ -457,18 +468,18 @@ export function AdminLeadWorkspace({
           </div>
         </div>
 
-        <div className="space-y-3 rounded-xl border border-[#e5e7f2] bg-white p-5">
-          <span className="text-sm font-bold text-[#0d1738]">This week</span>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-[#42506a]">Paid</span>
-            <span className="text-base font-bold text-[#0b8f5b]">
-              ${collectedThisWeek.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        <div className="space-y-3 rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
+          <span className="text-xs font-black uppercase tracking-wider text-slate-500">Weekly Target Pulse</span>
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-xs font-bold text-slate-600">Collected Revenue</span>
+            <span className="text-base font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              ${collectedThisWeek.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-[#42506a]">Still to close</span>
-            <span className="text-base font-bold text-[#533afd]">
-              ${pendingCloseAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <span className="text-xs font-bold text-slate-600">Pipeline To Close</span>
+            <span className="text-base font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+              ${pendingCloseAmount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </span>
           </div>
         </div>
@@ -476,39 +487,31 @@ export function AdminLeadWorkspace({
 
       {/* 2. RIGHT COLUMN: LINEAR STUDIO WORKSPACE */}
       <div className="space-y-8">
-        {/* The lead header.
-            Deliberately stacked rather than a two-column row. Six actions and
-            a business name cannot share a row inside this column: the actions
-            take the width they need and the name gets whatever is left, which
-            is how "Spennato Family Roofing" ended up wrapping one word per
-            line underneath the buttons. Stacking cannot break at any width. */}
-        <div className="space-y-5 rounded-2xl border border-[#c7d0fb] bg-white p-7 shadow-sm">
+        <div className="space-y-5 rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-sm">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#f0f3ff] px-2.5 py-1 text-xs font-bold text-[#533afd]">
-                <Zap className="h-3 w-3" /> Active Pipeline
+              <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-indigo-50 border border-indigo-200 px-3 py-1 text-xs font-black text-indigo-700">
+                <Zap className="h-3.5 w-3.5" /> Active Lead Pipeline
               </span>
-              <Badge variant="outline" className="whitespace-nowrap text-sm">
+              <Badge variant="outline" className="whitespace-nowrap text-xs font-bold px-2.5 py-1">
                 {STATUS_LABEL[lead.status] ?? lead.status}
               </Badge>
               <DeliverySlaTimer createdAt={lead.created_at} deliveredAt={lead.delivered_at} />
             </div>
-            <h1 className="mt-2.5 text-2xl font-bold tracking-tight text-[#0d1738] sm:text-3xl">
+            <h1 className="mt-3 text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
               {businessName}
             </h1>
-            <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[#42506a]">
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-semibold text-slate-600">
               <span>{lead.contact_name || "Owner"}</span>
-              <span className="text-[#c7d0fb]">|</span>
-              <span>{phone}</span>
-              <span className="text-[#c7d0fb]">|</span>
-              <span className="truncate">{email}</span>
+              <span className="text-slate-300">|</span>
+              <span className="text-slate-800">{phone}</span>
+              <span className="text-slate-300">|</span>
+              <span className="truncate text-slate-800">{email}</span>
             </p>
           </div>
 
-          {/* What this lead is worth knowing at a glance, measured rather
-              than decorative — the numbers an operator would otherwise open
-              three tabs to find. */}
-          <div className="grid grid-cols-2 gap-3 border-y border-[#eef0f8] py-4 sm:grid-cols-4">
+          {/* Key metrics grid */}
+          <div className="grid grid-cols-2 gap-3 border-y border-slate-100 py-4 sm:grid-cols-4">
             <HeaderStat
               label="Their mobile speed"
               value={typeof scrapeResults?.pagespeed_mobile?.score === "number" ? `${scrapeResults.pagespeed_mobile.score}` : "—"}
@@ -530,10 +533,6 @@ export function AdminLeadWorkspace({
               value={`${Array.isArray(facts.sitemap_urls) ? (facts.sitemap_urls as unknown[]).length : services.length || 0}`}
               tone="neutral"
             />
-            {/* The measured benchmark lives in the scrape_results.competitors
-                COLUMN, which is what the audit route reads and writes. This
-                read facts.competitors — a different place entirely — so it
-                showed 0 while the panel below had a full table. */}
             <HeaderStat
               label="Rivals measured"
               value={`${measuredRivals}`}
@@ -547,7 +546,7 @@ export function AdminLeadWorkspace({
               target="_blank"
               rel="noreferrer"
               title="Opens the page the client sees: their new homepage, the report and the price."
-              className="inline-flex items-center gap-2 rounded-md bg-[#533afd] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#432bd9]"
+              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs sm:text-sm font-black text-white shadow-md shadow-indigo-600/20 transition hover:bg-indigo-700"
             >
               <ExternalLink className="h-4 w-4" /> See what the client sees
             </a>
@@ -556,8 +555,8 @@ export function AdminLeadWorkspace({
               onClick={handleSendBrevoEmail}
               disabled={sendingEmail}
               title="Emails the client a private link to their new homepage and report."
-              className={`inline-flex items-center gap-2 rounded-md px-4 py-2.5 text-sm font-bold text-white transition ${
-                emailSent ? "bg-[#0b8f5b]" : "bg-[#533afd] hover:bg-[#432bd9]"
+              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-black text-white shadow-md transition ${
+                emailSent ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20" : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/20"
               }`}
             >
               <Mail className="h-4 w-4" />
@@ -568,9 +567,9 @@ export function AdminLeadWorkspace({
               <a
                 href={`tel:${lead.phone.replace(/\D/g, "")}`}
                 title={`Calls ${lead.phone}`}
-                className="inline-flex items-center gap-2 rounded-md bg-[#0b8f5b] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#09744a]"
+                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs sm:text-sm font-black text-white hover:bg-black shadow-sm transition"
               >
-                <PhoneCall className="h-4 w-4" /> Call them
+                <PhoneCall className="h-4 w-4 text-emerald-400" /> Call them
               </a>
             )}
 
@@ -578,7 +577,7 @@ export function AdminLeadWorkspace({
               onClick={handleGenerateStripeCheckout}
               disabled={generatingStripe}
               title="Creates a Stripe payment link for this price and opens it."
-              className="inline-flex items-center gap-2 rounded-md border border-[#533afd] bg-white px-4 py-2.5 text-sm font-bold text-[#533afd] hover:bg-[#f0f3ff]"
+              className="inline-flex items-center gap-2 rounded-xl border-2 border-indigo-600 bg-indigo-50/50 px-4 py-2.5 text-xs sm:text-sm font-black text-indigo-700 hover:bg-indigo-100/70 transition"
             >
               <CircleDollarSign className="h-4 w-4" /> Ask for payment · {priceDisplay}
             </button>
@@ -598,20 +597,20 @@ export function AdminLeadWorkspace({
 
         <TabPanel active={tab === "lead"}>
         {/* LINEAR STEP 1: INBOUND INTAKE & VERIFIED FACTS */}
-        <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-5">
-          <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
+        <div className="rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-sm space-y-5">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <div className="flex items-center gap-2.5">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f0f3ff] text-xs font-bold text-[#533afd]">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 border border-indigo-200 text-xs font-black text-indigo-700">
                 1
               </span>
-              <h3 className="font-bold text-base text-[#0d1738]">Inbound Lead & Verified Facts</h3>
+              <h3 className="font-extrabold text-base text-slate-900">Inbound Lead &amp; Verified Facts</h3>
             </div>
             <div className="flex items-center gap-2">
               {!scrapeResults ? (
                 <button
                   onClick={() => handleAnalyse("light")}
                   disabled={rescraping}
-                  className="inline-flex items-center gap-1.5 rounded-md bg-[#533afd] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#432bd9] disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-700 disabled:opacity-60 shadow-sm"
                 >
                   <RefreshCw className={`h-3.5 w-3.5 ${rescraping ? "animate-spin" : ""}`} />
                   {rescraping ? "Reading their site..." : "Read their site · 2 pages"}
@@ -622,64 +621,67 @@ export function AdminLeadWorkspace({
                     onClick={() => handleRescrape("light")}
                     disabled={rescraping}
                     title="Refresh brand colours, logo, rating and reviews. One page."
-                    className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-semibold text-[#0d1738] hover:bg-[#f0f3ff]"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-800 hover:bg-slate-50 transition shadow-xs"
                   >
-                    <RefreshCw className={`h-3.5 w-3.5 text-[#533afd] ${rescraping ? "animate-spin" : ""}`} />
+                    <RefreshCw className={`h-3.5 w-3.5 text-indigo-600 ${rescraping ? "animate-spin" : ""}`} />
                     Refresh · 1 page
                   </button>
                   <button
                     onClick={() => handleAnalyse("deep")}
                     disabled={rescraping}
                     title="Reads up to 25 of their pages instead of 2. Slower and costs more, but it is what finds the page-by-page faults you sell against."
-                    className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-semibold text-[#0d1738] hover:bg-[#f0f3ff]"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-800 hover:bg-slate-50 transition shadow-xs"
                   >
                     Read every page · up to 25
                   </button>
                 </>
               )}
               {scrapeResults && (
-                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b] shrink-0">
-                  <ShieldCheck className="h-3 w-3" /> Verified
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-extrabold text-emerald-700 shrink-0">
+                  <ShieldCheck className="h-3.5 w-3.5" /> Verified
                 </span>
               )}
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3 text-xs leading-relaxed">
-            <div className="rounded-xl bg-[#f9f9ff] p-4 border border-[#e5e7f2] space-y-1">
-              <span className="font-bold uppercase tracking-wider text-[#777588] text-[10px]">Selected Intake Pains</span>
+            <div className="rounded-xl bg-slate-50/80 p-4 border border-slate-200/80 space-y-1.5">
+              <span className="font-extrabold uppercase tracking-wider text-slate-500 text-[10px]">Selected Intake Pains</span>
               {lead.pain_points.length > 0 ? (
-                lead.pain_points.map((p) => <p key={p} className="font-bold text-[#0d1738]">• {p}</p>)
+                lead.pain_points.map((p) => <p key={p} className="font-bold text-slate-900">• {p}</p>)
               ) : (
-                <p className="text-muted-foreground">Standard Speed & Conversion Optimization</p>
+                <p className="text-slate-500 font-medium">Standard Speed &amp; Conversion Optimization</p>
               )}
             </div>
 
-            <div className="rounded-xl bg-[#f9f9ff] p-4 border border-[#e5e7f2] space-y-1">
-              <span className="font-bold uppercase tracking-wider text-[#777588] text-[10px]">Verified Credentials</span>
-              <p className="font-bold text-[#0d1738]">
+            <div className="rounded-xl bg-slate-50/80 p-4 border border-slate-200/80 space-y-1.5">
+              <span className="font-extrabold uppercase tracking-wider text-slate-500 text-[10px]">Verified Credentials</span>
+              <p className="font-bold text-slate-900">
                 • Google Rating: {reviewCount > 0 ? `${rating} ★ (${reviewCount}+ Reviews)` : "Pending Verification"}
               </p>
-              <p className="font-bold text-[#0d1738]">
+              <p className="font-bold text-slate-900">
                 • Location: {city || "Global / Digital"}
               </p>
-              <p className="font-bold text-[#0d1738]">• Operating Business Entity</p>
+              <p className="font-bold text-slate-900">• Operating Business Entity</p>
             </div>
 
-            <div className="rounded-xl bg-[#f9f9ff] p-4 border border-[#e5e7f2] space-y-1">
-              <span className="font-bold uppercase tracking-wider text-[#777588] text-[10px]">Extracted Brand Tokens</span>
+            <div className="rounded-xl bg-slate-50/80 p-4 border border-slate-200/80 space-y-1.5">
+              <span className="font-extrabold uppercase tracking-wider text-slate-500 text-[10px]">Extracted Brand Tokens</span>
               <div className="mt-1 flex items-center gap-3">
-                <span className="flex items-center gap-1 font-mono text-[11px] font-bold">
-                  <span className="h-3 w-3 rounded-full border" style={{ backgroundColor: primaryColor }} /> {primaryColor}
+                <span className="flex items-center gap-1 font-mono text-[11px] font-bold text-slate-800">
+                  <span className="h-3.5 w-3.5 rounded-full border shadow-inner" style={{ backgroundColor: primaryColor }} /> {primaryColor}
                 </span>
-                <span className="flex items-center gap-1 font-mono text-[11px] font-bold">
-                  <span className="h-3 w-3 rounded-full border" style={{ backgroundColor: accentColor }} /> {accentColor}
+                <span className="flex items-center gap-1 font-mono text-[11px] font-bold text-slate-800">
+                  <span className="h-3.5 w-3.5 rounded-full border shadow-inner" style={{ backgroundColor: accentColor }} /> {accentColor}
                 </span>
               </div>
-              <p className="text-[11px] text-[#777588] pt-1">{logoName}</p>
+              <p className="text-[11px] font-bold text-slate-600 pt-1">{logoName}</p>
             </div>
           </div>
         </div>
+
+        {/* Social Media Launch Studio (3D Poster & Motion Kit) prominently below Lead Data */}
+        <SocialMockupPanel lead={lead} artifact={artifact} facts={facts} />
 
         </TabPanel>
 
@@ -839,11 +841,6 @@ export function AdminLeadWorkspace({
             unreachable — mounted only inside a tabs layout nothing renders —
             so no lead could ever be approved and no portal could unlock. */}
         <ApprovalGate lead={lead} artifact={artifact} onChanged={() => setReloadKey((k) => k + 1)} />
-
-        {/* 3D Mockup Asset Panel for Social Media (Instagram / Facebook / After Effects) */}
-        {artifact?.bespoke_homepage_html && (
-          <SocialMockupPanel lead={lead} artifact={artifact} facts={facts} />
-        )}
 
         </TabPanel>
 
