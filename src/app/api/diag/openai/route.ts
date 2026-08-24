@@ -50,26 +50,48 @@ export async function GET() {
       ])
     : [null, null];
 
+  const geminiKey = process.env.GEMINI_API_KEY;
+  let geminiModels: Array<{ name: string; displayName?: string; description?: string }> = [];
+
+  if (geminiKey) {
+    try {
+      const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${geminiKey}`);
+      if (gRes.ok) {
+        const gData = await gRes.json();
+        geminiModels = (gData.models ?? []).map((m: any) => ({
+          name: m.name?.replace(/^models\//, "") ?? m.name,
+          displayName: m.displayName,
+          description: m.description,
+        }));
+      }
+    } catch (err) {
+      console.warn("Could not list Gemini models", err);
+    }
+  }
+
   return NextResponse.json({
-    keyPresent,
-    generation: {
-      pinnedViaEnv: process.env.OPENAI_MODEL ?? null,
-      modelUsed: configuredModel(),
-      ok: probe?.toUpperCase().includes("OK") ?? false,
-    },
-    search: {
-      // The chain the visibility measurement actually requires, and whether
-      // this key can serve any of it.
-      required: SEARCH_MODELS,
-      availableOnKey: SEARCH_MODELS.filter((m: string) => ids.has(m)),
-      allSearchModels: searchModels,
-      probeOk: !!searchProbe && /"ok"\s*:\s*true/i.test(searchProbe),
-      probeSample: searchProbe?.slice(0, 200) ?? null,
+    openai: {
+      keyPresent,
+      generation: {
+        pinnedViaEnv: process.env.OPENAI_MODEL ?? null,
+        modelUsed: configuredModel(),
+        ok: probe?.toUpperCase().includes("OK") ?? false,
+      },
+      search: {
+        required: SEARCH_MODELS,
+        availableOnKey: SEARCH_MODELS.filter((m: string) => ids.has(m)),
+        allSearchModels: searchModels,
+        probeOk: !!searchProbe && /"ok"\s*:\s*true/i.test(searchProbe),
+        probeSample: searchProbe?.slice(0, 200) ?? null,
+      },
+      reasoningModels,
+      allModels: (models ?? []).map((m) => m.id).sort(),
+      totalModelsVisible: models?.length ?? 0,
     },
     gemini: {
-      keyPresent: !!process.env.GEMINI_API_KEY,
+      keyPresent: !!geminiKey,
+      totalModelsVisible: geminiModels.length,
+      models: geminiModels,
     },
-    reasoningModels,
-    totalModelsVisible: models?.length ?? 0,
   });
 }
