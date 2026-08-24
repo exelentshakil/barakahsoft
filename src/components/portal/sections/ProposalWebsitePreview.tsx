@@ -77,12 +77,12 @@ export function ProposalWebsitePreview({
       </div>
 
       {/* Frame Container */}
-      <div className="overflow-hidden rounded-xl border border-[#dfe3ef] bg-[#f4f6fb] p-3 sm:p-6 shadow-inner">
+      <div className="overflow-x-auto rounded-xl border border-[#dfe3ef] bg-[#eef1f7] p-3 sm:p-6 shadow-inner">
         <div
-          className={`mx-auto overflow-hidden bg-white shadow-2xl transition-all duration-300 ${
+          className={`mx-auto overflow-hidden bg-white shadow-2xl transition-[width] duration-300 ${
             viewport === "mobile"
               ? "w-[390px] max-w-full rounded-[32px] border-[6px] border-slate-800 ring-4 ring-slate-900/10"
-              : "w-full rounded-xl border border-[#cfd5e3]"
+              : "w-full min-w-[1024px] rounded-xl border border-[#cfd5e3]"
           }`}
         >
           {/* Browser Address Bar */}
@@ -98,8 +98,8 @@ export function ProposalWebsitePreview({
               <span className="truncate">{businessName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com</span>
             </div>
 
-            <span className="hidden xs:inline-block text-[9px] sm:text-[10px] font-bold text-[#533afd] uppercase tracking-wider shrink-0">
-              {viewport === "mobile" ? "Mobile" : "Desktop"}
+            <span className="text-[10px] font-bold text-[#533afd] uppercase tracking-wider shrink-0">
+              {viewport === "mobile" ? "Mobile (390px)" : "Desktop (1024px+)"}
             </span>
           </div>
 
@@ -107,7 +107,7 @@ export function ProposalWebsitePreview({
           <iframe
             src={previewUrl}
             className={`w-full transition-all duration-200 ${
-              viewport === "mobile" ? "h-[740px]" : "h-[780px]"
+              viewport === "mobile" ? "h-[740px]" : "h-[820px]"
             }`}
             title={`${businessName} live website preview`}
             loading="lazy"
