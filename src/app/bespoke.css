@@ -920,7 +920,8 @@
 }
 
 [data-review-prev],
-[data-review-next] {
+[data-review-next],
+.site-slider-btn {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -933,10 +934,20 @@
   cursor: pointer !important;
   transition: all 0.2s ease !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+  flex-shrink: 0 !important;
+}
+
+[data-review-prev] svg,
+[data-review-next] svg,
+.site-slider-btn svg {
+  width: 1.125rem !important;
+  height: 1.125rem !important;
+  display: block !important;
 }
 
 [data-review-prev]:hover,
-[data-review-next]:hover {
+[data-review-next]:hover,
+.site-slider-btn:hover {
   background: var(--bs-primary, #533afd) !important;
   color: var(--bs-on-primary, #ffffff) !important;
   border-color: var(--bs-primary, #533afd) !important;

@@ -194,8 +194,8 @@ export const INTERACTION_CONTRACT = `INTERACTIONS — the page gets motion and b
   data-review-slider           an accessible reviews carousel root. All real review content is
                                 present in the HTML and remains horizontally scrollable without script.
   data-review-track            the overflow track containing one semantic blockquote per review
-  data-review-prev             previous-review button; include an accurate aria-label
-  data-review-next             next-review button; include an accurate aria-label
+  data-review-prev             previous-review button with vector arrow SVG icon; include aria-label="Previous review"
+  data-review-next             next-review button with vector arrow SVG icon; include aria-label="Next review"
   data-bar="4.9"               a proportional bar; pair with data-bar-max="5"
   data-bar-fill                the inner element whose width is animated
 
