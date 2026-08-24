@@ -78,8 +78,6 @@ export function LiveClientProposal({
   const pricingIsConfigured = typeof pricingData.offerId === "string" || (Array.isArray(pricingData.offerOptions) && pricingData.offerOptions.length > 0);
   const setupPrice = pricingIsConfigured && typeof pricingData.setupPrice === "number" ? pricingData.setupPrice : recommendedOffer.setupPrice;
   const monthlyPrice = pricingIsConfigured && typeof pricingData.monthlyPrice === "number" ? pricingData.monthlyPrice : recommendedOffer.monthlyPrice;
-  const standardValue = pricingIsConfigured && typeof pricingData.standardValue === "number" ? pricingData.standardValue : recommendedOffer.standardValue;
-  const discountLabel = pricingData.discountLabel || `${recommendedOffer.label} · Lead-specific offer`;
   const priceFormattedLabel =
     setupPrice === 0 && monthlyPrice > 0
       ? `$0 Setup · $${monthlyPrice}/mo`
@@ -209,7 +207,6 @@ export function LiveClientProposal({
           businessName={businessName}
           setupPrice={setupPrice}
           monthlyPrice={monthlyPrice}
-          standardValue={standardValue}
           scopeItems={scopeItems}
           audit={report.audit}
           offers={offers}
@@ -230,8 +227,6 @@ export function LiveClientProposal({
         {showCheckout && (
           <ProposalCheckoutModal
             businessName={businessName}
-            discountLabel={discountLabel}
-            standardValue={standardValue}
             setupPrice={setupPrice}
             monthlyPrice={monthlyPrice}
             priceFormattedLabel={priceFormattedLabel}

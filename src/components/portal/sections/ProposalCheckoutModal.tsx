@@ -1,7 +1,5 @@
 interface ProposalCheckoutModalProps {
   businessName: string;
-  discountLabel: string;
-  standardValue: number;
   setupPrice: number;
   monthlyPrice: number;
   priceFormattedLabel: string;
@@ -13,8 +11,6 @@ interface ProposalCheckoutModalProps {
 
 export function ProposalCheckoutModal({
   businessName,
-  discountLabel,
-  standardValue,
   setupPrice,
   monthlyPrice,
   priceFormattedLabel,
@@ -38,9 +34,7 @@ export function ProposalCheckoutModal({
         <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
           <div>
             <h3 className="text-xl font-bold text-[#0d1738]">Launch {businessName}&apos;s Website</h3>
-            <p className="text-xs text-[#777588]">
-              {discountLabel} · Tailored B2B Proposal
-            </p>
+            <p className="text-xs text-[#777588]">Personalized launch plan for {businessName}</p>
           </div>
           <button
             onClick={onClose}
@@ -59,8 +53,8 @@ export function ProposalCheckoutModal({
           ))}
           <div className="flex justify-between items-center border-t border-[#c7d0fb] pt-3 text-sm">
             <div>
-              <span className="font-bold text-[#0d1738] block">Pricing Terms</span>
-              <span className="text-[10px] text-[#777588] line-through">Standard Value: ${standardValue}</span>
+              <span className="font-bold text-[#0d1738] block">Total investment</span>
+              <span className="text-[10px] text-[#777588]">Based on the scope above</span>
             </div>
             <span className="text-xl font-bold text-[#533afd]">
               {priceFormattedLabel}
