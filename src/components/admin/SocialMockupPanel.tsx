@@ -127,6 +127,20 @@ export function SocialMockupPanel({
     }
   }
 
+  async function handleClearCapture(slot: "hero" | "about") {
+    const key = slot === "hero" ? "heroCaptureUrl" : "aboutCaptureUrl";
+    try {
+      await fetch(`/api/leads/${lead.id}/mockup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [key]: null }),
+      });
+      setMockupData((prev) => ({ ...prev, [key]: null }));
+    } catch (err) {
+      console.error("Failed to clear capture", err);
+    }
+  }
+
   const businessName = mockupData.businessName;
   const city = mockupData.city || "the local area";
   const trade = mockupData.trade || "Home Services";
@@ -248,23 +262,37 @@ export function SocialMockupPanel({
             {(["hero", "about"] as const).map((slot) => {
               const hasCapture = slot === "hero" ? mockupData.heroCaptureUrl : mockupData.aboutCaptureUrl;
               return (
-                <label key={slot} className="flex cursor-pointer items-center justify-between rounded-lg border border-border bg-white px-3 py-2 hover:border-[#533afd]">
-                  <span>
-                    <span className="block text-xs font-bold capitalize text-[#0d1738]">{slot} capture</span>
-                    <span className="block text-[10px] text-muted-foreground">{hasCapture ? "Uploaded, choose another to replace" : "PNG, JPG or WebP up to 12 MB"}</span>
-                  </span>
-                  <span className="flex items-center gap-1 text-[11px] font-bold text-[#533afd]">
-                    {uploadingCapture === slot ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-                    {hasCapture ? "Replace" : "Upload"}
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    className="sr-only"
-                    disabled={Boolean(uploadingCapture)}
-                    onChange={(event) => handleCaptureUpload(slot, event.target.files?.[0])}
-                  />
-                </label>
+                <div key={slot} className="flex items-center justify-between rounded-lg border border-border bg-white px-3 py-2">
+                  <div className="min-w-0 pr-2">
+                    <span className="block text-xs font-bold capitalize text-[#0d1738]">{slot} snapshot</span>
+                    <span className="block text-[10px] text-muted-foreground truncate">
+                      {hasCapture ? "Custom capture active" : "Using native 3D vector"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {hasCapture && (
+                      <button
+                        type="button"
+                        onClick={() => handleClearCapture(slot)}
+                        className="text-[10px] font-semibold text-rose-600 hover:underline"
+                        title="Revert to crisp vector rendering"
+                      >
+                        Clear
+                      </button>
+                    )}
+                    <label className="flex cursor-pointer items-center gap-1 rounded bg-slate-100 px-2 py-1 text-[11px] font-bold text-[#533afd] hover:bg-indigo-50">
+                      {uploadingCapture === slot ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                      <span>{hasCapture ? "Replace" : "Upload"}</span>
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        className="sr-only"
+                        disabled={Boolean(uploadingCapture)}
+                        onChange={(event) => handleCaptureUpload(slot, event.target.files?.[0])}
+                      />
+                    </label>
+                  </div>
+                </div>
               );
             })}
           </div>

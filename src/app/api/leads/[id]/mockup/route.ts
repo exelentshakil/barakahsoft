@@ -57,6 +57,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       ...existingMockup,
       ...(body && typeof body.themeId === "string" ? { themeId: body.themeId } : {}),
       ...(body && typeof body.headlineMode === "string" ? { headlineMode: body.headlineMode } : {}),
+      ...(body && "heroCaptureUrl" in body ? { heroCaptureUrl: body.heroCaptureUrl || null } : {}),
+      ...(body && "aboutCaptureUrl" in body ? { aboutCaptureUrl: body.aboutCaptureUrl || null } : {}),
       ...(uploadedCapture ? { [uploadedCapture.key]: uploadedCapture.url } : {}),
       updated_at: new Date().toISOString(),
       updated_by: user.email,
