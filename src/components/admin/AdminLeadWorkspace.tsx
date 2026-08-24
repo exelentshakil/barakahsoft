@@ -925,7 +925,12 @@ export function AdminLeadWorkspace({
         <LeadValuePanel leadId={lead.id} value={(facts.lead_value as LeadValueData | undefined) ?? null} />
 
         {/* LINEAR STEP 6: DYNAMIC PRICING MANAGER */}
-        <PricingManager leadId={lead.id} currentPricing={pricing} />
+        <PricingManager
+          leadId={lead.id}
+          currentPricing={pricing}
+          businessName={businessName}
+          pageCount={services.length}
+        />
 
         <HandoverPanel
           leadId={lead.id}

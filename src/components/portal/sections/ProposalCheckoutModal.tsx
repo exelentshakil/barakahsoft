@@ -5,6 +5,7 @@ interface ProposalCheckoutModalProps {
   setupPrice: number;
   monthlyPrice: number;
   priceFormattedLabel: string;
+  scopeItems: string[];
   checkoutLoading: boolean;
   onClose: () => void;
   onCheckout: () => void;
@@ -17,6 +18,7 @@ export function ProposalCheckoutModal({
   setupPrice,
   monthlyPrice,
   priceFormattedLabel,
+  scopeItems,
   checkoutLoading,
   onClose,
   onCheckout,
@@ -49,26 +51,12 @@ export function ProposalCheckoutModal({
         </div>
 
         <div className="rounded-xl bg-[#f0f3ff] p-5 text-xs space-y-3 border border-[#c7d0fb]">
-          <div className="flex justify-between items-center">
-            <span className="text-[#777588] font-semibold">Scope of Work</span>
-            <span className="font-bold text-[#0d1738]">28 Service Pages + 8 Launch Articles</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[#777588] font-semibold">AI Search & Assistant</span>
-            <span className="font-bold text-[#0d1738]">Local Schema + Callback Bot</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[#777588] font-semibold">Domain Setup</span>
-            <span className="font-bold text-[#0d1738]">Custom Domain (SSL & DNS Included)</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[#777588] font-semibold">Delivery Time</span>
-            <span className="font-bold text-[#0b8f5b]">2-4 Weeks to Official Go-Live*</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[#777588] font-semibold">Ownership</span>
-            <span className="font-bold text-[#0d1738]">100% You Own the Website</span>
-          </div>
+          {scopeItems.map((item) => (
+            <div key={item} className="flex items-start gap-3">
+              <span className="mt-0.5 text-[#0b8f5b]">✓</span>
+              <span className="font-bold text-[#0d1738]">{item}</span>
+            </div>
+          ))}
           <div className="flex justify-between items-center border-t border-[#c7d0fb] pt-3 text-sm">
             <div>
               <span className="font-bold text-[#0d1738] block">Pricing Terms</span>

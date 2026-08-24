@@ -14,14 +14,19 @@ interface PricingConfig {
   monthlyPrice: number;
   standardValue: number;
   discountLabel: string;
+  scopeItems: string[];
 }
 
 export function PricingManager({
   leadId,
   currentPricing,
+  businessName,
+  pageCount,
 }: {
   leadId: string;
   currentPricing?: Partial<PricingConfig> | null;
+  businessName: string;
+  pageCount: number;
 }) {
   const router = useRouter();
   const [model, setModel] = useState<"flat" | "monthly" | "hybrid">(
@@ -39,6 +44,18 @@ export function PricingManager({
   const [discountLabel, setDiscountLabel] = useState<string>(
     currentPricing?.discountLabel ?? "Save $1,000 Today"
   );
+  const [scopeItems, setScopeItems] = useState<string[]>(
+    currentPricing?.scopeItems?.length
+      ? currentPricing.scopeItems
+      : [
+          `Custom homepage redesign for ${businessName}`,
+          `${pageCount || 1} service pages based on your real offerings`,
+          "Lead capture, click-to-call, and callback flow",
+          "LocalBusiness schema and technical SEO foundation",
+          "Domain connection and 2-4 week launch support",
+          "100% client-owned website files",
+        ]
+  );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -51,11 +68,12 @@ export function PricingManager({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model,
-          setupPrice: Number(setupPrice),
-          monthlyPrice: Number(monthlyPrice),
-          standardValue: Number(standardValue),
-          discountLabel,
+            model,
+            setupPrice: Number(setupPrice),
+            monthlyPrice: Number(monthlyPrice),
+            standardValue: Number(standardValue),
+            discountLabel,
+            scopeItems: scopeItems.map((item) => item.trim()).filter(Boolean),
         }),
       });
       if (!res.ok) throw new Error("Failed to save");
@@ -80,6 +98,7 @@ export function PricingManager({
               <p className="text-[11px] text-muted-foreground">Hidden until QA is approved. Tailor to client budget.</p>
             </div>
           </div>
+
           {saved && (
             <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600">
               <CheckCircle2 className="h-3.5 w-3.5" /> Saved to Client Portal
@@ -218,6 +237,19 @@ export function PricingManager({
                 className="mt-1 h-8 text-xs"
               />
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="pricing-scope" className="text-xs">Client-facing scope bullets</Label>
+            <textarea
+              id="pricing-scope"
+              value={scopeItems.join("\n")}
+              onChange={(e) => setScopeItems(e.target.value.split("\n").slice(0, 10))}
+              placeholder="One deliverable per line"
+              rows={6}
+              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-xs leading-relaxed"
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">One line becomes one bullet in the client checkout. Keep every claim specific and deliverable.</p>
           </div>
 
           <div className="flex items-center justify-between pt-1">

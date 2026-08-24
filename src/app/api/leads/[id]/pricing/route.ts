@@ -25,12 +25,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     const existingAssets = (artifact?.extracted_assets ?? {}) as Record<string, unknown>;
 
+    const existingPricing = (existingAssets.pricing as Record<string, unknown> | undefined) ?? {};
     const pricingConfig = {
+      ...existingPricing,
       model: body.model || "hybrid", // "flat" | "monthly" | "hybrid"
       setupPrice: typeof body.setupPrice === "number" ? body.setupPrice : 779,
       monthlyPrice: typeof body.monthlyPrice === "number" ? body.monthlyPrice : 99,
       standardValue: typeof body.standardValue === "number" ? body.standardValue : 1897,
       discountLabel: body.discountLabel || "Save $1,000 Today",
+      ...(Array.isArray(body.scopeItems)
+        ? { scopeItems: body.scopeItems.filter((item: unknown): item is string => typeof item === "string").map((item: string) => item.trim()).filter(Boolean).slice(0, 10) }
+        : {}),
       updated_at: new Date().toISOString(),
       updated_by: user.email,
     };

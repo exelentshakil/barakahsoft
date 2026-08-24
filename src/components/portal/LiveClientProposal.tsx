@@ -15,8 +15,10 @@ import { ProposalPricingSection } from "@/components/portal/sections/ProposalPri
 import { ProposalDecisionBox } from "@/components/portal/sections/ProposalDecisionBox";
 import { ProposalCheckoutModal } from "@/components/portal/sections/ProposalCheckoutModal";
 import { ProposalFooter } from "@/components/portal/sections/ProposalFooter";
+import { ProposalAbout } from "@/components/portal/sections/ProposalAbout";
 import { SocialLaunchMockup } from "@/components/mockup/SocialLaunchMockup";
 import { extractMockupData } from "@/lib/mockup-data";
+import { CrispChat } from "@/components/CrispChat";
 
 interface LiveClientProposalProps {
   lead: Lead;
@@ -76,6 +78,17 @@ export function LiveClientProposal({
       : setupPrice > 0 && monthlyPrice > 0
       ? `$${setupPrice} setup · $${monthlyPrice}/mo`
       : `$${setupPrice}`;
+
+  const scopeItems = Array.isArray(pricingData.scopeItems) && pricingData.scopeItems.length > 0
+    ? pricingData.scopeItems.filter((item: unknown): item is string => typeof item === "string" && item.trim().length > 0)
+    : [
+        `Custom homepage redesign for ${businessName}`,
+        `${artifact?.funnel_pages.filter((page) => page.kind === "service").length || 1} service pages based on your real offerings`,
+        "Lead capture, click-to-call, and callback flow",
+        "LocalBusiness schema and technical SEO foundation",
+        "Domain connection and 2-4 week launch support",
+        "100% client-owned website files",
+      ];
 
   const launchSteps = [
     { label: "Payment received", complete: isPaid, detail: "Stripe checkout confirmed" },
@@ -166,6 +179,8 @@ export function LiveClientProposal({
           </div>
         </section>
 
+        <ProposalAbout data={mockupData} />
+
         {/* Modules render only when there is measured data behind them AND
             they apply to this kind of business. A national agency does not
             see a local search grid, and an empty panel is never shown — the
@@ -212,6 +227,7 @@ export function LiveClientProposal({
             setupPrice={setupPrice}
             monthlyPrice={monthlyPrice}
             priceFormattedLabel={priceFormattedLabel}
+            scopeItems={scopeItems}
             checkoutLoading={checkoutLoading}
             onClose={() => setShowCheckout(false)}
             onCheckout={handleCheckout}
@@ -220,6 +236,7 @@ export function LiveClientProposal({
       </main>
 
       <ProposalFooter />
+      <CrispChat />
     </div>
   );
 }

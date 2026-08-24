@@ -81,6 +81,14 @@ export function ProposalDecisionBox({
         >
           <PhoneCall className="h-4 w-4" /> Call Us with Questions
         </a>
+        {!isPaid && (
+          <button
+            type="button"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md border border-white/25 px-6 py-4 text-sm font-bold text-white transition hover:bg-white/10"
+          >
+            Message BarakahSoft
+          </button>
+        )}
       </div>
 
       {/* The landing page that won this lead answers "what's the catch?"
