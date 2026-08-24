@@ -193,6 +193,10 @@ export function LiveClientProposal({
           logoUrl={payload.logoUrl}
           fontFamily={payload.fontFamily}
           designTokens={payload.designTokens}
+          services={payload.services.map((s) => s.h2)}
+          areas={payload.areas.map((a) => a.h2)}
+          painPoints={lead.pain_points}
+          speedScore={report.audit?.speedScore ?? (typeof scrapeResults?.pagespeed_mobile?.score === "number" ? scrapeResults.pagespeed_mobile.score : null)}
         />
 
         {/* Modules render only when there is measured data behind them AND

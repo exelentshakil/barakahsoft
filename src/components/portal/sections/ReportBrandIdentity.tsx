@@ -1,16 +1,17 @@
 "use client";
 
 import {
-  ArrowRight,
+  Check,
   CheckCircle2,
+  FileCheck,
   Layers,
+  MapPin,
   Palette,
   ShieldCheck,
   Sparkles,
   Type,
+  Wrench,
   Zap,
-  Smartphone,
-  Check,
 } from "lucide-react";
 import type { FirecrawlBranding } from "@/lib/scrape/firecrawl";
 
@@ -21,6 +22,10 @@ interface ReportBrandIdentityProps {
   logoUrl?: string | null;
   fontFamily?: string | null;
   designTokens?: { vars: Record<string, string>; mood: string } | null;
+  services?: string[];
+  areas?: string[];
+  painPoints?: string[];
+  speedScore?: number | null;
 }
 
 export function ReportBrandIdentity({
@@ -30,6 +35,10 @@ export function ReportBrandIdentity({
   logoUrl,
   fontFamily,
   designTokens,
+  services = [],
+  areas = [],
+  painPoints = [],
+  speedScore,
 }: ReportBrandIdentityProps) {
   // Existing Scraped Footprint (from Firecrawl)
   const existingPrimary = branding?.colors?.primary || brandColorHex || "#533AFD";
@@ -50,42 +59,41 @@ export function ReportBrandIdentity({
   const proposedAccent = designTokens?.vars?.["--bs-accent"] || existingAccent;
   const proposedInk = designTokens?.vars?.["--bs-ink"] || "#0D1738";
   const proposedSurface = designTokens?.vars?.["--bs-surface"] || "#FFFFFF";
-  const proposedSurfaceAlt = designTokens?.vars?.["--bs-surface-alt"] || "#F8FAFC";
   const proposedDisplayFont = designTokens?.vars?.["--bs-font-display"] || "Outfit, sans-serif";
   const proposedBodyFont = designTokens?.vars?.["--bs-font-body"] || "Inter, sans-serif";
 
   return (
     <section className="rounded-2xl border border-[#c7d0fb] bg-white p-6 sm:p-10 shadow-sm space-y-8">
-      {/* Header */}
+      {/* Header — Human, Outcome-Focused (Hormozi / Creative Agency Style) */}
       <div className="border-b border-[#e5e7f2] pb-5">
         <div className="flex items-center gap-2">
           <span className="flex h-2.5 w-2.5 rounded-full bg-[#533afd] animate-pulse" />
           <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
-            Brand Identity &amp; Digital DNA
+            Brand Identity &amp; Digital Foundation
           </span>
         </div>
         <h2 className="mt-2 text-2xl font-bold tracking-tight text-[#0d1738] sm:text-3xl">
-          Engineered Around Your Authentic Brand
+          Preserving Your Reputation · Upgrading What Converts
         </h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[#42506a]">
-          We extracted and audited your company&apos;s real design footprint — from exact brand colors and typography
-          to UI components and visual assets. We preserved your brand equity while modernizing it into a high-converting digital engine.
+          We did the heavy lifting before touching a single line of code. We audited your real color palette,
+          logo assets, typography, core services, and local territory — then rebuilt the entire customer journey to capture more calls and quote requests.
         </p>
       </div>
 
-      {/* Side-by-Side Audit vs Proposed System */}
+      {/* Side-by-Side Brand Audit vs Modern Conversion Design */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Left: Existing Brand Footprint */}
+        {/* Left: What We Discovered & Audited */}
         <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-6 space-y-5">
           <div className="flex items-center justify-between border-b border-slate-200 pb-3">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                Audited Footprint
+                Audited Foundation
               </span>
-              <h3 className="text-base font-bold text-slate-800">Current Website Brand Assets</h3>
+              <h3 className="text-base font-bold text-slate-800">Your Authentic Brand Assets</h3>
             </div>
             <span className="rounded-md bg-slate-200/80 px-2.5 py-1 text-[11px] font-semibold text-slate-700">
-              Scraped &amp; Analyzed
+              Verified Footprint
             </span>
           </div>
 
@@ -101,7 +109,7 @@ export function ReportBrandIdentity({
                   style={{ backgroundColor: existingPrimary }}
                 />
                 <div className="min-w-0">
-                  <p className="truncate font-semibold text-slate-800">Primary</p>
+                  <p className="truncate font-semibold text-slate-800">Primary Brand</p>
                   <p className="font-mono text-[10px] text-slate-500">{existingPrimary}</p>
                 </div>
               </div>
@@ -141,7 +149,7 @@ export function ReportBrandIdentity({
           {/* Scraped Typography & Structure */}
           <div className="space-y-2">
             <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
-              <Type className="h-3.5 w-3.5 text-slate-500" /> Detected Typography
+              <Type className="h-3.5 w-3.5 text-slate-500" /> Typography &amp; Readability
             </div>
             <div className="rounded-lg border border-slate-200 bg-white p-3 text-xs space-y-1">
               <div className="flex justify-between text-slate-600">
@@ -155,44 +163,44 @@ export function ReportBrandIdentity({
             </div>
           </div>
 
-          {/* Legacy Assets & Status */}
+          {/* Logo & UI Geometry */}
           <div className="space-y-2">
             <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
-              <Layers className="h-3.5 w-3.5 text-slate-500" /> Component Audit
+              <Layers className="h-3.5 w-3.5 text-slate-500" /> Visual Assets &amp; Logo
             </div>
             <div className="rounded-lg border border-slate-200 bg-white p-3 text-xs space-y-2">
               <div className="flex items-center justify-between text-slate-600">
-                <span>Button Geometry:</span>
-                <span className="font-mono text-[11px]">{existingBorderRadius} radius</span>
+                <span>Brand Logo:</span>
+                <span className="font-semibold text-slate-800 truncate max-w-[170px]">
+                  {logo ? "Extracted & Preserved" : "Verified from Site"}
+                </span>
               </div>
               <div className="flex items-center justify-between text-slate-600">
-                <span>Brand Logo:</span>
-                <span className="font-semibold text-slate-800 truncate max-w-[160px]">
-                  {logo ? "Extracted & Verified" : "Identified"}
-                </span>
+                <span>Button Styling:</span>
+                <span className="font-mono text-[11px]">{existingBorderRadius} radius</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right: Proposed High-Converting Design System */}
+        {/* Right: How We Modernized It For Maximum Conversion */}
         <div className="rounded-xl border-2 border-[#533afd] bg-[#f0f3ff]/40 p-6 space-y-5 shadow-sm">
           <div className="flex items-center justify-between border-b border-[#c7d0fb] pb-3">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#533afd]">
-                Bespoke Upgrade
+                High-Conversion Redesign
               </span>
-              <h3 className="text-base font-bold text-[#0d1738]">Proposed High-Conversion Design System</h3>
+              <h3 className="text-base font-bold text-[#0d1738]">The Upgraded Digital Experience</h3>
             </div>
             <span className="rounded-md bg-[#533afd] px-2.5 py-1 text-[11px] font-bold text-white shadow-xs">
-              Engineered
+              Ready to Launch
             </span>
           </div>
 
-          {/* Upgraded 60-30-10 Palette */}
+          {/* 60-30-10 Balanced Visual Palette */}
           <div className="space-y-2">
             <div className="flex items-center gap-1.5 text-xs font-bold text-[#533afd]">
-              <Palette className="h-3.5 w-3.5" /> 60-30-10 Calibrated Palette
+              <Palette className="h-3.5 w-3.5" /> 60-30-10 Professional Color Harmony
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="flex items-center gap-2 rounded-lg border border-[#c7d0fb] bg-white p-2 text-xs shadow-xs">
@@ -231,63 +239,110 @@ export function ReportBrandIdentity({
                   style={{ backgroundColor: proposedSurface }}
                 />
                 <div className="min-w-0">
-                  <p className="truncate font-bold text-[#0d1738]">60% Canvas Ground</p>
+                  <p className="truncate font-bold text-[#0d1738]">60% Clean Canvas</p>
                   <p className="font-mono text-[10px] text-slate-600">{proposedSurface}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Upgraded Typography Pair */}
+          {/* Typography Pair */}
           <div className="space-y-2">
             <div className="flex items-center gap-1.5 text-xs font-bold text-[#533afd]">
-              <Type className="h-3.5 w-3.5" /> High-Impact Editorial Typography
+              <Type className="h-3.5 w-3.5" /> High-Impact Typography System
             </div>
             <div className="rounded-lg border border-[#c7d0fb] bg-white p-3 text-xs space-y-1 shadow-xs">
               <div className="flex justify-between text-slate-700">
                 <span className="font-semibold">Display Headings:</span>
-                <span className="font-bold text-[#533afd]">{proposedDisplayFont.split(",")[0]} (Calibrated Scale)</span>
+                <span className="font-bold text-[#533afd]">{proposedDisplayFont.split(",")[0]} (Bold &amp; Authoritative)</span>
               </div>
               <div className="flex justify-between text-slate-700">
                 <span className="font-semibold">Body Copy:</span>
-                <span className="font-bold text-[#0d1738]">{proposedBodyFont.split(",")[0]} (4.5:1 Contrast)</span>
+                <span className="font-bold text-[#0d1738]">{proposedBodyFont.split(",")[0]} (4.5:1 Contrast Ratio)</span>
               </div>
             </div>
           </div>
 
-          {/* Conversion Architecture */}
+          {/* Value Outcomes & Problems Solved */}
           <div className="space-y-2">
             <div className="flex items-center gap-1.5 text-xs font-bold text-[#533afd]">
-              <Zap className="h-3.5 w-3.5" /> Conversion Infrastructure
+              <Zap className="h-3.5 w-3.5" /> Conversion Upgrades
             </div>
             <div className="rounded-lg border border-[#c7d0fb] bg-white p-3 text-xs space-y-1.5 shadow-xs">
               <div className="flex items-center gap-2 text-[#0b8f5b] font-semibold">
                 <Check className="h-3.5 w-3.5 shrink-0" />
-                <span>44px+ minimum tap targets with micro-interaction states</span>
+                <span>Instant click-to-call and quote requests placed on every screen</span>
               </div>
               <div className="flex items-center gap-2 text-[#0b8f5b] font-semibold">
                 <Check className="h-3.5 w-3.5 shrink-0" />
-                <span>Integrated lead capture with real-time validation</span>
+                <span>Seamless footer &amp; header logo badges with zero background box clashing</span>
               </div>
               <div className="flex items-center gap-2 text-[#0b8f5b] font-semibold">
                 <Check className="h-3.5 w-3.5 shrink-0" />
-                <span>LocalBusiness Schema &amp; zero cumulative layout shift</span>
+                <span>Fast mobile load speed + LocalBusiness schema for Google rankings</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Trust & Ownership Footer Banner */}
+      {/* Services & Location Coverage Breakdown (Heavy Lifting Evidence) */}
+      {(services.length > 0 || areas.length > 0) && (
+        <div className="rounded-xl border border-[#e5e7f2] bg-[#fbfbfd] p-5 space-y-4">
+          <div className="flex items-center gap-2">
+            <Wrench className="h-4 w-4 text-[#533afd]" />
+            <h4 className="text-sm font-bold text-[#0d1738]">
+              Full Catalog &amp; Territory Structure Built Into Your Sitemap
+            </h4>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {services.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-bold text-slate-700">Core Services Mapped ({services.length}):</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {services.slice(0, 8).map((s) => (
+                    <span
+                      key={s}
+                      className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-[#0d1738] border border-[#e5e7f2] shadow-2xs"
+                    >
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {areas.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-bold text-slate-700">Target Locations &amp; Service Areas:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {areas.slice(0, 8).map((a) => (
+                    <span
+                      key={a}
+                      className="inline-flex items-center gap-1 rounded-md bg-white px-2.5 py-1 text-xs font-medium text-[#0d1738] border border-[#e5e7f2] shadow-2xs"
+                    >
+                      <MapPin className="h-3 w-3 text-[#533afd]" />
+                      {a}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Irresistible Value & 100% Ownership Guarantee */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#c7d0fb] bg-[#f0f3ff] p-4 text-xs font-medium text-[#42506a]">
         <div className="flex items-center gap-2.5">
           <Sparkles className="h-4 w-4 text-[#533afd] shrink-0" />
           <span>
-            <strong className="text-[#0d1738]">100% Client-Owned Brand Assets:</strong> Your new redesign is custom-coded for {businessName}. All SVGs, compiled design tokens, and source stylesheets belong entirely to you.
+            <strong className="text-[#0d1738]">100% Client-Owned:</strong> We custom-built this redesign for {businessName}. If you want us to put it live and host it, we handle everything. If you prefer your own team to launch it, the files are yours.
           </span>
         </div>
-        <div className="inline-flex items-center gap-1 font-bold text-[#0b8f5b]">
-          <ShieldCheck className="h-4 w-4" /> Ready for Live Launch
+        <div className="inline-flex items-center gap-1 font-bold text-[#0b8f5b] whitespace-nowrap">
+          <ShieldCheck className="h-4 w-4" /> Ready for Immediate Launch
         </div>
       </div>
     </section>
