@@ -113,7 +113,7 @@ export default async function LeadSitePage({
             rendering a catalog-assembled stand-in that looks like a
             finished site and reads as a template. */}
         {payload.bespokeHomepageHtml ? (
-          <BespokeHomepage payload={payload} />
+          <BespokeHomepage payload={{ ...payload, previewMode: true }} />
         ) : (
           <NotBuiltYet businessName={payload.businessName} />
         )}

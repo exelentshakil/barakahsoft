@@ -105,7 +105,9 @@ function auditMarkup(html: string, intent: ConversionIntent, hasPhone: boolean):
   }
 
   // The primary action has to exist, and be reachable more than once.
-  const ctaCount = html.match(/class="[^"]*bs-btn[^"]*"/gi)?.length ?? 0;
+  const ctaCount = [...html.matchAll(/<(?:a|button)\b([^>]*)>/gi)].filter((match) =>
+    /\b(?:bs-btn|site-cta)\b|data-open-quote-modal|href=["']tel:/i.test(match[1])
+  ).length;
   if (ctaCount === 0) {
     issues.push({ severity: "blocker", area: "cta", detail: "The page has no call-to-action button at all." });
   } else if (ctaCount < 3) {
@@ -124,16 +126,21 @@ function auditMarkup(html: string, intent: ConversionIntent, hasPhone: boolean):
     });
   }
 
-  // A page whose sections all share one background is the template look.
-  const bands = new Set(
-    (html.match(/bs-band-(alt|primary|gradient|invert)/gi) ?? []).map((b) => b.toLowerCase())
+  // New bespoke pages name their own section classes and ship matching CSS;
+  // legacy pages use bs-band-* treatments. Judge either vocabulary rather
+  // than declaring every modern page a flat wall.
+  const sections = [...html.matchAll(/<section\b([^>]*)>/gi)];
+  const treatments = new Set(
+    sections.map((match) => {
+      const classes = match[1].match(/class=["']([^"']+)["']/i)?.[1].split(/\s+/) ?? [];
+      return classes.find((name) => name !== "site-section" && name !== "bs-section") ?? classes[0] ?? "";
+    }).filter(Boolean)
   );
-  const sectionCount = html.match(/<section\b/gi)?.length ?? 0;
-  if (sectionCount >= 5 && bands.size < 2) {
+  if (sections.length >= 5 && treatments.size < Math.ceil(sections.length / 2)) {
     issues.push({
       severity: "warning",
       area: "composition",
-      detail: `${sectionCount} sections but only ${bands.size} distinct background treatment(s) — the page will read as one flat wall.`,
+      detail: `${sections.length} sections share only ${treatments.size} distinct section treatment(s) — the page may read as one flat wall.`,
     });
   }
 

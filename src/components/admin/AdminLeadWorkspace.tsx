@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { displayPhone } from "@/lib/phone";
 import {
   AlertCircle,
   ArrowLeft,
@@ -26,6 +27,7 @@ import {
   Mail,
   MapPin,
   MessageCircle,
+  Monitor,
   Pencil,
   Phone,
   PhoneCall,
@@ -150,6 +152,7 @@ export function AdminLeadWorkspace({
   const [generatingStripe, setGeneratingStripe] = useState(false);
   const [rescraping, setRescraping] = useState(false);
   const [previewPath, setPreviewPath] = useState("");
+  const [previewViewport, setPreviewViewport] = useState<"desktop" | "mobile">("desktop");
   const [reloadKey, setReloadKey] = useState(0);
   const [tab, setTab] = useState("lead");
 
@@ -171,13 +174,15 @@ export function AdminLeadWorkspace({
         return lead.source_url;
       }
     })();
-  const phone = lead.phone || "No phone on file";
-  const email = lead.email || "No email on file";
   const facts = (scrapeResults?.facts ?? {}) as Record<string, unknown>;
+  const nap = (facts.nap as { address?: string; phone?: string; phones?: string[]; email?: string; emails?: string[] } | undefined) || {};
+  const rawPhone = nap.phones?.find((p) => /\d{7,}/.test(p.replace(/\D/g, ""))) || nap.phone || lead.phone;
+  const phone = displayPhone(rawPhone) || "No phone on file";
+  const email = nap.emails?.[0] || nap.email || lead.email || "No email on file";
   const portalUrl = `https://portal.barakahsoft.com/s/${lead.slug}`;
   
-  // Clean preview URL: homepage renders ?view=preview so it shows the actual website, not the proposal portal
-  const previewUrl = previewPath ? `/s/${lead.slug}${previewPath}` : `/s/${lead.slug}?view=preview`;
+  // Preview mode suppresses proposal/chat UI on every route, not just home.
+  const previewUrl = `/s/${lead.slug}${previewPath}?view=preview`;
 
   // 1. Real Extracted Brand & Proof Facts
   const colors = (facts.colors as { primary?: string; accent?: string } | undefined) || {};
@@ -188,7 +193,6 @@ export function AdminLeadWorkspace({
   const proof = (facts.proof as { rating?: number; reviewCount?: number } | undefined) || {};
   const rating = proof.rating || 5.0;
   const reviewCount = proof.reviewCount || 0;
-  const nap = (facts.nap as { address?: string; phone?: string; email?: string } | undefined) || {};
   const city = typeof nap.address === "string" ? nap.address.split(",")[0] : typeof facts.town === "string" ? facts.town : null;
 
   // 2. Real Google Places Competitor Benchmark (Zero Fake Fallbacks)
@@ -224,6 +228,11 @@ export function AdminLeadWorkspace({
     : [];
 
   const services = artifact?.funnel_pages.filter((s) => s.kind === "service") || [];
+  const generatedPages = artifact?.bespoke_pages ?? {};
+  const previewServices = services.filter((service) => generatedPages[`services/${service.slug}`]);
+  const previewAreas = Object.keys(generatedPages)
+    .filter((key) => key.startsWith("areas/") && generatedPages[key])
+    .map((key) => ({ slug: key.slice("areas/".length), label: key.slice("areas/".length).replace(/-/g, " ") }));
   const rawLeadValue = facts.lead_value as LeadValueData | undefined;
   const offerOptions = rawLeadValue?.offers?.length
     ? rawLeadValue.offers
@@ -573,26 +582,28 @@ export function AdminLeadWorkspace({
             />
           </div>
 
-          <div className="flex flex-wrap gap-2.5 items-center">
+          <div className="flex flex-wrap items-center gap-2 pt-1">
             <a
               href={portalUrl}
               target="_blank"
               rel="noreferrer"
               title="Opens the page the client sees: their new homepage, the report and the price."
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs sm:text-sm font-black text-white shadow-md shadow-indigo-600/20 transition hover:bg-indigo-700"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xs hover:border-slate-300 hover:bg-slate-50 transition"
             >
-              <ExternalLink className="h-4 w-4" /> See what the client sees
+              <ExternalLink className="h-3.5 w-3.5 text-slate-400" /> See what the client sees
             </a>
 
             <button
               onClick={handleSendBrevoEmail}
               disabled={sendingEmail}
               title="Emails the client a private link to their new homepage and report."
-              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-black text-white shadow-md transition ${
-                emailSent ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20" : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/20"
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-xs transition ${
+                emailSent
+                  ? "border-emerald-200 bg-emerald-50/70 text-emerald-700 hover:bg-emerald-100/80"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
               }`}
             >
-              <Mail className="h-4 w-4" />
+              <Mail className="h-3.5 w-3.5 text-slate-400" />
               {sendingEmail ? "Sending..." : emailSent ? "Link sent ✓" : "Email their site to them"}
             </button>
 
@@ -600,9 +611,9 @@ export function AdminLeadWorkspace({
               <a
                 href={`tel:${lead.phone.replace(/\D/g, "")}`}
                 title={`Calls ${lead.phone}`}
-                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs sm:text-sm font-black text-white hover:bg-black shadow-sm transition"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xs hover:border-slate-300 hover:bg-slate-50 transition"
               >
-                <PhoneCall className="h-4 w-4 text-emerald-400" /> Call them
+                <PhoneCall className="h-3.5 w-3.5 text-slate-400" /> Call them
               </a>
             )}
 
@@ -610,11 +621,10 @@ export function AdminLeadWorkspace({
               onClick={handleGenerateStripeCheckout}
               disabled={generatingStripe}
               title="Creates a Stripe payment link for this price and opens it."
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-indigo-600 bg-indigo-50/50 px-4 py-2.5 text-xs sm:text-sm font-black text-indigo-700 hover:bg-indigo-100/70 transition"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xs hover:border-slate-300 hover:bg-slate-50 transition"
             >
-              <CircleDollarSign className="h-4 w-4" /> Ask for payment · {priceDisplay}
+              <CircleDollarSign className="h-3.5 w-3.5 text-slate-400" /> Ask for payment ({priceDisplay})
             </button>
-
           </div>
         </div>
 
@@ -623,22 +633,22 @@ export function AdminLeadWorkspace({
         <TabPanel active={tab === "lead"}>
         {/* LINEAR STEP 1: INBOUND INTAKE & VERIFIED FACTS */}
         <div className="rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-sm space-y-6">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4">
             <div className="flex items-center gap-3">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-200 text-sm font-black text-indigo-700">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 border border-indigo-200 text-xs font-black text-indigo-700 shrink-0">
                 1
               </span>
-              <h3 className="font-extrabold text-lg sm:text-xl text-slate-900">Inbound Lead &amp; Verified Facts</h3>
+              <h3 className="font-bold text-base sm:text-lg text-slate-900">Inbound Lead &amp; Verified Facts</h3>
             </div>
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2">
               {!scrapeResults ? (
                 <button
                   onClick={() => handleAnalyse("light")}
                   disabled={rescraping}
-                  className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-700 disabled:opacity-60 shadow-sm transition"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-indigo-700 disabled:opacity-60 shadow-xs transition"
                 >
-                  <RefreshCw className={`h-4 w-4 ${rescraping ? "animate-spin" : ""}`} />
-                  {rescraping ? "Reading their site..." : "Read their site · 2 pages"}
+                  <RefreshCw className={`h-3.5 w-3.5 ${rescraping ? "animate-spin" : ""}`} />
+                  {rescraping ? "Reading site..." : "Read site (2 pages)"}
                 </button>
               ) : (
                 <>
@@ -646,24 +656,24 @@ export function AdminLeadWorkspace({
                     onClick={() => handleRescrape("light")}
                     disabled={rescraping}
                     title="Refresh brand colours, logo, rating and reviews. One page."
-                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm font-bold text-slate-800 hover:bg-slate-50 transition shadow-xs"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-xs"
                   >
-                    <RefreshCw className={`h-4 w-4 text-indigo-600 ${rescraping ? "animate-spin" : ""}`} />
-                    Refresh · 1 page
+                    <RefreshCw className={`h-3.5 w-3.5 text-indigo-600 ${rescraping ? "animate-spin" : ""}`} />
+                    Refresh (1 page)
                   </button>
                   <button
                     onClick={() => handleAnalyse("deep")}
                     disabled={rescraping}
                     title="Reads up to 25 of their pages instead of 2. Slower and costs more, but it is what finds the page-by-page faults you sell against."
-                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm font-bold text-slate-800 hover:bg-slate-50 transition shadow-xs"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-xs"
                   >
-                    Read every page · up to 25
+                    Deep crawl (25 pages)
                   </button>
                 </>
               )}
               {scrapeResults && (
-                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-50 border border-emerald-200 px-3.5 py-1 text-xs sm:text-sm font-extrabold text-emerald-700 shrink-0">
-                  <ShieldCheck className="h-4 w-4" /> Verified
+                <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-bold text-emerald-700 shrink-0">
+                  <ShieldCheck className="h-3.5 w-3.5" /> Verified
                 </span>
               )}
             </div>
@@ -821,44 +831,86 @@ export function AdminLeadWorkspace({
             </div>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-border shadow-sm bg-white">
-            <div className="flex items-center justify-between gap-3 border-b border-border bg-muted/40 px-4 py-2.5">
-              <div className="flex items-center gap-2">
-                <Eye className="h-4 w-4 text-primary" />
-                <span className="font-bold text-xs">Live Generated Website Preview</span>
+          <div className="overflow-hidden rounded-2xl border border-[#dfe3ef] bg-white shadow-[0_18px_50px_rgba(24,35,72,0.08)]">
+            <div className="flex flex-col gap-4 border-b border-[#e5e7f2] bg-white px-5 py-4 xl:flex-row xl:items-center xl:justify-between">
+              <div className="flex items-start gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f0f3ff] text-[#533afd]">
+                  <Eye className="h-4 w-4" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-bold text-[#0d1738]">Generated website preview</h3>
+                  <p className="mt-0.5 text-xs text-[#667085]">Review the real responsive page before approval.</p>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2.5">
                 <select
                   value={previewPath}
                   onChange={(e) => setPreviewPath(e.target.value)}
-                  className="rounded-md border border-input bg-background px-2.5 py-1 text-xs"
+                  aria-label="Preview page"
+                  className="h-9 rounded-lg border border-[#dfe3ef] bg-white px-3 text-xs font-semibold text-[#26324b] outline-none focus:border-[#533afd]"
                 >
                   <option value="">Homepage</option>
-                  <option value="/about">About Us</option>
-                  <option value="/contact">Contact</option>
-                  <option value="/faq">FAQ</option>
-                  {services.map((s) => (
+                  {generatedPages.about && <option value="/about">About Us</option>}
+                  {generatedPages.contact && <option value="/contact">Contact</option>}
+                  {generatedPages.faq && <option value="/faq">FAQ</option>}
+                  {previewServices.map((s) => (
                     <option key={s.slug} value={`/services/${s.slug}`}>
                       Service: {s.h2}
                     </option>
                   ))}
+                  {previewAreas.map((area) => (
+                    <option key={area.slug} value={`/areas/${area.slug}`}>
+                      Area: {area.label}
+                    </option>
+                  ))}
                 </select>
+                <div className="flex h-9 items-center rounded-lg border border-[#dfe3ef] bg-[#f7f8fc] p-1" aria-label="Preview viewport">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewViewport("desktop")}
+                    aria-pressed={previewViewport === "desktop"}
+                    className={`flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs font-bold transition ${previewViewport === "desktop" ? "bg-white text-[#533afd] shadow-sm" : "text-[#667085] hover:text-[#26324b]"}`}
+                  >
+                    <Monitor className="h-3.5 w-3.5" /> Desktop
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewViewport("mobile")}
+                    aria-pressed={previewViewport === "mobile"}
+                    className={`flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs font-bold transition ${previewViewport === "mobile" ? "bg-white text-[#533afd] shadow-sm" : "text-[#667085] hover:text-[#26324b]"}`}
+                  >
+                    <Smartphone className="h-3.5 w-3.5" /> Mobile
+                  </button>
+                </div>
                 <a
                   href={previewUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                  className="flex h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-bold text-[#533afd] hover:bg-[#f0f3ff]"
                 >
-                  Open Full Window <ExternalLink className="h-3 w-3" />
+                  Open in new tab <ExternalLink className="h-3.5 w-3.5" />
                 </a>
               </div>
             </div>
-            <iframe
-              key={`${previewPath}-${reloadKey}`}
-              src={previewUrl}
-              className="h-[750px] w-full"
-              title="Generated site preview"
-            />
+            <div className="overflow-auto bg-[#eef1f7] p-3 sm:p-6">
+              <div className={`mx-auto overflow-hidden border border-[#cfd5e3] bg-white shadow-[0_24px_70px_rgba(24,35,72,0.16)] transition-[width] duration-300 ${previewViewport === "mobile" ? "w-[390px] max-w-full rounded-[28px]" : "w-full min-w-[1024px] rounded-xl"}`}>
+                <div className="flex h-9 items-center gap-1.5 border-b border-[#e5e7f2] bg-[#f8f9fc] px-3" aria-hidden>
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#ff6b6b]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#ffd166]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#5dd39e]" />
+                  <span className="mx-auto rounded-md border border-[#e2e6ef] bg-white px-4 py-1 text-[10px] text-[#98a2b3]">
+                    {previewViewport === "mobile" ? "390 × 844" : "Responsive desktop"}
+                  </span>
+                </div>
+                <iframe
+                  key={`${previewPath}-${previewViewport}-${reloadKey}`}
+                  src={previewUrl}
+                  className={previewViewport === "mobile" ? "h-[844px] w-full" : "h-[820px] w-full"}
+                  title={`${businessName} ${previewViewport} preview`}
+                  loading="lazy"
+                />
+              </div>
+            </div>
           </div>
         )}
 

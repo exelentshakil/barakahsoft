@@ -14,7 +14,7 @@ import { isAdminSession } from "@/lib/is-admin-session";
 export async function generateMetadata({ params }: { params: Promise<{ leadSlug: string }> }): Promise<Metadata> {
   const { leadSlug } = await params;
   const result = await getSiteData(leadSlug);
-  if (!result || !result.payload.innerPagesBuilt) return {};
+  if (!result || !result.payload.innerPagesBuilt || !result.payload.bespokePages.about) return {};
   return {
     title: `About | ${result.payload.businessName}`,
     description: result.payload.differentiator || undefined,
@@ -22,13 +22,13 @@ export async function generateMetadata({ params }: { params: Promise<{ leadSlug:
   };
 }
 
-export default async function AboutPage({ params }: { params: Promise<{ leadSlug: string }> }) {
+export default async function AboutPage({ params, searchParams }: { params: Promise<{ leadSlug: string }>; searchParams: Promise<{ view?: string }> }) {
   const { leadSlug } = await params;
   const result = await getSiteData(leadSlug);
   if (!result) notFound();
-  if (!result.payload.innerPagesBuilt && !(await isAdminSession())) redirect(`/s/${leadSlug}#expertise`);
+  if ((!result.payload.innerPagesBuilt || !result.payload.bespokePages.about) && !(await isAdminSession())) redirect(`/s/${leadSlug}#about`);
 
-  const { payload } = result;
+  const payload = { ...result.payload, previewMode: (await searchParams).view === "preview" };
   const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: "About", path: "/about" }]);
 
   return (

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Menu, Phone, X } from "lucide-react";
 import { useQuoteModal } from "@/components/site-shell/QuoteModalProvider";
 import type { ChromeSpec } from "@/lib/chrome-spec";
-import type { SitePayload } from "@/components/site-shell/types";
+import { homepageAnchor, siteHref, type SiteNavItem, type SitePayload } from "@/components/site-shell/types";
 
 // The per-lead header.
 //
@@ -17,26 +17,18 @@ import type { SitePayload } from "@/components/site-shell/types";
 // the app's shadcn tokens while the page body used the lead's, so the frame
 // and the page it framed were visibly two different designs.
 
-function href(payload: SitePayload, path: string): string {
-  return `${payload.basePath ?? `/s/${payload.leadSlug}`}${path}`;
-}
-
-function anchorOr(payload: SitePayload, path: string, anchor: string): string {
-  return payload.innerPagesBuilt ? href(payload, path) : anchor;
-}
-
 export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: ChromeSpec }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openPanel, setOpenPanel] = useState<"services" | "areas" | null>(null);
   const openQuoteModal = useQuoteModal();
 
   const { nav } = spec;
-  const services = payload.services;
-  const areas = payload.areas;
+  const services = payload.navigation.services;
+  const areas = payload.navigation.areas;
   const phoneDigits = payload.nap.phone?.replace(/[^\d+]/g, "") ?? "";
 
   const logo = (
-    <a href={href(payload, "")} className="bs-logo">
+    <a href={siteHref(payload)} className="bs-logo">
       {payload.logoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={payload.logoUrl} alt={payload.businessName} />
@@ -46,13 +38,17 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
     </a>
   );
 
-  const cta = (
+  const cta = nav.showPhone && payload.primaryAction === "call-now" && payload.nap.phone ? (
+    <a href={`tel:${phoneDigits}`} className="bs-btn bs-btn-primary">
+      {payload.primaryActionLabel}
+    </a>
+  ) : (
     <button
       type="button"
       onClick={openQuoteModal}
-      className={`bs-btn ${nav.ctaStyle === "accent" ? "bs-btn-accent" : nav.ctaStyle === "ghost" ? "bs-btn-ghost" : "bs-btn-primary"}`}
+      className="bs-btn bs-btn-primary"
     >
-      Get a free quote
+      {payload.primaryActionLabel}
     </button>
   );
 
@@ -61,8 +57,7 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
   const dropdown = (
     kind: "services" | "areas",
     label: string,
-    items: { slug: string; h2: string; body_content: string }[],
-    basePath: string
+    items: SiteNavItem[]
   ) => (
     <div
       className="bs-nav-group"
@@ -77,13 +72,13 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
           {items.map((item) => (
             <a
               key={item.slug}
-              href={anchorOr(payload, `${basePath}/${item.slug}`, `#${item.slug}`)}
+              href={siteHref(payload, item.path)}
               className="bs-nav-panel-item"
             >
               <span>
-                <span className="bs-nav-panel-title">{item.h2}</span>
-                {item.body_content && (
-                  <span className="bs-nav-panel-desc">{item.body_content.slice(0, 88)}</span>
+                <span className="bs-nav-panel-title">{item.label}</span>
+                {item.description && (
+                  <span className="bs-nav-panel-desc">{item.description.slice(0, 88)}</span>
                 )}
               </span>
             </a>
@@ -95,21 +90,23 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
 
   const links = (
     <>
-      {nav.servicesDropdown && services.length > 0
-        ? dropdown("services", "Services", services, "/services")
-        : services.length > 0 && (
-            <a href={anchorOr(payload, "/services", "#services")} className="bs-nav-link">
+      {nav.servicesDropdown && services.length >= 2
+        ? dropdown("services", "Services", services)
+        : payload.services.length > 0 && (
+            <a href={homepageAnchor(payload, "services")} className="bs-nav-link">
               Services
             </a>
           )}
-      {nav.areasDropdown && areas.length > 0 && dropdown("areas", "Service areas", areas, "/areas")}
-      <a href={anchorOr(payload, "/about", "#about")} className="bs-nav-link">
+      {nav.areasDropdown && areas.length >= 2 ? dropdown("areas", "Service areas", areas) : payload.areas.length > 0 && (
+        <a href={homepageAnchor(payload, "areas")} className="bs-nav-link">Service areas</a>
+      )}
+      <a href={payload.bespokePages.about && payload.innerPagesBuilt ? siteHref(payload, "/about") : homepageAnchor(payload, "about")} className="bs-nav-link">
         About
       </a>
-      <a href={anchorOr(payload, "/faq", "#faq")} className="bs-nav-link">
+      <a href={payload.bespokePages.faq && payload.innerPagesBuilt ? siteHref(payload, "/faq") : homepageAnchor(payload, "faq")} className="bs-nav-link">
         FAQ
       </a>
-      <a href={anchorOr(payload, "/contact", "#contact")} className="bs-nav-link">
+      <a href={payload.bespokePages.contact && payload.innerPagesBuilt ? siteHref(payload, "/contact") : homepageAnchor(payload, "contact")} className="bs-nav-link">
         Contact
       </a>
     </>
@@ -166,44 +163,48 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
 
         {mobileOpen && (
           <nav className="bs-nav-mobile">
-            {services.length > 0 && <span className="bs-nav-mobile-heading">Services</span>}
-            {services.map((service) => (
+            {payload.services.length > 0 && <span className="bs-nav-mobile-heading">Services</span>}
+            {services.length > 0 ? services.map((service) => (
               <a
                 key={service.slug}
-                href={anchorOr(payload, `/services/${service.slug}`, `#${service.slug}`)}
+                href={siteHref(payload, service.path)}
                 onClick={() => setMobileOpen(false)}
               >
-                {service.h2}
+                {service.label}
               </a>
-            ))}
+            )) : payload.services.length > 0 && (
+              <a href={homepageAnchor(payload, "services")} onClick={() => setMobileOpen(false)}>View services</a>
+            )}
             {/* Area names are always derivable from the scrape, but the
                 /areas routes only exist once phase 2 has built them. The
                 spec is the single source of truth for whether they may be
                 linked -- listing them here unconditionally put dead links
                 in the mobile menu while the desktop menu correctly hid
                 them. */}
-            {nav.areasDropdown && areas.length > 0 && (
+            {payload.areas.length > 0 && (
               <>
                 <span className="bs-nav-mobile-heading">Service areas</span>
-                {areas.map((area) => (
+                {areas.length > 0 ? areas.map((area) => (
                   <a
                     key={area.slug}
-                    href={anchorOr(payload, `/areas/${area.slug}`, `#${area.slug}`)}
+                    href={siteHref(payload, area.path)}
                     onClick={() => setMobileOpen(false)}
                   >
-                    {area.h2}
+                    {area.label}
                   </a>
-                ))}
+                )) : (
+                  <a href={homepageAnchor(payload, "areas")} onClick={() => setMobileOpen(false)}>View service areas</a>
+                )}
               </>
             )}
             <span className="bs-nav-mobile-heading">More</span>
-            <a href={anchorOr(payload, "/about", "#about")} onClick={() => setMobileOpen(false)}>
+            <a href={payload.bespokePages.about && payload.innerPagesBuilt ? siteHref(payload, "/about") : homepageAnchor(payload, "about")} onClick={() => setMobileOpen(false)}>
               About
             </a>
-            <a href={anchorOr(payload, "/faq", "#faq")} onClick={() => setMobileOpen(false)}>
+            <a href={payload.bespokePages.faq && payload.innerPagesBuilt ? siteHref(payload, "/faq") : homepageAnchor(payload, "faq")} onClick={() => setMobileOpen(false)}>
               FAQ
             </a>
-            <a href={anchorOr(payload, "/contact", "#contact")} onClick={() => setMobileOpen(false)}>
+            <a href={payload.bespokePages.contact && payload.innerPagesBuilt ? siteHref(payload, "/contact") : homepageAnchor(payload, "contact")} onClick={() => setMobileOpen(false)}>
               Contact
             </a>
             {payload.nap.phone && (

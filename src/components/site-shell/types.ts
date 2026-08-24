@@ -1,14 +1,25 @@
 import type { FunnelPageSection } from "@/types/database";
+import type { ConversionAction } from "@/lib/conversion-intent";
 
 // A funnel_pages entry with its media_asset_ids resolved to real Storage
 // URLs — render-shell.ts does this once, generically, for every section.
 export type ResolvedSection = FunnelPageSection & { imageUrl: string | null; imageUrls: string[] };
+
+export interface SiteNavItem {
+  slug: string;
+  label: string;
+  description: string;
+  /** Route relative to the lead's site root. Present only for a substantive generated page. */
+  path: string;
+}
 
 // The resolved props a template shell renders from — assembled once by
 // render-shell.ts (render_shell atom) from an artifact + its scrape facts,
 // so the shell components themselves never touch Supabase directly.
 export interface SitePayload {
   businessName: string;
+  primaryAction: ConversionAction;
+  primaryActionLabel: string;
   headline: string;
   subhead: string;
   heroImageUrl: string | null;
@@ -22,6 +33,10 @@ export interface SitePayload {
   guarantee: string;
   services: ResolvedSection[];
   areas: ResolvedSection[];
+  navigation: {
+    services: SiteNavItem[];
+    areas: SiteNavItem[];
+  };
   // v3 (Phase L) — real service x area combination pages, only populated
   // once enrich-expand.ts has run and found real extractable area names.
   locationServices: ResolvedSection[];
@@ -54,6 +69,8 @@ export interface SitePayload {
   // own domain, so it sets "" and every chrome link resolves to /services/x
   // rather than /s/<slug>/services/x, which would 404 on their host.
   basePath?: string;
+  /** Keep admin preview navigation inside website-preview mode. */
+  previewMode?: boolean;
   // The exported site ships no privacy or terms routes -- we are not
   // putting words in a client's legal pages -- so the links are omitted
   // rather than left pointing at nothing.
@@ -81,6 +98,11 @@ export interface SitePayload {
   bespokeRationale: string | null;
 }
 
-export function sectionHref(payload: Pick<SitePayload, "innerPagesBuilt" | "leadSlug">, kind: "services" | "areas", slug: string): string {
-  return payload.innerPagesBuilt ? `/s/${payload.leadSlug}/${kind}/${slug}` : `#${slug}`;
+export function siteHref(payload: Pick<SitePayload, "basePath" | "leadSlug" | "previewMode">, path = ""): string {
+  const root = `${payload.basePath ?? `/s/${payload.leadSlug}`}${path}` || "/";
+  return "previewMode" in payload && payload.previewMode ? `${root}?view=preview` : root;
+}
+
+export function homepageAnchor(payload: Pick<SitePayload, "basePath" | "leadSlug" | "previewMode">, anchor: string): string {
+  return `${siteHref(payload)}#${anchor}`;
 }

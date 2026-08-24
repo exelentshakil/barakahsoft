@@ -1,6 +1,9 @@
+"use client";
+
 import { Mail, MapPin, Phone, Star } from "lucide-react";
 import type { ChromeSpec } from "@/lib/chrome-spec";
-import type { SitePayload } from "@/components/site-shell/types";
+import { homepageAnchor, siteHref, type SitePayload } from "@/components/site-shell/types";
+import { useQuoteModal } from "@/components/site-shell/QuoteModalProvider";
 
 // The per-lead footer, rendered from the same spec and the same design
 // tokens as the header and the page body.
@@ -9,10 +12,6 @@ import type { SitePayload } from "@/components/site-shell/types";
 // delivered site and nothing linked to them, leaving two orphaned pages;
 // a real business site carries both, and their absence is exactly what a
 // cautious buyer notices.
-
-function href(payload: SitePayload, path: string): string {
-  return `${payload.basePath ?? `/s/${payload.leadSlug}`}${path}`;
-}
 
 // Real profiles the business already runs. A delivered site that does not
 // link them throws away trust the client has already earned elsewhere.
@@ -29,6 +28,7 @@ const SOCIAL_PLATFORMS: { pattern: RegExp; label: string }[] = [
 ];
 
 export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: ChromeSpec }) {
+  const openQuoteModal = useQuoteModal();
   const { footer } = spec;
   const year = new Date().getFullYear();
   const phoneDigits = payload.nap.phone?.replace(/[^\d+]/g, "") ?? "";
@@ -38,25 +38,32 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
   const columnCount = 2 + (showServices ? 1 : 0) + (showAreas ? 1 : 0);
 
   const isCompact = footer.archetype === "compact";
+  const primaryCta = payload.primaryAction === "call-now" && payload.nap.phone ? (
+    <a href={`tel:${phoneDigits}`} className="bs-btn bs-btn-primary bs-btn-lg">
+      {payload.primaryActionLabel}
+    </a>
+  ) : (
+    <button type="button" onClick={openQuoteModal} className="bs-btn bs-btn-primary bs-btn-lg">
+      {payload.primaryActionLabel}
+    </button>
+  );
 
   return (
     <footer className="bs-footer">
       <div className="bs-footer-inner">
         {footer.ctaBand && !isCompact && (
           <div className="bs-footer-cta">
-            <h2>Ready to get this sorted?</h2>
+            <div>
+              <p className="bs-footer-kicker">Ready to start?</p>
+              <h2>Tell us what you need. We'll make the next step clear.</h2>
+            </div>
             <div className="bs-row">
+              {primaryCta}
               {payload.nap.phone && (
-                <a href={`tel:${phoneDigits}`} className="bs-btn bs-btn-accent bs-btn-lg">
+                <a href={`tel:${phoneDigits}`} className="bs-btn bs-btn-ghost bs-btn-lg">
                   Call {payload.nap.phone}
                 </a>
               )}
-              <a
-                href={payload.innerPagesBuilt ? href(payload, "/contact") : "#contact"}
-                className="bs-btn bs-btn-ghost bs-btn-lg"
-              >
-                Send a message
-              </a>
             </div>
           </div>
         )}
@@ -64,7 +71,7 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
         {!isCompact && (
           <div className={`bs-footer-cols ${columnCount >= 4 ? "bs-footer-cols-4" : "bs-footer-cols-3"}`}>
             <div>
-              <a href={href(payload, "")} className="bs-logo" style={{ marginBottom: "0.75rem" }}>
+              <a href={siteHref(payload)} className="bs-logo bs-footer-logo">
                 {payload.logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={payload.logoUrl} alt={payload.businessName} />
@@ -119,14 +126,14 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
               <div>
                 <p className="bs-footer-heading">Services</p>
                 <div className="bs-footer-list">
-                  {payload.services.map((service) => (
+                  {payload.navigation.services.length > 0 ? payload.navigation.services.map((service) => (
                     <a
                       key={service.slug}
-                      href={payload.innerPagesBuilt ? href(payload, `/services/${service.slug}`) : `#${service.slug}`}
+                      href={siteHref(payload, service.path)}
                     >
-                      {service.h2}
+                      {service.label}
                     </a>
-                  ))}
+                  )) : <a href={homepageAnchor(payload, "services")}>View all services</a>}
                 </div>
               </div>
             )}
@@ -135,14 +142,14 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
               <div>
                 <p className="bs-footer-heading">Service areas</p>
                 <div className="bs-footer-list">
-                  {payload.areas.map((area) => (
+                  {payload.navigation.areas.length > 0 ? payload.navigation.areas.map((area) => (
                     <a
                       key={area.slug}
-                      href={payload.innerPagesBuilt ? href(payload, `/areas/${area.slug}`) : `#${area.slug}`}
+                      href={siteHref(payload, area.path)}
                     >
-                      {area.h2}
+                      {area.label}
                     </a>
-                  ))}
+                  )) : <a href={homepageAnchor(payload, "areas")}>View service areas</a>}
                 </div>
               </div>
             )}
@@ -150,9 +157,9 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
             <div>
               <p className="bs-footer-heading">Company</p>
               <div className="bs-footer-list">
-                <a href={payload.innerPagesBuilt ? href(payload, "/about") : "#about"}>About</a>
-                <a href={payload.innerPagesBuilt ? href(payload, "/faq") : "#faq"}>FAQ</a>
-                <a href={payload.innerPagesBuilt ? href(payload, "/contact") : "#contact"}>Contact</a>
+                <a href={payload.bespokePages.about && payload.innerPagesBuilt ? siteHref(payload, "/about") : homepageAnchor(payload, "about")}>About</a>
+                <a href={payload.bespokePages.faq && payload.innerPagesBuilt ? siteHref(payload, "/faq") : homepageAnchor(payload, "faq")}>FAQ</a>
+                <a href={payload.bespokePages.contact && payload.innerPagesBuilt ? siteHref(payload, "/contact") : homepageAnchor(payload, "contact")}>Contact</a>
               </div>
             </div>
           </div>
@@ -163,11 +170,11 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
             &copy; {year} {payload.businessName}. All rights reserved.
           </p>
           <nav>
-            {isCompact && <a href={payload.innerPagesBuilt ? href(payload, "/contact") : "#contact"}>Contact</a>}
+            {isCompact && <a href={payload.bespokePages.contact && payload.innerPagesBuilt ? siteHref(payload, "/contact") : homepageAnchor(payload, "contact")}>Contact</a>}
             {!payload.hideLegalLinks && (
               <>
-                <a href={href(payload, "/privacy")}>Privacy Policy</a>
-                <a href={href(payload, "/terms")}>Terms of Service</a>
+                <a href={siteHref(payload, "/privacy")}>Privacy Policy</a>
+                <a href={siteHref(payload, "/terms")}>Terms of Service</a>
               </>
             )}
           </nav>

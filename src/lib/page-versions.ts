@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Artifact } from "@/types/database";
 
 // Page version history and restore.
 //
@@ -56,7 +57,8 @@ export async function recordVersion(
   pageKey: string,
   html: string,
   source: VersionSource,
-  note?: string
+  note?: string,
+  assets?: { css: string; sections: Artifact["bespoke_sections"] }
 ): Promise<number> {
   const admin = createAdminClient();
 
@@ -78,6 +80,7 @@ export async function recordVersion(
     html,
     source,
     note: note ?? null,
+    ...(assets ? { bespoke_css: assets.css, bespoke_sections: assets.sections } : {}),
   });
 
   // Trim the tail. Six is enough to undo a bad afternoon and short enough
@@ -122,14 +125,19 @@ export async function writeLivePage(
   pageKey: string,
   html: string,
   source: VersionSource,
-  note?: string
+  note?: string,
+  assets?: { css: string; sections: Artifact["bespoke_sections"] }
 ): Promise<number> {
   const admin = createAdminClient();
 
   if (pageKey === HOME_KEY) {
     await admin
       .from("artifacts")
-      .update({ bespoke_homepage_html: html, last_edited_at: new Date().toISOString() })
+      .update({
+        bespoke_homepage_html: html,
+        ...(assets ? { bespoke_css: assets.css, bespoke_sections: assets.sections } : {}),
+        last_edited_at: new Date().toISOString(),
+      })
       .eq("lead_id", leadId);
   } else {
     const { data: current } = await admin
@@ -147,7 +155,7 @@ export async function writeLivePage(
       .eq("lead_id", leadId);
   }
 
-  return recordVersion(leadId, pageKey, html, source, note);
+  return recordVersion(leadId, pageKey, html, source, note, assets);
 }
 
 /** Copy a stored version back into the live artifact. */
@@ -156,16 +164,19 @@ export async function restoreVersion(leadId: string, pageKey: string, version: n
 
   const { data: target } = await admin
     .from("page_versions")
-    .select("html")
+    .select("html, bespoke_css, bespoke_sections")
     .eq("lead_id", leadId)
     .eq("page_key", pageKey)
     .eq("version", version)
-    .maybeSingle<{ html: string }>();
+    .maybeSingle<{ html: string; bespoke_css: string | null; bespoke_sections: Artifact["bespoke_sections"] | null }>();
 
   if (!target) return false;
 
   // Restoring is itself a change worth keeping, so the version it replaced
   // does not vanish when someone restores and then changes their mind.
-  await writeLivePage(leadId, pageKey, target.html, "edited", `Restored v${version}`);
+  const assets = pageKey === HOME_KEY && target.bespoke_css && target.bespoke_sections
+    ? { css: target.bespoke_css, sections: target.bespoke_sections }
+    : undefined;
+  await writeLivePage(leadId, pageKey, target.html, "edited", `Restored v${version}`, assets);
   return true;
 }

@@ -102,7 +102,10 @@ export function buildChromeSpec(dna: DesignDna, inputs: ChromeInputs): ChromeSpe
       // The phone already appears in the navigation and in the hero.
       utilityBar: false,
       sticky: true,
-      ctaStyle: dna.mood === "bold-utility" ? "accent" : "solid",
+      // Conversion actions always use the selected primary brand token. The
+      // accent is decorative; spending it on one chrome button made that
+      // button blue while every generated CTA was red.
+      ctaStyle: "solid",
       showPhone: inputs.hasPhone,
       // Ratings belong in proof content, never in the navigation chrome.
       showRating: false,

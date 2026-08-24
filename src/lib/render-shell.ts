@@ -4,6 +4,8 @@ import { extractServiceAreas } from "@/lib/scrape/extract-service-areas";
 import { slugifyText } from "@/lib/slug";
 import { DEFAULT_CHROME, type ChromeSpec } from "@/lib/chrome-spec";
 import type { PageInventory } from "@/lib/scrape/extract-text";
+import { conversionIntentFor } from "@/lib/conversion-intent";
+import { displayPhone } from "@/lib/phone";
 
 // render_shell atom — resolves an artifact + its lead/scrape context into
 // the flat SitePayload every shell component renders from. This is the
@@ -44,7 +46,10 @@ export function renderShell(
   // surfaced on the homepage/footer). extractServiceAreas is a cheap,
   // deterministic regex pass (no AI call), safe to run here directly
   // rather than requiring a stored, AI-generated section per area.
-  const realAreaNames = extractServiceAreas((facts.pages as PageInventory[]) ?? []);
+  const realAreaNames = Array.from(new Set([
+    ...((facts.derived_areas as string[] | undefined) ?? []),
+    ...extractServiceAreas((facts.pages as PageInventory[]) ?? []),
+  ])).slice(0, 12);
   const areas: ResolvedSection[] = realAreaNames.map((name) => ({
     slug: slugifyText(name),
     kind: "area",
@@ -55,6 +60,41 @@ export function renderShell(
     imageUrl: null,
     imageUrls: [],
   }));
+  const generatedAreaSlugs = Object.keys(artifact.bespoke_pages ?? {})
+    .filter((key) => key.startsWith("areas/") && artifact.bespoke_pages[key]?.trim())
+    .map((key) => key.slice("areas/".length));
+  for (const slug of generatedAreaSlugs) {
+    if (areas.some((area) => area.slug === slug)) continue;
+    areas.push({
+      slug,
+      kind: "area",
+      h2: slug.replace(/-/g, " ").replace(/\b\w/g, (character) => character.toUpperCase()),
+      body_content: "",
+      media_asset_ids: [],
+      cta: null,
+      imageUrl: null,
+      imageUrls: [],
+    });
+  }
+  const hasGeneratedPage = (key: string) => artifact.inner_pages_built && Boolean(artifact.bespoke_pages?.[key]?.trim());
+  const navigation = {
+    services: services
+      .filter((service) => hasGeneratedPage(`services/${service.slug}`))
+      .map((service) => ({
+        slug: service.slug,
+        label: service.h2,
+        description: service.body_content,
+        path: `/services/${service.slug}`,
+      })),
+    areas: areas
+      .filter((area) => hasGeneratedPage(`areas/${area.slug}`))
+      .map((area) => ({
+        slug: area.slug,
+        label: area.h2,
+        description: area.body_content,
+        path: `/areas/${area.slug}`,
+      })),
+  };
   const locationServices = resolvedSections.filter((s) => s.kind === "location-service");
   const faq = resolvedSections.filter((s) => s.kind === "faq");
   const differentiatorSection = resolvedSections.find((s) => s.kind === "differentiator");
@@ -80,9 +120,13 @@ export function renderShell(
     : differentiatorSection?.body_content && !META_COPY.test(differentiatorSection.body_content)
       ? differentiatorSection.body_content
       : "Clear communication, real local service, and a straightforward next step.";
+  const phone = displayPhone(((facts.nap as { phones?: string[] })?.phones ?? []).find((value) => /\d{7,}/.test(value.replace(/\D/g, ""))) ?? lead.phone);
+  const intent = conversionIntentFor(lead.industry, Boolean(phone));
 
   return {
     businessName,
+    primaryAction: intent.primary,
+    primaryActionLabel: intent.primaryLabel,
     headline,
     subhead,
     heroImageUrl: heroMedia,
@@ -96,6 +140,7 @@ export function renderShell(
     guarantee: (artifact.extracted_assets?.guarantee as string) || "",
     services,
     areas,
+    navigation,
     locationServices,
     faq,
     trustStrip,
@@ -113,7 +158,7 @@ export function renderShell(
       .filter((r) => r.text && r.text.trim().length > 0)
       .slice(0, 6),
     nap: {
-      phone: ((facts.nap as { phones?: string[] })?.phones ?? []).find((phone) => /\d{7,}/.test(phone.replace(/\D/g, ""))) ?? null,
+      phone,
       email: (facts.nap as { emails?: string[] })?.emails?.[0] ?? null,
       address: (facts.nap as { address?: string })?.address ?? null,
     },
@@ -129,7 +174,7 @@ export function renderShell(
     fontFamily: null,
     fontStylesheetUrl: null,
     innerPagesBuilt: artifact.inner_pages_built,
-    fullSiteBuilt: artifact.full_site_status === "complete",
+    fullSiteBuilt: (artifact.generation_phase ?? 0) >= 2,
     leadSlug: lead.slug,
     bespokeHomepageHtml: artifact.bespoke_homepage_html,
     bespokeCss: artifact.bespoke_css ?? null,

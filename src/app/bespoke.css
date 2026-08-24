@@ -216,6 +216,9 @@
   letter-spacing: 0.01em;
   cursor: pointer;
   border: var(--bs-border-width) solid transparent;
+  min-height: 44px;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 .bs-btn:hover { transform: translateY(-2px); box-shadow: var(--bs-shadow-lift); }
@@ -224,6 +227,7 @@
 .bs-btn-ghost { background: transparent; border-color: currentColor; color: inherit; }
 .bs-btn-lg { padding: 1.1rem 2.1rem; font-size: 1.0625rem; }
 .bs-btn-block { width: 100%; }
+.bespoke-page .site-cta { min-height: 44px; white-space: nowrap; flex-shrink: 0; }
 
 /* ------------------------------------------------------------------ hero */
 
@@ -568,8 +572,26 @@
   padding-bottom: clamp(2.5rem, 5vw, 4rem);
   border-bottom: 1px solid rgb(255 255 255 / 0.14);
 }
-@media (min-width: 900px) { .bs-footer-cta { grid-template-columns: 1.4fr auto; } }
-.bs-footer-cta h2 { color: var(--bs-invert-ink); max-width: 20ch; }
+@media (min-width: 900px) { .bs-footer-cta { grid-template-columns: minmax(0, 1.4fr) auto; } }
+.bs-footer-kicker {
+  margin-bottom: 0.65rem;
+  color: var(--bs-invert-ink);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.bs-footer-cta h2 {
+  color: var(--bs-invert-ink);
+  max-width: 24ch;
+  font-size: clamp(1.75rem, 3.2vw, 3rem);
+  line-height: 1.08;
+}
+.bs-footer-cta .bs-row { justify-content: flex-end; }
+.bs-footer-cta .bs-btn { white-space: nowrap; }
+.bs-footer-logo { margin-bottom: 1.25rem; }
+.bs-footer .bs-footer-logo img { max-height: 4rem; max-width: 12rem; }
 
 .bs-footer-cols { display: grid; gap: 2.5rem; padding-block: clamp(2.5rem, 5vw, 4rem); grid-template-columns: 1fr; }
 @media (min-width: 640px) { .bs-footer-cols { grid-template-columns: repeat(2, 1fr); } }

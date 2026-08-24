@@ -15,20 +15,20 @@ import { isAdminSession } from "@/lib/is-admin-session";
 export async function generateMetadata({ params }: { params: Promise<{ leadSlug: string }> }): Promise<Metadata> {
   const { leadSlug } = await params;
   const result = await getSiteData(leadSlug);
-  if (!result || !result.payload.innerPagesBuilt) return {};
+  if (!result || !result.payload.innerPagesBuilt || !result.payload.bespokePages.contact) return {};
   return {
     title: `Contact | ${result.payload.businessName}`,
     alternates: { canonical: `/s/${leadSlug}/contact` },
   };
 }
 
-export default async function ContactPage({ params }: { params: Promise<{ leadSlug: string }> }) {
+export default async function ContactPage({ params, searchParams }: { params: Promise<{ leadSlug: string }>; searchParams: Promise<{ view?: string }> }) {
   const { leadSlug } = await params;
   const result = await getSiteData(leadSlug);
   if (!result) notFound();
-  if (!result.payload.innerPagesBuilt && !(await isAdminSession())) redirect(`/s/${leadSlug}#contact`);
+  if ((!result.payload.innerPagesBuilt || !result.payload.bespokePages.contact) && !(await isAdminSession())) redirect(`/s/${leadSlug}#contact`);
 
-  const { payload } = result;
+  const payload = { ...result.payload, previewMode: (await searchParams).view === "preview" };
   const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: "Contact", path: "/contact" }]);
 
   return (

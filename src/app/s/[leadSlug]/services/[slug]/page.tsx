@@ -29,13 +29,13 @@ export async function generateMetadata({ params }: { params: Promise<{ leadSlug:
   };
 }
 
-export default async function ServicePage({ params }: { params: Promise<{ leadSlug: string; slug: string }> }) {
+export default async function ServicePage({ params, searchParams }: { params: Promise<{ leadSlug: string; slug: string }>; searchParams: Promise<{ view?: string }> }) {
   const { leadSlug, slug } = await params;
   const result = await getSiteData(leadSlug);
   if (!result) notFound();
-  if (!result.payload.innerPagesBuilt && !(await isAdminSession())) redirect(`/s/${leadSlug}#${slug}`);
+  if ((!result.payload.innerPagesBuilt || !result.payload.bespokePages[`services/${slug}`]) && !(await isAdminSession())) redirect(`/s/${leadSlug}#services`);
 
-  const { payload } = result;
+  const payload = { ...result.payload, previewMode: (await searchParams).view === "preview" };
   const service = payload.services.find((s) => s.slug === slug);
   if (!service) notFound();
 

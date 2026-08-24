@@ -500,13 +500,25 @@ export interface SiteLink {
   body_content: string;
 }
 
+export interface SiteNavItem {
+  slug: string;
+  label: string;
+  description: string;
+  path: string;
+}
+
+export type ConversionAction = "call-now" | "request-quote" | "book-appointment" | "send-enquiry";
+
 export interface SitePayload {
   businessName: string;
+  primaryAction: ConversionAction;
+  primaryActionLabel: string;
   leadSlug: string;
   logoUrl: string | null;
   innerPagesBuilt: boolean;
   /** "" here — this site is the root of its own domain. */
   basePath?: string;
+  previewMode?: boolean;
   /** Add your own privacy policy and terms, then link them here. */
   hideLegalLinks?: boolean;
   differentiator?: string | null;
@@ -514,6 +526,11 @@ export interface SitePayload {
   socialUrls: string[];
   services: SiteLink[];
   areas: SiteLink[];
+  navigation: {
+    services: SiteNavItem[];
+    areas: SiteNavItem[];
+  };
+  bespokePages: Record<string, string>;
   nap: {
     phone: string | null;
     email: string | null;
@@ -525,6 +542,15 @@ export interface SitePayload {
   };
   chromeSpec: ChromeSpec;
   [key: string]: unknown;
+}
+
+export function siteHref(payload: Pick<SitePayload, "basePath" | "leadSlug" | "previewMode">, path = ""): string {
+  const root = (payload.basePath ?? "/") + path || "/";
+  return payload.previewMode ? root + "?view=preview" : root;
+}
+
+export function homepageAnchor(payload: Pick<SitePayload, "basePath" | "leadSlug" | "previewMode">, anchor: string): string {
+  return siteHref(payload) + "#" + anchor;
 }
 
 export type NavArchetype = "mega" | "split" | "centered" | "minimal";
@@ -1134,25 +1160,29 @@ function Bubble({ text }: { text: string }) {
   // ---- Inner pages, when they were built --------------------------------
   const inner = payload.bespokePages ?? {};
   for (const [route, html] of Object.entries(inner)) {
-    if (!html) continue;
+    if (!html || route.startsWith("locations/")) continue;
     const safeRoute = route.replace(/[^a-z0-9/-]/gi, "-");
     const up = safeRoute.split("/").map(() => "..").join("/");
     const folder = app.folder(safeRoute);
     folder?.file(
       "page.tsx",
-      `import SiteRuntime from "${up}/SiteRuntime";
-import { NAV_HTML, FOOTER_HTML } from "${up}/chrome";
+       `import SiteRuntime from "${up}/SiteRuntime";
+import { BespokeNav } from "${up}/site/BespokeNav";
+import { BespokeFooter } from "${up}/site/BespokeFooter";
+import { QuoteModalProvider } from "${up}/site/QuoteModalProvider";
+import payload from "${up}/site/payload.json";
 
 const PAGE_HTML = \`${tpl(html)}\`;
 
 export default function Page() {
+  const site = payload as any;
   return (
-    <>
-      <div dangerouslySetInnerHTML={{ __html: NAV_HTML }} />
+    <QuoteModalProvider businessName={site.businessName}>
+      <BespokeNav payload={site} spec={site.chromeSpec} />
       <div className="bespoke-page" dangerouslySetInnerHTML={{ __html: PAGE_HTML }} />
-      <div dangerouslySetInnerHTML={{ __html: FOOTER_HTML }} />
+      <BespokeFooter payload={site} spec={site.chromeSpec} />
       <SiteRuntime />
-    </>
+    </QuoteModalProvider>
   );
 }
 `

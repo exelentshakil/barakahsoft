@@ -14,20 +14,20 @@ import { isAdminSession } from "@/lib/is-admin-session";
 export async function generateMetadata({ params }: { params: Promise<{ leadSlug: string }> }): Promise<Metadata> {
   const { leadSlug } = await params;
   const result = await getSiteData(leadSlug);
-  if (!result || !result.payload.innerPagesBuilt) return {};
+  if (!result || !result.payload.innerPagesBuilt || !result.payload.bespokePages.faq) return {};
   return {
     title: `FAQ | ${result.payload.businessName}`,
     alternates: { canonical: `/s/${leadSlug}/faq` },
   };
 }
 
-export default async function FaqPage({ params }: { params: Promise<{ leadSlug: string }> }) {
+export default async function FaqPage({ params, searchParams }: { params: Promise<{ leadSlug: string }>; searchParams: Promise<{ view?: string }> }) {
   const { leadSlug } = await params;
   const result = await getSiteData(leadSlug);
   if (!result) notFound();
-  if (!result.payload.innerPagesBuilt && !(await isAdminSession())) redirect(`/s/${leadSlug}#faq`);
+  if ((!result.payload.innerPagesBuilt || !result.payload.bespokePages.faq) && !(await isAdminSession())) redirect(`/s/${leadSlug}#faq`);
 
-  const { payload } = result;
+  const payload = { ...result.payload, previewMode: (await searchParams).view === "preview" };
   const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: "FAQ", path: "/faq" }]);
 
   return (

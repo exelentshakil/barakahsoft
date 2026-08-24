@@ -1,6 +1,7 @@
 import { slugifyText } from "@/lib/slug";
 import { buildRichContext, findRelevantPage } from "@/lib/facts-context";
 import { extractServiceAreas } from "@/lib/scrape/extract-service-areas";
+import { displayPhone } from "@/lib/phone";
 import { findLicenseInsuranceMention } from "@/lib/trust-signals";
 import { conversionIntentFor, painPointInstructions } from "@/lib/conversion-intent";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
@@ -149,7 +150,7 @@ export function buildSiteBrief(
     industry: overrides.industry?.trim() || lead.industry || "Local Services",
     city: overrides.city?.trim() || cityFromFacts(facts) || "the local area",
     founder: overrides.founder?.trim() || lead.contact_name || null,
-    phone: overrides.phone?.trim() || nap.phones?.find((p) => /\d{7,}/.test(p.replace(/\D/g, ""))) || lead.phone || null,
+    phone: displayPhone(overrides.phone?.trim() || nap.phones?.find((p) => /\d{7,}/.test(p.replace(/\D/g, ""))) || lead.phone),
     email: overrides.email?.trim() || nap.emails?.[0] || lead.email || null,
     services,
     areas,

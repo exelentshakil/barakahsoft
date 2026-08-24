@@ -478,6 +478,9 @@ export function verifyHomepage(
       if (!/data-review-prev/i.test(reviewSection) || !/data-review-next/i.test(reviewSection)) {
         add("blocker", "reviews", "The review slider is missing previous/next controls.");
       }
+      if (!/[★⭐]{4,}/u.test(reviewSection)) {
+        add("blocker", "reviews", "The review slider has no visible star rating, so the cards do not read as testimonials at a glance.");
+      }
 
       const supplied = brief.reviews.map((review) => ({
         quote: normalizedText(review.text),

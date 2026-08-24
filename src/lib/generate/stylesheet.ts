@@ -64,6 +64,12 @@ LAYOUT
   scales: 1.25rem on mobile, 2.5rem from desktop. Content must never touch the viewport edge.
 - Mobile first. Every grid collapses to one column and every layout works from 360px up.
 - The About section must execute the specific archetype in the design notes with comparable visual mass between story, media and proof. Do not reduce authentic imagery to an avatar, stretch copy across dead space, or let metrics dominate the story. Preserve its hierarchy on mobile with natural content height.
+- About and proof images use object-fit: cover with an explicit aspect-ratio; never set both an arbitrary fixed width and fixed height that distorts the source.
+- Long credentials such as “Licensed and insured” are not equal numeric stats. Give reassurance copy enough width or move it to a separate trust line so it cannot stack into a tall narrow column.
+- Every .site-cta--primary has one identical fill, text pairing, radius, weight, padding and hover/focus treatment everywhere. Use --bs-primary with --bs-on-primary. Do not recolour it by section.
+- Every .site-cta--secondary uses one consistent subordinate treatment. Do not introduce red, blue or section-specific button colours.
+- Every .site-cta has white-space: nowrap, flex-shrink: 0 and a minimum height of 44px. CTA groups wrap as whole buttons on narrow screens; individual labels never collapse into one word per line.
+- [data-review-track] is a horizontal overflow track with scroll-snap and touch scrolling. Review cards visibly prioritise rating, quote and attribution in that order; do not leave an unexplained empty rail beside quotes.
 
 ${SPACE_STANDARD}
 
@@ -115,7 +121,7 @@ Reply with CSS ONLY. No markdown fences, no commentary, no <style> tag. Do not w
   const raw = await callBestModel(
     prompt,
     {
-      maxTokens: 40000,
+      maxTokens: 24000,
       temperature: 0.6,
       system:
         "You are a senior front-end designer who writes production CSS. You use only custom properties for colour, and you write a rule for every class in the markup you are given.",

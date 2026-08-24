@@ -23,7 +23,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
       {/* 1. TOP BAR (Direct from Admin Prototype) */}
       <header className="sticky top-0 z-30 border-b border-[#e5e7f2] bg-white">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+        <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-between px-6">
           <div className="flex items-center gap-4">
             <Link href="/admin">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -56,7 +56,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-8">{children}</main>
+      <main className="mx-auto max-w-[1600px] px-6 py-8">{children}</main>
       <CrispChat />
     </div>
   );

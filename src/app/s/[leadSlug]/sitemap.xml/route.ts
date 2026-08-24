@@ -25,19 +25,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ leadSlug
   const urls = [base];
 
   if (result.payload.innerPagesBuilt) {
-    for (const service of result.payload.services) urls.push(`${base}/services/${service.slug}`);
-    urls.push(`${base}/contact`, `${base}/booking`, `${base}/about`, `${base}/faq`, `${base}/privacy`, `${base}/terms`);
-
-    // v3 (Phase L) -- only real once enrich-expand.ts has actually run and
-    // found real extractable area names, same gate the route itself uses.
-    // v4 -- areas/[slug] moved here too: it now aggregates location-service
-    // pages for real content, so it needs the same fullSiteBuilt gate the
-    // page itself checks (the area *name* is visible on the homepage from
-    // the fast pass, but its own page has nothing real to show until
-    // expansion has run).
-    if (result.payload.fullSiteBuilt) {
-      for (const area of result.payload.areas) urls.push(`${base}/areas/${area.slug}`);
-      for (const section of result.payload.locationServices) urls.push(`${base}/locations/${section.slug}`);
+    for (const service of result.payload.navigation.services) urls.push(`${base}${service.path}`);
+    for (const area of result.payload.navigation.areas) urls.push(`${base}${area.path}`);
+    for (const page of ["about", "faq", "contact"]) {
+      if (result.payload.bespokePages[page]) urls.push(`${base}/${page}`);
     }
   }
 

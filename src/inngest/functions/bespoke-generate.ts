@@ -24,14 +24,13 @@ import type { FunnelPageSection, Lead, ScrapeResults, Artifact } from "@/types/d
 
 // bespoke/generate.requested — the single generation path.
 //
-// Phase 1 builds the sellable core: homepage, every service page, about,
-// FAQ, contact. That is what the client is sent, and it is the only spend a
-// lead incurs before it responds.
+// Phase 1 builds the sellable homepage. That is what the client is sent, and
+// it is the only spend a lead incurs before it responds.
 //
-// Phase 2 builds the rest — location×service pages and service areas — and
-// is triggered explicitly after the client approves, so deep spend only
-// happens on leads that convert. There is no blog: articles were depth the
-// homepage does not need and effort spent away from the page that sells.
+// Phase 2 builds substantive service, service-area and company pages after
+// approval. It deliberately does not manufacture a service × area Cartesian
+// set without evidence unique to each pair; those are thin doorway pages, not
+// useful local-search assets.
 //
 // Every step is an Inngest step: a failure late in a run does not discard
 // the homepage that already succeeded, progress is visible rather than a
@@ -40,7 +39,6 @@ import type { FunnelPageSection, Lead, ScrapeResults, Artifact } from "@/types/d
 
 const MAX_SERVICE_PAGES = 8;
 const MAX_AREAS = 12;
-const MAX_LOCATION_PAGES = 24;
 
 // step.run's return type is Jsonify<T>, which will not unify with a plain
 // generic helper signature. These helpers only ever need "run something and
@@ -119,7 +117,7 @@ export const bespokeGenerate = inngest.createFunction(
     // page that has not been built.
     const knownPaths =
       phase === 2
-        ? buildKnownPaths(services, areas, { locationServices: buildLocationPairs(services, areas) })
+        ? buildKnownPaths(services, areas)
         : ["/"];
 
     // ---- Phase 2 reuses everything the client already approved ----------
@@ -196,12 +194,6 @@ export const bespokeGenerate = inngest.createFunction(
 
     await bumpProgress(admin, lead_id, 2);
 
-    const sitePlan = await step.run("plan-site", async () => {
-      const plan = await generateSitePlan(brief, dna, media, provider);
-      await admin.from("artifacts").update({ copy_plan: plan }).eq("lead_id", lead_id);
-      return plan;
-    });
-
     // funnel_pages drives the mega menu, the footer and sitemap.xml. It is
     // structure, not prose, so it needs the real service names rather than a
     // written plan.
@@ -225,10 +217,12 @@ export const bespokeGenerate = inngest.createFunction(
       })),
     ];
 
-    await step.run("save-sections", async () => {
+    const sitePlan = await step.run("plan-site", async () => {
+      const plan = await generateSitePlan(brief, dna, media, provider);
       await admin
         .from("artifacts")
         .update({
+          copy_plan: plan,
           funnel_pages: funnelPages,
           design_tokens: compileDesignTokens(dna, {
             colourSource: loaded.artifact?.colour_source,
@@ -237,6 +231,7 @@ export const bespokeGenerate = inngest.createFunction(
           inspiration_branding: dna,
         })
         .eq("lead_id", lead_id);
+      return plan;
     });
 
     // Generate the researched plan in small section batches, then style the
@@ -457,17 +452,6 @@ export const bespokeGenerate = inngest.createFunction(
   }
 );
 
-function buildLocationPairs(services: string[], areas: string[]): { service: string; area: string }[] {
-  const pairs: { service: string; area: string }[] = [];
-  for (const area of areas) {
-    for (const service of services.slice(0, 4)) {
-      if (pairs.length >= MAX_LOCATION_PAGES) return pairs;
-      pairs.push({ service, area });
-    }
-  }
-  return pairs;
-}
-
 async function bumpProgress(admin: ReturnType<typeof createAdminClient>, leadId: string, done: number) {
   await admin
     .from("build_jobs")
@@ -508,6 +492,7 @@ async function buildPages(
     const html = (await step.run(`page-${stepId}`, async () =>
       generateBespokePage(ctx.brief, ctx.voiceSample, ctx.dna, ctx.media, ctx.knownPaths, request)
     )) as string | null;
+    if (!html) throw new Error(`Generation returned no substantive content for ${key}`);
 
     done += 1;
 
@@ -543,10 +528,8 @@ async function runPhaseTwo(
   areas: string[]
 ): Promise<void> {
   const leadId = ctx.lead.id;
-  const pairs = buildLocationPairs(services, areas);
-
   const requests: InnerPageRequest[] = [
-    ...ctx.brief.services.map((name) => ({
+    ...services.map((name) => ({
       kind: "service" as const,
       title: name,
       subject: name,
@@ -555,15 +538,17 @@ async function runPhaseTwo(
     { kind: "faq" as const, title: "Frequently asked questions" },
     { kind: "contact" as const, title: `Contact ${ctx.brief.businessName}` },
     ...areas.map((area) => ({ kind: "area" as const, title: area, area })),
-    ...pairs.map((p) => ({
-      kind: "location-service" as const,
-      title: `${p.service} in ${p.area}`,
-      subject: p.service,
-      area: p.area,
-    })),
   ];
 
   await step.run("start-phase-2", async () => {
+    const { data: current } = await admin
+      .from("artifacts")
+      .select("bespoke_pages, funnel_pages")
+      .eq("lead_id", leadId)
+      .single<Pick<Artifact, "bespoke_pages" | "funnel_pages">>();
+    const pages = Object.fromEntries(Object.entries(current?.bespoke_pages ?? {}).filter(([key]) => !key.startsWith("locations/")));
+    const funnelPages = (current?.funnel_pages ?? []).filter((section) => section.kind !== "location-service");
+    await admin.from("artifacts").update({ bespoke_pages: pages, funnel_pages: funnelPages }).eq("lead_id", leadId);
     await admin.from("build_jobs").delete().eq("lead_id", leadId).eq("stage", "bespoke");
     await admin.from("build_jobs").insert({
       lead_id: leadId,

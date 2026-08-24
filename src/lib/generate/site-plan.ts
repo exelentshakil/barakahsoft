@@ -30,16 +30,39 @@ const PlannedSectionSchema = z.object({
   mediaSlot: z.string().max(60).nullable().default(null),
 });
 
+const PainCoverageSchema = z.object({
+  problem: z.string().min(8).max(300),
+  response: z.string().min(8).max(300),
+  sectionIds: z.array(z.string().regex(/^[a-z][a-z0-9-]*$/)).min(1).max(5),
+});
+
 export const SitePlanSchema = z.object({
   diagnosis: z.string().min(20).max(1200),
+  strategyLens: z.string().min(10).max(300),
   designNotes: z.string().min(20).max(1800),
   recurringPrimitive: z.string().min(3).max(160),
+  painCoverage: z.array(PainCoverageSchema).max(12).default([]),
+  rejectedSections: z.array(z.string().min(3).max(160)).max(8).default([]),
   services: z.array(z.object({ name: z.string().min(1).max(120), blurb: z.string().max(320) })).max(12).default([]),
   sections: z.array(PlannedSectionSchema).min(7).max(20),
 });
 
 export type SitePlan = z.infer<typeof SitePlanSchema>;
 export type PlannedSection = z.infer<typeof PlannedSectionSchema>;
+
+const STRATEGY_LENSES = [
+  "Risk-first: lead with the costly uncertainty the buyer wants removed, then prove this business is the safe decision.",
+  "Proof-first: use real work, reviews and supported credentials early, then connect that evidence to each buying question.",
+  "Local-authority: make service fit and geographic relevance unmistakable without turning the page into an SEO location list.",
+  "Owner-led trust: make the accountable person and their approach the thread connecting service, evidence and next action.",
+  "Project-journey: organise the argument around the customer's path from current problem to finished result and easy enquiry.",
+] as const;
+
+function strategyLensFor(brief: SiteBrief): string {
+  let hash = 0;
+  for (const char of `${brief.businessName}|${brief.industry}|${brief.city}`) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return STRATEGY_LENSES[hash % STRATEGY_LENSES.length];
+}
 
 function fallbackPlan(brief: SiteBrief, media: MediaPlan): SitePlan {
   const sections: PlannedSection[] = [
@@ -64,12 +87,12 @@ function fallbackPlan(brief: SiteBrief, media: MediaPlan): SitePlan {
       mediaSlot: media.some((item) => item.slot === "service-0") ? "service-0" : null,
     },
     {
-      id: "process",
-      kind: "process",
-      label: "What happens next",
-      visitorProblem: "Remove uncertainty about starting an enquiry.",
-      purpose: "Explain only the supported next steps and make contacting the business feel simple.",
-      archetype: "numbered horizontal sequence",
+      id: "decision-guide",
+      kind: "problem",
+      label: "Customer decision guide",
+      visitorProblem: `Help a ${brief.industry} buyer recognise the practical signs that determine the right next step.`,
+      purpose: "Turn genuine pre-hire uncertainty into useful, fact-grounded guidance rather than a generic company process.",
+      archetype: "editorial diagnostic guide with question-led rows",
       evidence: [],
       mediaSlot: null,
     },
@@ -146,8 +169,17 @@ function fallbackPlan(brief: SiteBrief, media: MediaPlan): SitePlan {
 
   return {
     diagnosis: `Visitors need to recognise the right ${brief.industry} service in ${brief.city}, trust the people doing it and understand how to start without friction.`,
+    strategyLens: strategyLensFor(brief),
     designNotes: `Build one spacious visual argument with varied section silhouettes, controlled colour cadence and a consistent action treatment. Keep customer outcomes and real evidence close together. Make the About composition substantial rather than a small portrait beside a wall of copy.`,
     recurringPrimitive: "a restrained brand-colour rule and numbered marker",
+    painCoverage: brief.painInstructions.map((problem) => ({
+      problem,
+      response: "Answer this concern visibly through the page argument and repeat the relevant action at its decision point.",
+      sectionIds: problem.toLowerCase().includes("search") && sections.some((section) => section.id === "areas")
+        ? ["areas", "faq"]
+        : ["hero", "contact"],
+    })),
+    rejectedSections: ["Generic feature grids with no buying question", "Unsupported metrics or company-history filler"],
     services: brief.services.slice(0, 12).map((name) => ({ name, blurb: `${name} for customers in ${brief.city}.` })),
     sections,
   };
@@ -159,7 +191,8 @@ export async function generateSitePlan(
   media: MediaPlan,
   provider: GenerationProvider = "openai"
 ): Promise<SitePlan> {
-  const prompt = `Diagnose and plan a homepage for a real ${brief.industry} business. This is the research and strategy pass: decide every section before any HTML is written.
+  const assignedLens = strategyLensFor(brief);
+  const prompt = `Act as a three-person commercial review: a marketing director, an experienced ${brief.industry} operator, and a local-search strategist. Diagnose and plan this homepage before any HTML is written. The owner should feel that the page understands their commercial problems better than they have articulated them.
 
 BUSINESS FACTS
 - Business: ${brief.businessName}
@@ -186,22 +219,28 @@ VISUAL RESEARCH DIRECTION
 - Why it works: ${dna.rationale}
 
 PLAN RULES
-- Use 7-12 sections normally. Use up to 20 only when distinct evidence and buying problems justify them. Never pad.
-- Every section must solve one named visitor problem and have a conversion purpose grounded in the supplied facts.
+- Assigned strategic lens for this lead: ${assignedLens}
+- First diagnose why this business is losing enquiries, what buyers fear before hiring this trade, and which supplied facts can resolve those fears. Do not begin from a standard website section list.
+- Map every owner-reported problem verbatim to one or more section IDs in painCoverage. If a selected problem is not visibly answered, the plan is invalid.
+- Use 7-12 sections normally. Use up to 20 only when distinct evidence and buying problems justify them. Reject filler explicitly in rejectedSections.
+- Every section must solve one named visitor problem and have a conversion purpose grounded in the supplied facts. A section label is not a reason for a section.
 - Hero is first. Include services, about, FAQ and a substantial final contact/CTA section.
 - If real review text exists, reviews is mandatory and its archetype must be an accessible horizontal slider. If none exists, omit reviews.
-- About must balance visual mass among authentic owner/team/work imagery, the business identity, owner name when supplied, concise story and supported trust evidence. Never invent a title, experience, logo, metric or credential.
+- About must balance visual mass among authentic owner/team/work imagery, the business identity, owner name and supported role when supplied, concise story and supported trust evidence. Never invent a title, experience, logo, metric or credential.
+- Do not default to a process section. Include one only when supplied facts support meaningful steps particular to this business.
+- Credentials such as “licensed and insured” are reassurance, not a numeric metric. Never force a long phrase into an equal-width stats cell beside short numbers.
 - No two adjacent sections use the same archetype. Plan quiet/focal/reset cadence instead of alternating coloured rectangles.
+- Do not reuse a memorised sequence. After the hero, order sections according to this lead's strategic lens, strongest evidence and reported problems.
 - Select media only by the supplied slot and subject. A slot may be used once.
 - The primary action wording and treatment are identical everywhere.
 - IDs are lowercase slugs. Navigation IDs must be exactly services, about, reviews, faq and contact where those sections exist.
 
 Return strict JSON only:
-{"diagnosis":"...","designNotes":"...","recurringPrimitive":"...","services":[{"name":"exact service name","blurb":"customer problem it addresses"}],"sections":[{"id":"hero","kind":"hero|problem|services|process|proof|about|reviews|areas|faq|contact|cta","label":"...","visitorProblem":"...","purpose":"...","archetype":"...","evidence":["supported fact"],"mediaSlot":"hero or null"}]}`;
+{"diagnosis":"...","strategyLens":"...","designNotes":"...","recurringPrimitive":"...","painCoverage":[{"problem":"owner problem verbatim","response":"how the page visibly solves it","sectionIds":["hero"]}],"rejectedSections":["section rejected and why"],"services":[{"name":"exact service name","blurb":"customer problem it addresses"}],"sections":[{"id":"hero","kind":"hero|problem|services|process|proof|about|reviews|areas|faq|contact|cta","label":"...","visitorProblem":"...","purpose":"...","archetype":"...","evidence":["supported fact"],"mediaSlot":"hero or null"}]}`;
 
   const raw = await callBestModel(prompt, {
     maxTokens: 8000,
-    temperature: 0.35,
+    temperature: 0.5,
     system: "You are a conversion researcher and senior information architect. Diagnose from supplied evidence, make decisive section choices, never invent facts, and return valid JSON only.",
   }, provider);
   const parsed = raw ? SitePlanSchema.safeParse(parseJsonResponse(raw)) : null;
@@ -214,7 +253,10 @@ Return strict JSON only:
   const hasRequired = ["hero", "services", "about", "faq", "contact"].every((id) => ids.has(id));
   const reviewRule = brief.reviews.length > 0 ? ids.has("reviews") : !ids.has("reviews");
   const validOrder = parsed.data.sections[0]?.id === "hero" && ids.size === parsed.data.sections.length;
-  if (!hasRequired || !reviewRule || !validOrder) return fallbackPlan(brief, media);
+  const coveredProblems = brief.painInstructions.every((problem) =>
+    parsed.data.painCoverage.some((coverage) => coverage.problem === problem && coverage.sectionIds.every((id) => ids.has(id)))
+  );
+  if (!hasRequired || !reviewRule || !validOrder || !coveredProblems) return fallbackPlan(brief, media);
 
   const availableSlots = new Set(media.map((item) => item.slot));
   const usedSlots = new Set<string>();
@@ -229,7 +271,7 @@ Return strict JSON only:
     name,
     blurb: generatedBlurbs.get(name.toLowerCase()) ?? `${name} for customers in ${brief.city}.`,
   }));
-  return { ...parsed.data, sections, services };
+  return { ...parsed.data, strategyLens: assignedLens, sections, services };
 }
 
 export function sectionBatches(sections: PlannedSection[], size = 4): PlannedSection[][] {

@@ -39,7 +39,7 @@ function factsBlock(brief: SiteBrief): string {
   lines.push(`Their real services:\n${brief.services.map((service) => `  - ${service}`).join("\n")}`);
   lines.push(
     brief.reviews.length > 0
-      ? `Real reviews — quote verbatim or not at all:\n${brief.reviews.map((review) => `  "${review.text}" — ${review.author}`).join("\n")}`
+      ? `Real reviews — quote verbatim or not at all:\n${brief.reviews.map((review) => `  ${review.rating}/5 — "${review.text}" — ${review.author}`).join("\n")}`
       : "No review text available. Include no testimonials of any kind."
   );
   lines.push(`\nScraped from their current site:\n${brief.factsDigest.slice(0, 5000)}`);
@@ -90,8 +90,11 @@ ${brief.painInstructions.length ? `Owner-reported problems this page must solve:
 
 ═══ APPROVED PAGE RESEARCH AND PLAN ═══
 Diagnosis: ${plan.diagnosis}
+Strategic lens: ${plan.strategyLens}
 Composition: ${plan.designNotes}
 Recurring graphic primitive: ${plan.recurringPrimitive}
+Owner-problem coverage:
+${plan.painCoverage.map((coverage) => `- ${coverage.problem} => ${coverage.response} in ${coverage.sectionIds.join(", ")}`).join("\n") || "No owner-selected problems were supplied."}
 Complete ordered page:
 ${plan.sections.map((section, index) => `${index + 1}. ${section.id} [${section.kind}] — ${section.archetype}; solves: ${section.visitorProblem}; purpose: ${section.purpose}`).join("\n")}
 
@@ -104,8 +107,10 @@ ${JSON.stringify(batch, null, 2)}
 - Secondary actions use "site-cta site-cta--secondary" and remain visually subordinate.
 - Shared components keep shared classes across sections. Use descriptive block__element classes only for section-specific composition.
 - Keep generous whitespace and clear separation between content groups. Do not fill empty space with extra cards, badges or copy.
-- The About section must visibly balance authentic imagery or brand treatment, ${brief.founder ? `owner identity (${brief.founder})` : "business identity"}, concise story and supported trust evidence. Never shrink imagery to an avatar or stretch copy across dead space. Do not invent a logo, owner title, years of experience or metric.
-- If this batch contains reviews, build one accessible slider: the section has data-review-slider, a viewport with data-review-track, one semantic blockquote per supplied review, and previous/next buttons with data-review-prev and data-review-next plus aria-labels. Inside each blockquote, put the verbatim quote in a <p> and its supplied author in a <cite>. JavaScript-off fallback remains horizontally scrollable.
+- The About section must visibly balance authentic imagery or brand treatment, ${brief.founder ? `owner identity (${brief.founder}, supported role: owner)` : "business identity"}, concise story and supported trust evidence. Use a real owner portrait as a balanced profile image when supplied; otherwise use honest project/team imagery without implying it depicts the owner. Preserve the image's natural proportions with an intentional square, 4:5 or editorial crop, never a stretched fixed-height box. Do not invent a logo, title, years of experience or metric.
+- Credentials such as “licensed and insured” are a compact reassurance line or badge near the action. Never place that long phrase in an equal-width numeric metric cell beside a rating and review count.
+- If this batch contains reviews, make it unmistakably testimonial content: build one accessible slider whose section has data-review-slider, a viewport with data-review-track, one slide article per supplied review, and previous/next buttons with data-review-prev and data-review-next plus aria-labels. Each slide shows the supplied rating visibly as repeated ★ characters, followed by a semantic blockquote containing only the verbatim quote in a <p> and supplied author in a <cite>. JavaScript-off fallback remains horizontally scrollable.
+- Primary CTAs have enough inline space for the full label, never wrap word-by-word, and never share a narrow stats-grid column.
 - If this batch contains FAQ, use the reviewed accordion data attributes from the interaction contract.
 - No adjacent section may copy the same skeleton. Follow the planned archetypes and colour cadence, but leave all visual styling to the stylesheet pass.
 
@@ -115,7 +120,7 @@ Motifs: ${dna.motifs.join("; ") || "none specified"}
 Why it works: ${dna.rationale}
 
 ═══ AVAILABLE IMAGES — exact URLs only, each at most once on the whole page ═══
-${media.length ? media.map((item) => `[${item.slot}] ${item.url}\nshows: ${item.caption}`).join("\n") : "None. Output no img tags."}
+${media.length ? media.map((item) => `[${item.slot}] ${item.url}\norigin: ${item.origin}; shows: ${item.caption}`).join("\n") : "None. Output no img tags."}
 Only use media slots assigned to this batch's plan entries. Every image needs width, height, meaningful alt, and lazy loading except the hero.
 
 ═══ LINKS THAT EXIST ═══
