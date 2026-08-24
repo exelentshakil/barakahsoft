@@ -150,7 +150,7 @@ export function LiveClientProposal({
         </>
       )}
 
-      <main className={`mx-auto max-w-5xl px-6 py-12 space-y-16 transition duration-500 ${!isApproved && !isPaid ? "blur-md opacity-40 pointer-events-none select-none" : ""}`}>
+      <main className={`mx-auto max-w-7xl px-4 sm:px-8 py-12 space-y-16 transition duration-500 ${!isApproved && !isPaid ? "blur-md opacity-40 pointer-events-none select-none" : ""}`}>
         <ProposalHero
           businessName={businessName}
           address={address}

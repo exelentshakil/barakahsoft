@@ -649,9 +649,12 @@ export function SocialLaunchMockup({
           </div>
 
           {/* Dynamic Top Header */}
-          <div className="relative z-10 text-center pt-10">
+          <div className="relative z-10 text-center pt-8">
+            <span className="inline-block rounded-full bg-white/20 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-white backdrop-blur-sm mb-3">
+              {activeHeadline.tag}
+            </span>
             <h2
-              className="text-4xl sm:text-5xl font-black tracking-wider text-white uppercase font-sans"
+              className="text-4xl sm:text-5xl font-black tracking-wider text-white uppercase font-sans leading-tight"
               style={{
                 textShadow: "0 8px 24px rgba(24, 48, 77, 0.45), 0 2px 6px rgba(0,0,0,0.3)",
               }}
@@ -663,15 +666,29 @@ export function SocialLaunchMockup({
           </div>
 
           {/* 3D Composition Stage (Scaled for 9:16) */}
-          <div className="relative z-10 w-full flex items-center justify-center scale-110 my-auto">
+          <div className="relative z-10 w-full flex items-center justify-center scale-105 my-auto">
             {render3DStage()}
+          </div>
+
+          {/* Bottom Story Callout Card */}
+          <div className="relative z-10 w-full rounded-2xl bg-white/95 backdrop-blur-md p-4 text-[#0d1738] shadow-2xl border border-white/40 flex items-center justify-between mb-4">
+            <div>
+              <p className="text-xs font-bold text-slate-900">{businessShortName}</p>
+              <p className="text-[10px] text-slate-500 font-medium">Bespoke High-Converting Redesign Concept</p>
+            </div>
+            <span
+              className="rounded-lg px-3 py-1.5 text-[10px] font-bold text-white shadow-xs"
+              style={{ backgroundColor: primaryColor }}
+            >
+              TAP TO VIEW →
+            </span>
           </div>
         </div>
       </div>
 
       {/* Control Panel for Operator */}
       {showControls && (
-        <div className="w-full max-w-[560px] space-y-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="w-full max-w-[640px] space-y-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
           {/* 1. Headline Wording Switcher */}
           <div className="space-y-1.5 pt-1 border-t border-slate-100">
             <div className="flex items-center justify-between">
