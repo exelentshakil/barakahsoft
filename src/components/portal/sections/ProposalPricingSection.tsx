@@ -36,8 +36,9 @@ export function ProposalPricingSection({
   // generator writes no articles at all), and "0.12s Mobile Load Time"
   // (nothing measures it — it was a number somebody typed).
   const share = (fraction: number) => Math.max(25, Math.round((standardValue * fraction) / 25) * 25);
-  const parts = [share(0.31), share(0.385), share(0.193), share(0.075), share(0.037)];
-  const anchor = parts.reduce((total, part) => total + part, 0);
+  const firstParts = [share(0.31), share(0.385), share(0.193), share(0.075)];
+  const parts = [...firstParts, Math.max(25, standardValue - firstParts.reduce((total, part) => total + part, 0))];
+  const anchor = standardValue;
 
   const deliverableItems = scopeItems.map((item, index) => ({
     item,

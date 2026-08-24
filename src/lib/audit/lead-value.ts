@@ -37,20 +37,13 @@ export interface LeadValue {
   typicalJobValue: string | null;
   /** What to lead with, in one line an operator can read on a call. */
   recommendation: string;
-  suggested: { setupPrice: number; monthlyPrice: number; label: string };
+  suggested: { setupPrice: number; monthlyPrice: number; standardValue: number; label: string };
 }
 
 const OFFERS: Record<OfferTier, { setupPrice: number; monthlyPrice: number; label: string }> = {
-  // Nothing upfront. For an operator who believes a website should be
-  // cheap, any setup fee is the whole objection, and £79 a month is under
-  // the threshold where people ask their accountant.
-  budget: { setupPrice: 0, monthlyPrice: 79, label: "$0 setup · $79/mo" },
-  // The same, plus the assistant. Someone losing evening enquiries pays
-  // twenty dollars to stop losing them without needing to think about it.
-  standard: { setupPrice: 0, monthlyPrice: 99, label: "$0 setup · $99/mo" },
-  // A setup fee, because a business this size genuinely needs the work:
-  // more services, more areas, a migration, and real content per page.
-  premium: { setupPrice: 779, monthlyPrice: 99, label: "$779 setup · $99/mo" },
+  budget: { setupPrice: 597, monthlyPrice: 0, label: "$597 one time" },
+  standard: { setupPrice: 997, monthlyPrice: 0, label: "$997 one time" },
+  premium: { setupPrice: 1297, monthlyPrice: 0, label: "$1,297 one time" },
 };
 
 interface ValueInput {
@@ -199,10 +192,11 @@ export async function evaluateLeadValue(input: ValueInput): Promise<LeadValue> {
 
   const recommendation =
     tier === "premium"
-      ? "Lead with the setup fee. This business is established, sells big jobs and already spends on getting found — the cheapest tier reads as a downgrade to them, and they will want the extra pages and the migration doing properly."
+      ? "Lead with the complete fixed-scope build. This business is established and sells valuable work; a cheap website offer would undersell the implementation and the cost of getting it wrong."
       : tier === "budget"
-        ? "Lead with nothing upfront. A setup fee is the whole objection for an operator this size — they believe a website should be cheap and they are not wrong about the market. Get them on at $79 and let the assistant be the upgrade later."
-        : "Lead with $0 upfront and the assistant included. They have real work coming in and are losing the evening enquiries — twenty dollars to stop losing them is an easy yes, and it avoids the setup-fee argument entirely.";
+        ? "Lead with the smallest fixed-scope launch. Keep the commitment easy, but charge for the actual rebuild instead of giving away implementation."
+        : "Lead with a $997 one-time rebuild. It is accessible for a real business, recovers the research and delivery work, and avoids presenting the website as a commodity.";
 
-  return { tier, score, signals, typicalJobValue, recommendation, suggested: OFFERS[tier] };
+  const suggested = { ...OFFERS[tier], standardValue: tier === "premium" ? 2497 : tier === "budget" ? 1297 : 1997 };
+  return { tier, score, signals, typicalJobValue, recommendation, suggested };
 }

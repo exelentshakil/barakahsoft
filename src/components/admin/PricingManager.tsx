@@ -17,32 +17,39 @@ interface PricingConfig {
   scopeItems: string[];
 }
 
+interface LeadValueSuggestion {
+  recommendation: string;
+  suggested: { setupPrice: number; monthlyPrice: number; standardValue: number; label: string };
+}
+
 export function PricingManager({
   leadId,
   currentPricing,
   businessName,
   pageCount,
+  leadValue,
 }: {
   leadId: string;
   currentPricing?: Partial<PricingConfig> | null;
   businessName: string;
   pageCount: number;
+  leadValue?: LeadValueSuggestion | null;
 }) {
   const router = useRouter();
   const [model, setModel] = useState<"flat" | "monthly" | "hybrid">(
-    currentPricing?.model || "hybrid"
+    currentPricing?.model || (leadValue?.suggested.monthlyPrice ? "hybrid" : "flat")
   );
   const [setupPrice, setSetupPrice] = useState<number>(
-    currentPricing?.setupPrice ?? 779
+    currentPricing?.setupPrice ?? leadValue?.suggested.setupPrice ?? 997
   );
   const [monthlyPrice, setMonthlyPrice] = useState<number>(
-    currentPricing?.monthlyPrice ?? 99
+    currentPricing?.monthlyPrice ?? leadValue?.suggested.monthlyPrice ?? 0
   );
   const [standardValue, setStandardValue] = useState<number>(
-    currentPricing?.standardValue ?? 1897
+    currentPricing?.standardValue ?? leadValue?.suggested.standardValue ?? 1997
   );
   const [discountLabel, setDiscountLabel] = useState<string>(
-    currentPricing?.discountLabel ?? "Save $1,000 Today"
+    currentPricing?.discountLabel ?? leadValue?.suggested.label ?? "Custom Client Proposal"
   );
   const [scopeItems, setScopeItems] = useState<string[]>(
     currentPricing?.scopeItems?.length
@@ -95,7 +102,7 @@ export function PricingManager({
             <CircleDollarSign className="h-5 w-5 text-primary" />
             <div>
               <h3 className="text-sm font-bold text-foreground">Custom Client Proposal Pricing</h3>
-              <p className="text-[11px] text-muted-foreground">Hidden until QA is approved. Tailor to client budget.</p>
+              <p className="text-[11px] text-muted-foreground">AI recommendation from verified lead signals. Review before sending.</p>
             </div>
           </div>
 
@@ -106,6 +113,12 @@ export function PricingManager({
           )}
         </div>
 
+        {leadValue && (
+          <div className="rounded-lg border border-indigo-200 bg-indigo-50/60 px-3 py-2.5 text-xs text-slate-700">
+            <span className="font-bold text-indigo-700">AI close judgment:</span> {leadValue.recommendation}
+          </div>
+        )}
+
         <form onSubmit={handleSave} className="space-y-4 text-xs">
           {/* Preset Buttons */}
           <div className="space-y-1.5">
@@ -114,77 +127,77 @@ export function PricingManager({
               <button
                 type="button"
                 onClick={() => {
-                  setModel("monthly");
-                  setSetupPrice(0);
-                  setMonthlyPrice(30);
-                  setStandardValue(997);
-                  setDiscountLabel("$0 Setup · $30/mo Hosting");
-                }}
-                className={`rounded-lg border p-2.5 text-center transition ${
-                  model === "monthly" && monthlyPrice === 30 && setupPrice === 0
-                    ? "border-primary bg-primary/10 font-bold text-primary"
-                    : "border-border hover:bg-accent"
-                }`}
-              >
-                <span className="block font-bold text-sm">$0 + $30/mo</span>
-                <span className="text-[10px] text-muted-foreground">Low-Budget Client</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setModel("monthly");
-                  setSetupPrice(0);
-                  setMonthlyPrice(79);
+                  setModel("flat");
+                  setSetupPrice(597);
+                  setMonthlyPrice(0);
                   setStandardValue(1297);
-                  setDiscountLabel("Zero Down SaaS");
+                  setDiscountLabel("Founding Launch Offer");
                 }}
                 className={`rounded-lg border p-2.5 text-center transition ${
-                  model === "monthly" && monthlyPrice === 79 && setupPrice === 0
+                  model === "flat" && setupPrice === 597 && monthlyPrice === 0
                     ? "border-primary bg-primary/10 font-bold text-primary"
                     : "border-border hover:bg-accent"
                 }`}
               >
-                <span className="block font-bold text-sm">$79 / month</span>
-                <span className="text-[10px] text-muted-foreground">Standard SaaS</span>
+                <span className="block font-bold text-sm">$597 one time</span>
+                <span className="text-[10px] text-muted-foreground">Essential Launch</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => {
                   setModel("flat");
-                  setSetupPrice(797);
+                  setSetupPrice(997);
                   setMonthlyPrice(0);
-                  setStandardValue(1597);
-                  setDiscountLabel("Save $800 Today");
+                  setStandardValue(1997);
+                  setDiscountLabel("Recommended Launch Offer");
                 }}
                 className={`rounded-lg border p-2.5 text-center transition ${
-                  model === "flat" && setupPrice === 797
+                  model === "flat" && setupPrice === 997 && monthlyPrice === 0
                     ? "border-primary bg-primary/10 font-bold text-primary"
                     : "border-border hover:bg-accent"
                 }`}
               >
-                <span className="block font-bold text-sm">$797 Flat</span>
-                <span className="text-[10px] text-muted-foreground">One-Time Buyout</span>
+                <span className="block font-bold text-sm">$997 one time</span>
+                <span className="text-[10px] text-muted-foreground">Recommended Build</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setModel("flat");
+                  setSetupPrice(1297);
+                  setMonthlyPrice(0);
+                  setStandardValue(2497);
+                  setDiscountLabel("Complete Launch Offer");
+                }}
+                className={`rounded-lg border p-2.5 text-center transition ${
+                  model === "flat" && setupPrice === 1297
+                    ? "border-primary bg-primary/10 font-bold text-primary"
+                    : "border-border hover:bg-accent"
+                }`}
+              >
+                <span className="block font-bold text-sm">$1,297 one time</span>
+                <span className="text-[10px] text-muted-foreground">Complete Build</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => {
                   setModel("hybrid");
-                  setSetupPrice(779);
-                  setMonthlyPrice(99);
-                  setStandardValue(1897);
-                  setDiscountLabel("Full Market Takeover");
+                  setSetupPrice(497);
+                  setMonthlyPrice(149);
+                  setStandardValue(2497);
+                  setDiscountLabel("Managed Growth Offer");
                 }}
                 className={`rounded-lg border p-2.5 text-center transition ${
-                  model === "hybrid" && setupPrice === 779
+                  model === "hybrid" && setupPrice === 497 && monthlyPrice === 149
                     ? "border-primary bg-primary/10 font-bold text-primary"
                     : "border-border hover:bg-accent"
                 }`}
               >
-                <span className="block font-bold text-sm">$779 + $99/mo</span>
-                <span className="text-[10px] text-muted-foreground">Setup + Growth</span>
+                <span className="block font-bold text-sm">$497 + $149/mo</span>
+                <span className="text-[10px] text-muted-foreground">Managed Growth</span>
               </button>
             </div>
           </div>

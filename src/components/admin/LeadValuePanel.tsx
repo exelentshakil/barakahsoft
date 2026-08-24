@@ -29,7 +29,7 @@ export interface LeadValueData {
   signals: LeadValueSignal[];
   typicalJobValue: string | null;
   recommendation: string;
-  suggested: { setupPrice: number; monthlyPrice: number; label: string };
+  suggested: { setupPrice: number; monthlyPrice: number; standardValue: number; label: string };
 }
 
 const TIER_STYLE: Record<LeadValueData["tier"], { chip: string; name: string }> = {
@@ -58,6 +58,7 @@ export function LeadValuePanel({ leadId, value }: { leadId: string; value: LeadV
           model: value.suggested.monthlyPrice > 0 ? "monthly" : "flat",
           setupPrice: value.suggested.setupPrice,
           monthlyPrice: value.suggested.monthlyPrice,
+          standardValue: value.suggested.standardValue,
         }),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Could not save the price");
@@ -139,7 +140,7 @@ export function LeadValuePanel({ leadId, value }: { leadId: string; value: LeadV
             className="gap-2 bg-[#533afd] text-sm font-bold text-white hover:bg-[#432bd9]"
           >
             {applied ? <Check className="h-4 w-4" /> : null}
-            {applied ? "Price set" : applying ? "Saving..." : `Use ${value.suggested.label}`}
+            {applied ? "AI price applied" : applying ? "Applying..." : `Apply AI price · ${value.suggested.label}`}
           </Button>
         </div>
       </CardContent>

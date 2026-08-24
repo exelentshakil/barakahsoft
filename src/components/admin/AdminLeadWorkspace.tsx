@@ -930,6 +930,7 @@ export function AdminLeadWorkspace({
           currentPricing={pricing}
           businessName={businessName}
           pageCount={services.length}
+          leadValue={(facts.lead_value as LeadValueData | undefined) ?? null}
         />
 
         <HandoverPanel
