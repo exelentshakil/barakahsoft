@@ -153,9 +153,10 @@ export function LiveClientProposal({
           reviewCount={reviewCount}
           leadSlug={lead.slug}
           isPaid={isPaid}
-          priceFormattedLabel={priceFormattedLabel}
-          onOpenCheckout={() => setShowCheckout(true)}
+          chatContext={chatContext}
         />
+
+        <ProposalAbout data={mockupData} />
 
         {/* 3D Website Redesign Showcase Mockup */}
         <section className="flex flex-col items-center space-y-6">
@@ -179,8 +180,6 @@ export function LiveClientProposal({
             />
           </div>
         </section>
-
-        <ProposalAbout data={mockupData} />
 
         {/* Modules render only when there is measured data behind them AND
             they apply to this kind of business. A national agency does not

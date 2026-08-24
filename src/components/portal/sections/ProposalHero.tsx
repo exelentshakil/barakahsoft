@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle2, ExternalLink } from "lucide-react";
+import { CheckCircle2, ExternalLink, MessageCircle } from "lucide-react";
 
 interface ProposalHeroProps {
   businessName: string;
@@ -7,8 +7,7 @@ interface ProposalHeroProps {
   reviewCount: string | null;
   leadSlug: string;
   isPaid: boolean;
-  priceFormattedLabel: string;
-  onOpenCheckout: () => void;
+  chatContext: string;
 }
 
 /**
@@ -36,8 +35,7 @@ export function ProposalHero({
   reviewCount,
   leadSlug,
   isPaid,
-  priceFormattedLabel,
-  onOpenCheckout,
+  chatContext,
 }: ProposalHeroProps) {
   const town = townFrom(address);
 
@@ -94,10 +92,15 @@ export function ProposalHero({
           </div>
         ) : (
           <button
-            onClick={onOpenCheckout}
+            type="button"
+            onClick={() => {
+              const crisp = (window as Window & { $crisp?: unknown[] }).$crisp;
+              crisp?.push(["set", "message:text", [chatContext]]);
+              crisp?.push(["do", "chat:open"]);
+            }}
             className="inline-flex items-center gap-2 rounded-md bg-[#0b8f5b] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#09744a]"
           >
-            Put it live ({priceFormattedLabel}) <ArrowRight className="h-4 w-4" />
+            Talk through the best fit <MessageCircle className="h-4 w-4" />
           </button>
         )}
       </div>

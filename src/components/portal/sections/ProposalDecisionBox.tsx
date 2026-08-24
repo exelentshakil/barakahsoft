@@ -40,10 +40,10 @@ export function ProposalDecisionBox({
         {isPaid ? "Launch Workflow Active" : "Ready to Launch?"}
       </span>
       <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-        {isPaid ? "Your Website Is Moving Into Production" : "Launch Your New Website in 2-4 Weeks"}
+        {isPaid ? "Your Website Is Moving Into Production" : `Ready to put ${businessName} in front of more of the right customers?`}
       </h2>
       <p className="mx-auto max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
-        {narrative}
+        {isPaid ? narrative : `${narrative} We have already done the research, found the gaps, and shaped the launch around your business. You only need to choose the path that fits.`}
       </p>
       {!isPaid && (
         <p className="mx-auto max-w-xl text-xs leading-relaxed text-white/55">
@@ -74,7 +74,7 @@ export function ProposalDecisionBox({
             onClick={onOpenCheckout}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md bg-[#533afd] px-8 py-4 text-base font-bold text-white shadow-md transition hover:bg-[#432bd9]"
           >
-            Put my site live ({priceFormattedLabel}) <ArrowRight className="h-5 w-5" />
+            Start my recommended plan ({priceFormattedLabel}) <ArrowRight className="h-5 w-5" />
           </button>
         )}
         <a
