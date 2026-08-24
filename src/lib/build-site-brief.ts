@@ -137,9 +137,9 @@ export function buildSiteBrief(
   const reviewCount = typeof facts.review_count === "number" ? facts.review_count : null;
 
   const reviews = ((facts.reviews as { author_name: string; rating: number; text: string }[] | undefined) ?? [])
-    .filter((r) => r?.text && r.text.trim().length > 20)
-    .slice(0, 6)
-    .map((r) => ({ author: r.author_name, rating: r.rating, text: r.text.trim() }));
+    .filter((r) => r?.text && r.text.trim().length > 20 && (typeof r.rating !== "number" || r.rating >= 4))
+    .slice(0, 8)
+    .map((r) => ({ author: r.author_name, rating: r.rating || 5, text: r.text.trim() }));
 
   return {
     businessName:

@@ -239,12 +239,21 @@ Then, in whatever order the design direction genuinely calls for:
 - Real trust signals the facts support.
 - Real services each with clear, problem-aware benefits and appropriate imagery.
 - A substantive About / Our Story section (id="about") that establishes who does the work, what they value and why that matters to the customer. Keep the copy concise: eyebrow, strong customer-relevant heading, at most two readable paragraphs, supported proof, and one action. Balance visual mass rather than forcing a universal column ratio. Use only supported statistics; if fewer than three meaningful metrics exist, use no metric ribbon at all. On mobile, preserve the chosen story with no overlap or clipped content.
-- A prominent Reviews section (id="reviews") only when real review text exists. Quote it verbatim, attribute it, and show the exact verified aggregate rating/count when available. Never hardcode 5.0, five stars, "verified", or a review count. If no review text exists, omit the section rather than manufacturing social proof.
-- Service areas with visual badges/cards.
+- A prominent Reviews section (id="reviews") only when real review text exists:
+  - Build an agency-grade horizontal carousel using [data-review-slider] and [data-review-track].
+  - Every review card MUST have equal height (flex column with justify-content: space-between, min-height 280px).
+  - Each card includes 5 gold stars ★★★★★ (#f59e0b), clean quotation body, and an author attribution block (<cite>) with verified Google badge.
+  - Section header includes prev/next circular arrow controls ([data-review-prev], [data-review-next]).
+- Service areas & interactive territory map (id="areas"):
+  - Desktop layout: 2-column balanced split.
+  - Left column: Territory headline ("Serving [City] & Surrounding Areas"), dispatch reassurance ("24/7 Rapid Response across all coverage zones"), visual location badges/pills for every single target area, and a primary CTA.
+  - Right column: A real, live Google Maps embed iframe:
+    <iframe src="https://maps.google.com/maps?q=City+Name&t=&z=10&ie=UTF8&iwloc=&output=embed" width="100%" height="400" style="border:0; border-radius: 16px;" loading="lazy" title="Service Area Map"></iframe> (with query set to this business's city/area)
+  - NEVER generate fake abstract geometry, random canvas circles or yellow boxes with dots pretending to be a map! Real map iframe or real territory cards only.
 - A comprehensive Frequently Asked Questions section (id="faq") with 8–12 high-intent buying questions that can be answered from the supplied facts without inventing policy, pricing, timing, warranties or credentials.
 - A closing call to action carrying the real phone number.
 
-Service areas are a specific content type, not a generic text list — give each one a real visual anchor (a location-pin icon, a small map motif, or a distinct card treatment), never bare text in a row. A list of city names with nothing else on the page is the clearest tell of an unfinished section.
+Service areas are a specific content type, not a generic text list — give each one a real visual anchor (a location-pin icon, a distinct card treatment, and the real map embed), never bare text in a row. A list of city names with nothing else on the page is the clearest tell of an unfinished section.
 
 Section ids the real navigation links to: services, about, reviews, faq, contact
 

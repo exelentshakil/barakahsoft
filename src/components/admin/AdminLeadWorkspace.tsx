@@ -256,38 +256,71 @@ export function AdminLeadWorkspace({
   const pricing = (artifact?.extracted_assets?.pricing as any) ?? null;
   const pricingIsConfigured = typeof pricing?.offerId === "string" || (Array.isArray(pricing?.offerOptions) && pricing.offerOptions.length > 0);
 
-  // Outreach & Lifecycle Status
+  // Outreach Mode & Sequence State
+  const defaultIsCold = lead.source !== "redesign" && lead.source !== "home";
+  const [outreachMode, setOutreachMode] = useState<"inbound" | "cold">(defaultIsCold ? "cold" : "inbound");
   const [currentLeadStatus, setCurrentLeadStatus] = useState<LeadStatus>(lead.status);
   const [activeOutreachStep, setActiveOutreachStep] = useState<1 | 2 | 3>(
     lead.status === "contacted" ? 2 : lead.status === "delivered" ? 2 : 1
   );
 
-  // Editable Delivery Email State
-  const [emailSubject, setEmailSubject] = useState(
-    `Your Rebuilt Homepage & Speed Audit are Ready! (${businessName})`
-  );
-  const [emailBody, setEmailBody] = useState(
-    `Hi ${lead.contact_name || "there"}, we analyzed ${lead.source_url} and created a custom high-converting homepage concept tailored to ${businessName}. Your live concept is ready to review.`
-  );
+  const contactName = lead.contact_name || "there";
+
+  function getEmailContentFor(mode: "inbound" | "cold", step: 1 | 2 | 3) {
+    if (mode === "inbound") {
+      if (step === 1) {
+        return {
+          subject: `Your Rebuilt Homepage & Speed Audit are Ready! (${businessName})`,
+          body: `Hi ${contactName}, we finished your requested 48-hour homepage redesign for ${businessName}. We audited your mobile speed, mapped your local search rankings, and built a fresh concept tailored to your brand. Your live concept is ready to review below.`,
+        };
+      } else if (step === 2) {
+        return {
+          subject: `Quick follow up regarding ${businessName}'s homepage rebuild`,
+          body: `Hi ${contactName}, just checking in to see if you had a moment to review the homepage concept you requested for ${businessName}. Have you had any thoughts on the layout or features?`,
+        };
+      } else {
+        return {
+          subject: `Final check regarding ${businessName} website concept`,
+          body: `Hi ${contactName}, following up one last time on the custom website files and Google speed audit for ${businessName} before we archive the staging preview.`,
+        };
+      }
+    } else {
+      // Cold Outreach (Born-to-Help / Value Gift)
+      if (step === 1) {
+        return {
+          subject: `Rebuilt ${businessName} homepage (no charge)`,
+          body: `Hi ${contactName}, we analyzed ${lead.source_url} and noticed a few mobile speed bottlenecks costing you local customer calls. Rather than send a sales pitch, we went ahead and rebuilt a clean, high-speed homepage concept for ${businessName} (no charge). We also mapped out your core services and service territory. Your concept is ready to review below.`,
+        };
+      } else if (step === 2) {
+        return {
+          subject: `Quick question about ${businessName}`,
+          body: `Hi ${contactName}, just wanted to check if you had a quick minute to take a look at the ${businessName} rebuild we put together. Any thoughts on the new layout?`,
+        };
+      } else {
+        return {
+          subject: `Rebuilt homepage files for ${businessName}`,
+          body: `Hi ${contactName}, following up one last time regarding the custom redesign for ${businessName}. The files and Google speed diagnostic are 100% yours to keep with zero obligation.`,
+        };
+      }
+    }
+  }
+
+  const initialContent = getEmailContentFor(defaultIsCold ? "cold" : "inbound", lead.status === "contacted" || lead.status === "delivered" ? 2 : 1);
+  const [emailSubject, setEmailSubject] = useState(initialContent.subject);
+  const [emailBody, setEmailBody] = useState(initialContent.body);
+
+  function handleSwitchMode(mode: "inbound" | "cold") {
+    setOutreachMode(mode);
+    const content = getEmailContentFor(mode, activeOutreachStep);
+    setEmailSubject(content.subject);
+    setEmailBody(content.body);
+  }
 
   function selectOutreachSequenceStep(step: 1 | 2 | 3) {
     setActiveOutreachStep(step);
-    if (step === 1) {
-      setEmailSubject(`Your Rebuilt Homepage & Speed Audit are Ready! (${businessName})`);
-      setEmailBody(
-        `Hi ${lead.contact_name || "there"}, we analyzed ${lead.source_url} and created a custom high-converting homepage concept tailored to ${businessName}. Your live concept is ready to review.`
-      );
-    } else if (step === 2) {
-      setEmailSubject(`Quick follow up regarding ${businessName}'s homepage rebuild`);
-      setEmailBody(
-        `Hi ${lead.contact_name || "there"}, just checking in to see if you had a moment to take a look at the rebuilt homepage concept we put together for ${businessName}. Have you had any thoughts on the layout?`
-      );
-    } else {
-      setEmailSubject(`Final check regarding ${businessName} website concept`);
-      setEmailBody(
-        `Hi ${lead.contact_name || "there"}, following up one last time on the custom website files and Google speed audit for ${businessName} before we archive the staging preview.`
-      );
-    }
+    const content = getEmailContentFor(outreachMode, step);
+    setEmailSubject(content.subject);
+    setEmailBody(content.body);
   }
 
   async function handleUpdateLeadStatus(newStatus: LeadStatus) {
@@ -1057,19 +1090,51 @@ export function AdminLeadWorkspace({
         <TabPanel active={tab === "send"}>
         {/* LINEAR STEP 5: AUTOMATED BREVO DELIVERY & LIVE PROPOSAL LINK */}
         <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-5">
-          <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-[#e5e7f2] pb-4">
             <div className="flex items-center gap-2.5">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f0f3ff] text-xs font-bold text-[#533afd]">
                 5
               </span>
               <h3 className="text-base font-bold text-[#0d1738]">Outreach &amp; Sequence Delivery</h3>
             </div>
-            <span className="text-xs font-semibold text-slate-500">Manual 1-Click Brevo Sequence</span>
+
+            {/* Inbound vs Cold Outreach Mode Switcher */}
+            <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1 border border-slate-200">
+              <button
+                type="button"
+                onClick={() => handleSwitchMode("inbound")}
+                className={`rounded-md px-3 py-1 text-xs font-bold transition ${
+                  outreachMode === "inbound"
+                    ? "bg-white text-[#533afd] shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                🎯 Inbound Ad Lead (Requested)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSwitchMode("cold")}
+                className={`rounded-md px-3 py-1 text-xs font-bold transition ${
+                  outreachMode === "cold"
+                    ? "bg-[#533afd] text-white shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                ⚡ Cold Outreach (Value Drop Gift)
+              </button>
+            </div>
           </div>
 
           {/* Sequence Step Selector */}
           <div className="space-y-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-600">Select Outreach Sequence Step:</span>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                {outreachMode === "inbound" ? "Inbound Requested Delivery Sequence:" : "Cold Outreach Anti-Spam Sequence:"}
+              </span>
+              <span className="text-[11px] font-medium text-slate-500">
+                {outreachMode === "inbound" ? "Warm follow-up on requested site" : "Born-to-help gift & curiosity loop"}
+              </span>
+            </div>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <button
                 type="button"
@@ -1080,8 +1145,12 @@ export function AdminLeadWorkspace({
                     : "border-slate-200 bg-white hover:bg-slate-50"
                 }`}
               >
-                <span className="block text-xs font-bold text-[#0d1738]">1. Initial Value Drop</span>
-                <span className="text-[11px] text-slate-500">Rebuilt homepage link &amp; speed diagnostic</span>
+                <span className="block text-xs font-bold text-[#0d1738]">
+                  {outreachMode === "inbound" ? "1. Initial Delivery" : "1. Value Drop Gift"}
+                </span>
+                <span className="text-[11px] text-slate-500">
+                  {outreachMode === "inbound" ? "Your requested 48h rebuild is ready" : "Rebuilt concept & speed audit (no charge)"}
+                </span>
               </button>
               <button
                 type="button"
@@ -1093,7 +1162,9 @@ export function AdminLeadWorkspace({
                 }`}
               >
                 <span className="block text-xs font-bold text-[#0d1738]">2. 48h Follow-up Bump</span>
-                <span className="text-[11px] text-slate-500">Short check-in if no response to Step 1</span>
+                <span className="text-[11px] text-slate-500">
+                  {outreachMode === "inbound" ? "Checking in on requested concept" : "Quick 2-sentence check on layout"}
+                </span>
               </button>
               <button
                 type="button"
@@ -1105,7 +1176,9 @@ export function AdminLeadWorkspace({
                 }`}
               >
                 <span className="block text-xs font-bold text-[#0d1738]">3. Final Notice</span>
-                <span className="text-[11px] text-slate-500">Staging archive teaser &amp; files transfer</span>
+                <span className="text-[11px] text-slate-500">
+                  {outreachMode === "inbound" ? "Final check before staging archive" : "Free files transfer & zero-obligation wrap"}
+                </span>
               </button>
             </div>
           </div>

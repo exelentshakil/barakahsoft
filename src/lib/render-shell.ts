@@ -149,14 +149,11 @@ export function renderShell(
     process,
     audienceSegments,
     certifications,
-    // Star-only Google reviews (real, common -- a reviewer left a rating with
-    // no written comment) render as a blank card with just a name floating
-    // at the bottom in every reviews variant, since the text paragraph has
-    // nothing to fill it. Filtered here once, upstream of every variant,
-    // rather than each component re-deriving the same guard.
+    // Only highlight positive, authentic reviews (4+ stars). A negative complaint
+    // or bug report from Google should never be published on a sales redesign.
     reviews: ((facts.reviews as { author_name: string; rating: number; text: string }[]) ?? [])
-      .filter((r) => r.text && r.text.trim().length > 0)
-      .slice(0, 6),
+      .filter((r) => r.text && r.text.trim().length > 0 && (typeof r.rating !== "number" || r.rating >= 4))
+      .slice(0, 8),
     nap: {
       phone,
       email: (facts.nap as { emails?: string[] })?.emails?.[0] ?? null,

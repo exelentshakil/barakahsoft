@@ -19,6 +19,8 @@ const ALLOWED_TAGS = [
   "h1", "h2", "h3", "h4", "h5", "h6", "p", "span", "a", "img", "svg", "path",
   "ul", "ol", "li", "button", "strong", "em", "br", "hr", "figure", "figcaption",
   "blockquote", "cite", "time", "small", "dl", "dt", "dd",
+  // Interactive Google Maps / OpenStreetMap territory embeds
+  "iframe",
   // The hero lead-capture form. Safe only in combination with
   // FORM_TARGET_ATTRS below, which guarantees it cannot name a destination.
   "form", "label", "input", "select", "option", "textarea",
@@ -74,6 +76,7 @@ const ALLOWED_ATTRIBUTES = {
   svg: ["viewBox", "fill", "stroke", "xmlns", "width", "height", "stroke-width", "stroke-linecap", "stroke-linejoin"],
   path: ["d", "fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin"],
   time: ["datetime"],
+  iframe: ["src", "width", "height", "style", "loading", "title", "class", "aria-label", "tabindex", "allowfullscreen", "referrerpolicy"],
   // No action/method anywhere here by construction — see FORM_TARGET_ATTRS.
   form: ["aria-label", "novalidate"],
   label: ["for", "aria-label"],
@@ -186,10 +189,21 @@ export function sanitizeBespokeHtml(rawHtml: string): string {
     // Safety comes from FORM_TARGET_ATTRS instead: the tags are allowed, but
     // naming a destination is not, so a generated form can only ever be
     // submitted by the reviewed runtime to this application's own endpoint.
-    nonTextTags: ["script", "style", "iframe"],
+    nonTextTags: ["script", "style"],
     transformTags: {
       "*": (tagName, attribs) => {
         const next: Record<string, string> = { ...attribs };
+
+        // Ensure iframes can only load safe, trusted Google Maps or OpenStreetMap embeds
+        if (tagName === "iframe") {
+          const src = next.src ?? "";
+          const isSafeMap = /^https:\/\/(www\.)?(google\.com\/maps|maps\.google\.com|openstreetmap\.org)\//i.test(src);
+          if (!isSafeMap) {
+            return { tagName: "div", attribs: {} };
+          }
+          if (!next.loading) next.loading = "lazy";
+          return { tagName, attribs: next };
+        }
 
         // A generated form may never name where it posts. Stripped from every
         // tag, not just <form>, because formaction on a submit button is the
