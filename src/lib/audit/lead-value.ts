@@ -20,6 +20,16 @@ import { callGemini } from "@/lib/gemini-client";
 
 export type OfferTier = "budget" | "standard" | "premium";
 
+export interface OfferOption {
+  id: "essential" | "growth" | "complete" | "managed";
+  label: string;
+  description: string;
+  setupPrice: number;
+  monthlyPrice: number;
+  standardValue: number;
+  scopeItems: string[];
+}
+
 export interface LeadValueSignal {
   label: string;
   /** Positive means more able to pay. */
@@ -37,14 +47,51 @@ export interface LeadValue {
   typicalJobValue: string | null;
   /** What to lead with, in one line an operator can read on a call. */
   recommendation: string;
-  suggested: { setupPrice: number; monthlyPrice: number; standardValue: number; label: string };
+  suggested: { setupPrice: number; monthlyPrice: number; standardValue: number; label: string; offerId: OfferOption["id"] };
+  offers: OfferOption[];
 }
 
-const OFFERS: Record<OfferTier, { setupPrice: number; monthlyPrice: number; label: string }> = {
-  budget: { setupPrice: 597, monthlyPrice: 0, label: "$597 one time" },
-  standard: { setupPrice: 997, monthlyPrice: 0, label: "$997 one time" },
-  premium: { setupPrice: 1297, monthlyPrice: 0, label: "$1,297 one time" },
-};
+export function buildOfferOptions(corePageCount: number, businessName = "your business"): OfferOption[] {
+  const pages = Math.max(5, Math.min(20, corePageCount));
+  return [
+    {
+      id: "essential",
+      label: "Essential Launch",
+      description: "A focused five-page rebuild for a clear, credible first impression.",
+      setupPrice: 295,
+      monthlyPrice: 0,
+      standardValue: 595,
+      scopeItems: [`Homepage and up to ${Math.min(5, pages)} core pages for ${businessName}`, "Mobile conversion and click-to-call flow", "One revision round and client-owned files"],
+    },
+    {
+      id: "growth",
+      label: "Growth Build",
+      description: "The practical choice when several services need their own conversion path.",
+      setupPrice: 597,
+      monthlyPrice: 0,
+      standardValue: 1297,
+      scopeItems: [`Homepage and up to ${Math.min(10, pages)} core service pages`, "Lead capture, callback flow, and local SEO foundation", "One revision round and domain launch support"],
+    },
+    {
+      id: "complete",
+      label: "Complete Website",
+      description: "The full core website, without charging for duplicate archives or thin pages.",
+      setupPrice: 997,
+      monthlyPrice: 0,
+      standardValue: 1997,
+      scopeItems: [`Full ${pages}-page core website rebuild for ${businessName}`, "Service and location structure based on your real offering", "Technical SEO, conversion QA, and 2-4 week launch support"],
+    },
+    {
+      id: "managed",
+      label: "Managed Growth",
+      description: "The complete build plus ongoing hosting, updates, and lead-system support.",
+      setupPrice: 295,
+      monthlyPrice: 149,
+      standardValue: 2497,
+      scopeItems: [`Full ${pages}-page core website rebuild`, "Managed hosting, maintenance, and conversion updates", "AI lead assistant with fair-use limits and human escalation"],
+    },
+  ];
+}
 
 interface ValueInput {
   facts: Record<string, unknown>;
@@ -181,6 +228,10 @@ export async function evaluateLeadValue(input: ValueInput): Promise<LeadValue> {
 
   const city = typeof input.facts.town === "string" ? input.facts.town : null;
   const typicalJobValue = await estimateJobValue(input.industry, city);
+  const services = (input.facts.derived_services as string[] | undefined) ?? [];
+  const areas = (input.facts.derived_areas as string[] | undefined) ?? [];
+  const corePageCount = Math.max(5, Math.min(20, 1 + services.length + Math.min(areas.length, 8)));
+  const offers = buildOfferOptions(corePageCount, typeof input.facts.business_name === "string" ? input.facts.business_name : "your business");
 
   // A big-ticket trade lifts the tier on its own: one won job pays for
   // years of the monthly, which is the argument that closes them.
@@ -197,6 +248,14 @@ export async function evaluateLeadValue(input: ValueInput): Promise<LeadValue> {
         ? "Lead with the smallest fixed-scope launch. Keep the commitment easy, but charge for the actual rebuild instead of giving away implementation."
         : "Lead with a $997 one-time rebuild. It is accessible for a real business, recovers the research and delivery work, and avoids presenting the website as a commodity.";
 
-  const suggested = { ...OFFERS[tier], standardValue: tier === "premium" ? 2497 : tier === "budget" ? 1297 : 1997 };
-  return { tier, score, signals, typicalJobValue, recommendation, suggested };
+  const recommendedId: OfferOption["id"] = tier === "premium" ? "complete" : tier === "budget" ? "essential" : "growth";
+  const recommended = offers.find((offer) => offer.id === recommendedId) ?? offers[1];
+  const suggested = {
+    setupPrice: recommended.setupPrice,
+    monthlyPrice: recommended.monthlyPrice,
+    standardValue: recommended.standardValue,
+    label: `${recommended.label} · ${recommended.setupPrice === 0 ? `$${recommended.monthlyPrice}/mo` : `$${recommended.setupPrice} one time`}`,
+    offerId: recommended.id,
+  };
+  return { tier, score, signals, typicalJobValue, recommendation, suggested, offers };
 }

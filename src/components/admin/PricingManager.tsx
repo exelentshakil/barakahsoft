@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { buildOfferOptions, type OfferOption } from "@/lib/audit/lead-value";
 
 interface PricingConfig {
   model: "flat" | "monthly" | "hybrid";
@@ -15,11 +16,14 @@ interface PricingConfig {
   standardValue: number;
   discountLabel: string;
   scopeItems: string[];
+  offerOptions: OfferOption[];
+  offerId: OfferOption["id"];
 }
 
 interface LeadValueSuggestion {
   recommendation: string;
-  suggested: { setupPrice: number; monthlyPrice: number; standardValue: number; label: string };
+  suggested: { setupPrice: number; monthlyPrice: number; standardValue: number; label: string; offerId: OfferOption["id"] };
+  offers: OfferOption[];
 }
 
 export function PricingManager({
@@ -36,20 +40,21 @@ export function PricingManager({
   leadValue?: LeadValueSuggestion | null;
 }) {
   const router = useRouter();
+  const hasSavedOffer = Boolean(currentPricing?.offerId || currentPricing?.offerOptions?.length);
   const [model, setModel] = useState<"flat" | "monthly" | "hybrid">(
-    currentPricing?.model || (leadValue?.suggested.monthlyPrice ? "hybrid" : "flat")
+    hasSavedOffer ? currentPricing?.model || "flat" : leadValue?.suggested.monthlyPrice ? "hybrid" : "flat"
   );
   const [setupPrice, setSetupPrice] = useState<number>(
-    currentPricing?.setupPrice ?? leadValue?.suggested.setupPrice ?? 997
+    hasSavedOffer ? currentPricing?.setupPrice ?? 997 : leadValue?.suggested.setupPrice ?? 997
   );
   const [monthlyPrice, setMonthlyPrice] = useState<number>(
-    currentPricing?.monthlyPrice ?? leadValue?.suggested.monthlyPrice ?? 0
+    hasSavedOffer ? currentPricing?.monthlyPrice ?? 0 : leadValue?.suggested.monthlyPrice ?? 0
   );
   const [standardValue, setStandardValue] = useState<number>(
-    currentPricing?.standardValue ?? leadValue?.suggested.standardValue ?? 1997
+    hasSavedOffer ? currentPricing?.standardValue ?? 1997 : leadValue?.suggested.standardValue ?? 1997
   );
   const [discountLabel, setDiscountLabel] = useState<string>(
-    currentPricing?.discountLabel ?? leadValue?.suggested.label ?? "Custom Client Proposal"
+    hasSavedOffer ? currentPricing?.discountLabel ?? "Custom Client Proposal" : leadValue?.suggested.label ?? "Custom Client Proposal"
   );
   const [scopeItems, setScopeItems] = useState<string[]>(
     currentPricing?.scopeItems?.length
@@ -63,6 +68,11 @@ export function PricingManager({
           "100% client-owned website files",
         ]
   );
+  const offerOptions = currentPricing?.offerOptions?.length
+    ? currentPricing.offerOptions
+    : leadValue?.offers?.length
+    ? leadValue.offers
+    : buildOfferOptions(pageCount + 1, businessName);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -81,6 +91,8 @@ export function PricingManager({
             standardValue: Number(standardValue),
             discountLabel,
             scopeItems: scopeItems.map((item) => item.trim()).filter(Boolean),
+            offerOptions,
+            offerId: leadValue?.suggested.offerId,
         }),
       });
       if (!res.ok) throw new Error("Failed to save");
@@ -116,6 +128,21 @@ export function PricingManager({
         {leadValue && (
           <div className="rounded-lg border border-indigo-200 bg-indigo-50/60 px-3 py-2.5 text-xs text-slate-700">
             <span className="font-bold text-indigo-700">AI close judgment:</span> {leadValue.recommendation}
+          </div>
+        )}
+
+        {offerOptions.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-slate-700">AI-generated offer ladder from this lead&apos;s business footprint</p>
+            <div className="grid gap-2 sm:grid-cols-4">
+              {offerOptions.map((offer) => (
+                <div key={offer.id} className={`rounded-lg border p-3 ${leadValue?.suggested.offerId === offer.id ? "border-indigo-500 bg-indigo-50" : "border-slate-200 bg-slate-50"}`}>
+                  <p className="text-xs font-bold text-slate-900">{offer.label}</p>
+                  <p className="mt-1 text-sm font-black text-indigo-700">${offer.setupPrice}{offer.monthlyPrice > 0 ? ` + $${offer.monthlyPrice}/mo` : " one time"}</p>
+                  <p className="mt-1 text-[10px] leading-relaxed text-slate-600">{offer.description}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

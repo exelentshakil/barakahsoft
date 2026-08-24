@@ -1,5 +1,6 @@
 import { CheckCircle2, Sparkles, Tag } from "lucide-react";
 import type { SiteAudit } from "@/lib/audit/site-audit";
+import type { OfferOption } from "@/lib/audit/lead-value";
 
 interface ProposalPricingSectionProps {
   businessName: string;
@@ -8,6 +9,8 @@ interface ProposalPricingSectionProps {
   standardValue: number;
   scopeItems: string[];
   audit?: SiteAudit | null;
+  offers: OfferOption[];
+  recommendedOfferId?: OfferOption["id"];
 }
 
 export function ProposalPricingSection({
@@ -17,6 +20,8 @@ export function ProposalPricingSection({
   standardValue,
   scopeItems,
   audit,
+  offers,
+  recommendedOfferId,
 }: ProposalPricingSectionProps) {
   // Each line says the problem it solves rather than the thing we build. A
   // business owner does not want "LocalBusiness schema"; he wants to stop
@@ -113,6 +118,28 @@ export function ProposalPricingSection({
                 {finding.title}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {offers.length > 0 && (
+        <div className="space-y-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#533afd]">Choose your launch path</p>
+            <p className="mt-1 text-sm text-[#42506a]">Every option starts with the same evidence-led rebuild. The difference is how much of the site and ongoing responsibility you want us to carry.</p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {offers.map((offer) => {
+              const recommended = offer.id === recommendedOfferId;
+              return (
+                <div key={offer.id} className={`relative rounded-xl border p-4 ${recommended ? "border-[#533afd] bg-[#f0f3ff] shadow-sm" : "border-[#e5e7f2] bg-[#f9f9ff]"}`}>
+                  {recommended && <span className="absolute -top-2.5 left-3 rounded-full bg-[#533afd] px-2.5 py-1 text-[10px] font-bold text-white">Recommended</span>}
+                  <h3 className="text-sm font-bold text-[#0d1738]">{offer.label}</h3>
+                  <p className="mt-2 text-xl font-black text-[#533afd]">${offer.setupPrice}{offer.monthlyPrice > 0 ? <span className="text-xs font-bold text-[#42506a]"> + ${offer.monthlyPrice}/mo</span> : <span className="text-xs font-bold text-[#42506a]"> one time</span>}</p>
+                  <p className="mt-2 text-xs leading-relaxed text-[#42506a]">{offer.description}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

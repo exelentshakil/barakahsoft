@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, Minus, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import type { OfferOption } from "@/lib/audit/lead-value";
 
 // What to quote this lead, and why.
 //
@@ -29,7 +30,8 @@ export interface LeadValueData {
   signals: LeadValueSignal[];
   typicalJobValue: string | null;
   recommendation: string;
-  suggested: { setupPrice: number; monthlyPrice: number; standardValue: number; label: string };
+  suggested: { setupPrice: number; monthlyPrice: number; standardValue: number; label: string; offerId: OfferOption["id"] };
+  offers: OfferOption[];
 }
 
 const TIER_STYLE: Record<LeadValueData["tier"], { chip: string; name: string }> = {
@@ -59,6 +61,8 @@ export function LeadValuePanel({ leadId, value }: { leadId: string; value: LeadV
           setupPrice: value.suggested.setupPrice,
           monthlyPrice: value.suggested.monthlyPrice,
           standardValue: value.suggested.standardValue,
+          offerOptions: value.offers,
+          offerId: value.suggested.offerId,
         }),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Could not save the price");

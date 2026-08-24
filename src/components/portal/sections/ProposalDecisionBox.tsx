@@ -14,6 +14,7 @@ interface ProposalDecisionBoxProps {
   isPaid: boolean;
   launchSteps: LaunchStep[];
   onOpenCheckout: () => void;
+  chatContext: string;
 }
 
 export function ProposalDecisionBox({
@@ -24,6 +25,7 @@ export function ProposalDecisionBox({
   isPaid,
   launchSteps,
   onOpenCheckout,
+  chatContext,
 }: ProposalDecisionBoxProps) {
   const narrative =
     setupPrice === 0 && monthlyPrice > 0
@@ -84,6 +86,11 @@ export function ProposalDecisionBox({
         {!isPaid && (
           <button
             type="button"
+            onClick={() => {
+              const crisp = (window as Window & { $crisp?: unknown[] }).$crisp;
+              crisp?.push(["set", "message:text", [chatContext]]);
+              crisp?.push(["do", "chat:open"]);
+            }}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md border border-white/25 px-6 py-4 text-sm font-bold text-white transition hover:bg-white/10"
           >
             Message BarakahSoft

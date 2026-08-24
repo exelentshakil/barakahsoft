@@ -18,6 +18,7 @@ import { ProposalFooter } from "@/components/portal/sections/ProposalFooter";
 import { ProposalAbout } from "@/components/portal/sections/ProposalAbout";
 import { SocialLaunchMockup } from "@/components/mockup/SocialLaunchMockup";
 import { extractMockupData } from "@/lib/mockup-data";
+import { buildOfferOptions, type OfferOption } from "@/lib/audit/lead-value";
 import { CrispChat } from "@/components/CrispChat";
 
 interface LiveClientProposalProps {
@@ -37,6 +38,7 @@ export function LiveClientProposal({
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const businessName = lead.business_name || payload.businessName || "Your Business";
+  const facts = (scrapeResults?.facts ?? {}) as Record<string, unknown>;
   // No invented fallbacks. A placeholder phone number or rating shown to a
   // client as their own is worse than showing nothing — the previous
   // defaults put a stranger's phone number and a made-up review count on
@@ -65,30 +67,31 @@ export function LiveClientProposal({
 
   // Dynamic Pricing from Admin Configuration
   const pricingData = (artifact?.extracted_assets?.pricing as any) ?? {};
-  const setupPrice = typeof pricingData.setupPrice === "number" ? pricingData.setupPrice : 779;
-  const monthlyPrice = typeof pricingData.monthlyPrice === "number" ? pricingData.monthlyPrice : 99;
-  const standardValue = typeof pricingData.standardValue === "number" ? pricingData.standardValue : 1897;
-  const discountLabel =
-    pricingData.discountLabel ||
-    (setupPrice === 0 ? "$0 Setup · Monthly Plan" : "Custom Client Proposal");
-
+  const leadValue = (facts.lead_value as { offers?: OfferOption[]; suggested?: { offerId?: OfferOption["id"] } } | undefined) ?? null;
+  const servicePageCount = artifact?.funnel_pages.filter((page) => page.kind === "service").length ?? 0;
+  const corePageCount = Math.max(5, Math.min(20, 1 + servicePageCount));
+  const offers: OfferOption[] = Array.isArray(pricingData.offerOptions) && pricingData.offerOptions.length > 0
+    ? pricingData.offerOptions
+    : leadValue?.offers ?? buildOfferOptions(corePageCount, businessName);
+  const recommendedOfferId = (pricingData.offerId as OfferOption["id"] | undefined) ?? leadValue?.suggested?.offerId ?? "growth";
+  const recommendedOffer = offers.find((offer) => offer.id === recommendedOfferId) ?? offers[1];
+  const pricingIsConfigured = typeof pricingData.offerId === "string" || (Array.isArray(pricingData.offerOptions) && pricingData.offerOptions.length > 0);
+  const setupPrice = pricingIsConfigured && typeof pricingData.setupPrice === "number" ? pricingData.setupPrice : recommendedOffer.setupPrice;
+  const monthlyPrice = pricingIsConfigured && typeof pricingData.monthlyPrice === "number" ? pricingData.monthlyPrice : recommendedOffer.monthlyPrice;
+  const standardValue = pricingIsConfigured && typeof pricingData.standardValue === "number" ? pricingData.standardValue : recommendedOffer.standardValue;
+  const discountLabel = pricingData.discountLabel || `${recommendedOffer.label} · Lead-specific offer`;
   const priceFormattedLabel =
     setupPrice === 0 && monthlyPrice > 0
       ? `$0 Setup · $${monthlyPrice}/mo`
       : setupPrice > 0 && monthlyPrice > 0
       ? `$${setupPrice} setup · $${monthlyPrice}/mo`
       : `$${setupPrice}`;
-
-  const scopeItems = Array.isArray(pricingData.scopeItems) && pricingData.scopeItems.length > 0
+  const scopeItems = pricingIsConfigured && Array.isArray(pricingData.scopeItems) && pricingData.scopeItems.length > 0
     ? pricingData.scopeItems.filter((item: unknown): item is string => typeof item === "string" && item.trim().length > 0)
-    : [
-        `Custom homepage redesign for ${businessName}`,
-        `${artifact?.funnel_pages.filter((page) => page.kind === "service").length || 1} service pages based on your real offerings`,
-        "Lead capture, click-to-call, and callback flow",
-        "LocalBusiness schema and technical SEO foundation",
-        "Domain connection and 2-4 week launch support",
-        "100% client-owned website files",
-      ];
+    : recommendedOffer.scopeItems;
+  const diagnosedGaps = report.audit?.findings.slice(0, 3).map((finding) => finding.title).join(", ") || "the measured website and visibility gaps";
+  const offerSummary = offers.map((offer) => `${offer.label}: $${offer.setupPrice}${offer.monthlyPrice > 0 ? ` + $${offer.monthlyPrice}/mo` : " one time"}`).join("; ");
+  const chatContext = `Hi BarakahSoft, I am reviewing the proposal for ${businessName}. I would like to discuss the ${recommendedOffer?.label ?? "website rebuild"} option${recommendedOffer ? ` (${recommendedOffer.setupPrice > 0 ? `$${recommendedOffer.setupPrice} one time` : "no setup"}${recommendedOffer.monthlyPrice > 0 ? ` + $${recommendedOffer.monthlyPrice}/mo` : ""})` : ""}. Please help me choose between the four launch paths: ${offerSummary}. The main gaps identified were: ${diagnosedGaps}. Website: ${lead.source_url}`;
 
   const launchSteps = [
     { label: "Payment received", complete: isPaid, detail: "Stripe checkout confirmed" },
@@ -209,6 +212,8 @@ export function LiveClientProposal({
           standardValue={standardValue}
           scopeItems={scopeItems}
           audit={report.audit}
+          offers={offers}
+          recommendedOfferId={recommendedOfferId}
         />
 
         <ProposalDecisionBox
@@ -219,6 +224,7 @@ export function LiveClientProposal({
           isPaid={isPaid}
           launchSteps={launchSteps}
           onOpenCheckout={() => setShowCheckout(true)}
+          chatContext={chatContext}
         />
 
         {showCheckout && (

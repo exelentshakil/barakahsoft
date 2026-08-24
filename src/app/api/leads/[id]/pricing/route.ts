@@ -36,6 +36,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       ...(Array.isArray(body.scopeItems)
         ? { scopeItems: body.scopeItems.filter((item: unknown): item is string => typeof item === "string").map((item: string) => item.trim()).filter(Boolean).slice(0, 10) }
         : {}),
+      ...(Array.isArray(body.offerOptions) ? { offerOptions: body.offerOptions.slice(0, 4) } : {}),
+      ...(typeof body.offerId === "string" ? { offerId: body.offerId } : {}),
       updated_at: new Date().toISOString(),
       updated_by: user.email,
     };

@@ -78,6 +78,7 @@ import { SocialMockupPanel } from "@/components/admin/SocialMockupPanel";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { buildOfferOptions, type OfferOption } from "@/lib/audit/lead-value";
 
 // Database status values, said the way an operator would say them. The raw
 // values are how the pipeline talks to itself; "qa_pending" tells someone
@@ -173,7 +174,6 @@ export function AdminLeadWorkspace({
   const phone = lead.phone || "No phone on file";
   const email = lead.email || "No email on file";
   const facts = (scrapeResults?.facts ?? {}) as Record<string, unknown>;
-  const pricing = (artifact?.extracted_assets?.pricing as any) ?? null;
   const portalUrl = `https://portal.barakahsoft.com/s/${lead.slug}`;
   
   // Clean preview URL: homepage renders ?view=preview so it shows the actual website, not the proposal portal
@@ -224,6 +224,27 @@ export function AdminLeadWorkspace({
     : [];
 
   const services = artifact?.funnel_pages.filter((s) => s.kind === "service") || [];
+  const rawLeadValue = facts.lead_value as LeadValueData | undefined;
+  const offerOptions = rawLeadValue?.offers?.length
+    ? rawLeadValue.offers
+    : buildOfferOptions(services.length + 1, businessName);
+  const fallbackOfferId: OfferOption["id"] = rawLeadValue?.tier === "premium" ? "complete" : rawLeadValue?.tier === "budget" ? "essential" : "growth";
+  const fallbackOffer = offerOptions.find((offer) => offer.id === (rawLeadValue?.suggested?.offerId ?? fallbackOfferId)) ?? offerOptions[1];
+  const aiLeadValue = rawLeadValue
+    ? {
+        ...rawLeadValue,
+        offers: offerOptions,
+        suggested: {
+          setupPrice: fallbackOffer.setupPrice,
+          monthlyPrice: fallbackOffer.monthlyPrice,
+          standardValue: fallbackOffer.standardValue,
+          label: `${fallbackOffer.label} · ${fallbackOffer.setupPrice > 0 ? `$${fallbackOffer.setupPrice} one time` : `$${fallbackOffer.monthlyPrice}/mo`}`,
+          offerId: fallbackOffer.id,
+        },
+      }
+    : null;
+  const pricing = (artifact?.extracted_assets?.pricing as any) ?? null;
+  const pricingIsConfigured = typeof pricing?.offerId === "string" || (Array.isArray(pricing?.offerOptions) && pricing.offerOptions.length > 0);
 
   // Editable Delivery Email State
   const [emailSubject, setEmailSubject] = useState(
@@ -234,8 +255,8 @@ export function AdminLeadWorkspace({
   );
 
   // Price formatting
-  const setupPrice = pricing?.setupPrice ?? 779;
-  const monthlyPrice = pricing?.monthlyPrice ?? 99;
+  const setupPrice = pricingIsConfigured ? pricing.setupPrice : aiLeadValue?.suggested.setupPrice ?? 997;
+  const monthlyPrice = pricingIsConfigured ? pricing.monthlyPrice : aiLeadValue?.suggested.monthlyPrice ?? 0;
   const priceDisplay =
     setupPrice === 0 && monthlyPrice > 0
       ? `$${monthlyPrice}/mo`
@@ -922,7 +943,7 @@ export function AdminLeadWorkspace({
 
         <TabPanel active={tab === "close"}>
         {/* What they can pay, before the panel that asks what to charge. */}
-        <LeadValuePanel leadId={lead.id} value={(facts.lead_value as LeadValueData | undefined) ?? null} />
+        <LeadValuePanel leadId={lead.id} value={aiLeadValue} />
 
         {/* LINEAR STEP 6: DYNAMIC PRICING MANAGER */}
         <PricingManager
@@ -930,7 +951,7 @@ export function AdminLeadWorkspace({
           currentPricing={pricing}
           businessName={businessName}
           pageCount={services.length}
-          leadValue={(facts.lead_value as LeadValueData | undefined) ?? null}
+          leadValue={aiLeadValue}
         />
 
         <HandoverPanel
