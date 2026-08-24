@@ -947,7 +947,7 @@ export function AdminLeadWorkspace({
               Collect {priceDisplay} & Launch {lead.custom_domain || lead.source_url}
             </h3>
             <p className="text-xs text-white/70 mt-1 leading-relaxed">
-              Client receives 100% standalone Next.js code + DNS CNAME setup with 48h SLA.
+              Client receives 100% standalone Next.js code + DNS CNAME setup with a 2-4 week launch timeline after payment, content approval, and domain access.
             </p>
           </div>
 

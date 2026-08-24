@@ -63,7 +63,7 @@ export function ProposalCheckoutModal({
           </div>
           <div className="flex justify-between items-center">
             <span className="text-[#777588] font-semibold">Delivery Time</span>
-            <span className="font-bold text-[#0b8f5b]">48 Hours to Official Go-Live</span>
+            <span className="font-bold text-[#0b8f5b]">2-4 Weeks to Official Go-Live*</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-[#777588] font-semibold">Ownership</span>
@@ -81,6 +81,9 @@ export function ProposalCheckoutModal({
         </div>
 
         <div className="space-y-3">
+          <p className="text-center text-[11px] leading-relaxed text-[#777588]">
+            *After payment, final content approval, and domain access are received.
+          </p>
           <button
             onClick={onCheckout}
             disabled={checkoutLoading}

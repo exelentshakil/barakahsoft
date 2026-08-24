@@ -38,11 +38,16 @@ export function ProposalDecisionBox({
         {isPaid ? "Launch Workflow Active" : "Ready to Launch?"}
       </span>
       <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-        {isPaid ? "Your Website Is Moving Into Production" : "Launch Your New Website in 48 Hours"}
+        {isPaid ? "Your Website Is Moving Into Production" : "Launch Your New Website in 2-4 Weeks"}
       </h2>
       <p className="mx-auto max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
         {narrative}
       </p>
+      {!isPaid && (
+        <p className="mx-auto max-w-xl text-xs leading-relaxed text-white/55">
+          Official go-live is typically 2-4 weeks after payment, final content approval, and domain access.
+        </p>
+      )}
 
       {isPaid && (
         <div className="mx-auto w-full max-w-2xl rounded-xl border border-white/15 bg-white/5 p-4 text-left">
