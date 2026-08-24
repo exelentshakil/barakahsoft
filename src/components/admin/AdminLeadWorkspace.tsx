@@ -121,8 +121,8 @@ function HeaderStat({
       : "bg-slate-50 border-slate-200/80";
   return (
     <div className={`min-w-0 rounded-xl p-3.5 border transition shadow-sm ${bgBadge}`}>
-      <p className="truncate text-[11px] font-extrabold text-slate-600 uppercase tracking-wider">{label}</p>
-      <p className={`mt-1 text-2xl font-black tabular-nums tracking-tight ${colour}`}>
+      <p className="truncate text-[11px] font-bold text-slate-600 uppercase tracking-wider">{label}</p>
+      <p className={`mt-1 text-2xl font-bold tabular-nums tracking-tight ${colour}`}>
         {value}
         {suffix && <span className="text-xs font-bold text-slate-500 ml-1">{suffix}</span>}
       </p>
@@ -519,9 +519,21 @@ export function AdminLeadWorkspace({
               </Badge>
               <DeliverySlaTimer createdAt={lead.created_at} deliveredAt={lead.delivered_at} />
             </div>
-            <h1 className="mt-3 text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
-              {businessName}
-            </h1>
+            <div className="mt-3 flex flex-wrap items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+                {businessName}
+              </h1>
+              <div className="flex shrink-0 items-center rounded-xl border border-slate-200 bg-white">
+                <EditLeadDialog
+                  leadId={lead.id}
+                  businessName={lead.business_name}
+                  sourceUrl={lead.source_url}
+                  facebookPixelId={lead.facebook_pixel_id}
+                  googleSiteVerification={lead.google_site_verification}
+                />
+                <DeleteLeadButton leadId={lead.id} />
+              </div>
+            </div>
             <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-semibold text-slate-600">
               <span>{lead.contact_name || "Owner"}</span>
               <span className="text-slate-300">|</span>
@@ -603,16 +615,6 @@ export function AdminLeadWorkspace({
               <CircleDollarSign className="h-4 w-4" /> Ask for payment · {priceDisplay}
             </button>
 
-            <div className="flex shrink-0 items-center rounded-xl border border-slate-200 bg-white">
-              <EditLeadDialog
-                leadId={lead.id}
-                businessName={lead.business_name}
-                sourceUrl={lead.source_url}
-                facebookPixelId={lead.facebook_pixel_id}
-                googleSiteVerification={lead.google_site_verification}
-              />
-              <DeleteLeadButton leadId={lead.id} />
-            </div>
           </div>
         </div>
 
