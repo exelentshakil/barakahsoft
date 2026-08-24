@@ -69,6 +69,7 @@ export interface Lead {
   // verified there; rendered as a meta tag on the delivered site when set.
   google_site_verification: string | null;
   delivered_at: string | null;
+  last_viewed_at?: string | null;
   paid_at: string | null;
   live_at: string | null;
   created_at: string;

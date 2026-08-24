@@ -452,6 +452,18 @@ export function BespokeGenerationStudio({
                   className="mt-1 h-8 text-xs bg-[#f9f9ff]"
                   placeholder="https://.../owner-headshot.png"
                 />
+                {heroImage && (
+                  <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1.5 shadow-2xs">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={heroImage}
+                      alt="Hero preview"
+                      className="h-10 w-16 rounded object-cover border border-black/10 bg-white"
+                      onError={(e) => (e.currentTarget.style.display = "none")}
+                    />
+                    <span className="text-[10px] font-semibold text-slate-600 truncate">Hero Photo Active</span>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -463,6 +475,18 @@ export function BespokeGenerationStudio({
                   className="mt-1 h-8 text-xs bg-[#f9f9ff]"
                   placeholder="https://.../logo.png"
                 />
+                {logoUrl && (
+                  <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1.5 shadow-2xs">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={logoUrl}
+                      alt="Brand logo preview"
+                      className="h-9 max-w-[120px] rounded object-contain border border-black/10 bg-white p-1"
+                      onError={(e) => (e.currentTarget.style.display = "none")}
+                    />
+                    <span className="text-[10px] font-semibold text-slate-600 truncate">Brand Logo Active</span>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -474,6 +498,18 @@ export function BespokeGenerationStudio({
                   className="mt-1 h-8 text-xs bg-[#f9f9ff]"
                   placeholder="https://.../logo-white.png"
                 />
+                {footerLogoUrl && (
+                  <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 p-1.5 text-white shadow-2xs">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={footerLogoUrl}
+                      alt="Footer logo preview"
+                      className="h-9 max-w-[120px] object-contain p-1"
+                      onError={(e) => (e.currentTarget.style.display = "none")}
+                    />
+                    <span className="text-[10px] font-semibold text-slate-300 truncate">Footer Dark Preview</span>
+                  </div>
+                )}
               </div>
 
               <div className="sm:col-span-2 lg:col-span-3 grid sm:grid-cols-2 gap-3">

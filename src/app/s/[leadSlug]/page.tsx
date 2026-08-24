@@ -7,6 +7,7 @@ import { NotBuiltYet } from "@/components/site-shell/NotBuiltYet";
 import { LiveClientProposal } from "@/components/portal/LiveClientProposal";
 import { isAdminSession } from "@/lib/is-admin-session";
 import { verifyPortalToken } from "@/lib/portal-token";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // THE homepage — one crawlable document. Every service/area gets a #slug
 // mega-menu anchor here pre-payment; title/meta/canonical/FAQPage/
@@ -119,6 +120,17 @@ export default async function LeadSitePage({
         )}
       </>
     );
+  }
+
+  // Record client view timestamp when opened via email link or by client
+  if (!operator && lead?.id) {
+    try {
+      const admin = createAdminClient();
+      await admin
+        .from("leads")
+        .update({ last_viewed_at: new Date().toISOString() })
+        .eq("id", lead.id);
+    } catch {}
   }
 
   // By default, render the full interactive Master Proposal & Website X-Ray!

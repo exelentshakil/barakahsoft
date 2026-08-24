@@ -637,7 +637,7 @@ export function AdminLeadWorkspace({
           {/* Outreach Pipeline Status & Outcome Toolbar */}
           <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 space-y-2.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Outreach Stage:</span>
                 <span
                   className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold ${
@@ -662,6 +662,18 @@ export function AdminLeadWorkspace({
                     ? "📧 Step 1 Pitch Sent"
                     : "Ready for Outreach"}
                 </span>
+
+                {/* Real-time Email Link View Tracker */}
+                {lead.last_viewed_at ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 animate-pulse">
+                    <Eye className="h-3 w-3" />
+                    Proposal Opened {new Date(lead.last_viewed_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                ) : lead.delivered_at ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200/70 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700">
+                    <Clock3 className="h-3 w-3" /> Email Sent · Waiting for click
+                  </span>
+                ) : null}
               </div>
 
               {/* Quick 1-Click Outcome Buttons */}
@@ -721,6 +733,12 @@ export function AdminLeadWorkspace({
           {/* Key metrics grid */}
           <div className="grid grid-cols-2 gap-3 border-y border-slate-100 py-4 sm:grid-cols-4">
             <HeaderStat
+              label="Proposal link activity"
+              value={lead.last_viewed_at ? "Opened ✓" : lead.delivered_at ? "Sent" : "Unsent"}
+              suffix={lead.last_viewed_at ? ` · ${new Date(lead.last_viewed_at).toLocaleDateString([], { month: "short", day: "numeric" })}` : ""}
+              tone={lead.last_viewed_at ? "good" : "neutral"}
+            />
+            <HeaderStat
               label="Their mobile speed"
               value={typeof scrapeResults?.pagespeed_mobile?.score === "number" ? `${scrapeResults.pagespeed_mobile.score}` : "—"}
               suffix="/100"
@@ -739,11 +757,6 @@ export function AdminLeadWorkspace({
             <HeaderStat
               label="Pages on their site"
               value={`${Array.isArray(facts.sitemap_urls) ? (facts.sitemap_urls as unknown[]).length : services.length || 0}`}
-              tone="neutral"
-            />
-            <HeaderStat
-              label="Rivals measured"
-              value={`${measuredRivals}`}
               tone="neutral"
             />
           </div>
@@ -1199,17 +1212,8 @@ export function AdminLeadWorkspace({
                   className="inline-flex items-center gap-1 font-bold text-[#533afd] hover:underline"
                 >
                   <Copy className="h-3.5 w-3.5" />
-                  {copiedPortalLink ? "Copied! ✓" : "Copy Client Link"}
+                  {copiedPortalLink ? "Proposal Link Copied! ✓" : "Copy Proposal Link"}
                 </button>
-                <span className="text-[#c7d0fb]">·</span>
-                <a
-                  href={`/s/${lead.slug}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 font-semibold text-[#533afd] hover:underline"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" /> View Proposal Portal
-                </a>
                 <span className="text-[#c7d0fb]">·</span>
                 <a
                   href={`/s/${lead.slug}?view=preview`}
@@ -1217,7 +1221,7 @@ export function AdminLeadWorkspace({
                   rel="noreferrer"
                   className="inline-flex items-center gap-1 font-semibold text-[#533afd] hover:underline"
                 >
-                  <ExternalLink className="h-3.5 w-3.5" /> View Website Directly
+                  <ExternalLink className="h-3.5 w-3.5" /> View Live Website Directly
                 </a>
               </div>
             </div>
