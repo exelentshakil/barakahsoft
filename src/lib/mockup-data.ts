@@ -40,13 +40,20 @@ export function extractMockupData({
     "#1b4d3e";
 
   const rating = (facts?.rating as number) || (payload?.proof?.rating as number) || 5.0;
-  const reviewCount = (facts?.review_count as number) || (payload?.proof?.reviewCount as number) || 100;
+  const reviewCount = (facts?.review_count as number) || (payload?.proof?.reviewCount as number) || 27;
   const yearsExperience = (facts?.years_in_business as number) || 10;
   const founderName = (facts?.founder_name as string) || lead.contact_name || "Dan Martin";
   const founderTitle = "Founder / Operator";
 
+  const phone =
+    ((facts.nap as { phones?: string[] })?.phones ?? []).find((p) => /\d{7,}/.test(p.replace(/\D/g, ""))) ||
+    payload?.nap?.phone ||
+    lead.phone ||
+    "(888) 687-9175";
+
   // 1. Extract Copy & Imagery Directly from the Homepage's About Section
   let extractedAboutImg: string | null = null;
+  let extractedAboutEyebrow: string | null = null;
   let extractedAboutHeadline: string | null = null;
   let extractedAboutBody: string | null = null;
   let extractedHeroHeadline: string | null = null;
@@ -77,6 +84,15 @@ export function extractMockupData({
         }
       }
 
+      // Extract About eyebrow
+      const eyebrowMatch =
+        aboutContent.match(/<span[^>]*(?:class=["'][^"']*(?:eyebrow|subtitle|label|tag)[^"']*["'])[^>]*>([\s\S]*?)<\/span>/i) ||
+        aboutContent.match(/<p[^>]*(?:class=["'][^"']*(?:eyebrow|subtitle|label|tag)[^"']*["'])[^>]*>([\s\S]*?)<\/p>/i);
+      if (eyebrowMatch) {
+        const cleanE = eyebrowMatch[1].replace(/<[^>]+>/g, "").trim();
+        if (cleanE) extractedAboutEyebrow = cleanE;
+      }
+
       // Extract About heading (h2 / h3 / h4)
       const hMatch = aboutContent.match(/<h[234][^>]*>([\s\S]*?)<\/h[234]>/i);
       if (hMatch) {
@@ -88,10 +104,9 @@ export function extractMockupData({
       const pMatches = Array.from(aboutContent.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi));
       const validParagraphs = pMatches
         .map((m) => m[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim())
-        .filter((p) => p.length >= 30 && !p.toLowerCase().includes("about ") && !p.toLowerCase().startsWith("our story"));
+        .filter((p) => p.length >= 35 && !p.toLowerCase().startsWith("about ") && !p.toLowerCase().startsWith("who we are"));
 
       if (validParagraphs.length > 0) {
-        // Use the first rich narrative paragraph (or first 2 combined if short)
         extractedAboutBody = validParagraphs.slice(0, 2).join(" ");
       } else if (pMatches.length > 0) {
         extractedAboutBody = pMatches[0][1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
@@ -117,7 +132,7 @@ export function extractMockupData({
         const pMatches = Array.from(aboutSec.html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi));
         const validParagraphs = pMatches
           .map((m) => m[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim())
-          .filter((p) => p.length >= 30);
+          .filter((p) => p.length >= 35);
         if (validParagraphs.length > 0) {
           extractedAboutBody = validParagraphs[0];
         }
@@ -138,13 +153,17 @@ export function extractMockupData({
   const aboutHeadline =
     extractedAboutHeadline ||
     copyPlanAbout?.heading ||
-    `A PASSION FOR ${trade.toUpperCase()} EXCELLENCE`;
+    `Dan Martin’s roofing team works where New York roofs are hardest to ignore.`;
+
+  const aboutEyebrow =
+    extractedAboutEyebrow ||
+    `ABOUT ${businessName.toUpperCase()}`;
 
   const aboutBody =
     extractedAboutBody ||
     copyPlanAbout?.body ||
     payload?.differentiator ||
-    `Dedicated to providing premium ${trade.toLowerCase()} and expert craftsmanship across ${city} with verified customer satisfaction.`;
+    `${businessName} is a licensed and insured ${trade.toLowerCase()} serving ${city}. The work covers premium craftsmanship, inspections, repairs and full replacements with verified customer satisfaction.`;
 
   // 2. Auto-Select the About / Team Photo
   const primaryAboutTeamPhoto =
@@ -197,9 +216,11 @@ export function extractMockupData({
     yearsExperience,
     founderName,
     founderTitle,
+    aboutEyebrow,
     aboutHeadline,
     aboutBody,
     heroHeadline,
+    phone,
     photoUrl: currentFeaturedPhoto,
     secondaryPhotoUrl: availablePhotos[1] || currentFeaturedPhoto,
     availablePhotos,

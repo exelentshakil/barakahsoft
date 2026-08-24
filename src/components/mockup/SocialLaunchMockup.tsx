@@ -31,10 +31,12 @@ export interface MockupData {
   yearsExperience?: number | string | null;
   founderName?: string | null;
   founderTitle?: string | null;
+  aboutEyebrow?: string | null;
   aboutHeadline?: string | null;
   aboutBody?: string | null;
   heroHeadline?: string | null;
   heroSubheadline?: string | null;
+  phone?: string | null;
   photoUrl?: string | null;
   secondaryPhotoUrl?: string | null;
   availablePhotos?: string[];
@@ -221,16 +223,17 @@ export function SocialLaunchMockup({
   const trade = data.trade || "Contractor";
   const heroHeading =
     data.heroHeadline || `PREMIER ${trade.toUpperCase()} IN ${city.toUpperCase()}`;
+  const aboutEyebrow =
+    data.aboutEyebrow || `ABOUT ${businessShortName.toUpperCase()}`;
   const aboutHeading =
-    data.aboutHeadline || `A PASSION FOR ${trade.toUpperCase()} EXCELLENCE`;
+    data.aboutHeadline || `Dan Martin’s roofing team works where New York roofs are hardest to ignore.`;
   const aboutBody =
     data.aboutBody ||
-    `Dedicated to providing premium ${trade.toLowerCase()} and expert craftsmanship across ${city} with verified customer satisfaction.`;
+    `${businessShortName} is a licensed and insured ${trade.toLowerCase()} serving ${city}. The work covers roof repair, replacement, inspections and emergency craftsmanship with verified customer satisfaction.`;
   const founder = data.founderName || "Dan Martin";
-  const founderRole = data.founderTitle || "Founder / Operator";
-  const ratingText = data.rating ? `${data.rating}★` : "5★";
-  const reviewsCountText = data.reviewCount ? `${data.reviewCount}+` : "100+";
-  const yearsExp = data.yearsExperience ? `${data.yearsExperience}+` : "10+";
+  const ratingText = data.rating ? `${data.rating}` : "5.0";
+  const reviewsCountText = data.reviewCount ? `${data.reviewCount}` : "27";
+  const phoneText = data.phone || "(888) 687-9175";
 
   const activeHeadline = HEADLINE_OPTIONS.find((h) => h.id === headlineMode) || HEADLINE_OPTIONS[0];
   const featuredCardPhoto = selectedPhoto || data.photoUrl || data.secondaryPhotoUrl;
@@ -438,22 +441,21 @@ export function SocialLaunchMockup({
         </div>
       </div>
 
-      {/* 2. REALISTIC FLOATING ABOUT / FOUNDER CARD (Overlapping Right Foreground) */}
+      {/* 2. EXACT ABOUT SECTION FLOATING CARD (Overlapping Right Foreground Matching Homepage) */}
       <div
-        className="absolute -right-1 sm:-right-3 top-0 sm:top-2 w-[68%] max-w-[310px] rounded-2xl bg-white shadow-2xl border border-white/95 overflow-hidden transition-transform duration-500"
+        className="absolute -right-1 sm:-right-3 top-0 sm:top-2 w-[72%] max-w-[340px] rounded-2xl bg-white shadow-2xl border border-white/95 overflow-hidden transition-transform duration-500 p-3 sm:p-4 text-slate-900 space-y-2.5"
         style={{
           transform: "rotateY(-12deg) rotateX(8deg) rotateZ(-2.5deg) translateZ(50px)",
           boxShadow: "0 28px 55px -10px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0,0,0,0.06)",
         }}
       >
-        {/* Sheet Top Notch */}
-        <div className="h-1.5 w-12 bg-slate-300 rounded-full mx-auto my-1 opacity-60" />
+        {/* Sheet Top Subtle Notch */}
+        <div className="h-1 w-10 bg-slate-200 rounded-full mx-auto -mt-1 opacity-70" />
 
-        {/* Sheet Main Header with Founder Story */}
-        <div className="p-3 sm:p-4 text-white" style={{ backgroundColor: primaryColor }}>
-          <div className="flex items-start gap-2.5">
-            {/* Photo */}
-            <div className="relative h-14 w-14 sm:h-18 sm:w-18 rounded-xl bg-slate-800 overflow-hidden shrink-0 border-2 border-white/40 shadow-md">
+        <div className="flex items-start gap-2.5">
+          {/* Photo */}
+          <div className="space-y-1 shrink-0">
+            <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-xl bg-slate-100 overflow-hidden border border-slate-200 shadow-sm">
               {featuredCardPhoto ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -463,79 +465,57 @@ export function SocialLaunchMockup({
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="h-full w-full flex items-center justify-center bg-black/30 text-white font-black text-sm">
+                <div className="h-full w-full flex items-center justify-center bg-slate-800 text-white font-black text-sm">
                   {founder.slice(0, 2).toUpperCase()}
                 </div>
               )}
-
-              {/* Founder Name Tag Overlay */}
-              <div className="absolute bottom-0 inset-x-0 bg-white/95 text-[#0d1738] p-0.5 text-center shadow-sm">
-                <span className="block text-[5px] sm:text-[6px] font-black truncate">{founder}</span>
-                <span className="block text-[4px] sm:text-[5px] text-muted-foreground truncate">{founderRole}</span>
-              </div>
             </div>
-
-            <div className="min-w-0 flex-1 space-y-0.5">
-              <span className="text-[6px] sm:text-[7px] uppercase font-black tracking-widest text-white/75">
-                OUR STORY
-              </span>
-              <h4 className="text-[8px] sm:text-[10px] font-black leading-snug line-clamp-2 uppercase">
-                {aboutHeading}
-              </h4>
-              <p className="text-[5.5px] sm:text-[6.5px] text-white/85 line-clamp-3 leading-tight">
-                {aboutBody}
-              </p>
-              <div className="pt-1 flex items-center gap-1">
-                <span className="rounded bg-white/20 px-1.5 py-0.5 text-[5px] sm:text-[6px] font-bold">
-                  GET A FREE QUOTE →
-                </span>
-                <span className="rounded bg-white/10 px-1 py-0.5 text-[5px] sm:text-[6px] font-bold">
-                  FOLLOW US
-                </span>
-              </div>
-            </div>
+            <p className="text-[5px] sm:text-[6px] text-slate-400 font-medium text-center truncate max-w-[90px]">
+              Rooftop work in close urban conditions
+            </p>
           </div>
 
-          {/* 4-Column Metric Ribbon */}
-          <div className="mt-3 pt-2.5 border-t border-white/25 grid grid-cols-4 gap-1 text-center">
-            <div>
-              <span className="block text-[9px] sm:text-[11.5px] font-black">{yearsExp}</span>
-              <span className="block text-[4.5px] sm:text-[6px] text-white/80 uppercase font-bold">Experience</span>
-            </div>
-            <div>
-              <span className="block text-[9px] sm:text-[11.5px] font-black">{ratingText}</span>
-              <span className="block text-[4.5px] sm:text-[6px] text-white/80 uppercase font-bold">Reviews</span>
-            </div>
-            <div>
-              <span className="block text-[9px] sm:text-[11.5px] font-black">1-YEAR</span>
-              <span className="block text-[4.5px] sm:text-[6px] text-white/80 uppercase font-bold">Guarantee</span>
-            </div>
-            <div>
-              <span className="block text-[9px] sm:text-[11.5px] font-black">100%</span>
-              <span className="block text-[4.5px] sm:text-[6px] text-white/80 uppercase font-bold">Focus</span>
-            </div>
+          <div className="min-w-0 flex-1 space-y-1">
+            <span className="text-[6.5px] sm:text-[7.5px] uppercase font-black tracking-wider text-red-600 block">
+              {aboutEyebrow}
+            </span>
+            <h4 className="text-[8.5px] sm:text-[10.5px] font-black leading-tight text-slate-950 line-clamp-2">
+              {aboutHeading}
+            </h4>
+            <p className="text-[5.5px] sm:text-[6.8px] text-slate-600 font-normal line-clamp-3 leading-snug">
+              {aboutBody}
+            </p>
           </div>
         </div>
 
-        {/* Sheet Lower Area: Service Callout */}
-        <div className="p-3 bg-[#fbfbfd] space-y-1">
-          <span className="text-[5px] sm:text-[6px] font-black uppercase tracking-wider text-muted-foreground">
-            CRAFTSMANSHIP YOU CAN TRUST
-          </span>
-          <p className="text-[7.5px] sm:text-[9.5px] font-black text-[#0d1738] leading-tight uppercase">
-            EXPERT {city.toUpperCase()} {trade.toUpperCase()} SERVICES
-          </p>
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-[6px] sm:text-[7px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-              ✓ Verified Live
-            </span>
-            <span
-              className="rounded px-2.5 py-0.5 text-[6px] sm:text-[7px] font-bold text-white shadow-sm"
-              style={{ backgroundColor: primaryColor }}
-            >
-              Call Now
-            </span>
+        {/* 4-Box Metrics Grid (matching exact site design) */}
+        <div className="grid grid-cols-2 gap-1 rounded-lg border border-slate-200/90 bg-slate-50/70 p-1.5">
+          <div className="border-b border-r border-slate-200/70 pb-1 pr-1">
+            <span className="block text-[4.5px] sm:text-[5.5px] font-extrabold text-slate-500 uppercase">Google Rating</span>
+            <span className="block text-[8px] sm:text-[10px] font-black text-slate-900">{ratingText}</span>
           </div>
+          <div className="border-b border-slate-200/70 pb-1 pl-1">
+            <span className="block text-[4.5px] sm:text-[5.5px] font-extrabold text-slate-500 uppercase">Verified Reviews</span>
+            <span className="block text-[8px] sm:text-[10px] font-black text-slate-900">{reviewsCountText}</span>
+          </div>
+          <div className="border-r border-slate-200/70 pt-1 pr-1">
+            <span className="block text-[4.5px] sm:text-[5.5px] font-extrabold text-slate-500 uppercase">Availability</span>
+            <span className="block text-[8px] sm:text-[10px] font-black text-slate-900">24/7</span>
+          </div>
+          <div className="pt-1 pl-1">
+            <span className="block text-[4.5px] sm:text-[5.5px] font-extrabold text-slate-500 uppercase">Named Service Areas</span>
+            <span className="block text-[8px] sm:text-[10px] font-black text-slate-900">4</span>
+          </div>
+        </div>
+
+        {/* Dual CTA Buttons */}
+        <div className="flex items-center gap-1.5 pt-0.5">
+          <span className="rounded bg-red-600 px-2 py-1 text-[5.5px] sm:text-[7px] font-bold text-white shadow-xs">
+            Get a free quote
+          </span>
+          <span className="rounded border border-slate-300 bg-white px-2 py-1 text-[5.5px] sm:text-[7px] font-bold text-slate-800 shadow-xs truncate">
+            Call {phoneText}
+          </span>
         </div>
       </div>
     </div>
