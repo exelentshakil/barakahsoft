@@ -61,7 +61,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { Lead, Artifact, ScrapeResults } from "@/types/database";
+import type { Lead, LeadStatus, Artifact, ScrapeResults } from "@/types/database";
 import { WorkspaceTabs, TabPanel, type WorkspaceStep } from "@/components/admin/WorkspaceTabs";
 import { DeliverySlaTimer } from "@/components/admin/DeliverySlaTimer";
 import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStudio";
@@ -256,6 +256,12 @@ export function AdminLeadWorkspace({
   const pricing = (artifact?.extracted_assets?.pricing as any) ?? null;
   const pricingIsConfigured = typeof pricing?.offerId === "string" || (Array.isArray(pricing?.offerOptions) && pricing.offerOptions.length > 0);
 
+  // Outreach & Lifecycle Status
+  const [currentLeadStatus, setCurrentLeadStatus] = useState<LeadStatus>(lead.status);
+  const [activeOutreachStep, setActiveOutreachStep] = useState<1 | 2 | 3>(
+    lead.status === "contacted" ? 2 : lead.status === "delivered" ? 2 : 1
+  );
+
   // Editable Delivery Email State
   const [emailSubject, setEmailSubject] = useState(
     `Your Rebuilt Homepage & Speed Audit are Ready! (${businessName})`
@@ -263,6 +269,40 @@ export function AdminLeadWorkspace({
   const [emailBody, setEmailBody] = useState(
     `Hi ${lead.contact_name || "there"}, we analyzed ${lead.source_url} and created a custom high-converting homepage concept tailored to ${businessName}. Your live concept is ready to review.`
   );
+
+  function selectOutreachSequenceStep(step: 1 | 2 | 3) {
+    setActiveOutreachStep(step);
+    if (step === 1) {
+      setEmailSubject(`Your Rebuilt Homepage & Speed Audit are Ready! (${businessName})`);
+      setEmailBody(
+        `Hi ${lead.contact_name || "there"}, we analyzed ${lead.source_url} and created a custom high-converting homepage concept tailored to ${businessName}. Your live concept is ready to review.`
+      );
+    } else if (step === 2) {
+      setEmailSubject(`Quick follow up regarding ${businessName}'s homepage rebuild`);
+      setEmailBody(
+        `Hi ${lead.contact_name || "there"}, just checking in to see if you had a moment to take a look at the rebuilt homepage concept we put together for ${businessName}. Have you had any thoughts on the layout?`
+      );
+    } else {
+      setEmailSubject(`Final check regarding ${businessName} website concept`);
+      setEmailBody(
+        `Hi ${lead.contact_name || "there"}, following up one last time on the custom website files and Google speed audit for ${businessName} before we archive the staging preview.`
+      );
+    }
+  }
+
+  async function handleUpdateLeadStatus(newStatus: LeadStatus) {
+    setCurrentLeadStatus(newStatus);
+    try {
+      await fetch(`/api/leads/${lead.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      router.refresh();
+    } catch (err) {
+      console.error("Failed to update status", err);
+    }
+  }
 
   // Price formatting
   const setupPrice = pricingIsConfigured ? pricing.setupPrice : aiLeadValue?.suggested.setupPrice ?? 997;
@@ -384,12 +424,17 @@ export function AdminLeadWorkspace({
   }
 
   async function handleSendBrevoEmail() {
+    if (currentLeadStatus === "lost") {
+      alert("Outreach is blocked because this lead is marked as 'Not Interested / Lost'.");
+      return;
+    }
     setSendingEmail(true);
     try {
       const res = await fetch(`/api/leads/${lead.id}/deliver`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          step: activeOutreachStep,
           subject: emailSubject,
           message: emailBody,
         }),
@@ -399,6 +444,9 @@ export function AdminLeadWorkspace({
         throw new Error(data.error || "The email did not send. Please check your Brevo/Resend API keys.");
       }
       setEmailSent(true);
+      if (data.status) {
+        setCurrentLeadStatus(data.status);
+      }
       if (data.warning) {
         alert(data.warning);
       }
@@ -551,6 +599,90 @@ export function AdminLeadWorkspace({
               <span className="text-slate-300">|</span>
               <span className="truncate text-slate-800">{email}</span>
             </p>
+          </div>
+
+          {/* Outreach Pipeline Status & Outcome Toolbar */}
+          <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 space-y-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Outreach Stage:</span>
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                    currentLeadStatus === "paid" || currentLeadStatus === "live"
+                      ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                      : currentLeadStatus === "lost"
+                      ? "bg-rose-100 text-rose-800 border border-rose-300"
+                      : currentLeadStatus === "contacted"
+                      ? "bg-blue-100 text-blue-800 border border-blue-300"
+                      : currentLeadStatus === "delivered"
+                      ? "bg-indigo-100 text-indigo-800 border border-indigo-300"
+                      : "bg-slate-200 text-slate-800"
+                  }`}
+                >
+                  {currentLeadStatus === "lost"
+                    ? "🚫 Not Interested / Do Not Contact"
+                    : currentLeadStatus === "paid" || currentLeadStatus === "live"
+                    ? "🏆 Won & Paid (Live)"
+                    : currentLeadStatus === "contacted"
+                    ? "💬 In Conversation"
+                    : currentLeadStatus === "delivered"
+                    ? "📧 Step 1 Pitch Sent"
+                    : "Ready for Outreach"}
+                </span>
+              </div>
+
+              {/* Quick 1-Click Outcome Buttons */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleUpdateLeadStatus("contacted")}
+                  className={`rounded-md px-2.5 py-1 text-xs font-bold transition border ${
+                    currentLeadStatus === "contacted"
+                      ? "bg-blue-600 text-white border-blue-700 shadow-xs"
+                      : "bg-white text-slate-700 border-slate-200 hover:bg-blue-50 hover:text-blue-700"
+                  }`}
+                >
+                  💬 In Conversation
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleUpdateLeadStatus("paid")}
+                  className={`rounded-md px-2.5 py-1 text-xs font-bold transition border ${
+                    currentLeadStatus === "paid" || currentLeadStatus === "live"
+                      ? "bg-emerald-600 text-white border-emerald-700 shadow-xs"
+                      : "bg-white text-slate-700 border-slate-200 hover:bg-emerald-50 hover:text-emerald-700"
+                  }`}
+                >
+                  🏆 Won / Paid
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleUpdateLeadStatus("lost")}
+                  className={`rounded-md px-2.5 py-1 text-xs font-bold transition border ${
+                    currentLeadStatus === "lost"
+                      ? "bg-rose-600 text-white border-rose-700 shadow-xs"
+                      : "bg-white text-slate-700 border-slate-200 hover:bg-rose-50 hover:text-rose-700"
+                  }`}
+                >
+                  🚫 Not Interested
+                </button>
+                {["lost", "contacted", "paid", "live"].includes(currentLeadStatus) && (
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateLeadStatus("qa_approved")}
+                    className="rounded-md bg-white px-2 py-1 text-[11px] font-semibold text-slate-500 border border-slate-200 hover:bg-slate-100"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {currentLeadStatus === "lost" && (
+              <p className="text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded p-2">
+                ⚠️ Lead is marked as Not Interested. Email delivery is disabled to prevent spam.
+              </p>
+            )}
           </div>
 
           {/* Key metrics grid */}
@@ -930,14 +1062,53 @@ export function AdminLeadWorkspace({
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f0f3ff] text-xs font-bold text-[#533afd]">
                 5
               </span>
-              <h3 className="text-base font-bold text-[#0d1738]">Send their new site to them</h3>
+              <h3 className="text-base font-bold text-[#0d1738]">Outreach &amp; Sequence Delivery</h3>
             </div>
+            <span className="text-xs font-semibold text-slate-500">Manual 1-Click Brevo Sequence</span>
           </div>
 
-          <p className="text-sm text-[#42506a]">
-            This emails {lead.contact_name || "the owner"} a private link to their new homepage and the report on their
-            current site. Nobody else can open it. Edit the wording below if you want to say something specific.
-          </p>
+          {/* Sequence Step Selector */}
+          <div className="space-y-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-600">Select Outreach Sequence Step:</span>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <button
+                type="button"
+                onClick={() => selectOutreachSequenceStep(1)}
+                className={`rounded-xl border p-3 text-left transition ${
+                  activeOutreachStep === 1
+                    ? "border-[#533afd] bg-[#f0f3ff] ring-2 ring-[#533afd]/20"
+                    : "border-slate-200 bg-white hover:bg-slate-50"
+                }`}
+              >
+                <span className="block text-xs font-bold text-[#0d1738]">1. Initial Value Drop</span>
+                <span className="text-[11px] text-slate-500">Rebuilt homepage link &amp; speed diagnostic</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => selectOutreachSequenceStep(2)}
+                className={`rounded-xl border p-3 text-left transition ${
+                  activeOutreachStep === 2
+                    ? "border-[#533afd] bg-[#f0f3ff] ring-2 ring-[#533afd]/20"
+                    : "border-slate-200 bg-white hover:bg-slate-50"
+                }`}
+              >
+                <span className="block text-xs font-bold text-[#0d1738]">2. 48h Follow-up Bump</span>
+                <span className="text-[11px] text-slate-500">Short check-in if no response to Step 1</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => selectOutreachSequenceStep(3)}
+                className={`rounded-xl border p-3 text-left transition ${
+                  activeOutreachStep === 3
+                    ? "border-[#533afd] bg-[#f0f3ff] ring-2 ring-[#533afd]/20"
+                    : "border-slate-200 bg-white hover:bg-slate-50"
+                }`}
+              >
+                <span className="block text-xs font-bold text-[#0d1738]">3. Final Notice</span>
+                <span className="text-[11px] text-slate-500">Staging archive teaser &amp; files transfer</span>
+              </button>
+            </div>
+          </div>
 
           <div className="space-y-4 rounded-xl border border-[#c7d0fb] bg-[#f0f3ff] p-5">
             <div className="flex flex-col gap-2 border-b border-[#c7d0fb] pb-3 text-sm sm:flex-row sm:items-center sm:justify-between">
@@ -989,7 +1160,7 @@ export function AdminLeadWorkspace({
               </div>
 
               <div>
-                <span className="mb-1 block text-sm font-semibold text-[#0d1738]">First line of the email</span>
+                <span className="mb-1 block text-sm font-semibold text-[#0d1738]">Email Content</span>
                 <Textarea
                   rows={3}
                   value={emailBody}
@@ -999,15 +1170,36 @@ export function AdminLeadWorkspace({
               </div>
             </div>
 
-            <div className="flex items-center justify-end pt-1">
-              <button
-                onClick={handleSendBrevoEmail}
-                disabled={sendingEmail}
-                className="rounded-md bg-[#533afd] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#432bd9]"
-              >
-                {sendingEmail ? "Sending..." : emailSent ? "Sent ✓" : "Send it now"}
-              </button>
-            </div>
+            {currentLeadStatus === "lost" ? (
+              <div className="rounded-lg border border-rose-300 bg-rose-50 p-3 text-xs font-semibold text-rose-800 flex items-center justify-between">
+                <span>🚫 Outreach is blocked because lead is marked as Not Interested.</span>
+                <button
+                  type="button"
+                  onClick={() => handleUpdateLeadStatus("qa_approved")}
+                  className="underline hover:text-rose-950"
+                >
+                  Re-enable Outreach
+                </button>
+              </div>
+            ) : currentLeadStatus === "paid" || currentLeadStatus === "live" ? (
+              <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-3 text-xs font-semibold text-emerald-800 flex items-center justify-between">
+                <span>🏆 Client has purchased. Automated outreach sequence finished.</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-xs text-slate-500">
+                  Sending Step {activeOutreachStep} will update lead status to{" "}
+                  <strong>{activeOutreachStep === 1 ? "Delivered" : "Contacted"}</strong>.
+                </span>
+                <button
+                  onClick={handleSendBrevoEmail}
+                  disabled={sendingEmail}
+                  className="rounded-md bg-[#533afd] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#432bd9] disabled:opacity-50"
+                >
+                  {sendingEmail ? "Sending via Brevo..." : emailSent ? "Sent ✓" : `Send Step ${activeOutreachStep} via Brevo`}
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

@@ -14,6 +14,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const body = await req.json().catch(() => null);
   const updates: Record<string, string | null> = {};
   if (typeof body?.business_name === "string") updates.business_name = body.business_name || null;
+  if (typeof body?.contact_name === "string") updates.contact_name = body.contact_name || null;
+  if (typeof body?.email === "string") updates.email = body.email.trim() || null;
+  if (typeof body?.phone === "string") updates.phone = body.phone.trim() || null;
+  if (typeof body?.status === "string") updates.status = body.status;
   if (typeof body?.source_url === "string" && body.source_url) updates.source_url = body.source_url;
   if (typeof body?.facebook_pixel_id === "string") updates.facebook_pixel_id = body.facebook_pixel_id.trim() || null;
   if (typeof body?.google_site_verification === "string") updates.google_site_verification = body.google_site_verification.trim() || null;
