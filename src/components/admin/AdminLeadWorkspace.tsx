@@ -71,6 +71,7 @@ import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStu
 import { RefinePanel } from "@/components/admin/RefinePanel";
 import { HandBuildPanel } from "@/components/admin/HandBuildPanel";
 import { LiveSectionStudio } from "@/components/admin/LiveSectionStudio";
+import { OutreachSequencePanel } from "@/components/admin/OutreachSequencePanel";
 import { AddUrlDialog } from "@/components/admin/AddUrlDialog";
 import { VisibilityPanel } from "@/components/admin/VisibilityPanel";
 import { AuditPanel } from "@/components/admin/AuditPanel";
@@ -691,6 +692,8 @@ export function AdminLeadWorkspace({
             )}
           </div>
         </div>
+
+        {outreachLeads.length > 0 && <OutreachSequencePanel leads={outreachLeads} />}
 
         <div className="space-y-3 rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
           <span className="text-xs font-black uppercase tracking-wider text-slate-500">Weekly Target Pulse</span>

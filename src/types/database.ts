@@ -81,6 +81,12 @@ export interface Lead {
   showcase_label: string | null;
   showcase_approved_at: string | null;
   showcase_sort: number;
+  // Cold outreach sequence position. 0 = nothing sent; 1..3 = that touch has
+  // been sent. outreach_stopped_at ends the sequence without deleting the
+  // lead — set when a prospect replies or asks to stop.
+  outreach_stage: number;
+  outreach_last_sent_at: string | null;
+  outreach_stopped_at: string | null;
   created_at: string;
   updated_at: string;
 }
