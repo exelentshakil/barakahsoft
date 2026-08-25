@@ -168,28 +168,33 @@ export function AdminLeadWorkspace({
   const [previewPath, setPreviewPath] = useState("");
   const [previewViewport, setPreviewViewport] = useState<"desktop" | "mobile">("desktop");
   const [reloadKey, setReloadKey] = useState(0);
-  // The tab lives in the URL rather than component state.
+  // The tab is local state, mirrored into the URL.
   //
-  // A refresh in the middle of a build dropped the operator back on Lead —
-  // and a build is exactly when the page gets refreshed, because that is how
-  // you watch it progress. The URL also makes a tab linkable, so "look at
-  // the Approve step on this lead" is one address.
+  // It was read straight from useSearchParams and written with
+  // router.replace, which on a force-dynamic page is a server round trip —
+  // so every tab click sat for half a second re-rendering a page whose data
+  // had not changed. The panels are all already mounted; switching between
+  // them should cost nothing.
+  //
+  // history.replaceState updates the address bar without telling the router
+  // anything, so a refresh still lands on the right tab and the tab is still
+  // linkable, but the click itself is instant.
   const searchParams = useSearchParams();
-  const tabParam = searchParams.get("tab");
-  const tab = tabParam && TAB_IDS.includes(tabParam) ? tabParam : "lead";
+  const [tab, setTabState] = useState(() => {
+    const initial = searchParams.get("tab");
+    return initial && TAB_IDS.includes(initial) ? initial : "lead";
+  });
 
-  const setTab = useCallback(
-    (next: string) => {
-      const params = new URLSearchParams(Array.from(searchParams.entries()));
-      if (next === "lead") params.delete("tab");
-      else params.set("tab", next);
-      const qs = params.toString();
-      // replace, not push: stepping through the build should not make the
-      // back button walk every tab visited on the way.
-      router.replace(qs ? `?${qs}` : window.location.pathname, { scroll: false });
-    },
-    [router, searchParams]
-  );
+  const setTab = useCallback((next: string) => {
+    setTabState(next);
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (next === "lead") url.searchParams.delete("tab");
+    else url.searchParams.set("tab", next);
+    // replaceState, not pushState: stepping through the build should not make
+    // the back button walk every tab visited on the way.
+    window.history.replaceState(window.history.state, "", url.toString());
+  }, []);
 
   // Scrape and generation both run in the background. This keeps every panel
   // -- verified facts, brief defaults, preview, refine slots -- in step with
@@ -1204,40 +1209,38 @@ export function AdminLeadWorkspace({
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f0f3ff] text-[#533afd]">
                   <Eye className="h-4 w-4" />
                 </span>
-                <div>
+                <div className="min-w-0">
                   <h3 className="text-sm font-bold text-[#0d1738]">Generated website preview</h3>
                   <p className="mt-0.5 text-xs text-[#667085]">Review the real responsive page before approval.</p>
-                  <ShowcaseApprovalControl
-                    leadId={lead.id}
-                    initialApproved={lead.showcase_approved}
-                    initialLabel={lead.showcase_label}
-                    hasImages={Boolean(lead.showcase_before_url && lead.showcase_after_url)}
-                    compact
-                  />
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2.5">
-                {/* 1-Click Screenshot Capture to Mockup Studio */}
-                <div className="flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50/70 p-1">
-                  <button
-                    type="button"
-                    disabled={Boolean(capturingSlot)}
-                    onClick={() => captureIframeSection("hero")}
-                    className="inline-flex items-center gap-1 rounded-md bg-white px-2.5 py-1 text-xs font-bold text-indigo-700 shadow-2xs hover:bg-indigo-100 disabled:opacity-60 transition"
-                  >
-                    <Camera className="h-3 w-3" />
-                    {capturingSlot === "hero" ? "Capturing Hero..." : "Capture Hero"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={Boolean(capturingSlot)}
-                    onClick={() => captureIframeSection("about")}
-                    className="inline-flex items-center gap-1 rounded-md bg-white px-2.5 py-1 text-xs font-bold text-indigo-700 shadow-2xs hover:bg-indigo-100 disabled:opacity-60 transition"
-                  >
-                    <Camera className="h-3 w-3" />
-                    {capturingSlot === "about" ? "Capturing About..." : "Capture About"}
-                  </button>
-                </div>
+                {/* Behind a toggle: capturing a section for the social studio
+                    is an occasional job, and at the top level it competed with
+                    the controls used on every visit. */}
+                <details className="group relative">
+                  <summary className="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-bold text-slate-600 transition hover:border-indigo-300 hover:text-indigo-700">
+                    <Camera className="h-3 w-3" /> Capture
+                  </summary>
+                  <div className="absolute right-0 z-20 mt-1 flex w-44 flex-col gap-1 rounded-lg border border-slate-200 bg-white p-1 shadow-lg">
+                    <button
+                      type="button"
+                      disabled={Boolean(capturingSlot)}
+                      onClick={() => captureIframeSection("hero")}
+                      className="rounded px-2 py-1.5 text-left text-xs font-bold text-slate-700 transition hover:bg-indigo-50 hover:text-indigo-700 disabled:opacity-60"
+                    >
+                      {capturingSlot === "hero" ? "Capturing hero…" : "Capture hero"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={Boolean(capturingSlot)}
+                      onClick={() => captureIframeSection("about")}
+                      className="rounded px-2 py-1.5 text-left text-xs font-bold text-slate-700 transition hover:bg-indigo-50 hover:text-indigo-700 disabled:opacity-60"
+                    >
+                      {capturingSlot === "about" ? "Capturing about…" : "Capture about"}
+                    </button>
+                  </div>
+                </details>
 
                 {capturedSuccess && (
                   <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg animate-fade-in">
@@ -1293,6 +1296,16 @@ export function AdminLeadWorkspace({
                   Open in new tab <ExternalLink className="h-3.5 w-3.5" />
                 </a>
               </div>
+            </div>
+
+            <div className="border-b border-[#e5e7f2] px-5 py-2.5">
+              <ShowcaseApprovalControl
+                leadId={lead.id}
+                initialApproved={lead.showcase_approved}
+                initialLabel={lead.showcase_label}
+                hasImages={Boolean(lead.showcase_before_url && lead.showcase_after_url)}
+                compact
+              />
             </div>
             <div className="overflow-auto bg-[#eef1f7] p-3 sm:p-6">
               <div className={`mx-auto overflow-hidden border border-[#cfd5e3] bg-white shadow-[0_24px_70px_rgba(24,35,72,0.16)] transition-[width] duration-300 ${previewViewport === "mobile" ? "w-[390px] max-w-full rounded-[28px]" : "w-full min-w-[1024px] rounded-xl"}`}>
