@@ -20,6 +20,8 @@ interface ShowcaseApprovalControlProps {
   initialApproved: boolean;
   initialLabel: string | null;
   hasImages: boolean;
+  /** Tighter styling for the admin workspace, where it sits inside a panel header. */
+  compact?: boolean;
 }
 
 export function ShowcaseApprovalControl({
@@ -27,6 +29,7 @@ export function ShowcaseApprovalControl({
   initialApproved,
   initialLabel,
   hasImages,
+  compact = false,
 }: ShowcaseApprovalControlProps) {
   const [approved, setApproved] = useState(initialApproved);
   const [label, setLabel] = useState(initialLabel ?? "");
@@ -64,17 +67,25 @@ export function ShowcaseApprovalControl({
   }
 
   return (
-    <div className="rounded-xl border border-dashed border-[#f0a202] bg-[#fffaf0] p-4 space-y-3">
+    <div
+      className={
+        compact
+          ? "mt-2 rounded-lg border border-dashed border-[#f0a202] bg-[#fffaf0] p-2.5 space-y-2"
+          : "rounded-xl border border-dashed border-[#f0a202] bg-[#fffaf0] p-4 space-y-3"
+      }
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <BadgeCheck className={`h-4 w-4 shrink-0 ${approved ? "text-[#0b8f5b]" : "text-[#b07500]"}`} />
           <div>
             <p className="text-xs font-bold text-[#0d1738]">
-              Operator only — {approved ? "live on the landing page" : "not on the landing page"}
+              {approved ? "Live on the landing page" : "Show on landing page"}
             </p>
-            <p className="text-[11px] text-[#6b5a34]">
-              Approving publishes this before/after to the public Design Quality Bar section.
-            </p>
+            {!compact && (
+              <p className="text-[11px] text-[#6b5a34]">
+                Approving publishes this before/after to the public Design Quality Bar section.
+              </p>
+            )}
           </div>
         </div>
 

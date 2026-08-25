@@ -66,6 +66,7 @@ import type { Lead, LeadStatus, Artifact, ScrapeResults } from "@/types/database
 import { toBlob } from "html-to-image";
 import { WorkspaceTabs, TabPanel, type WorkspaceStep } from "@/components/admin/WorkspaceTabs";
 import { DeliverySlaTimer } from "@/components/admin/DeliverySlaTimer";
+import { ShowcaseApprovalControl } from "@/components/portal/sections/ShowcaseApprovalControl";
 import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStudio";
 import { RefinePanel } from "@/components/admin/RefinePanel";
 import { HandBuildPanel } from "@/components/admin/HandBuildPanel";
@@ -1115,6 +1116,13 @@ export function AdminLeadWorkspace({
                 <div>
                   <h3 className="text-sm font-bold text-[#0d1738]">Generated website preview</h3>
                   <p className="mt-0.5 text-xs text-[#667085]">Review the real responsive page before approval.</p>
+                  <ShowcaseApprovalControl
+                    leadId={lead.id}
+                    initialApproved={lead.showcase_approved}
+                    initialLabel={lead.showcase_label}
+                    hasImages={Boolean(lead.showcase_before_url && lead.showcase_after_url)}
+                    compact
+                  />
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2.5">
