@@ -38,7 +38,24 @@ export async function generateStylesheet(
     .map(([name, value]) => `  ${name}: ${value};`)
     .join("\n");
 
-  const prompt = `${STANCE}
+  // The rejection notice leads the prompt rather than trailing it.
+  //
+  // It used to sit after roughly a hundred and seventy lines of general
+  // guidance, immediately before "reply with CSS only" — the position least
+  // likely to change behaviour. A repair attempt has one job, and it should
+  // be the first thing read.
+  const rejection = previousFailures
+    ? `═══ YOUR PREVIOUS ATTEMPT WAS REJECTED — FIX THESE FIRST ═══
+${previousFailures}
+
+These are release blockers, not suggestions. The stylesheet is discarded
+again if any remain. Everything below still applies, but fixing the above is
+the reason you are being asked a second time.
+
+`
+    : "";
+
+  const prompt = `${rejection}${STANCE}
 
 Write the complete stylesheet for the page below.
 
@@ -170,11 +187,7 @@ WHAT MAKES IT LOOK EXPENSIVE
 - Restraint. Two type sizes per section, not five. One accent, not four.
 - Planned quiet/focal/reset section grounds so the page has rhythm without mechanical zebra striping.
 - Detail where the eye lands: the hero, the primary button, the first card in a grid.
-${
-  previousFailures
-    ? `\n═══ A PREVIOUS ATTEMPT WAS REJECTED ═══\n${previousFailures}\n`
-    : ""
-}
+
 Reply with CSS ONLY. No markdown fences, no commentary, no <style> tag. Do not write @import or url() — both are stripped. Start at the first selector.`;
 
   const raw = await callBestModel(

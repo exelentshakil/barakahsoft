@@ -368,8 +368,17 @@ function verifyStylesheet(css: string): QualityFinding[] {
   // Pure black is never the right ink. It maximises contrast to the point of
   // eye fatigue and is the single most recognisable tell of an unconsidered
   // palette; the compiled tokens already carry a soft charcoal instead.
-  if (/#000(000)?\b/i.test(css) || /rgba?\(\s*0\s*,\s*0\s*,\s*0\s*[,)]/i.test(css)) {
-    add("blocker", "colour", "Pure black (#000000) is used. Ink comes from the tokens, which carry a softer charcoal for readability.");
+  // Only OPAQUE black. This previously matched any rgba(0,0,0,…), which is
+  // how every stylesheet in existence writes a shadow — including the
+  // compiled tokens themselves, whose --bs-shadow-card is
+  // "rgb(0 0 0 / 0.04), rgb(0 0 0 / 0.12)". The gate was failing builds for
+  // using the exact pattern it ships.
+  const opaqueBlack =
+    /#000(000)?\b/i.test(css) ||
+    /rgba?\(\s*0\s*,\s*0\s*,\s*0\s*\)/i.test(css) ||
+    /rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*1(\.0+)?\s*\)/i.test(css);
+  if (opaqueBlack) {
+    add("blocker", "colour", "Opaque pure black is used as a colour. Ink comes from the tokens, which carry a softer charcoal for readability. Translucent black in a shadow is fine.");
   }
 
   const literals = css.match(/#[0-9a-f]{3,8}\b|rgba?\(\s*\d/gi)?.length ?? 0;
