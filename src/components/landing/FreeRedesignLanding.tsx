@@ -13,12 +13,13 @@ const EXAMPLES = [
 ] as const;
 
 const FAQ = [
-  ["Why is the homepage redesign free?", "We want you to judge the quality before deciding whether to hire us. The concept should be useful whether or not we work together."],
-  ["What do I receive?", "A human-reviewed homepage mockup, desktop and mobile direction, a website audit, the problems we found, and a clear explanation of what should change."],
-  ["Is this a template?", "No. We use your real business information, brand, services, images, and category references. The final concept still receives a human design review before delivery."],
-  ["How long does it take?", "Our target is 48 hours after the request is accepted. Complicated sites or missing content may need more time, and we will tell you rather than send weak work."],
-  ["What happens if I like it?", "We can talk through the next step if the direction feels right. There is no pressure to continue."],
-  ["Will the site rank on Google or AI search?", "The paid build includes a sound technical, schema, content, and internal-linking foundation. No honest provider can guarantee rankings; ongoing authority and content work compound over time."],
+  ["Is the redesign really 100% free? What's the catch?", "It is completely free. No credit card, no auto-billing, and zero obligation. We build a real homepage concept and X-Ray audit so you can experience our quality firsthand before deciding whether to hire us."],
+  ["How long does it take?", "You receive your private portal with the custom concept and audit within 48 hours. If you love it and choose to launch the full website on your domain, official go-live typically takes 2 to 4 weeks."],
+  ["Do I have to buy or continue if I don't want to?", "No. If you decide not to move forward, you owe nothing and nobody will hound you. The concept and diagnostic insights are yours to keep."],
+  ["Is this just a generic template?", "Never. We extract your authentic brand colors, logos, 5-star reviews, and service catalog to engineer a bespoke, lightning-fast design tailored specifically to your trade."],
+  ["Do I own the website if I launch with you?", "Yes, 100%. You own all the files, code, and content outright. There is zero platform lock-in and no hostage fees."],
+  ["Can you work with my existing domain and business email?", "Yes. We connect directly to your existing domain name without touching or disrupting your business emails or daily operations."],
+  ["What happens with the rest of my website pages?", "Once you approve the homepage concept, we build out dedicated high-converting pages for every service you offer and each city in your service territory."],
 ];
 
 export function FreeRedesignLanding() {
