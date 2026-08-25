@@ -34,3 +34,18 @@ export async function callBestModel(
     system: options.system,
   });
 }
+
+// Routes a vision request to the best multi-modal model (currently OpenAI's vision capabilities)
+export async function callBestVisionModel(
+  prompt: string,
+  base64ImageUrl: string,
+  options: BestModelCallOptions
+): Promise<string | null> {
+   return callOpenAI(prompt, {
+      maxTokens: options.maxTokens,
+      temperature: options.temperature,
+      modelChain: bestModelChain(),
+      system: options.system,
+      images: [base64ImageUrl]
+   });
+}

@@ -7,7 +7,9 @@ import { criticiseDesign, type DesignVerdict } from "@/lib/audit/design-critic";
 import { conversionIntentFor } from "@/lib/conversion-intent";
 import { compileDesignTokens, type DesignTokens } from "@/lib/design-tokens";
 import { DEFAULT_DESIGN_DNA } from "@/lib/design-dna";
-import { callBestModel, type GenerationProvider } from "@/lib/generate/model";
+import { callBestModel, callBestVisionModel, type GenerationProvider } from "@/lib/generate/model";
+import { readFileSync } from "fs";
+import { resolve } from "path";
 
 export interface EditableSection {
   id: string;
@@ -119,7 +121,8 @@ export async function promptSection(
   input: string,
   sectionId: string,
   instruction: string,
-  provider: GenerationProvider = "openai"
+  provider: GenerationProvider = "openai",
+  imagePath?: string
 ): Promise<EditableSection> {
   const data = await getSiteData(slugFromInput(input));
   if (!data) throw new Error(`No site data found for ${input}`);
@@ -128,8 +131,8 @@ export async function promptSection(
   if (!section) throw new Error(`Section "${sectionId}" not found. Available: ${sections.map((s) => s.id).join(", ")}`);
 
   const brief = buildSiteBrief(data.lead, data.scrapeResults);
-  const raw = await callBestModel(
-    `You are surgically improving one section of a live generated homepage. Keep the section grounded in facts and preserve existing CSS class hooks where possible so the current stylesheet continues to style it. Use only token-based class architecture and no literal colors.
+  const systemPrompt = "You are a premium agency frontend designer doing a precise section-level repair. Return valid semantic HTML only.";
+  const promptText = `You are surgically improving one section of a live generated homepage. Keep the section grounded in facts and preserve existing CSS class hooks where possible so the current stylesheet continues to style it. Use only token-based class architecture and no literal colors.
 
 Business: ${brief.businessName}
 Industry: ${brief.industry}
@@ -139,18 +142,48 @@ Primary action: ${brief.intent.primaryLabel}
 
 Operator instruction:
 ${instruction}
+${imagePath ? "\n(A reference image has been provided. Match its layout and structural intent visually)." : ""}
 
 Current section HTML:
 ${section.html}
 
-Return ONLY one complete <section id="${section.id}">...</section>. No markdown fences, no explanation.`,
-    {
-      maxTokens: 12000,
-      temperature: 0.45,
-      system: "You are a premium agency frontend designer doing a precise section-level repair. Return valid semantic HTML only.",
-    },
-    provider
-  );
+Return ONLY one complete <section id="${section.id}">...</section>. No markdown fences, no explanation.`;
+
+  let raw: string | null = null;
+
+  if (imagePath) {
+    try {
+      const absolutePath = resolve(process.cwd(), imagePath);
+      const buffer = readFileSync(absolutePath);
+      const base64 = buffer.toString('base64');
+      const ext = imagePath.split('.').pop()?.toLowerCase();
+      let mimeType = "image/jpeg";
+      if (ext === 'png') mimeType = "image/png";
+      else if (ext === 'webp') mimeType = "image/webp";
+
+      raw = await callBestVisionModel(
+        promptText,
+        `data:${mimeType};base64,${base64}`,
+        {
+          maxTokens: 12000,
+          temperature: 0.45,
+          system: systemPrompt,
+        }
+      );
+    } catch (e: any) {
+      throw new Error(`Failed to read or process vision image at ${imagePath}: ${e.message}`);
+    }
+  } else {
+    raw = await callBestModel(
+      promptText,
+      {
+        maxTokens: 12000,
+        temperature: 0.45,
+        system: systemPrompt,
+      },
+      provider
+    );
+  }
 
   if (!raw) throw new Error("Model returned no section HTML");
   const html = sanitizeBespokeHtml(raw.replace(/^```(?:html)?\s*/i, "").replace(/```\s*$/i, "").trim());

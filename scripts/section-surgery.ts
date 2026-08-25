@@ -75,10 +75,13 @@ async function main() {
       case "prompt": {
         const sectionId = args[0];
         const instruction = args[1];
+        const imagePath = args[2]; // Optional third argument for image context
         if (!sectionId || !instruction) throw new Error("Missing sectionId or instruction");
         
         console.log(`Prompting section ${sectionId} with: "${instruction}"...`);
-        const newSection = await promptSection(leadSlug, sectionId, instruction, "openai");
+        if (imagePath) console.log(`Attaching image context from: ${imagePath}`);
+        
+        const newSection = await promptSection(leadSlug, sectionId, instruction, "openai", imagePath);
         
         const { sections, css } = await loadSections(leadSlug);
         const updated = replaceSection(sections, newSection);
