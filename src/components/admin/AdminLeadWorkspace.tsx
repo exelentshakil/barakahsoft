@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { displayPhone } from "@/lib/phone";
 import {
   AlertCircle,
@@ -46,7 +46,6 @@ import {
   Target,
   Upload,
   User,
-  Zap,
 } from "lucide-react";
 import {
   Bar,
@@ -130,15 +129,19 @@ function HeaderStat({
       ? "bg-emerald-50/80 border-emerald-200"
       : "bg-slate-50 border-slate-200/80";
   return (
-    <div className={`min-w-0 rounded-xl p-3.5 border transition shadow-sm ${bgBadge}`}>
-      <p className="truncate text-[11px] font-bold text-slate-600 uppercase tracking-wider">{label}</p>
-      <p className={`mt-1 text-2xl font-bold tabular-nums tracking-tight ${colour}`}>
+    <div className={`min-w-0 rounded-lg border p-2 transition ${bgBadge}`}>
+      <p className="truncate text-[10px] font-bold uppercase tracking-wider text-slate-600">{label}</p>
+      <p className={`mt-0.5 truncate text-base font-bold tabular-nums tracking-tight ${colour}`}>
         {value}
-        {suffix && <span className="text-xs font-bold text-slate-500 ml-1">{suffix}</span>}
+        {suffix && <span className="ml-1 text-[10px] font-bold text-slate-500">{suffix}</span>}
       </p>
     </div>
   );
 }
+
+// The workspace steps, as ids only. `steps` itself is built from lead state
+// far below this point, and the tab has to be resolved before that.
+const TAB_IDS = ["lead", "build", "photos", "audit", "rivals", "review", "send", "close"];
 
 interface AdminLeadWorkspaceProps {
   lead: Lead;
@@ -165,7 +168,28 @@ export function AdminLeadWorkspace({
   const [previewPath, setPreviewPath] = useState("");
   const [previewViewport, setPreviewViewport] = useState<"desktop" | "mobile">("desktop");
   const [reloadKey, setReloadKey] = useState(0);
-  const [tab, setTab] = useState("lead");
+  // The tab lives in the URL rather than component state.
+  //
+  // A refresh in the middle of a build dropped the operator back on Lead —
+  // and a build is exactly when the page gets refreshed, because that is how
+  // you watch it progress. The URL also makes a tab linkable, so "look at
+  // the Approve step on this lead" is one address.
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const tab = tabParam && TAB_IDS.includes(tabParam) ? tabParam : "lead";
+
+  const setTab = useCallback(
+    (next: string) => {
+      const params = new URLSearchParams(Array.from(searchParams.entries()));
+      if (next === "lead") params.delete("tab");
+      else params.set("tab", next);
+      const qs = params.toString();
+      // replace, not push: stepping through the build should not make the
+      // back button walk every tab visited on the way.
+      router.replace(qs ? `?${qs}` : window.location.pathname, { scroll: false });
+    },
+    [router, searchParams]
+  );
 
   // Scrape and generation both run in the background. This keeps every panel
   // -- verified facts, brief defaults, preview, refine slots -- in step with
@@ -601,53 +625,43 @@ export function AdminLeadWorkspace({
   function renderLeadCard(item: Lead) {
     const isSelected = item.id === lead.id;
     const itemTrade = item.industry || (item.persona ? item.persona.replace(/-/g, " ") : "Business");
+    // Two lines instead of six. Everything trimmed from here — the trade
+    // pill, the price, the SLA timer — is on the right-hand pane for the
+    // lead actually open, so repeating it once per row in a list that grows
+    // was buying nothing and costing the list its scannability.
     return (
       <Link
         key={item.id}
         href={`/admin/leads/${item.id}`}
-        className={`block rounded-xl p-3.5 transition border ${
+        title={`${item.business_name || item.slug} · ${itemTrade}`}
+        className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition border ${
           isSelected
-            ? "bg-indigo-50/70 border-2 border-indigo-600 shadow-md ring-2 ring-indigo-500/10"
-            : "bg-white hover:bg-slate-50 border-slate-200/80 hover:border-slate-300"
+            ? "border-indigo-500 bg-indigo-50/70 ring-1 ring-indigo-500/20"
+            : "border-transparent hover:border-slate-200 hover:bg-slate-50"
         }`}
       >
-        <div className="flex items-center justify-between gap-1">
-          <div className="flex items-center gap-1.5 truncate">
-            <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-slate-700">
-              {itemTrade}
-            </span>
-            {(item.source === "outreach" || item.source === "manual") && (
-              <span className="rounded-md bg-sky-50 border border-sky-200 px-1.5 py-0.5 text-[10px] font-bold text-sky-700">
-                Outreach
-              </span>
-            )}
-          </div>
-          <span className="text-xs font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">$779</span>
-        </div>
-
-        <p className="mt-2 truncate text-sm font-black text-slate-900 leading-tight">
-          {item.business_name || item.slug}
-        </p>
-        <p className="truncate text-xs font-medium text-slate-500 mt-0.5">{item.contact_name || item.source_url}</p>
-
-        <div className="mt-2.5 flex items-center justify-between text-xs pt-2 border-t border-slate-100">
-          <span
-            className={`font-black text-[11px] uppercase tracking-wider ${
-              item.status === "paid"
-                ? "text-emerald-700"
-                : item.status === "delivered" || item.status === "qa_approved"
-                ? "text-indigo-600"
-                : "text-amber-700"
-            }`}
-          >
-            {STATUS_LABEL[item.status] ?? item.status}
+        <span
+          className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+            item.status === "paid"
+              ? "bg-emerald-500"
+              : item.status === "delivered" || item.status === "qa_approved"
+                ? "bg-indigo-500"
+                : "bg-amber-500"
+          }`}
+          aria-hidden
+        />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[13px] font-bold leading-tight text-slate-900">
+            {item.business_name || item.slug}
           </span>
-          <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
-        </div>
-
-        <div className="mt-2">
-          <DeliverySlaTimer createdAt={item.created_at} deliveredAt={item.delivered_at} compact />
-        </div>
+          <span className="block truncate text-[10px] leading-tight text-slate-500">
+            {STATUS_LABEL[item.status] ?? item.status}
+            {item.contact_name ? ` · ${item.contact_name}` : ""}
+          </span>
+        </span>
+        {(item.source === "outreach" || item.source === "manual") && (
+          <span className="shrink-0 text-[10px] font-bold text-sky-600">🎯</span>
+        )}
       </Link>
     );
   }
@@ -719,12 +733,9 @@ export function AdminLeadWorkspace({
 
       {/* 2. RIGHT COLUMN: LINEAR STUDIO WORKSPACE */}
       <div className="space-y-8">
-        <div className="space-y-5 rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-sm">
+        <div className="space-y-3.5 rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm sm:p-5">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-indigo-50 border border-indigo-200 px-3 py-1 text-xs font-black text-indigo-700">
-                <Zap className="h-3.5 w-3.5" /> Active Lead Pipeline
-              </span>
               {lead.source === "outreach" || lead.source === "manual" ? (
                 <Badge variant="outline" className="whitespace-nowrap text-xs font-bold px-2.5 py-1 bg-sky-50 text-sky-700 border-sky-300">
                   🎯 Manual Outreach
@@ -739,8 +750,8 @@ export function AdminLeadWorkspace({
               </Badge>
               <DeliverySlaTimer createdAt={lead.created_at} deliveredAt={lead.delivered_at} />
             </div>
-            <div className="mt-3 flex flex-wrap items-center gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+            <div className="mt-2 flex flex-wrap items-center gap-2.5">
+              <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
                 {businessName}
               </h1>
               <div className="flex shrink-0 items-center rounded-xl border border-slate-200 bg-white">
@@ -754,7 +765,7 @@ export function AdminLeadWorkspace({
                 <DeleteLeadButton leadId={lead.id} />
               </div>
             </div>
-            <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-semibold text-slate-600">
+            <p className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs font-semibold text-slate-600">
               <span>{lead.contact_name || "Owner"}</span>
               <span className="text-slate-300">|</span>
               <span className="text-slate-800">{phone}</span>
@@ -764,7 +775,7 @@ export function AdminLeadWorkspace({
           </div>
 
           {/* Outreach Pipeline Status & Outcome Toolbar */}
-          <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 space-y-2.5">
+          <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Outreach Stage:</span>
@@ -860,7 +871,7 @@ export function AdminLeadWorkspace({
           </div>
 
           {/* Key metrics grid */}
-          <div className="grid grid-cols-2 gap-3 border-y border-slate-100 py-4 sm:grid-cols-5">
+          <div className="grid grid-cols-2 gap-2.5 border-y border-slate-100 py-2.5 sm:grid-cols-5">
             <HeaderStat
               label="Proposal link activity"
               value={lead.last_viewed_at ? "Opened ✓" : lead.delivered_at ? "Sent" : "Unsent"}

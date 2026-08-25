@@ -6,6 +6,10 @@ import { AdminLeadWorkspace } from "@/components/admin/AdminLeadWorkspace";
 import { leadCost } from "@/lib/cost/lead-cost";
 import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 
+// Live operator data, and the workspace reads its active tab from the query
+// string — both make a prerendered copy wrong. Marked dynamic explicitly so
+// that stays true regardless of what the page happens to import.
+export const dynamic = "force-dynamic";
 export default async function AdminLeadsPage() {
   const supabase = createAdminClient();
   const { data: leads } = await supabase
