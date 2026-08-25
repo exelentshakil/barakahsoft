@@ -12,8 +12,11 @@ import {
   RefreshCw,
   Rocket,
   Sparkles,
+  Trash2,
+  Upload,
   User,
   Wrench,
+  X,
   Zap,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -122,6 +125,33 @@ export function BespokeGenerationStudio({
   // -- and the operator waited for a result that was never coming.
   const isScraping = lead.status === "scraping";
   const notAnalysed = !scrapeResults && !isScraping;
+
+  const [uploadingSlot, setUploadingSlot] = useState<"hero" | "logo" | "footerLogo" | null>(null);
+
+  async function handleDirectUpload(slot: "hero" | "logo" | "footerLogo", file: File | undefined) {
+    if (!file) return;
+    setUploadingSlot(slot);
+    markTouched();
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("lead_id", lead.id);
+      formData.append("slot_hint", slot === "hero" ? "hero" : slot === "logo" ? "logo" : "footer-logo");
+
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || "Upload failed");
+      }
+      if (slot === "hero") setHeroImage(data.url);
+      else if (slot === "logo") setLogoUrl(data.url);
+      else if (slot === "footerLogo") setFooterLogoUrl(data.url);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to upload image to Supabase Storage");
+    } finally {
+      setUploadingSlot(null);
+    }
+  }
 
   // Phase 2: every service, area, about, FAQ and contact page, each written
   // to match the homepage that was approved. It is a separate button rather
@@ -444,7 +474,20 @@ export function BespokeGenerationStudio({
               </div>
 
               <div>
-                <Label htmlFor="gen-hero" className="text-xs font-bold">Hero Photo / Cutout URL</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="gen-hero" className="text-xs font-bold">Hero Photo / Cutout</Label>
+                  <label className="cursor-pointer text-[11px] font-bold text-[#533afd] hover:underline inline-flex items-center gap-1">
+                    {uploadingSlot === "hero" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                    <span>Upload to Supabase</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      disabled={Boolean(uploadingSlot)}
+                      onChange={(e) => handleDirectUpload("hero", e.target.files?.[0])}
+                    />
+                  </label>
+                </div>
                 <Input
                   id="gen-hero"
                   value={heroImage}
@@ -453,21 +496,44 @@ export function BespokeGenerationStudio({
                   placeholder="https://.../owner-headshot.png"
                 />
                 {heroImage && (
-                  <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1.5 shadow-2xs">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={heroImage}
-                      alt="Hero preview"
-                      className="h-10 w-16 rounded object-cover border border-black/10 bg-white"
-                      onError={(e) => (e.currentTarget.style.display = "none")}
-                    />
-                    <span className="text-[10px] font-semibold text-slate-600 truncate">Hero Photo Active</span>
+                  <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1.5 shadow-2xs">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={heroImage}
+                        alt="Hero preview"
+                        className="h-10 w-16 rounded object-cover border border-black/10 bg-white"
+                        onError={(e) => (e.currentTarget.style.display = "none")}
+                      />
+                      <span className="text-[10px] font-semibold text-slate-600 truncate">Hero Photo Active</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { markTouched(); setHeroImage(""); }}
+                      className="text-slate-400 hover:text-rose-600 p-1"
+                      title="Remove hero image"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 )}
               </div>
 
               <div>
-                <Label htmlFor="gen-logo" className="text-xs font-bold">Brand Logo URL</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="gen-logo" className="text-xs font-bold">Brand Logo</Label>
+                  <label className="cursor-pointer text-[11px] font-bold text-[#533afd] hover:underline inline-flex items-center gap-1">
+                    {uploadingSlot === "logo" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                    <span>Upload to Supabase</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      disabled={Boolean(uploadingSlot)}
+                      onChange={(e) => handleDirectUpload("logo", e.target.files?.[0])}
+                    />
+                  </label>
+                </div>
                 <Input
                   id="gen-logo"
                   value={logoUrl}
@@ -476,38 +542,71 @@ export function BespokeGenerationStudio({
                   placeholder="https://.../logo.png"
                 />
                 {logoUrl && (
-                  <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1.5 shadow-2xs">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={logoUrl}
-                      alt="Brand logo preview"
-                      className="h-9 max-w-[120px] rounded object-contain border border-black/10 bg-white p-1"
-                      onError={(e) => (e.currentTarget.style.display = "none")}
-                    />
-                    <span className="text-[10px] font-semibold text-slate-600 truncate">Brand Logo Active</span>
+                  <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1.5 shadow-2xs">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={logoUrl}
+                        alt="Brand logo preview"
+                        className="h-9 max-w-[120px] rounded object-contain border border-black/10 bg-white p-1"
+                        onError={(e) => (e.currentTarget.style.display = "none")}
+                      />
+                      <span className="text-[10px] font-semibold text-slate-600 truncate">Brand Logo Active</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { markTouched(); setLogoUrl(""); }}
+                      className="text-slate-400 hover:text-rose-600 p-1"
+                      title="Remove logo"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 )}
               </div>
 
               <div>
-                <Label htmlFor="gen-footer-logo" className="text-xs font-bold">Footer Logo URL (Transparent / Optional)</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="gen-footer-logo" className="text-xs font-bold">Footer Logo (Transparent PNG / SVG)</Label>
+                  <label className="cursor-pointer text-[11px] font-bold text-[#533afd] hover:underline inline-flex items-center gap-1">
+                    {uploadingSlot === "footerLogo" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                    <span>Upload to Supabase</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      disabled={Boolean(uploadingSlot)}
+                      onChange={(e) => handleDirectUpload("footerLogo", e.target.files?.[0])}
+                    />
+                  </label>
+                </div>
                 <Input
                   id="gen-footer-logo"
                   value={footerLogoUrl}
                   onChange={(e) => { markTouched(); setFooterLogoUrl(e.target.value); }}
                   className="mt-1 h-8 text-xs bg-[#f9f9ff]"
-                  placeholder="https://.../logo-white.png"
+                  placeholder="Paste URL or click 'Upload to Supabase' above"
                 />
                 {footerLogoUrl && (
-                  <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 p-1.5 text-white shadow-2xs">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={footerLogoUrl}
-                      alt="Footer logo preview"
-                      className="h-9 max-w-[120px] object-contain p-1"
-                      onError={(e) => (e.currentTarget.style.display = "none")}
-                    />
-                    <span className="text-[10px] font-semibold text-slate-300 truncate">Footer Dark Preview</span>
+                  <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-900 p-1.5 text-white shadow-2xs">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={footerLogoUrl}
+                        alt="Footer logo preview"
+                        className="h-9 max-w-[120px] object-contain p-1"
+                        onError={(e) => (e.currentTarget.style.display = "none")}
+                      />
+                      <span className="text-[10px] font-semibold text-slate-300 truncate">Transparent Footer Logo Active</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { markTouched(); setFooterLogoUrl(""); }}
+                      className="text-slate-400 hover:text-rose-400 p-1"
+                      title="Remove footer logo"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 )}
               </div>
