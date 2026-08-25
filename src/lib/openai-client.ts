@@ -29,13 +29,13 @@ export type OpenAIImagePart = { mimeType: string; data: string } | { url: string
 // Ordered newest-first by actual release date, not by name: model families
 // do not sort sensibly by version string, so this ordering is checked
 // against /v1/models (see the admin diagnostic) rather than assumed.
-const MODEL_CHAIN = ["gpt-5.6", "gpt-5.5", "gpt-5.4", "gpt-5.2", "gpt-5.1", "gpt-5", "gpt-4.1"];
+const MODEL_CHAIN = ["gpt-4o", "gpt-4o-2024-11-20", "chatgpt-4o-latest", "gpt-4o-mini", "o3-mini", "gpt-4-turbo"];
 
 // The strongest models on the account, for the one call where output quality
 // IS the product. Everything else — classification, captioning, judging —
 // runs on the standard chain, where a pro model buys nothing and costs real
 // time. Overridable with OPENAI_MODEL_BEST.
-const BEST_CHAIN = ["gpt-5.6", "gpt-5.5-pro", "gpt-5.5", "gpt-5.4-pro", "gpt-5.4"];
+const BEST_CHAIN = ["o3-mini", "o1", "gpt-4o", "gpt-4o-2024-11-20", "chatgpt-4o-latest", "gpt-4-turbo"];
 
 export function bestModelChain(): string[] {
   const pinned = process.env.OPENAI_MODEL_BEST?.trim();

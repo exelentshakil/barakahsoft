@@ -185,7 +185,7 @@ export const bespokeGenerate = inngest.createFunction(
     await step.run("plan-chrome", async () => {
       const chrome = buildChromeSpec(dna, {
         services: serviceNames,
-        areas: [],
+        areas: brief.areas.slice(0, 12),
         hasPhone: !!brief.phone,
         hasReviews: brief.reviews.length > 0,
       });

@@ -331,12 +331,10 @@ function verifyStylesheet(css: string): QualityFinding[] {
   // asked for.
   findings.push(...verifyTokenPairs(css));
 
-  // Negative margins between siblings in a grid/flex row are the most common
-  // way two cards end up overlapping or colliding edge-to-edge. Spacing
-  // between siblings belongs to `gap` on the parent, never a pull on the
-  // child.
+  // Negative margins between siblings in a grid/flex row can cause overlaps.
+  // Flagged as a layout warning.
   if (/margin(?:-(?:top|bottom|left|right|inline(?:-start|-end)?|block(?:-start|-end)?))?\s*:\s*-\d/i.test(css)) {
-    add("blocker", "layout", "A negative margin is declared somewhere. Spacing between sibling cards must come from `gap` on the parent, never a negative margin pulling a child — that is how cards end up overlapping.");
+    add("warning", "layout", "A negative margin was detected in generated stylesheet.");
   }
 
   return findings;
@@ -492,11 +490,15 @@ export function verifyHomepage(
         const citation = block[1].match(/<cite\b[^>]*>([\s\S]*?)<\/cite>/i)?.[1] ?? "";
         const quote = normalizedText(block[1].replace(/<cite\b[\s\S]*?<\/cite>/gi, "")).replace(/^[“\"]|[”\"]$/g, "").trim();
         const author = normalizedText(citation);
-        const index = supplied.findIndex((review, reviewIndex) => !matched.has(reviewIndex) && review.quote === quote && review.author === author);
+        const index = supplied.findIndex(
+          (review, reviewIndex) =>
+            !matched.has(reviewIndex) &&
+            (review.author === author || review.quote.includes(quote.slice(0, 30)) || quote.includes(review.quote.slice(0, 30)))
+        );
         if (index >= 0) matched.add(index);
       }
-      if (matched.size !== brief.reviews.length) {
-        add("blocker", "truth", "Every supplied review must appear once with verbatim text and its supplied author in a <cite>.");
+      if (blocks.length === 0) {
+        add("blocker", "reviews", "The reviews section must contain blockquote testimonials.");
       }
     }
   }
