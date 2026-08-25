@@ -57,12 +57,24 @@ export interface GeneratedSection {
 function parseSections(raw: string, batch: PlannedSection[]): GeneratedSection[] | null {
   const cleaned = raw.replace(/^```(?:html)?\s*/i, "").replace(/```\s*$/i, "").trim();
   const generated: GeneratedSection[] = [];
+  const compositionClasses = new Set<string>();
   for (const section of batch) {
     const escaped = section.id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const match = cleaned.match(new RegExp(`<!--\\s*SECTION:${escaped}\\s*-->([\\s\\S]*?)<!--\\s*\\/SECTION:${escaped}\\s*-->`, "i"));
     const html = match?.[1]?.trim();
     const rootId = html?.match(/^<section\b[^>]*\bid=["']([^"']+)["']/i)?.[1];
-    if (!html || rootId !== section.id || html.replace(/<[^>]+>/g, " ").trim().length < 80) return null;
+    const classValue = html?.match(/^<section\b[^>]*\bclass=["']([^"']+)["']/i)?.[1] ?? "";
+    const sectionClasses = classValue.split(/\s+/).filter((name) => name && name !== "site-section");
+    const compositionClass = sectionClasses.find((name) => !name.startsWith("site-"));
+    if (
+      !html ||
+      rootId !== section.id ||
+      html.replace(/<[^>]+>/g, " ").trim().length < 80 ||
+      !compositionClass ||
+      compositionClass === "descriptive-section-class" ||
+      compositionClasses.has(compositionClass)
+    ) return null;
+    compositionClasses.add(compositionClass);
     generated.push({ id: section.id, kind: section.kind, label: section.label, html });
   }
   return generated;

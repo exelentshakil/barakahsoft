@@ -101,7 +101,7 @@ function normalizeRuleBody(body: string, selector = ""): string {
 
   // Fix unreadable token pairs if invert background is present
   if (hasInvertBg) {
-    text = text.replace(/(?<!-)\bcolor\s*:\s*var\(\s*(?:--bs-ink|--bs-ink-muted)(?![a-z-])(?:\s*,\s*[^)]+)?\s*\)(\s*!important)?/gi, "color: var(--bs-invert-ink)$1");
+    text = text.replace(/(?<!-)\bcolor\s*:\s*var\(\s*(?:--bs-ink|--bs-ink-muted|--bs-surface|--bs-surface-alt|--bs-primary-on-surface|--bs-on-accent)(?![a-z-])(?:\s*,\s*[^)]+)?\s*\)(\s*!important)?/gi, "color: var(--bs-invert-ink)$1");
   }
 
   // 5. Black rgba/rgb -> token ink rgb
