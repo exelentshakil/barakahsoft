@@ -231,9 +231,13 @@ export function AdminLeadWorkspace({
   const resolvedLogo = (artifact?.extracted_assets as any)?.branding?.logo || (artifact?.extracted_assets as any)?.logo_url || facts.logo_url || (facts.branding as any)?.images?.logo || (facts.branding as any)?.logo || null;
   const logoName = resolvedLogo ? "Brand Logo Verified" : "Logo Pending";
 
-  const proof = (facts.proof as { rating?: number; reviewCount?: number } | undefined) || {};
-  const rating = proof.rating || 5.0;
-  const reviewCount = proof.reviewCount || 0;
+  // The scrape writes these at the top level of facts — there is no
+  // facts.proof object, so this read always missed and the header showed a
+  // hardcoded 5.0 with no count while the real 4.9 from 109 reviews sat
+  // beside it. A rating this screen invented is one an operator can repeat
+  // to a client on a call, so a missing value now reads as missing.
+  const rating = typeof facts.rating === "number" ? facts.rating : null;
+  const reviewCount = typeof facts.review_count === "number" ? facts.review_count : 0;
   const city = typeof nap.address === "string" ? nap.address.split(",")[0] : typeof facts.town === "string" ? facts.town : null;
 
   // 2. Real Google Places Competitor Benchmark (Zero Fake Fallbacks)
@@ -257,11 +261,20 @@ export function AdminLeadWorkspace({
           territory: city ?? "—",
           status: "Your lead",
         },
-        ...scrapedCompetitors.slice(0, 3).map((c, i) => ({
+        // The same rule the row above already follows, applied to the rows it
+        // is compared against. These three fields were invented: reviews fell
+        // back to "50+ ★ 4.8", and speed and page count were computed from
+        // the row's index — competitor one always 0.45s and 4 pages, two
+        // always 0.65s and 6. An operator reads this table to a client as
+        // evidence, so an unmeasured cell has to look unmeasured.
+        ...scrapedCompetitors.slice(0, 3).map((c) => ({
           name: c.name,
-          reviews: `${c.user_ratings_total || 50}+ ★ ${c.rating || 4.8}`,
-          speed: `${(0.45 + i * 0.2).toFixed(2)}s (${Math.max(40, 65 - i * 15)}/100)`,
-          routes: `${4 + i * 2} Pages`,
+          reviews:
+            typeof c.user_ratings_total === "number" && typeof c.rating === "number"
+              ? `${c.user_ratings_total} ★ ${c.rating}`
+              : "—",
+          speed: "—",
+          routes: "—",
           territory: c.website ? c.website.replace(/^https?:\/\/(www\.)?/, "").split("/")[0] : "Competitor",
           status: "Competitor",
         })),
