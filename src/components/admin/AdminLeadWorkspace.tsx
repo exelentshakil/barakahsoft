@@ -910,22 +910,25 @@ export function AdminLeadWorkspace({
             {/* Sits beside the price being asked, which is the only place
                 cost-to-process means anything. Tokens are always real;
                 dollars appear only for models that have been priced. */}
+            {/* Ads plus models, against the price being asked two rows
+                below. Falls back to whichever half is known rather than
+                showing nothing, and to raw tokens when no model is priced. */}
             <HeaderStat
-              label="AI cost to process"
+              label="Cost to acquire"
               value={
-                cost.costUsd !== null
-                  ? `$${cost.costUsd.toFixed(2)}`
+                cost.totalUsd !== null
+                  ? `$${cost.totalUsd.toFixed(2)}`
                   : cost.calls > 0
                     ? `${(cost.promptTokens + cost.completionTokens).toLocaleString()}`
                     : "—"
               }
               suffix={
-                cost.costUsd !== null
-                  ? cost.unpricedCalls > 0
-                    ? ` · +${cost.unpricedCalls} unpriced`
-                    : ` · ${cost.calls} calls`
+                cost.totalUsd !== null
+                  ? cost.adShareUsd !== null
+                    ? ` · ads $${cost.adShareUsd.toFixed(2)} of ${cost.adShareCohort}`
+                    : ` · ${cost.calls} model calls`
                   : cost.calls > 0
-                    ? " tokens · set AI_MODEL_PRICES"
+                    ? " tokens · no price set"
                     : ""
               }
               tone="neutral"
