@@ -27,6 +27,8 @@ export interface SectionCriticResult {
   warnings: string[];
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function slugFromInput(input: string): string {
   const trimmed = input.trim();
   try {
@@ -37,6 +39,24 @@ function slugFromInput(input: string): string {
   } catch {
     return trimmed.replace(/^\/+|\/+$/g, "");
   }
+}
+
+/**
+ * Accept either a lead slug/URL or a lead id.
+ *
+ * These helpers were written for the CLI, where an operator pastes a preview
+ * URL or a slug. The admin API routes address leads by id instead, and a
+ * UUID passed straight through to getSiteData — which matches on `slug` —
+ * silently found nothing and surfaced as "No site data found for <uuid>".
+ */
+async function resolveSlug(input: string): Promise<string> {
+  const trimmed = input.trim();
+  if (!UUID.test(trimmed)) return slugFromInput(trimmed);
+
+  const admin = createAdminClient();
+  const { data } = await admin.from("leads").select("slug").eq("id", trimmed).maybeSingle<{ slug: string }>();
+  if (!data?.slug) throw new Error(`No lead found with id ${trimmed}`);
+  return data.slug;
 }
 
 function labelFromId(id: string): string {
@@ -55,7 +75,7 @@ function parseSections(html: string): EditableSection[] {
 }
 
 export async function loadSections(input: string): Promise<{ leadSlug: string; sections: EditableSection[]; css: string | null }> {
-  const leadSlug = slugFromInput(input);
+  const leadSlug = await resolveSlug(input);
   const data = await getSiteData(leadSlug);
   if (!data) throw new Error(`No site data found for ${leadSlug}`);
 
@@ -68,7 +88,7 @@ export async function loadSections(input: string): Promise<{ leadSlug: string; s
 }
 
 export async function saveSections(input: string, sections: EditableSection[], options: { css?: string | null } = {}): Promise<void> {
-  const leadSlug = slugFromInput(input);
+  const leadSlug = await resolveSlug(input);
   const data = await getSiteData(leadSlug);
   if (!data) throw new Error(`No site data found for ${leadSlug}`);
 
@@ -93,7 +113,7 @@ export async function saveSections(input: string, sections: EditableSection[], o
 }
 
 export async function criticiseSite(input: string): Promise<SectionCriticResult> {
-  const leadSlug = slugFromInput(input);
+  const leadSlug = await resolveSlug(input);
   const data = await getSiteData(leadSlug);
   if (!data) throw new Error(`No site data found for ${leadSlug}`);
 
@@ -124,7 +144,7 @@ export async function promptSection(
   provider: GenerationProvider = "openai",
   imagePath?: string
 ): Promise<EditableSection> {
-  const data = await getSiteData(slugFromInput(input));
+  const data = await getSiteData(await resolveSlug(input));
   if (!data) throw new Error(`No site data found for ${input}`);
   const { sections } = await loadSections(input);
   const section = sections.find((item) => item.id === sectionId);

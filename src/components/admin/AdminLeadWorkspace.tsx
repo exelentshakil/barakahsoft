@@ -990,6 +990,11 @@ export function AdminLeadWorkspace({
           </div>
         </div>
 
+        {/* Sits on the lead tab, directly under the verified facts: the
+            operator watches sections stream in while reading the brief they
+            were generated from, rather than switching tabs to find them. */}
+        <LiveSectionStudio leadId={lead.id} isActive={tab === "lead"} />
+
         {/* Social Media Launch Studio (3D Poster & Motion Kit) prominently below Lead Data */}
         <SocialMockupPanel lead={lead} artifact={artifact} facts={facts} />
 
@@ -1003,7 +1008,6 @@ export function AdminLeadWorkspace({
           scrapeResults={scrapeResults}
           onGenerated={() => setReloadKey((k) => k + 1)}
         />
-        <LiveSectionStudio leadId={lead.id} isActive={tab === "build"} />
         </TabPanel>
 
         <TabPanel active={tab === "photos"}>
@@ -1447,7 +1451,7 @@ export function AdminLeadWorkspace({
               Collect {priceDisplay} & Launch {lead.custom_domain || lead.source_url}
             </h3>
             <p className="text-xs text-white/70 mt-1 leading-relaxed">
-              Client receives 100% standalone Next.js code + DNS CNAME setup with a 48-hour launch timeline after payment, content approval, and domain access.
+              Client receives 100% standalone Next.js code + DNS CNAME setup with a 2-4 week launch timeline after payment, content approval, and domain access.
             </p>
           </div>
 
