@@ -621,9 +621,16 @@ export function AdminLeadWorkspace({
                   }`}
                 >
                   <div className="flex items-center justify-between gap-1">
-                    <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-slate-700">
-                      {itemTrade}
-                    </span>
+                    <div className="flex items-center gap-1.5 truncate">
+                      <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-slate-700">
+                        {itemTrade}
+                      </span>
+                      {(item.source === "outreach" || item.source === "manual") && (
+                        <span className="rounded-md bg-sky-50 border border-sky-200 px-1.5 py-0.5 text-[10px] font-bold text-sky-700">
+                          Outreach
+                        </span>
+                      )}
+                    </div>
                     <span className="text-xs font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">$779</span>
                   </div>
 
@@ -681,6 +688,15 @@ export function AdminLeadWorkspace({
               <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-indigo-50 border border-indigo-200 px-3 py-1 text-xs font-black text-indigo-700">
                 <Zap className="h-3.5 w-3.5" /> Active Lead Pipeline
               </span>
+              {lead.source === "outreach" || lead.source === "manual" ? (
+                <Badge variant="outline" className="whitespace-nowrap text-xs font-bold px-2.5 py-1 bg-sky-50 text-sky-700 border-sky-300">
+                  🎯 Manual Outreach
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="whitespace-nowrap text-xs font-bold px-2.5 py-1 bg-emerald-50 text-emerald-700 border-emerald-300">
+                  ⚡ Inbound Lead
+                </Badge>
+              )}
               <Badge variant="outline" className="whitespace-nowrap text-xs font-bold px-2.5 py-1">
                 {STATUS_LABEL[lead.status] ?? lead.status}
               </Badge>

@@ -23,6 +23,7 @@ export async function POST(req: Request) {
       business_name: body.business_name ?? null,
       slug,
       status: "new",
+      source: "outreach",
     })
     .select()
     .single();

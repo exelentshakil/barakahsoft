@@ -39,7 +39,7 @@ export interface Lead {
   id: string;
   owner_account_id: string | null;
   source_url: string;
-  source: "home" | "redesign";
+  source: "home" | "redesign" | "outreach" | "manual";
   contact_name: string | null;
   business_name: string | null;
   slug: string;
