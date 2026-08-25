@@ -83,17 +83,15 @@ export function LiveClientProposal({
   const pricingIsConfigured = typeof pricingData.offerId === "string" || (Array.isArray(pricingData.offerOptions) && pricingData.offerOptions.length > 0);
   const [selectedOfferId, setSelectedOfferId] = useState<OfferOption["id"]>(recommendedOfferId);
   const selectedOffer = offers.find((offer) => offer.id === selectedOfferId) ?? recommendedOffer;
-  const setupPrice = selectedOffer.id === recommendedOfferId && pricingIsConfigured && typeof pricingData.setupPrice === "number" ? pricingData.setupPrice : selectedOffer.setupPrice;
-  const monthlyPrice = selectedOffer.id === recommendedOfferId && pricingIsConfigured && typeof pricingData.monthlyPrice === "number" ? pricingData.monthlyPrice : selectedOffer.monthlyPrice;
+  const setupPrice = selectedOffer.setupPrice;
+  const monthlyPrice = selectedOffer.monthlyPrice;
   const priceFormattedLabel =
     setupPrice === 0 && monthlyPrice > 0
       ? `$0 Setup · $${monthlyPrice}/mo`
       : setupPrice > 0 && monthlyPrice > 0
       ? `$${setupPrice} setup · $${monthlyPrice}/mo`
       : `$${setupPrice}`;
-  const scopeItems = pricingIsConfigured && Array.isArray(pricingData.scopeItems) && pricingData.scopeItems.length > 0
-    ? pricingData.scopeItems.filter((item: unknown): item is string => typeof item === "string" && item.trim().length > 0)
-    : selectedOffer.scopeItems;
+  const scopeItems = selectedOffer.scopeItems;
   const diagnosedGaps = report.audit?.findings.slice(0, 3).map((finding) => finding.title).join(", ") || "the measured website and visibility gaps";
   const offerSummary = offers.map((offer) => `${offer.label}: $${offer.setupPrice}${offer.monthlyPrice > 0 ? ` + $${offer.monthlyPrice}/mo` : " one time"}`).join("; ");
   const chatContext = `Hi BarakahSoft, I am reviewing the proposal for ${businessName}. I would like to discuss the ${selectedOffer.label} option (${setupPrice > 0 ? `$${setupPrice} one time` : "no setup"}${monthlyPrice > 0 ? ` + $${monthlyPrice}/mo` : ""}). Please help me choose between the four launch paths: ${offerSummary}. The main gaps identified were: ${diagnosedGaps}. Website: ${lead.source_url}`;

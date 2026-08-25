@@ -76,6 +76,10 @@ export function PricingManager({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  const [selectedOfferId, setSelectedOfferId] = useState<OfferOption["id"]>(
+    currentPricing?.offerId || leadValue?.suggested?.offerId || "complete"
+  );
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -92,7 +96,7 @@ export function PricingManager({
             discountLabel,
             scopeItems: scopeItems.map((item) => item.trim()).filter(Boolean),
             offerOptions,
-            offerId: leadValue?.suggested.offerId,
+            offerId: selectedOfferId,
         }),
       });
       if (!res.ok) throw new Error("Failed to save");
@@ -149,71 +153,74 @@ export function PricingManager({
         <form onSubmit={handleSave} className="space-y-4 text-xs">
           {/* Preset Buttons */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">1-Click Offer Presets</Label>
+            <Label className="text-xs font-semibold">1-Click Offer Presets (Select Recommended Plan)</Label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <button
                 type="button"
                 onClick={() => {
+                  setSelectedOfferId("essential");
                   setModel("flat");
-                  setSetupPrice(597);
+                  setSetupPrice(295);
                   setMonthlyPrice(0);
-                  setStandardValue(1297);
-                  setDiscountLabel("Founding Launch Offer");
-                  setScopeItems([
+                  setStandardValue(595);
+                  setDiscountLabel("Essential Launch Offer");
+                  setScopeItems(offerOptions.find(o => o.id === "essential")?.scopeItems || [
                     `Custom homepage redesign tailored for ${businessName}`,
-                    `${pageCount || 5} core service pages based on your real offerings`,
-                    "Lead capture, quote request & click-to-call flow",
-                    "LocalBusiness JSON-LD schema & technical SEO foundation",
-                    "Responsive visual assets with custom footer & logo badge integration",
-                    "100% client-owned website files with 2-4 week launch support",
+                    `${Math.min(5, pageCount || 5)} core service pages based on your real offerings`,
+                    "Mobile conversion optimization & click-to-call flow",
+                    "Verified Google review badges and trust integration",
+                    "LocalBusiness schema foundation for local search",
+                    "100% client-owned website files & source assets",
                   ]);
                 }}
                 className={`rounded-lg border p-2.5 text-center transition ${
-                  model === "flat" && setupPrice === 597 && monthlyPrice === 0
-                    ? "border-primary bg-primary/10 font-bold text-primary"
+                  selectedOfferId === "essential"
+                    ? "border-[#533afd] bg-[#f0f3ff] font-bold text-[#533afd] ring-2 ring-[#533afd]/20"
                     : "border-border hover:bg-accent"
                 }`}
               >
-                <span className="block font-bold text-sm">$597 one time</span>
+                <span className="block font-bold text-sm">$295 one time</span>
                 <span className="text-[10px] text-muted-foreground">Essential Launch</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => {
+                  setSelectedOfferId("growth");
                   setModel("flat");
-                  setSetupPrice(997);
+                  setSetupPrice(597);
                   setMonthlyPrice(0);
-                  setStandardValue(1997);
-                  setDiscountLabel("Recommended Launch Offer");
-                  setScopeItems([
+                  setStandardValue(1297);
+                  setDiscountLabel("Growth Build Offer");
+                  setScopeItems(offerOptions.find(o => o.id === "growth")?.scopeItems || [
                     `Custom homepage redesign tailored for ${businessName}`,
-                    `${pageCount || 8} dedicated service & location pages based on real offerings`,
-                    "Speed-engineered performance (95+ Google PageSpeed on mobile)",
-                    "Lead capture, click-to-call, and callback flow",
-                    "Full LocalBusiness SEO schema, OpenGraph cards & sitemap structure",
-                    "100% client-owned website files with white-glove launch support",
+                    `${Math.min(10, pageCount || 8)} dedicated service & location pages`,
+                    "Lead capture, quote request & instant callback routing",
+                    "LocalBusiness JSON-LD schema & technical SEO foundation",
+                    "Responsive branding with custom footer & logo badge integration",
+                    "100% client-owned website files with 2-4 week launch support",
                   ]);
                 }}
                 className={`rounded-lg border p-2.5 text-center transition ${
-                  model === "flat" && setupPrice === 997 && monthlyPrice === 0
-                    ? "border-primary bg-primary/10 font-bold text-primary"
+                  selectedOfferId === "growth"
+                    ? "border-[#533afd] bg-[#f0f3ff] font-bold text-[#533afd] ring-2 ring-[#533afd]/20"
                     : "border-border hover:bg-accent"
                 }`}
               >
-                <span className="block font-bold text-sm">$997 one time</span>
-                <span className="text-[10px] text-muted-foreground">Recommended Build</span>
+                <span className="block font-bold text-sm">$597 one time</span>
+                <span className="text-[10px] text-muted-foreground">Growth Build</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => {
+                  setSelectedOfferId("complete");
                   setModel("flat");
-                  setSetupPrice(1297);
+                  setSetupPrice(997);
                   setMonthlyPrice(0);
-                  setStandardValue(2497);
-                  setDiscountLabel("Complete Launch Offer");
-                  setScopeItems([
+                  setStandardValue(1997);
+                  setDiscountLabel("Complete Website Launch");
+                  setScopeItems(offerOptions.find(o => o.id === "complete")?.scopeItems || [
                     `Full ${pageCount || 10}-page core website architecture for ${businessName}`,
                     "Dedicated service pages for all offerings + local area combinations",
                     "Speed-engineered performance (95+ Google PageSpeed on mobile)",
@@ -223,39 +230,40 @@ export function PricingManager({
                   ]);
                 }}
                 className={`rounded-lg border p-2.5 text-center transition ${
-                  model === "flat" && setupPrice === 1297
-                    ? "border-primary bg-primary/10 font-bold text-primary"
+                  selectedOfferId === "complete"
+                    ? "border-[#533afd] bg-[#f0f3ff] font-bold text-[#533afd] ring-2 ring-[#533afd]/20"
                     : "border-border hover:bg-accent"
                 }`}
               >
-                <span className="block font-bold text-sm">$1,297 one time</span>
-                <span className="text-[10px] text-muted-foreground">Complete Build</span>
+                <span className="block font-bold text-sm">$997 one time</span>
+                <span className="text-[10px] text-muted-foreground">Complete Website ⭐</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => {
+                  setSelectedOfferId("managed");
                   setModel("hybrid");
-                  setSetupPrice(497);
+                  setSetupPrice(295);
                   setMonthlyPrice(149);
                   setStandardValue(2497);
                   setDiscountLabel("Managed Growth Offer");
-                  setScopeItems([
+                  setScopeItems(offerOptions.find(o => o.id === "managed")?.scopeItems || [
                     `Full ${pageCount || 10}-page core website rebuild tailored for ${businessName}`,
                     "Dedicated service & territory pages based on your real offerings",
                     "Global high-speed edge hosting, SSL & automated weekly backups",
                     "Ongoing security monitoring, maintenance & monthly content updates",
-                    "AI lead assistant with instant SMS/Email inquiry alerts",
+                    "AI lead assistant with instant SMS/Email notifications",
                     "100% client-owned website files (cancel anytime without penalty)",
                   ]);
                 }}
                 className={`rounded-lg border p-2.5 text-center transition ${
-                  model === "hybrid" && setupPrice === 497 && monthlyPrice === 149
-                    ? "border-primary bg-primary/10 font-bold text-primary"
+                  selectedOfferId === "managed"
+                    ? "border-[#533afd] bg-[#f0f3ff] font-bold text-[#533afd] ring-2 ring-[#533afd]/20"
                     : "border-border hover:bg-accent"
                 }`}
               >
-                <span className="block font-bold text-sm">$497 + $149/mo</span>
+                <span className="block font-bold text-sm">$295 + $149/mo</span>
                 <span className="text-[10px] text-muted-foreground">Managed Growth</span>
               </button>
             </div>
