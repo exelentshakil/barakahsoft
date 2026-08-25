@@ -151,7 +151,7 @@ export function LiveSectionStudio({ leadId, isActive }: { leadId: string; isActi
 
                 <div className="rounded-lg bg-[#f0f3ff] p-3 border border-[#c7d0fb]">
                   <p className="text-[11px] leading-relaxed text-[#42506a]">
-                    <strong>Vision / Figma:</strong> You can also paste screenshots or Figma URLs in your prompt for the AI to match visually (Coming soon to this UI, supported via OpenCode CLI).
+                    <strong>Vision:</strong> Attach a reference screenshot on the live preview&rsquo;s code editor (Edit code &rarr; pick a section) and the rebuild will match it. A Figma <em>file</em> link cannot be read &mdash; it serves HTML, not an image &mdash; so export the frame as PNG.
                   </p>
                 </div>
               </div>

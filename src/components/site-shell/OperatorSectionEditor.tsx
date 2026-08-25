@@ -52,6 +52,7 @@ export function OperatorSectionEditor({ leadId }: { leadId: string }) {
   const [image, setImage] = useState<string | null>(null);
   const [imageName, setImageName] = useState<string | null>(null);
   const [refining, setRefining] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const loadChrome = useCallback(async () => {
     try {
@@ -65,13 +66,28 @@ export function OperatorSectionEditor({ leadId }: { leadId: string }) {
     }
   }, [leadId]);
 
-  function attachImage(file: File | undefined) {
+  // Uploaded rather than inlined: a retry then costs a URL instead of
+  // re-sending several megabytes of base64, and one path per lead is
+  // overwritten each time so references never accumulate in the bucket.
+  async function attachImage(file: File | undefined) {
     if (!file) return;
     if (!file.type.startsWith("image/")) { setError("That file is not an image."); return; }
     if (file.size > 8 * 1024 * 1024) { setError("Image is over 8MB — export it smaller."); return; }
-    const reader = new FileReader();
-    reader.onload = () => { setImage(String(reader.result)); setImageName(file.name); setError(null); };
-    reader.readAsDataURL(file);
+    setUploading(true);
+    setError(null);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch(`/api/leads/${leadId}/reference-image`, { method: "POST", body });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) { setError(data?.error ?? "Upload failed."); return; }
+      setImage(data.url);
+      setImageName(data.name ?? file.name);
+    } catch {
+      setError("Could not reach the server.");
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function refine() {
@@ -313,8 +329,8 @@ export function OperatorSectionEditor({ leadId }: { leadId: string }) {
               />
               <div className="flex flex-wrap items-center gap-2">
                 <label className="cursor-pointer rounded-md border border-slate-600 px-2.5 py-1.5 text-[11px] font-bold text-slate-200 transition hover:border-amber-300 hover:text-amber-300">
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => attachImage(e.target.files?.[0])} />
-                  {imageName ? "Change image" : "Attach screenshot"}
+                  <input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={(e) => void attachImage(e.target.files?.[0])} />
+                  {uploading ? "Uploading…" : imageName ? "Change image" : "Attach screenshot"}
                 </label>
                 {imageName && (
                   <span className="flex items-center gap-1.5 text-[11px] text-slate-400">
@@ -327,7 +343,7 @@ export function OperatorSectionEditor({ leadId }: { leadId: string }) {
                 )}
                 <button
                   type="button"
-                  disabled={refining || !instruction.trim()}
+                  disabled={refining || uploading || !instruction.trim()}
                   onClick={() => void refine()}
                   className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-amber-300/40 bg-amber-300/10 px-3 py-1.5 text-[11px] font-bold text-amber-200 transition hover:bg-amber-300/20 disabled:opacity-40"
                 >
