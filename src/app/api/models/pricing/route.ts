@@ -86,7 +86,12 @@ Return strict JSON only:
     typeof v === "number" && Number.isFinite(v) && v >= 0 && v < 10_000 ? v : null;
 
   const suggestions: Suggestion[] = models.map((m) => {
-    const hit = rows.find((r) => typeof (r as { model?: string })?.model === "string" && (r as { model: string }).model.toLowerCase() === m.model.toLowerCase()) as
+    const hit = rows.find((r) => {
+      if (typeof (r as { model?: string })?.model !== "string") return false;
+      const returnedModel = (r as { model: string }).model.toLowerCase();
+      const requestedModel = m.model.toLowerCase();
+      return returnedModel === requestedModel || returnedModel.includes(requestedModel);
+    }) as
       | { inputPerMillion?: unknown; outputPerMillion?: unknown; sourceUrl?: unknown; note?: unknown }
       | undefined;
     return {
