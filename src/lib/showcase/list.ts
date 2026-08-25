@@ -32,26 +32,34 @@ interface ShowcaseRow {
  * one-sided "before/after" is worse than one fewer card.
  */
 export async function listApprovedShowcases(limit = 12): Promise<ShowcaseEntry[]> {
-  const admin = createAdminClient();
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return [];
+  }
 
-  const { data, error } = await admin
-    .from("leads")
-    .select("slug, business_name, showcase_label, showcase_before_url, showcase_after_url")
-    .eq("showcase_approved", true)
-    .order("showcase_sort", { ascending: false })
-    .order("showcase_approved_at", { ascending: false })
-    .limit(limit)
-    .returns<ShowcaseRow[]>();
+  try {
+    const admin = createAdminClient();
 
-  if (error || !data) return [];
+    const { data, error } = await admin
+      .from("leads")
+      .select("slug, business_name, showcase_label, showcase_before_url, showcase_after_url")
+      .eq("showcase_approved", true)
+      .order("showcase_sort", { ascending: false })
+      .order("showcase_approved_at", { ascending: false })
+      .limit(limit)
+      .returns<ShowcaseRow[]>();
 
-  return data
-    .filter((row) => row.showcase_before_url && row.showcase_after_url)
-    .map((row) => ({
-      slug: row.slug,
-      businessName: row.business_name ?? "Client redesign",
-      label: row.showcase_label,
-      beforeUrl: row.showcase_before_url as string,
-      afterUrl: row.showcase_after_url as string,
-    }));
+    if (error || !data) return [];
+
+    return data
+      .filter((row) => row.showcase_before_url && row.showcase_after_url)
+      .map((row) => ({
+        slug: row.slug,
+        businessName: row.business_name ?? "Client redesign",
+        label: row.showcase_label,
+        beforeUrl: row.showcase_before_url as string,
+        afterUrl: row.showcase_after_url as string,
+      }));
+  } catch {
+    return [];
+  }
 }
