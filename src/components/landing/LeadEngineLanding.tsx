@@ -291,7 +291,10 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 3. 3-STEP EVIDENCE VALUE BANNER (High-Contrast Navy & Gold) */}
+      {/* 3. TEAM SHOWCASE */}
+      <LandingTeamShowcase />
+
+      {/* 4. 3-STEP EVIDENCE VALUE BANNER (High-Contrast Navy & Gold) */}
       <section className="relative overflow-hidden border-b border-[#d9e8f4] bg-[#07284d] py-10 text-white shadow-inner">
         {/* Subtle grid on dark */}
         <div
@@ -344,7 +347,7 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 4. "SEE WHAT YOUR NEW WEBSITE COULD LOOK LIKE" (Smooth Multi-Row Marquee Showcase with Grid Backdrop) */}
+      {/* 5. "SEE WHAT YOUR NEW WEBSITE COULD LOOK LIKE" (Smooth Multi-Row Marquee Showcase with Grid Backdrop) */}
       <section id="design-quality" className="relative scroll-mt-24 border-b border-[#d9e8f4] bg-[#f8fbfe] py-20 lg:py-28 overflow-hidden space-y-10">
         <div
           className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(to_right,rgba(12,104,200,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(12,104,200,0.05)_1px,transparent_1px)] [background-size:48px_48px]"
@@ -409,7 +412,7 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 5. VISUAL STEP 0 TO DELIVERY JOURNEY (Modern SaaS Interactive Timeline) */}
+      {/* 6. VISUAL STEP 0 TO DELIVERY JOURNEY (Modern SaaS Interactive Timeline) */}
       <section id="how-it-works" className="relative border-b border-[#d9e8f4] bg-white py-20 lg:py-28">
         <div
           className="pointer-events-none absolute inset-0 opacity-30 [background-image:linear-gradient(to_right,rgba(12,104,200,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(12,104,200,0.04)_1px,transparent_1px)] [background-size:36px_36px]"
@@ -477,13 +480,13 @@ export function LeadEngineLanding() {
               href="#top"
               className="inline-flex items-center gap-2 rounded-lg bg-[#ffd12d] px-8 py-4 text-sm font-bold text-[#07284d] shadow-[0_6px_25px_rgba(255,209,45,0.3)] transition hover:bg-[#f5c400] hover:scale-105"
             >
-              Get My Free Redesign <ArrowRight className="h-4 w-4" />
+              See My New Homepage (Free) <ArrowRight className="h-4 w-4" />
             </a>
           </div>
         </div>
       </section>
 
-      {/* 6. "EVERYTHING YOU GET, FREE" (Navy + Gold Luxury Card) */}
+      {/* 7. "EVERYTHING YOU GET, FREE" (Navy + Gold Luxury Card) */}
       <section id="what-you-get" className="relative border-b border-[#d9e8f4] bg-[#f8fbfe] py-20 lg:py-28">
         <div className="relative mx-auto max-w-3xl px-6 space-y-10">
           <div className="text-center space-y-3">
@@ -531,7 +534,7 @@ export function LeadEngineLanding() {
                 href="#top"
                 className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#ffd12d] py-4 text-sm font-bold text-[#07284d] shadow-[0_6px_25px_rgba(255,209,45,0.35)] transition hover:bg-[#f5c400]"
               >
-                Get My Free Redesign <ArrowRight className="h-4 w-4" />
+                See My New Homepage (Free) <ArrowRight className="h-4 w-4" />
               </a>
               <p className="text-center text-xs text-white/70 mt-2.5">
                 48h delivery · No credit card · Yours to keep forever
@@ -540,9 +543,6 @@ export function LeadEngineLanding() {
           </div>
         </div>
       </section>
-
-      {/* 7. TEAM SHOWCASE */}
-      <LandingTeamShowcase />
 
       {/* 8. FAQ ACCORDION */}
       <FAQAccordion />
@@ -572,7 +572,7 @@ export function LeadEngineLanding() {
               href="#top"
               className="inline-flex items-center gap-2 rounded-lg bg-[#ffd12d] px-8 py-4 text-sm font-bold text-[#07284d] shadow-[0_6px_25px_rgba(255,209,45,0.3)] transition hover:bg-[#f5c400] hover:scale-105"
             >
-              Get My Free Redesign <ArrowRight className="h-4 w-4" />
+              See My New Homepage (Free) <ArrowRight className="h-4 w-4" />
             </a>
             <a
               href="tel:+13075336678"

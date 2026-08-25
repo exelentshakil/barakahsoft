@@ -73,9 +73,10 @@ export function RedesignIntakeFlow() {
   return (
     <div className="w-full">
       <form onSubmit={begin} className="mx-auto mt-8 flex w-full max-w-2xl flex-col gap-3 rounded-xl border border-white/20 bg-white p-2 shadow-2xl sm:flex-row">
-        <Input required type="url" placeholder="https://yourbusiness.com" value={url} onChange={(event) => setUrl(event.target.value)} className="h-12 flex-1 border-0 bg-transparent text-[#1e212b] shadow-none focus-visible:ring-0" />
-        <Button type="submit" className="h-12 rounded-lg bg-[#ffd12d] px-6 font-bold text-[#07284d] hover:bg-[#f5c400]">Get my free redesign <ArrowRight className="h-4 w-4" /></Button>
+        <Input required type="url" placeholder="Enter your current website address (e.g., mysite.com)" value={url} onChange={(event) => setUrl(event.target.value)} className="h-12 flex-1 border-0 bg-transparent text-[#1e212b] shadow-none focus-visible:ring-0" />
+        <Button type="submit" className="h-12 rounded-lg bg-[#ffd12d] px-6 font-bold text-[#07284d] hover:bg-[#f5c400]">See My New Homepage (Free) <ArrowRight className="h-4 w-4" /></Button>
       </form>
+      <p className="mt-3 w-full text-center text-xs text-[#7890a5]">🔒 We only look at your public website — no passwords or credit cards needed.</p>
       <p className="mt-3 w-full text-center text-xs text-[#7890a5]">Free · No credit card · Yours to keep</p>
 
       <Dialog open={open} onOpenChange={setOpen}>
