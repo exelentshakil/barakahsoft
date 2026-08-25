@@ -333,10 +333,56 @@ export const bespokeGenerate = inngest.createFunction(
       return result;
     });
 
-    const checked = await step.run("verify", async () => {
+    const firstCheck = await step.run("verify", async () => {
       const html = sanitizeBespokeHtml(composedHtml);
       return { html, report: verifyHomepage(html, brief, gateTokens, stylesheet.css) };
     });
+
+    // One repair attempt before giving up.
+    //
+    // generateStylesheet has always accepted the previous attempt's failures
+    // and nothing ever passed them, so the gate could only ever block: a
+    // sheet two shaping constructs short of the bar threw the run away
+    // instead of asking for two more. Handing the model its own blockers is
+    // what makes a standard raisable — otherwise every tightening is just a
+    // higher chance of shipping nothing.
+    let stylesheetCss = stylesheet.css;
+    let checked = firstCheck;
+
+    if (!firstCheck.report.passes) {
+      const repaired = await step.run("stylesheet-repair", async () => {
+        await touchProgress(admin, lead_id);
+        const blockers = firstCheck.report.findings
+          .filter((f) => f.severity === "blocker")
+          .map((f) => `- ${f.check}: ${f.detail}`)
+          .join("\n");
+        const result = await generateStylesheet(
+          composedHtml,
+          sitePlan.designNotes,
+          dna,
+          gateTokens,
+          blockers,
+          provider,
+          sitePlan.recurringPrimitive,
+          model
+        );
+        return result?.css ?? null;
+      });
+
+      if (repaired) {
+        const recheck = await step.run("verify-repair", async () => {
+          const html = sanitizeBespokeHtml(composedHtml);
+          return { html, report: verifyHomepage(html, brief, gateTokens, repaired) };
+        });
+        // Kept only if the repair actually cleared the gate — a second sheet
+        // that fails differently is not an improvement.
+        if (recheck.report.passes) {
+          stylesheetCss = repaired;
+          checked = recheck;
+        }
+      }
+    }
+
     if (!checked.report.passes) {
       throw new Error(`The composed homepage failed deterministic release checks. The previous live page was preserved.\n${checked.report.constraints}`);
     }
@@ -346,7 +392,7 @@ export const bespokeGenerate = inngest.createFunction(
     // sections wholesale. Deterministic source and browser defects still gate.
     const critique = (await step.run("creative-director", async () => {
       await touchProgress(admin, lead_id);
-      const result = await critiqueHomepage(checked.html, stylesheet.css, brief, dna, provider ?? "openai");
+      const result = await critiqueHomepage(checked.html, stylesheetCss, brief, dna, provider ?? "openai");
       return result ?? {
         passes: false,
         blockers: ["The creative-director review was unavailable; inspect the generated candidate manually."],
@@ -363,7 +409,7 @@ export const bespokeGenerate = inngest.createFunction(
               lead_id,
               attempt: 1,
               html: checked.html,
-              css: stylesheet.css,
+              css: stylesheetCss,
               rationale: sitePlan.designNotes,
               context: {
                 businessName: brief.businessName,
@@ -448,7 +494,7 @@ export const bespokeGenerate = inngest.createFunction(
       }
     }
 
-    const homepage = { html: checked.html, css: stylesheet.css, rationale: sitePlan.designNotes, visualReport };
+    const homepage = { html: checked.html, css: stylesheetCss, rationale: sitePlan.designNotes, visualReport };
     const homepageHtml = homepage.html;
     const verdict = checked.report;
 

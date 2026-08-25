@@ -126,7 +126,11 @@ function fallbackPlan(brief: SiteBrief, media: MediaPlan): SitePlan {
       visitorProblem: "Provide credible reassurance from people who have already hired the business.",
       purpose: "Present real attributed review text in an agency-grade equal-height horizontal slider.",
       archetype: "agency-grade equal-height review slider with 5-star ratings and customer attributions",
-      evidence: brief.reviews.map((review) => `${review.author}: ${review.text.slice(0, 100)}`),
+      // Not truncated. The plan's evidence is copied into the page almost
+      // verbatim, so a review clipped here ships as "due to a wat" — which
+      // reads as a broken site rather than a real customer. Long reviews are
+      // trimmed at a sentence boundary instead of mid-word.
+      evidence: brief.reviews.map((review) => `${review.author}: ${trimToSentence(review.text, 320)}`),
       mediaSlot: null,
     });
   }
@@ -183,6 +187,23 @@ function fallbackPlan(brief: SiteBrief, media: MediaPlan): SitePlan {
     services: brief.services.slice(0, 12).map((name) => ({ name, blurb: `${name} for customers in ${brief.city}.` })),
     sections,
   };
+}
+
+/**
+ * Shorten to a whole sentence, never mid-word.
+ *
+ * A review that stops at "True to their wo" undermines the credibility the
+ * section exists to establish, and the model copies this text through to the
+ * page as-is.
+ */
+function trimToSentence(text: string, max: number): string {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (clean.length <= max) return clean;
+  const cut = clean.slice(0, max);
+  const lastStop = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("! "), cut.lastIndexOf("? "));
+  if (lastStop > max * 0.5) return cut.slice(0, lastStop + 1);
+  const lastSpace = cut.lastIndexOf(" ");
+  return `${cut.slice(0, lastSpace > 0 ? lastSpace : max)}…`;
 }
 
 export async function generateSitePlan(

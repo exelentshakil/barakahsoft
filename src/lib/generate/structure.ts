@@ -104,7 +104,7 @@ THIS BATCH ONLY:
 ${JSON.stringify(batch, null, 2)}
 
 ═══ ONE DESIGN SYSTEM ACROSS EVERY BATCH ═══
-- Every section root is <section id="the-plan-id" class="site-section descriptive-section-class"> and contains a site-shell wrapper.
+- Every section root is <section id="the-plan-id" class="site-section {name}"> where {name} is a class YOU choose describing that section, e.g. class="site-section hero-split" or class="site-section services-index". Never emit the word "descriptive-section-class" — it is a placeholder, not a class name, and every section carrying it is how nine sections end up sharing one block class and looking identical.
 - Every repetition of the primary action uses the exact text "${brief.intent.primaryLabel}" and classes "site-cta site-cta--primary". Do not invent another primary button class, colour or label.
 - Secondary actions use "site-cta site-cta--secondary" and remain visually subordinate.
 - Shared components keep shared classes across sections. Use descriptive block__element classes only for section-specific composition.
