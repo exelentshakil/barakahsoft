@@ -169,15 +169,24 @@ If this batch contains the hero section (id="hero"):
 ${
   brief.intent.primary === "shop"
     ? `- For this e-commerce business, feature high-impact product collection CTAs: <a href="#products" class="site-cta site-cta--primary">${brief.intent.primaryLabel}</a> paired with <a href="#about" class="site-cta site-cta--secondary">Learn More</a>.`
-    : `- For this service/appointment/contractor business, include a high-converting, styled lead capture form ([data-lead-form]) in the hero left column above the fold!
-  Form fields:
-    name="name" (text, required, placeholder="Your Full Name")
-    name="phone" (tel, required, placeholder="Phone Number")
-    name="email" (email, optional, placeholder="Email Address")
-    name="service" (<select> with the business's real services, optional)
-    <button type="submit" class="site-cta site-cta--primary">${brief.intent.primaryLabel || "Get Free Quote / Fast Callback"}</button>
-    <div data-lead-form-message></div>
-- Pair with direct click-to-call phone link: <a href="tel:${brief.phone ? brief.phone.replace(/[^\d+]/g, "") : ""}" class="site-cta site-cta--secondary">Call ${brief.phone || "(XXX) XXX-XXXX"}</a>.`
+    : `- For this service/appointment/contractor business, build a balanced 2-column hero strictly above the fold:
+  * LEFT COLUMN (55%):
+    - Eyebrow tag (e.g. "— 24/7 EMERGENCY RESTORATION IN ${brief.city.toUpperCase()}")
+    - Massive bold headline addressing the customer's urgent problem (clamp(2.5rem, 4vw, 3.75rem))
+    - Outcome-driven subheadline connecting service to peace of mind
+    - Direct click-to-call button: <a href="tel:${brief.phone ? brief.phone.replace(/[^\d+]/g, "") : ""}" class="site-cta site-cta--primary">Call ${brief.phone || "(XXX) XXX-XXXX"}</a>
+    - 24/7 live dispatch status badge with pulse indicator ("24/7 Live Dispatch · Fast Response")
+    - Verified Google rating trust strip (${brief.rating ? brief.rating + " stars (" + brief.reviewCount + " reviews)" : "5.0 Star Rated"} · Licensed & Insured)
+  * RIGHT COLUMN (45%):
+    - Elevated Lead Machine Card (<div class="hero-lead-card">) containing [data-lead-form]
+    - Form fields:
+        name="name" (text, required, placeholder="Your Full Name")
+        name="phone" (tel, required, placeholder="Phone Number")
+        name="email" (email, optional, placeholder="Email Address")
+        name="service" (<select> with real services: ${brief.services.slice(0, 5).join(", ")})
+        <button type="submit" class="site-cta site-cta--primary">${brief.intent.primaryLabel || "Get Free Quote / Fast Callback"}</button>
+        <div data-lead-form-message></div>
+    - Reassurance guarantee note under the button ("🔒 100% Confidential · No Obligation Estimate")`
 }
 - Every later primary CTA button further down the page uses data-open-quote-modal.
 

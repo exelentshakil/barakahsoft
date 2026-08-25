@@ -196,20 +196,25 @@ export function BespokeRuntime({ leadSlug }: { leadSlug: string }) {
     // ---- Review sliders -------------------------------------------------
     // All quotes remain in the document and the track remains swipeable when
     // script is off. These controls only add predictable previous/next steps.
-    root.querySelectorAll<HTMLElement>("[data-review-slider]").forEach((slider) => {
-      const track = slider.querySelector<HTMLElement>("[data-review-track]");
+    const onReviewSliderClick = (event: Event) => {
+      const target = event.target as HTMLElement;
+      const prevBtn = target.closest<HTMLElement>("[data-review-prev]");
+      const nextBtn = target.closest<HTMLElement>("[data-review-next]");
+      if (!prevBtn && !nextBtn) return;
+      event.preventDefault();
+
+      const direction = prevBtn ? -1 : 1;
+      const btn = prevBtn || nextBtn;
+      const container = btn?.closest<HTMLElement>("section, [class*='container'], [data-review-slider]") || root;
+      const track = container.querySelector<HTMLElement>("[data-review-track]") || root.querySelector<HTMLElement>("[data-review-track]");
       if (!track) return;
-      const move = (direction: number) => {
-        const card = track.firstElementChild as HTMLElement | null;
-        track.scrollBy({ left: direction * (card?.offsetWidth ?? track.clientWidth), behavior: reduceMotion ? "auto" : "smooth" });
-      };
-      const onClick = (event: Event) => {
-        if ((event.target as HTMLElement).closest("[data-review-prev]")) move(-1);
-        if ((event.target as HTMLElement).closest("[data-review-next]")) move(1);
-      };
-      slider.addEventListener("click", onClick);
-      cleanups.push(() => slider.removeEventListener("click", onClick));
-    });
+
+      const card = track.firstElementChild as HTMLElement | null;
+      const step = card?.offsetWidth ? card.offsetWidth + 24 : track.clientWidth * 0.85;
+      track.scrollBy({ left: direction * step, behavior: reduceMotion ? "auto" : "smooth" });
+    };
+    root.addEventListener("click", onReviewSliderClick);
+    cleanups.push(() => root.removeEventListener("click", onReviewSliderClick));
 
     // ---- Bar charts -----------------------------------------------------
     // Drawn from data attributes into elements that already contain their

@@ -148,24 +148,25 @@ SECTION QUALITY. Every section needs a strong headline, a visual idea and a conv
 MOBILE IS A REDESIGN, NOT A COLLAPSE. Preserve hierarchy and colour rhythm at 360px. Reorder media before copy where it improves comprehension, remove decorative overlap, keep natural content height, and ensure no type, metric, form or image crop becomes cramped.`;
 
 export const MASTER_HERO_STANDARD = `═══ HERO SECTION — THE UNMISSABLE HIGH-CONVERTING MASTERPIECE ═══
-Every hero section must look like a high-end $20,000 bespoke agency build with clear visual hierarchy and balanced mass:
+Every hero section must look like a high-end $20,000 bespoke agency build with clear visual hierarchy, disciplined grid, and above-the-fold conversion power:
 
 DESKTOP SILHOUETTE (2-Column Balanced Grid, 55% / 45%):
 1. LEFT COLUMN — The Value Stack & Immediate Conversion Anchor:
    - Eyebrow Tag: A sleek uppercase label preceded by a subtle brand accent line (e.g., "— PROPERTY DAMAGE RESTORATION IN LAS VEGAS").
-   - Massive Typographic Headline: Bold, commanding font-display face (clamp(2.75rem, 4.5vw, 4.25rem)) directly addressing the urgent customer problem (e.g., "Help for water, fire, mold and property damage in Las Vegas").
+   - Massive Typographic Headline: Bold, commanding font-display face (clamp(2.5rem, 4vw, 3.75rem)) directly addressing the urgent customer problem (e.g., "Help for water, fire, mold and property damage in Las Vegas").
    - Outcome-Driven Subhead: 1-2 readable sentences connecting real services to relief and peace of mind.
-   - Conversion Action (Above the Fold):
-     * For Quote/Booking/Consultation businesses: Include a styled above-the-fold lead capture form ([data-lead-form]) with clean 44px+ inputs and high-contrast submit button matching --bs-primary.
-     * For Emergency/Call-First businesses: High-contrast Primary Button (e.g., "Call (702) 213-5972") paired with a Secondary "Request a callback" button ([data-open-quote-modal]) and a 24/7 dispatch reassurance text ("Open 24 hours, every day").
+   - Immediate Direct Call CTA: Click-to-call phone link (<a href="tel:..." class="site-cta site-cta--primary">Call (XXX) XXX-XXXX</a>) paired with a 24/7 live dispatch status badge / pulse indicator ("24/7 Emergency Dispatch · Avg 45 Min Response").
    - Trust Proof Strip: Real Google review rating badge with ★★★★★ stars, verified review count, "Licensed & Insured" reassurance badge, and "Locally Owned" pill.
 
-2. RIGHT COLUMN — Framed Hero Visual with Inset Caption:
-   - High-resolution hero image or owner cutout set inside an elegant frame with generous border-radius (var(--bs-radius-lg)), subtle 1px border (var(--bs-border-color)), and deep ambient drop shadow (var(--bs-shadow-lift)).
-   - Inset or floating caption pill in the brand accent color along the bottom edge (e.g., "Property restoration work in progress in Las Vegas").
-   - Image must use object-fit: cover with explicit aspect-ratio (e.g. 4/3 or 1/1) and loading="eager" fetchpriority="high".
+2. RIGHT COLUMN — Above-The-Fold Lead Capture Form Card OR Framed Hero Visual:
+   - For Service / Quote / Contractor / Lead-Gen Businesses:
+     * A sharp, elevated Lead Capture Card (.hero-lead-card) containing [data-lead-form] with service/pain dropdown, name, phone, email, high-contrast submit button, and reassurance guarantee note ("100% Free · No Obligation · Fast Response").
+     * Positioned strictly above the fold with compact padding so visitors can convert without scrolling!
+   - For Portfolio / Story / E-commerce Businesses:
+     * High-resolution hero image or owner cutout set inside an elegant frame with generous border-radius (var(--bs-radius-lg)), subtle 1px border (var(--bs-border-color)), deep ambient drop shadow (var(--bs-shadow-lift)), and inset caption pill.
+     * Image must use object-fit: cover with explicit aspect-ratio (e.g. 4/3 or 1/1) and loading="eager" fetchpriority="high".
 
-NEVER output a bare text wall without photography, never center-align a generic brochure paragraph, and never leave the hero without immediate trust proof and action targets.`;
+NEVER output a bare text wall without photography or lead card, never center-align a generic brochure paragraph, and never leave the hero without immediate trust proof and action targets.`;
 
 export const MASTER_ABOUT_STANDARD = `═══ ABOUT / OUR STORY SECTION — THE 3-TIER LAYERED MASTERPIECE ═══
 The About section (id="about") is the ultimate credibility builder where a visitor decides whether to trust the people behind the business:

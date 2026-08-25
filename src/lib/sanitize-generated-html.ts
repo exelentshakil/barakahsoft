@@ -241,6 +241,9 @@ export function sanitizeBespokeHtml(rawHtml: string): string {
         }
 
         if (tagName === "img" && !next.loading) next.loading = "lazy";
+        if (tagName === "svg" && !next.viewBox && !next.viewbox) {
+          next.viewBox = "0 0 24 24";
+        }
 
         return { tagName, attribs: next };
       },

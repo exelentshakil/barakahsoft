@@ -132,8 +132,9 @@ LAYOUT & MASTER SECTIONS
 - Text measure limits: max-width: 26ch on major headings, max-width: 60ch–66ch on body copy and section subtitles.
 - HERO SECTION STYLING:
   * 2-column balanced grid on desktop (55% left / 45% right).
-  * Left: Eyebrow label, massive bold heading (clamp(2.75rem, 4.5vw, 4.25rem)), clear subheadline, above-the-fold lead form or dual CTAs, and trust proof badges.
-  * Right: Framed hero image with border-radius (var(--bs-radius-lg)), subtle 1px border (var(--bs-border-color)), deep drop shadow (var(--bs-shadow-lift)), and an inset or floating brand-accent caption pill.
+  * Vertical padding: compact clamp(2rem, 3.5vw, 3.5rem) to ensure the entire hero and lead capture card fit strictly above the fold on desktop viewports.
+  * Left: Eyebrow label, massive bold heading (clamp(2.5rem, 4vw, 3.75rem)), outcome subheadline, direct click-to-call button (.site-cta--primary), 24/7 live dispatch status badge, and verified rating trust strip.
+  * Right: Elevated Lead Capture Card (.hero-lead-card) with crisp background, subtle border, shadow (var(--bs-shadow-card)), and 44px+ inputs OR framed hero image with radius and lift shadow.
 - ABOUT SECTION STYLING (3-TIER LAYERED MASTERPIECE):
   * Tier 1: Asymmetric split with a framed documentary team/work photograph on the left and an editorial story block on the right (with eyebrow, headline, 2 paragraphs, 4px solid left-border guarantee box, and primary action buttons).
   * Tier 2: Full-width solid metric ribbon band with 3-4 high-contrast stats (Experience, Projects, Rating, Satisfaction) in --bs-primary or dark surface.
