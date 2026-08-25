@@ -87,6 +87,23 @@ export async function loadSections(input: string): Promise<{ leadSlug: string; s
   return { leadSlug, sections, css: data.artifact.bespoke_css ?? null };
 }
 
+/**
+ * Confirm an editor id is a real account before it is written.
+ *
+ * artifacts.last_edited_by has a foreign key to accounts(id), and the value
+ * reaching here has been wrong twice. Verifying costs one indexed lookup and
+ * makes it impossible for attribution to cost someone their edit.
+ */
+async function resolveEditor(
+  admin: ReturnType<typeof createAdminClient>,
+  editedBy: string | null | undefined
+): Promise<string | null> {
+  const id = (editedBy ?? "").trim();
+  if (!UUID.test(id)) return null;
+  const { data } = await admin.from("accounts").select("id").eq("id", id).maybeSingle<{ id: string }>();
+  return data?.id ?? null;
+}
+
 export async function saveSections(
   input: string,
   sections: EditableSection[],
@@ -108,12 +125,14 @@ export async function saveSections(
       locked: Boolean(section.locked),
     })),
     last_edited_at: new Date().toISOString(),
-    // A uuid column. It previously took the literal string
-    // "local-section-surgery", which Postgres rejected outright — every save
-    // through this path failed with "invalid input syntax for type uuid".
-    // The CLI has no user to attribute, so it stores null rather than a
-    // label the column cannot hold.
-    last_edited_by: UUID.test((options.editedBy ?? "").trim()) ? options.editedBy : null,
+    // A uuid column with a foreign key to accounts(id). It has broken saves
+    // twice: first holding the literal string "local-section-surgery", which
+    // is not a uuid at all, then holding a Supabase auth user id, which is a
+    // uuid but not an accounts id — those are separate values matched only
+    // by email. Attribution is best-effort, so an id that does not resolve
+    // to a real account is stored as null rather than failing the save and
+    // losing the operator's edit.
+    last_edited_by: await resolveEditor(admin, options.editedBy),
   };
   if (options.css !== undefined) update.bespoke_css = options.css;
 
