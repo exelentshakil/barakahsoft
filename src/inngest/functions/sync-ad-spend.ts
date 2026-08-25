@@ -15,13 +15,20 @@ import { fetchDailyInsights } from "@/lib/meta/ads-insights";
 // re-reading a day corrects it instead of adding to it.
 export const syncAdSpend = inngest.createFunction(
   { id: "sync-ad-spend", retries: 2 },
-  { cron: "30 4 * * *" }, // 04:30 UTC daily, after Meta has settled the previous day
+  // Every six hours rather than nightly.
+  //
+  // Insights is not a demanding call — one account, one week, account level —
+  // and Meta's own spend figures refresh on roughly an hour, so this is well
+  // inside any rate limit while never showing a number more than a quarter of
+  // a day stale. Polling faster than the source updates buys nothing: the
+  // limit on freshness is Meta's attribution, not our schedule.
+  { cron: "15 */6 * * *" },
   async ({ step }) => {
     const result = await step.run("fetch-insights", async () => fetchDailyInsights(7));
 
-    // Not thrown: a missing token or a revoked one is a configuration
-    // problem the operator fixes in Business Settings, and failing the run
-    // every night turns it into noise that gets muted rather than read.
+    // Not thrown: a missing or revoked token is a configuration problem
+    // fixed in Business Settings, and a job that fails on every run becomes
+    // noise that gets muted rather than read.
     if (result.error) {
       console.warn(`[sync-ad-spend] skipped — ${result.error}`);
       return { synced: 0, skipped: result.error };

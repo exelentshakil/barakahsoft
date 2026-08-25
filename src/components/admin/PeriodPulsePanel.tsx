@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, AlertTriangle, Settings } from "lucide-react";
+import { Loader2, AlertTriangle, Settings, RefreshCw } from "lucide-react";
 import { CostSettingsDialog } from "@/components/admin/CostSettingsDialog";
 
 // Did this period pay for itself?
@@ -39,6 +39,34 @@ export function PeriodPulsePanel({ collectedRevenue, pipelineToClose }: { collec
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncNote, setSyncNote] = useState<string | null>(null);
+
+  // The same sync the nightly job runs. Kept on the panel rather than only
+  // inside settings because "is this figure current?" is asked while looking
+  // at the figure, not while configuring anything.
+  async function pullAdSpend() {
+    setSyncing(true);
+    setSyncNote(null);
+    setError(null);
+    try {
+      const res = await fetch("/api/costs/meta-sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ days: 30 }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) { setError(body?.error ?? "Sync failed."); return; }
+      if (body.synced === 0) { setSyncNote(body.note ?? "Nothing to sync."); return; }
+      setSyncNote(`${body.synced} days · ${body.currency} ${body.totalSpend.toFixed(2)}`);
+      if (body.currencyWarning) setError(body.currencyWarning);
+      await load();
+    } catch {
+      setError("Could not reach the server.");
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   const load = useCallback(async () => {
     if (period === "custom" && !from) return;
@@ -109,6 +137,18 @@ export function PeriodPulsePanel({ collectedRevenue, pipelineToClose }: { collec
         {(data?.otherCosts ?? []).map((c) => (
           <Row key={c.kind} label={c.kind === "ads" ? "Ad spend" : c.kind} value={money(c.amountUsd)} tone="cost" />
         ))}
+        <div className="flex items-center justify-between pt-0.5">
+          <button
+            type="button"
+            disabled={syncing}
+            onClick={() => void pullAdSpend()}
+            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-bold text-slate-600 transition hover:border-[#533afd] hover:text-[#533afd] disabled:opacity-40"
+          >
+            {syncing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+            {syncing ? "Pulling…" : "Pull ad spend"}
+          </button>
+          {syncNote && <span className="text-[10px] font-semibold text-emerald-700">{syncNote}</span>}
+        </div>
         <div className="flex items-center justify-between border-t border-slate-100 pt-1.5">
           <span className="text-xs font-black text-slate-700">Net</span>
           <span className={`rounded border px-2 py-0.5 text-base font-black ${
