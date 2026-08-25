@@ -277,7 +277,7 @@ function verifyStylesheet(css: string): QualityFinding[] {
   // page with a repeated primitive clears without trying, and blocking there
   // is what stops the generator settling for stacked rectangles. A page
   // measured before this existed had exactly zero.
-  const shaping = (css.match(/clip-path\s*:|border-radius\s*:\s*[^;]*\/|::(before|after)\b|mask-image\s*:|transform\s*:\s*(skew|rotate)/gi) ?? []).length;
+  const shaping = (css.match(/clip-path\s*:|border-radius\s*:\s*[^;]*\/|::?(before|after)\b|mask(-image)?\s*:|transform\s*:\s*[^;]*(skew|rotate)/gi) ?? []).length;
   if (shaping < 3) {
     add("blocker", "composition", `Only ${shaping} shaping constructs (clip-path, ::before/::after, skew/rotate, mask). Every section is a plain rectangle — build the recurring primitive and give at least three sections a shaped edge or offset ground.`);
   } else if (shaping < 8) {
