@@ -13,6 +13,10 @@ export function AddUrlDialog({ variant = "default" }: { variant?: "default" | "o
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState("");
   const [businessName, setBusinessName] = useState("");
+  const [email, setEmail] = useState("");
+  // Advisory findings from validation — a shared inbox or a free mailbox is
+  // worth knowing about but is not a reason to refuse the prospect.
+  const [emailNotes, setEmailNotes] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,13 +31,18 @@ export function AddUrlDialog({ variant = "default" }: { variant?: "default" | "o
         body: JSON.stringify({
           source_url: url.trim().startsWith("http") ? url.trim() : `https://${url.trim()}`,
           business_name: businessName.trim() || undefined,
+          email: email.trim() || undefined,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong");
+      // Advisory notes are shown rather than swallowed, but they never block
+      // the save — the prospect was created either way.
+      if (Array.isArray(data.emailNotes) && data.emailNotes.length > 0) setEmailNotes(data.emailNotes);
       setOpen(false);
       setUrl("");
       setBusinessName("");
+      setEmail("");
       const leadId = data.lead_id || data.lead?.id;
       if (leadId) {
         router.push(`/admin/leads/${leadId}`);
@@ -105,6 +114,32 @@ export function AddUrlDialog({ variant = "default" }: { variant?: "default" | "o
               className="text-xs"
             />
           </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="add-email" className="text-xs font-bold text-[#0d1738]">
+              Email <span className="text-[10px] font-normal text-muted-foreground">(needed to send the outreach sequence)</span>
+            </Label>
+            <Input
+              id="add-email"
+              type="email"
+              placeholder="e.g. info@pinnaclerestoration.com"
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); setEmailNotes([]); }}
+              className="text-xs"
+            />
+            <p className="text-[10px] leading-snug text-muted-foreground">
+              Checked on save: the address must be well formed and its domain must actually accept mail. Bounces are
+              what move a sending domain into the spam folder for every other prospect.
+            </p>
+          </div>
+
+          {emailNotes.length > 0 && (
+            <ul className="space-y-1 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[11px] text-amber-900">
+              {emailNotes.map((n) => (
+                <li key={n}>• {n}</li>
+              ))}
+            </ul>
+          )}
 
           {error && <p className="text-xs font-semibold text-[#e11d48] bg-rose-50 p-2.5 rounded-lg border border-rose-200">{error}</p>}
 

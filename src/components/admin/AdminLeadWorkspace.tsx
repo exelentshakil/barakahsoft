@@ -70,7 +70,6 @@ import { ShowcaseApprovalControl } from "@/components/portal/sections/ShowcaseAp
 import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStudio";
 import { RefinePanel } from "@/components/admin/RefinePanel";
 import { HandBuildPanel } from "@/components/admin/HandBuildPanel";
-import { LiveSectionStudio } from "@/components/admin/LiveSectionStudio";
 import { OutreachSequencePanel } from "@/components/admin/OutreachSequencePanel";
 import { AddUrlDialog } from "@/components/admin/AddUrlDialog";
 import { VisibilityPanel } from "@/components/admin/VisibilityPanel";
@@ -1042,11 +1041,6 @@ export function AdminLeadWorkspace({
             </div>
           </div>
         </div>
-
-        {/* Sits on the lead tab, directly under the verified facts: the
-            operator watches sections stream in while reading the brief they
-            were generated from, rather than switching tabs to find them. */}
-        <LiveSectionStudio leadId={lead.id} isActive={tab === "lead"} />
 
         {/* Social Media Launch Studio (3D Poster & Motion Kit) prominently below Lead Data */}
         <SocialMockupPanel lead={lead} artifact={artifact} facts={facts} />
