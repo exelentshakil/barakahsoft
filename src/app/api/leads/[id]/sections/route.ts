@@ -39,7 +39,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
 
     sections[existingIndex].html = sanitizeBespokeHtml(html);
-    await saveSections(id, sections, { css });
+    await saveSections(id, sections, { css, editedBy: user.id });
 
     return NextResponse.json({ ok: true, section: sections[existingIndex] });
   } catch (err: any) {
@@ -60,7 +60,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       return NextResponse.json({ error: "sections array is required" }, { status: 400 });
     }
 
-    await saveSections(id, sections, { css });
+    await saveSections(id, sections, { css, editedBy: user.id });
     return NextResponse.json({ ok: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

@@ -87,7 +87,11 @@ export async function loadSections(input: string): Promise<{ leadSlug: string; s
   return { leadSlug, sections, css: data.artifact.bespoke_css ?? null };
 }
 
-export async function saveSections(input: string, sections: EditableSection[], options: { css?: string | null } = {}): Promise<void> {
+export async function saveSections(
+  input: string,
+  sections: EditableSection[],
+  options: { css?: string | null; editedBy?: string | null } = {}
+): Promise<void> {
   const leadSlug = await resolveSlug(input);
   const data = await getSiteData(leadSlug);
   if (!data) throw new Error(`No site data found for ${leadSlug}`);
@@ -104,7 +108,12 @@ export async function saveSections(input: string, sections: EditableSection[], o
       locked: Boolean(section.locked),
     })),
     last_edited_at: new Date().toISOString(),
-    last_edited_by: "local-section-surgery",
+    // A uuid column. It previously took the literal string
+    // "local-section-surgery", which Postgres rejected outright — every save
+    // through this path failed with "invalid input syntax for type uuid".
+    // The CLI has no user to attribute, so it stores null rather than a
+    // label the column cannot hold.
+    last_edited_by: UUID.test((options.editedBy ?? "").trim()) ? options.editedBy : null,
   };
   if (options.css !== undefined) update.bespoke_css = options.css;
 

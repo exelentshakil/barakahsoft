@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdminSession } from "@/lib/is-admin-session";
+import { createClient } from "@/lib/supabase/server";
 import { promptSection, loadSections, saveSections, replaceSection } from "@/lib/section-surgery";
 
 // Rebuilding one section from an instruction, optionally against a reference
@@ -54,8 +55,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       typeof model === "string" && model.trim() ? model.trim() : undefined
     );
 
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
     const { sections, css } = await loadSections(id);
-    await saveSections(id, replaceSection(sections, newSection), { css });
+    await saveSections(id, replaceSection(sections, newSection), { css, editedBy: user?.id ?? null });
 
     return NextResponse.json({ ok: true, section: newSection });
   } catch (err) {
