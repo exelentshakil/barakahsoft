@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Code2, Loader2, X, Check, RefreshCw, AlertTriangle, Wand2, Image as ImageIcon } from "lucide-react";
+import { Code2, Loader2, X, Check, RefreshCw, AlertTriangle, Wand2, Image as ImageIcon, MousePointerClick } from "lucide-react";
 
 // Direct code editing on the live preview, for operators only.
 //
@@ -53,6 +53,88 @@ export function OperatorSectionEditor({ leadId }: { leadId: string }) {
   const [imageName, setImageName] = useState<string | null>(null);
   const [refining, setRefining] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  // Inline editing: the page itself is the editor.
+  //
+  // Raw markup in a textarea is precise but it is the wrong tool for the
+  // edits that actually come up — a stray line break in an address, a word
+  // in a heading. Those are faster to fix where you can see them. Structural
+  // work still belongs in the markup tab, which is why both exist.
+  const [inline, setInline] = useState(false);
+  const [touched, setTouched] = useState<string[]>([]);
+
+  const stopInline = useCallback(() => {
+    document.querySelectorAll<HTMLElement>("[data-op-edit]").forEach((el) => {
+      el.removeAttribute("contenteditable");
+      el.removeAttribute("data-op-edit");
+      el.style.removeProperty("outline");
+      el.style.removeProperty("outline-offset");
+    });
+  }, []);
+
+  const startInline = useCallback(() => {
+    let armed = 0;
+    document.querySelectorAll<HTMLElement>("section[id]").forEach((el) => {
+      el.setAttribute("contenteditable", "true");
+      el.setAttribute("data-op-edit", el.id);
+      el.style.setProperty("outline", "1px dashed rgba(251,191,36,0.65)");
+      el.style.setProperty("outline-offset", "-2px");
+      armed++;
+    });
+    if (armed === 0) setError("No sections with an id found on this page.");
+  }, []);
+
+  useEffect(() => {
+    if (!inline) { stopInline(); return; }
+    startInline();
+    const onInput = (e: Event) => {
+      const host = (e.target as HTMLElement | null)?.closest?.("[data-op-edit]") as HTMLElement | null;
+      const id = host?.getAttribute("data-op-edit");
+      if (id) setTouched((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    };
+    document.addEventListener("input", onInput, true);
+    return () => { document.removeEventListener("input", onInput, true); stopInline(); };
+  }, [inline, startInline, stopInline]);
+
+  /** Read a section back out of the DOM without the editing attributes. */
+  function serialiseSection(id: string): string | null {
+    const el = document.querySelector<HTMLElement>(`section[data-op-edit="${CSS.escape(id)}"]`);
+    if (!el) return null;
+    const clone = el.cloneNode(true) as HTMLElement;
+    clone.removeAttribute("contenteditable");
+    clone.removeAttribute("data-op-edit");
+    clone.style.removeProperty("outline");
+    clone.style.removeProperty("outline-offset");
+    if (!clone.getAttribute("style")) clone.removeAttribute("style");
+    clone.querySelectorAll("[contenteditable]").forEach((c) => c.removeAttribute("contenteditable"));
+    return clone.outerHTML;
+  }
+
+  async function saveInline() {
+    if (touched.length === 0) return;
+    setSaving(true);
+    setError(null);
+    try {
+      for (const id of touched) {
+        const html = serialiseSection(id);
+        if (!html) continue;
+        const res = await fetch(`/api/leads/${leadId}/sections`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sectionId: id, html }),
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok) { setError(`${id}: ${data?.error ?? "save failed"}`); return; }
+      }
+      setSaved(true);
+      setTouched([]);
+      setTimeout(() => window.location.reload(), 600);
+    } catch {
+      setError("Could not reach the server.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   const loadChrome = useCallback(async () => {
     try {
@@ -233,16 +315,51 @@ export function OperatorSectionEditor({ leadId }: { leadId: string }) {
         ? chromeLoaded
         : Boolean(activeId) && draft !== sections.find((s) => s.id === activeId)?.html;
 
+  // Closed, the panel collapses to a bar so inline editing can be used with
+  // the whole page visible — a side panel covering half the site is the
+  // wrong shape for "fix this heading".
   if (!open) {
     return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="fixed bottom-5 left-5 z-[9999] inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-lg transition hover:bg-slate-800"
-      >
-        <Code2 className="h-4 w-4" />
-        Edit code
-      </button>
+      <div className="fixed bottom-5 left-5 z-[9999] flex items-center gap-2 rounded-full bg-slate-900 p-1.5 pl-2 shadow-lg">
+        <button
+          type="button"
+          onClick={() => setInline((v) => !v)}
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition ${
+            inline ? "bg-amber-300 text-slate-900" : "text-slate-200 hover:bg-slate-800"
+          }`}
+          title="Click any text on the page and type"
+        >
+          <MousePointerClick className="h-3.5 w-3.5" />
+          {inline ? "Editing page" : "Edit on page"}
+        </button>
+
+        {inline && touched.length > 0 && (
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => void saveInline()}
+            className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400 px-3 py-1.5 text-xs font-bold text-slate-900 transition hover:bg-emerald-300 disabled:opacity-50"
+          >
+            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+            Save {touched.length}
+          </button>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold text-slate-200 transition hover:bg-slate-800"
+        >
+          <Code2 className="h-3.5 w-3.5" />
+          Code
+        </button>
+
+        {error && (
+          <span className="max-w-[16rem] truncate pr-2 text-[11px] text-red-300" title={error}>
+            {error}
+          </span>
+        )}
+      </div>
     );
   }
 

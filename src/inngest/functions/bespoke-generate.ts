@@ -291,7 +291,22 @@ export const bespokeGenerate = inngest.createFunction(
       // match the colour the page actually renders with, and the palette
       // may have adjusted or replaced what was scraped.
       const map = await renderServiceMap(lead_id, brief.areas, gateTokens.vars["--bs-primary"] ?? null);
-      return map ? injectServiceMap(composedRaw, map, brief.businessName) : composedRaw;
+      if (!map) return composedRaw;
+
+      // The map has to land in the stored areas SECTION, not only in the
+      // composed document. Editing any section rebuilds the page HTML by
+      // re-joining bespoke_sections, so a map that existed only in the
+      // composed copy would silently disappear the first time an operator
+      // saved an unrelated edit.
+      const areasIndex = generatedSections.findIndex((section) => section.id === "areas");
+      if (areasIndex >= 0) {
+        generatedSections[areasIndex] = {
+          ...generatedSections[areasIndex],
+          html: injectServiceMap(generatedSections[areasIndex].html, map, brief.businessName),
+        };
+      }
+
+      return generatedSections.map((section) => section.html).join("\n");
     });
 
     const stylesheet = await step.run("stylesheet", async () => {
