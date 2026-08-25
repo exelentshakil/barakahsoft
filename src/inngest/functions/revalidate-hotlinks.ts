@@ -34,7 +34,9 @@ export const revalidateHotlinks = inngest.createFunction(
           const ext = contentType.split("/")[1]?.split(";")[0]?.split("+")[0] || "jpg";
           const buffer = Buffer.from(await res.arrayBuffer());
           const path = `${asset.lead_id}/${asset.source}/${asset.slot_hint ?? "repaired"}-${Date.now()}.${ext}`;
-          const { error: uploadError } = await admin.storage.from("lead-media").upload(path, buffer, { contentType, upsert: false });
+          const { error: uploadError } = await admin.storage
+            .from("lead-media")
+            .upload(path, buffer, { contentType, cacheControl: "31536000", upsert: false });
           if (uploadError) throw uploadError;
           const { data } = admin.storage.from("lead-media").getPublicUrl(path);
           return { path, publicUrl: data.publicUrl };

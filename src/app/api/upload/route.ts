@@ -28,7 +28,9 @@ export async function POST(req: Request) {
 
   const admin = createAdminClient();
   const buffer = Buffer.from(await file.arrayBuffer());
-  const { error: uploadError } = await admin.storage.from("lead-media").upload(path, buffer, { contentType: file.type, upsert: false });
+  const { error: uploadError } = await admin.storage
+    .from("lead-media")
+    .upload(path, buffer, { contentType: file.type, cacheControl: "31536000", upsert: false });
   if (uploadError) return NextResponse.json({ error: uploadError.message }, { status: 400 });
 
   const { data } = admin.storage.from("lead-media").getPublicUrl(path);

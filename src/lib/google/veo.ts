@@ -136,7 +136,9 @@ export async function storeGeneratedVideo(
 
     const path = `${leadId}/${folder}/${slotHint}-${Date.now()}.mp4`;
     const admin = createAdminClient();
-    const { error: uploadError } = await admin.storage.from("lead-media").upload(path, buffer, { contentType, upsert: false });
+    const { error: uploadError } = await admin.storage
+      .from("lead-media")
+      .upload(path, buffer, { contentType, cacheControl: "31536000", upsert: false });
     if (uploadError) throw uploadError;
 
     const { data } = admin.storage.from("lead-media").getPublicUrl(path);

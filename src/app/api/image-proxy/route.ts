@@ -34,10 +34,17 @@ export async function GET(req: Request) {
     const base64 = Buffer.from(arrayBuffer).toString("base64");
     const dataUri = `data:${contentType};base64,${base64}`;
 
-    return NextResponse.json({
-      dataUri,
-      contentType,
-    });
+    return NextResponse.json(
+      {
+        dataUri,
+        contentType,
+      },
+      {
+        headers: {
+          "Cache-Control": "public, max-age=31536000, immutable",
+        },
+      }
+    );
   } catch (err) {
     console.error("[image-proxy] error fetching", imageUrl, err);
     return NextResponse.json({ error: "Could not fetch image" }, { status: 500 });

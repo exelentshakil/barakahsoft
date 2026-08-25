@@ -43,7 +43,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       const path = `${leadId}/mockup/${slot}-${Date.now()}.${extension}`;
       const { error: uploadError } = await admin.storage
         .from("lead-media")
-        .upload(path, Buffer.from(await file.arrayBuffer()), { contentType: file.type, upsert: false });
+        .upload(path, Buffer.from(await file.arrayBuffer()), { contentType: file.type, cacheControl: "31536000", upsert: false });
       if (uploadError) throw uploadError;
 
       const { data } = admin.storage.from("lead-media").getPublicUrl(path);
