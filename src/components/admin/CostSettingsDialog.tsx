@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, Search, X, Plus, AlertTriangle, ExternalLink } from "lucide-react";
+import { Loader2, Search, X, Plus, AlertTriangle, ExternalLink, RefreshCw } from "lucide-react";
 
 // Setting model prices and recording spend.
 //
@@ -34,6 +34,34 @@ export function CostSettingsDialog({ onClose }: { onClose: () => void }) {
   const [spendKind, setSpendKind] = useState<"ads" | "tooling" | "other">("ads");
   const [spendDate, setSpendDate] = useState(new Date().toISOString().slice(0, 10));
   const [spendSaving, setSpendSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
+
+  async function syncMeta() {
+    setSyncing(true);
+    setError(null);
+    setSyncResult(null);
+    try {
+      const res = await fetch("/api/costs/meta-sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ days: 30 }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) { setError(data?.error ?? "Sync failed."); return; }
+      if (data.synced === 0) { setSyncResult(data.note ?? "Nothing to sync."); return; }
+      const cpr = data.costPerResult ? ` · ${data.currency} ${data.costPerResult.toFixed(2)} per result` : "";
+      setSyncResult(
+        `${data.synced} days · ${data.currency} ${data.totalSpend.toFixed(2)} spend · ${data.totalResults} results${cpr}`
+      );
+      if (data.currencyWarning) setError(data.currencyWarning);
+      setTimeout(() => window.location.reload(), 2000);
+    } catch {
+      setError("Could not reach the server.");
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -260,6 +288,20 @@ export function CostSettingsDialog({ onClose }: { onClose: () => void }) {
             </button>
           </div>
           <p className="text-[10px] text-slate-500">Dated, not stamped with today — ad spend entered late belongs in the week it happened.</p>
+
+          <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-2.5">
+            <button type="button" disabled={syncing} onClick={() => void syncMeta()}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-2.5 py-1.5 text-[11px] font-bold text-slate-700 transition hover:border-[#533afd] hover:text-[#533afd] disabled:opacity-40">
+              {syncing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+              {syncing ? "Pulling from Meta…" : "Pull ad spend from Meta"}
+            </button>
+            {syncResult && <span className="text-[10px] font-semibold text-emerald-700">{syncResult}</span>}
+          </div>
+          <p className="text-[10px] leading-snug text-slate-500">
+            Pulls the last 30 days, one row per day, keyed so re-running updates a figure rather than adding to it.
+            Needs META_ADS_TOKEN and META_AD_ACCOUNT_ID — use a System User token, not one from the Graph API Explorer,
+            which expires within hours.
+          </p>
         </div>
 
         {error && (
