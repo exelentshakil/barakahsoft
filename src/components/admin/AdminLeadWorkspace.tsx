@@ -63,7 +63,7 @@ import {
 } from "recharts";
 import type { Lead, LeadStatus, Artifact, ScrapeResults } from "@/types/database";
 import { toBlob } from "html-to-image";
-import { WorkspaceTabs, TabPanel, type WorkspaceStep } from "@/components/admin/WorkspaceTabs";
+import { WorkspaceTabs, WorkspaceTabHint, TabPanel, type WorkspaceStep } from "@/components/admin/WorkspaceTabs";
 import { DeliverySlaTimer } from "@/components/admin/DeliverySlaTimer";
 import { ShowcaseApprovalControl } from "@/components/portal/sections/ShowcaseApprovalControl";
 import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStudio";
@@ -131,9 +131,9 @@ function HeaderStat({
   return (
     <div className={`min-w-0 rounded-lg border p-2 transition ${bgBadge}`}>
       <p className="truncate text-[10px] font-bold uppercase tracking-wider text-slate-600">{label}</p>
-      <p className={`mt-0.5 truncate text-base font-bold tabular-nums tracking-tight ${colour}`}>
+      <p className={`mt-0.5 truncate text-lg font-bold tabular-nums tracking-tight ${colour}`}>
         {value}
-        {suffix && <span className="ml-1 text-[10px] font-bold text-slate-500">{suffix}</span>}
+        {suffix && <span className="ml-1 text-[11px] font-bold text-slate-500">{suffix}</span>}
       </p>
     </div>
   );
@@ -672,7 +672,7 @@ export function AdminLeadWorkspace({
   }
 
   return (
-    <div className="grid min-w-0 gap-8 lg:grid-cols-[320px_minmax(0,1fr)]">
+    <div className="grid min-w-0 gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
       {/* 1. LEFT ASIDE: INBOUND LEAD ORDERS & WEEKLY PULSE */}
       <aside className="min-w-0 space-y-6">
         <div className="rounded-2xl border border-slate-200/90 bg-white p-4 space-y-4 shadow-sm">
@@ -738,7 +738,7 @@ export function AdminLeadWorkspace({
 
       {/* 2. RIGHT COLUMN: LINEAR STUDIO WORKSPACE */}
       <div className="space-y-8">
-        <div className="space-y-3.5 rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm sm:p-5">
+        <div className="min-w-0 space-y-2.5 rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-sm sm:p-4">
           <div>
             <div className="flex flex-wrap items-center gap-2">
               {lead.source === "outreach" || lead.source === "manual" ? (
@@ -756,7 +756,7 @@ export function AdminLeadWorkspace({
               <DeliverySlaTimer createdAt={lead.created_at} deliveredAt={lead.delivered_at} />
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2.5">
-              <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+              <h1 className="truncate text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
                 {businessName}
               </h1>
               <div className="flex shrink-0 items-center rounded-xl border border-slate-200 bg-white">
@@ -773,7 +773,7 @@ export function AdminLeadWorkspace({
                 <DeleteLeadButton leadId={lead.id} />
               </div>
             </div>
-            <p className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs font-semibold text-slate-600">
+            <p className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-sm font-semibold text-slate-600">
               <span>{lead.contact_name || "Owner"}</span>
               <span className="text-slate-300">|</span>
               <span className="text-slate-800">{phone}</span>
@@ -783,7 +783,7 @@ export function AdminLeadWorkspace({
           </div>
 
           {/* Outreach Pipeline Status & Outcome Toolbar */}
-          <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 space-y-2">
+          <div className="min-w-0 rounded-xl border border-slate-200 bg-slate-50/80 p-2 space-y-1.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Outreach Stage:</span>
@@ -879,7 +879,7 @@ export function AdminLeadWorkspace({
           </div>
 
           {/* Key metrics grid */}
-          <div className="grid grid-cols-2 gap-2.5 border-y border-slate-100 py-2.5 sm:grid-cols-5">
+          <div className="grid grid-cols-2 gap-2 border-y border-slate-100 py-2 sm:grid-cols-3 xl:grid-cols-5">
             <HeaderStat
               label="Proposal link activity"
               value={lead.last_viewed_at ? "Opened ✓" : lead.delivered_at ? "Sent" : "Unsent"}
@@ -932,13 +932,13 @@ export function AdminLeadWorkspace({
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 pt-1">
+          <div className="flex flex-wrap items-center gap-1.5">
             <a
               href={portalUrl}
               target="_blank"
               rel="noreferrer"
               title="Opens the page the client sees: their new homepage, the report and the price."
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xs hover:border-slate-300 hover:bg-slate-50 transition"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 shadow-xs hover:border-slate-300 hover:bg-slate-50 transition"
             >
               <ExternalLink className="h-3.5 w-3.5 text-slate-400" /> See what the client sees
             </a>
@@ -961,7 +961,7 @@ export function AdminLeadWorkspace({
               <a
                 href={`tel:${lead.phone.replace(/\D/g, "")}`}
                 title={`Calls ${lead.phone}`}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xs hover:border-slate-300 hover:bg-slate-50 transition"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 shadow-xs hover:border-slate-300 hover:bg-slate-50 transition"
               >
                 <PhoneCall className="h-3.5 w-3.5 text-slate-400" /> Call them
               </a>
@@ -971,14 +971,20 @@ export function AdminLeadWorkspace({
               onClick={handleGenerateStripeCheckout}
               disabled={generatingStripe}
               title="Creates a Stripe payment link for this price and opens it."
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xs hover:border-slate-300 hover:bg-slate-50 transition"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 shadow-xs hover:border-slate-300 hover:bg-slate-50 transition"
             >
               <CircleDollarSign className="h-3.5 w-3.5 text-slate-400" /> Ask for payment ({priceDisplay})
             </button>
           </div>
         </div>
 
+        {/* Rail and content are siblings in a row, so the step's own work
+            gets every pixel the rail is not using. */}
+        <div className="flex flex-col gap-4 lg:flex-row lg:gap-5">
         <WorkspaceTabs steps={steps} active={tab} onChange={setTab} />
+
+        <div className="min-w-0 flex-1 space-y-4">
+        <WorkspaceTabHint steps={steps} active={tab} />
 
         <TabPanel active={tab === "lead"}>
         {/* LINEAR STEP 1: INBOUND INTAKE & VERIFIED FACTS */}
@@ -1567,6 +1573,8 @@ export function AdminLeadWorkspace({
           </button>
         </div>
         </TabPanel>
+        </div>
+        </div>
       </div>
     </div>
   );

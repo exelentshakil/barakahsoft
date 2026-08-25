@@ -18,13 +18,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const initials = (user.email || "OP").slice(0, 2).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-[#f9f9ff] text-[#0d1738] font-sans antialiased">
+    <div className="min-h-screen bg-[#f9f9ff] text-[15px] text-[#0d1738] font-sans antialiased">
       {/* Realtime Lead Watcher with Soothing Shopify-Style Chime */}
       <NewLeadWatcher />
 
       {/* 1. TOP BAR (Direct from Admin Prototype) */}
       <header className="sticky top-0 z-30 border-b border-[#e5e7f2] bg-white">
-        <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-between px-6">
+        <div className="flex h-16 w-full items-center justify-between px-6">
           <div className="flex items-center gap-4">
             <Link href="/admin">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -58,7 +58,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1600px] px-6 py-8">{children}</main>
+      {/* Full width: the workspace is a three-column tool, and a 1600px
+          cap left the middle column narrow enough to wrap on a laptop while
+          the sides sat in whitespace. */}
+      <main className="w-full px-6 py-6">{children}</main>
       <CrispChat />
     </div>
   );
