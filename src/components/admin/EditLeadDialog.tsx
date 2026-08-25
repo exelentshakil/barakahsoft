@@ -14,12 +14,18 @@ export function EditLeadDialog({
   sourceUrl,
   facebookPixelId,
   googleSiteVerification,
+  contactName,
+  phone,
+  email,
 }: {
   leadId: string;
   businessName: string | null;
   sourceUrl: string;
   facebookPixelId?: string | null;
   googleSiteVerification?: string | null;
+  contactName?: string | null;
+  phone?: string | null;
+  email?: string | null;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -27,6 +33,10 @@ export function EditLeadDialog({
   const [url, setUrl] = useState(sourceUrl);
   const [pixelId, setPixelId] = useState(facebookPixelId ?? "");
   const [gscToken, setGscToken] = useState(googleSiteVerification ?? "");
+  const [contact, setContact] = useState(contactName ?? "");
+  const [phoneValue, setPhoneValue] = useState(phone ?? "");
+  const [emailValue, setEmailValue] = useState(email ?? "");
+  const [notes, setNotes] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,10 +48,25 @@ export function EditLeadDialog({
       const res = await fetch(`/api/leads/${leadId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ business_name: name, source_url: url, facebook_pixel_id: pixelId, google_site_verification: gscToken }),
+        body: JSON.stringify({
+          business_name: name,
+          source_url: url,
+          facebook_pixel_id: pixelId,
+          google_site_verification: gscToken,
+          contact_name: contact,
+          phone: phoneValue,
+          email: emailValue,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong");
+      // Advisory findings on the address — a shared inbox, a free mailbox —
+      // are worth seeing but never block the save.
+      if (Array.isArray(data.emailNotes) && data.emailNotes.length > 0) {
+        setNotes(data.emailNotes);
+        router.refresh();
+        return;
+      }
       setOpen(false);
       router.refresh();
     } catch (err) {
@@ -61,7 +86,7 @@ export function EditLeadDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit lead</DialogTitle>
-          <DialogDescription>Correct the business name or source URL — useful for fixing junk test data.</DialogDescription>
+          <DialogDescription>Correct the business name, website and contact details. These are what the delivered site and every outreach email use.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>

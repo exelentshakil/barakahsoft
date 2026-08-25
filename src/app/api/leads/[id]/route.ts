@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { validateOutreachEmail } from "@/lib/outreach/validate-email";
 import { cleanupLeadStorage } from "@/lib/supabase/cleanup-storage";
 
 // Admin edit/delete for a single lead — cleanup of test/junk rows and
@@ -16,7 +17,21 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const updates: Record<string, string | null> = {};
   if (typeof body?.business_name === "string") updates.business_name = body.business_name || null;
   if (typeof body?.contact_name === "string") updates.contact_name = body.contact_name || null;
-  if (typeof body?.email === "string") updates.email = body.email.trim() || null;
+  // Checked here as well as at intake: this is the address the proposal and
+  // every sequence email goes to, and storing one that cannot receive mail
+  // means the send fails later with the bounce already spent.
+  let emailNotes: string[] = [];
+  if (typeof body?.email === "string") {
+    const trimmed = body.email.trim();
+    if (!trimmed) {
+      updates.email = null;
+    } else {
+      const verdict = await validateOutreachEmail(trimmed, typeof body?.source_url === "string" ? body.source_url : null);
+      if (!verdict.ok) return NextResponse.json({ error: verdict.problem }, { status: 400 });
+      updates.email = trimmed.toLowerCase();
+      emailNotes = verdict.notes;
+    }
+  }
   if (typeof body?.phone === "string") updates.phone = body.phone.trim() || null;
   if (typeof body?.status === "string") updates.status = body.status;
   if (typeof body?.source_url === "string" && body.source_url) updates.source_url = body.source_url;
@@ -30,7 +45,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const { data: lead, error } = await admin.from("leads").update(updates).eq("id", id).select().single();
   if (error || !lead) return NextResponse.json({ error: error?.message ?? "Could not update lead" }, { status: 500 });
 
-  return NextResponse.json({ lead });
+  return NextResponse.json({ lead, emailNotes });
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
