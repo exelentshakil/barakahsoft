@@ -151,13 +151,18 @@ ${INTERACTION_CONTRACT}
 
 ${truthStandard(brief.rating, brief.reviewCount)}
 
-${
-  brief.intent.primary !== "call-now" && brief.intent.primary !== "shop"
-    ? `If this batch contains the hero, put one real data-lead-form inside it. Every later primary CTA uses data-open-quote-modal.`
-    : brief.intent.secondary && brief.intent.secondary !== "call-now" && brief.intent.secondary !== "shop"
-      ? `The secondary action uses data-open-quote-modal.`
-      : ""
-}
+═══ HERO & LEAD CONVERSION REQUIREMENT ═══
+If this batch contains the hero section (id="hero"):
+- MUST include a high-converting, styled lead capture form ([data-lead-form]) in the hero left column above the fold!
+  Form fields:
+    name="name" (text, required, placeholder="Your Full Name")
+    name="phone" (tel, required, placeholder="Phone Number")
+    name="email" (email, optional, placeholder="Email Address")
+    name="service" (<select> with the business's real services, optional)
+    <button type="submit" class="site-cta site-cta--primary">${brief.intent.primaryLabel || "Get Free Quote / Fast Callback"}</button>
+    <div data-lead-form-message></div>
+- Pair with direct click-to-call phone link: <a href="tel:${brief.phone ? brief.phone.replace(/[^\d+]/g, "") : ""}" class="site-cta site-cta--secondary">Call ${brief.phone || "(XXX) XXX-XXXX"}</a>.
+- Every later primary CTA button further down the page uses data-open-quote-modal.
 
 Reply with every assigned section exactly once, in batch order, using these exact delimiters and no prose or markdown fences:
 ${batch.map((section) => `<!-- SECTION:${section.id} -->\n<section id="${section.id}" class="site-section ...">...</section>\n<!-- /SECTION:${section.id} -->`).join("\n")}`;

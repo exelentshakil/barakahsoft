@@ -130,8 +130,14 @@ export function buildSiteBrief(
       ? derivedAreas.slice(0, 12)
       : extractServiceAreas(pages).slice(0, 12);
 
-  const photos = realPhotos(facts);
-  const heroImage = overrides.heroImage || photos[0] || null;
+  const rawPhotos = realPhotos(facts);
+  const heroImage = overrides.heroImage || rawPhotos[0] || null;
+  const photos = Array.from(
+    new Set([
+      ...(heroImage ? [heroImage] : []),
+      ...rawPhotos,
+    ])
+  ).filter((u): u is string => typeof u === "string" && /^https?:\/\//i.test(u));
 
   const rating = typeof facts.rating === "number" ? facts.rating : null;
   const reviewCount = typeof facts.review_count === "number" ? facts.review_count : null;

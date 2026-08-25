@@ -467,14 +467,19 @@
 
 .bs-nav-link {
   padding: 0.5rem 0.75rem;
-  border-radius: var(--bs-radius-sm);
+  border-radius: var(--bs-radius-sm, 0.5rem);
   font-size: 0.9375rem;
-  font-weight: 500;
-  color: var(--bs-ink);
+  font-weight: 600;
+  color: var(--bs-ink, #0f172a) !important;
   transition: background 0.18s ease, color 0.18s ease;
   white-space: nowrap;
 }
-.bs-nav-link:hover { background: rgb(var(--bs-primary-rgb) / 0.08); color: var(--bs-primary); }
+.bs-nav-link:hover,
+.bs-nav-group:hover > .bs-nav-link,
+.bs-nav-link[aria-expanded="true"] {
+  background: var(--bs-surface-alt, #f1f5f9) !important;
+  color: var(--bs-ink, #0f172a) !important;
+}
 
 .bs-nav-group { position: relative; }
 .bs-nav-link-dropdown {
@@ -520,10 +525,11 @@
 
 .bs-nav-mega-kicker {
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--bs-primary);
+  color: var(--bs-ink, #0f172a);
+  opacity: 0.75;
 }
 
 .bs-nav-mega-cols {
@@ -713,15 +719,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
-  padding: 0.5rem 0.85rem;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
 }
 .bs-footer-logo-badge img {
-  max-height: 3.25rem;
-  max-width: 11rem;
+  max-height: 3.5rem;
+  max-width: 13rem;
   object-fit: contain;
 }
 .bs-footer-brand-text {

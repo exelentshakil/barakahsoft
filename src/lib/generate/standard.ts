@@ -24,8 +24,12 @@ export const COLOUR_STANDARD = `COLOUR — the 60-30-10 rule, and this is the wh
 
 CONTRAST IS NOT NEGOTIABLE. Body text clears 4.5:1 against whatever it sits on. Never pure
 #000000 — pure black is eye fatigue and the clearest tell of an unconsidered palette; the
-tokens already give you a soft charcoal, which holds a reader far longer. Never a saturated
-brand colour as body text.
+tokens already give you a soft charcoal, which holds a reader far longer.
+
+NEVER EVER USE BRIGHT ACCENT COLORS (such as yellow #FFD974, gold, lime, cyan, or pastel tints)
+FOR FONT TEXT ON LIGHT BACKGROUNDS. It makes navigation, headings, and labels completely invisible.
+All text, navigation links, and body copy on light surfaces MUST use high-contrast dark neutral (--bs-ink, #0f172a).
+Bright brand colors belong on button fills and borders, never as body/heading font text on white.
 
 - Grounds and text are NEUTRAL. --bs-surface, --bs-surface-alt, --bs-ink, --bs-ink-muted.
 - --bs-accent is a second, smaller highlight. Use it once or twice at most.
