@@ -1,3 +1,4 @@
+import { recordUsage, usageContext } from "@/lib/cost/record-usage";
 export type GeminiImagePart = { mimeType: string; data: string };
 
 export interface GeminiCallOptions {
@@ -131,6 +132,21 @@ export async function callGemini(
       }
 
       console.log(`[gemini] ${candidate} ok — ${text.length} chars`);
+
+      // Gemini reports usage on the response envelope rather than per
+      // candidate. Thinking tokens are billed as output, so they are counted
+      // with the completion rather than dropped.
+      const um = data.usageMetadata ?? {};
+      const ctx = usageContext();
+      void recordUsage({
+        leadId: ctx.leadId,
+        purpose: ctx.purpose,
+        provider: "gemini",
+        model: candidate,
+        promptTokens: um.promptTokenCount ?? 0,
+        completionTokens: (um.candidatesTokenCount ?? 0) + (um.thoughtsTokenCount ?? 0),
+      });
+
       return text.trim();
     } catch (err) {
       const timedOut = err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");

@@ -24,6 +24,7 @@
 
 // Either a public URL (cheaper — the API fetches it, we don't download and
 // re-encode it) or inline base64 for images that aren't publicly reachable.
+import { recordUsage, usageContext } from "@/lib/cost/record-usage";
 export type OpenAIImagePart = { mimeType: string; data: string } | { url: string } | string;
 
 // Ordered newest-first by actual release date, not by name: model families
@@ -246,6 +247,20 @@ export async function callOpenAI(prompt: string, options: CallOptions = {}): Pro
           `[openai] ${model} ok — prompt=${usage.prompt_tokens} completion=${usage.completion_tokens}` +
             ` reasoning=${usage.completion_tokens_details?.reasoning_tokens ?? 0}`
         );
+
+        // Not awaited: recording what a call cost must never delay or fail
+        // the call itself. Reasoning tokens are billed as output, so they
+        // are counted with the completion rather than dropped.
+        const ctx = usageContext();
+        void recordUsage({
+          leadId: ctx.leadId,
+          purpose: ctx.purpose,
+          provider: "openai",
+          model,
+          promptTokens: usage.prompt_tokens ?? 0,
+          completionTokens:
+            (usage.completion_tokens ?? 0) + (usage.completion_tokens_details?.reasoning_tokens ?? 0),
+        });
 
         return text.trim();
       }

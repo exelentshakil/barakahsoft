@@ -19,6 +19,7 @@ import { buildChromeSpec } from "@/lib/chrome-spec";
 import { writeLivePage, HOME_KEY } from "@/lib/page-versions";
 import { sanitizeBespokeHtml } from "@/lib/sanitize-generated-html";
 import { verifyHomepage } from "@/lib/audit/quality-gate";
+import { setUsageContext } from "@/lib/cost/record-usage";
 import { visualQaEnabled, type GenerationCandidate, type VisualQaReport } from "@/lib/visual-qa";
 import { slugifyText } from "@/lib/slug";
 import type { FunnelPageSection, Lead, ScrapeResults, Artifact } from "@/types/database";
@@ -96,6 +97,11 @@ export const bespokeGenerate = inngest.createFunction(
       model?: string;
     };
     const admin = createAdminClient();
+
+    // Every model call this run makes is billed to this lead. Generation is
+    // concurrency-limited to one run per lead, so a module-level current
+    // lead is accurate without threading an id through every signature.
+    setUsageContext(lead_id, `phase-${phase}`);
 
     const loaded = await step.run("load-context", async () => {
       const [{ data: lead }, { data: scrapeResults }, { data: artifact }] = await Promise.all([

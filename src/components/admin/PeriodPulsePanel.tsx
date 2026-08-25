@@ -1,0 +1,150 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { Loader2, AlertTriangle } from "lucide-react";
+
+// Did this period pay for itself?
+//
+// The pulse previously showed collected revenue and open pipeline and
+// nothing about what the leads cost to produce, so the one number that
+// decides whether this works — what went out against what came in — was not
+// on the screen at all.
+
+type Period = "week" | "fortnight" | "month" | "custom";
+
+interface Summary {
+  from: string;
+  to: string;
+  ai: { calls: number; promptTokens: number; completionTokens: number; costUsd: number; unpricedCalls: number };
+  otherCosts: { kind: string; amountUsd: number }[];
+  paidLeads: number;
+  pricingConfigured: boolean;
+}
+
+const PERIODS: { id: Period; label: string }[] = [
+  { id: "week", label: "7 days" },
+  { id: "fortnight", label: "14 days" },
+  { id: "month", label: "Month" },
+  { id: "custom", label: "Custom" },
+];
+
+const money = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+export function PeriodPulsePanel({ collectedRevenue, pipelineToClose }: { collectedRevenue: number; pipelineToClose: number }) {
+  const [period, setPeriod] = useState<Period>("week");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [data, setData] = useState<Summary | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    if (period === "custom" && !from) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const qs = new URLSearchParams({ period });
+      if (period === "custom") {
+        qs.set("from", from);
+        if (to) qs.set("to", to);
+      }
+      const res = await fetch(`/api/costs?${qs}`);
+      const body = await res.json().catch(() => null);
+      if (!res.ok) { setError(body?.error ?? "Could not load costs."); return; }
+      setData(body);
+    } catch {
+      setError("Could not reach the server.");
+    } finally {
+      setLoading(false);
+    }
+  }, [period, from, to]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const otherTotal = (data?.otherCosts ?? []).reduce((n, c) => n + c.amountUsd, 0);
+  const spend = (data?.ai.costUsd ?? 0) + otherTotal;
+  const net = collectedRevenue - spend;
+
+  return (
+    <div className="space-y-3 rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-black uppercase tracking-wider text-slate-500">Target pulse</span>
+        {loading && <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-400" />}
+      </div>
+
+      <div className="flex flex-wrap gap-1">
+        {PERIODS.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            onClick={() => setPeriod(p.id)}
+            className={`rounded-md px-2 py-1 text-[10px] font-bold transition ${
+              period === p.id ? "bg-[#533afd] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      {period === "custom" && (
+        <div className="flex items-center gap-1.5">
+          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-7 flex-1 rounded border border-slate-200 px-1.5 text-[10px]" />
+          <span className="text-[10px] text-slate-400">to</span>
+          <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-7 flex-1 rounded border border-slate-200 px-1.5 text-[10px]" />
+        </div>
+      )}
+
+      <div className="space-y-1.5 border-t border-slate-100 pt-2.5">
+        <Row label="Collected revenue" value={money(collectedRevenue)} tone="good" />
+        <Row label="AI processing" value={data ? money(data.ai.costUsd) : "—"} tone="cost" />
+        {(data?.otherCosts ?? []).map((c) => (
+          <Row key={c.kind} label={c.kind === "ads" ? "Ad spend" : c.kind} value={money(c.amountUsd)} tone="cost" />
+        ))}
+        <div className="flex items-center justify-between border-t border-slate-100 pt-1.5">
+          <span className="text-xs font-black text-slate-700">Net</span>
+          <span className={`rounded border px-2 py-0.5 text-base font-black ${
+            net >= 0 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700"
+          }`}>
+            {money(net)}
+          </span>
+        </div>
+        <Row label="Pipeline to close" value={money(pipelineToClose)} tone="neutral" />
+      </div>
+
+      {data && (
+        <p className="text-[10px] leading-snug text-slate-400">
+          {data.ai.calls} model calls · {(data.ai.promptTokens + data.ai.completionTokens).toLocaleString()} tokens ·{" "}
+          {data.paidLeads} paid {data.paidLeads === 1 ? "lead" : "leads"}
+        </p>
+      )}
+
+      {/* An unpriced model contributes tokens but no dollars, so the spend
+          figure above is a floor rather than a total. Saying so beats a
+          number that quietly understates what the week cost. */}
+      {data && !data.pricingConfigured && (
+        <p className="flex items-start gap-1.5 rounded-lg border border-amber-200 bg-amber-50 p-2 text-[10px] leading-snug text-amber-900">
+          <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+          No model prices set, so cost shows as $0. Set <code className="font-mono">AI_MODEL_PRICES</code> to see real spend — tokens above are already accurate.
+        </p>
+      )}
+      {data?.pricingConfigured && data.ai.unpricedCalls > 0 && (
+        <p className="text-[10px] leading-snug text-amber-700">
+          {data.ai.unpricedCalls} of {data.ai.calls} calls used a model with no price — actual spend is higher.
+        </p>
+      )}
+
+      {error && <p className="text-[10px] font-semibold text-rose-600">{error}</p>}
+    </div>
+  );
+}
+
+function Row({ label, value, tone }: { label: string; value: string; tone: "good" | "cost" | "neutral" }) {
+  const colour = tone === "good" ? "text-emerald-700" : tone === "cost" ? "text-rose-600" : "text-indigo-700";
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-xs font-bold text-slate-600">{label}</span>
+      <span className={`text-sm font-black ${colour}`}>{tone === "cost" ? `−${value.replace("$", "$")}` : value}</span>
+    </div>
+  );
+}

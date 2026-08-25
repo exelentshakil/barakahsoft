@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AddUrlDialog } from "@/components/admin/AddUrlDialog";
 import { AdminLeadWorkspace } from "@/components/admin/AdminLeadWorkspace";
+import { leadCost } from "@/lib/cost/lead-cost";
 import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 
 export default async function AdminLeadsPage() {
@@ -45,12 +46,15 @@ export default async function AdminLeadsPage() {
     supabase.from("scrape_results").select("*").eq("lead_id", activeLead.id).maybeSingle<ScrapeResults>(),
   ]);
 
+  const cost = await leadCost(activeLead.id);
+
   return (
     <AdminLeadWorkspace
       lead={activeLead}
       artifact={artifact ?? null}
       scrapeResults={scrapeResults ?? null}
       otherLeads={rows}
+      cost={cost}
     />
   );
 }

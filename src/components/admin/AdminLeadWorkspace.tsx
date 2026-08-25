@@ -71,6 +71,7 @@ import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStu
 import { RefinePanel } from "@/components/admin/RefinePanel";
 import { HandBuildPanel } from "@/components/admin/HandBuildPanel";
 import { OutreachSequencePanel } from "@/components/admin/OutreachSequencePanel";
+import { PeriodPulsePanel } from "@/components/admin/PeriodPulsePanel";
 import { AddUrlDialog } from "@/components/admin/AddUrlDialog";
 import { VisibilityPanel } from "@/components/admin/VisibilityPanel";
 import { AuditPanel } from "@/components/admin/AuditPanel";
@@ -87,6 +88,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { buildOfferOptions, type OfferOption } from "@/lib/audit/lead-value";
+import type { LeadCost } from "@/lib/cost/lead-cost";
 
 // Database status values, said the way an operator would say them. The raw
 // values are how the pipeline talks to itself; "qa_pending" tells someone
@@ -143,6 +145,8 @@ interface AdminLeadWorkspaceProps {
   artifact: Artifact | null;
   scrapeResults: ScrapeResults | null;
   otherLeads: Lead[];
+  /** Model spend so far on this lead. Zeroed when nothing has been recorded. */
+  cost: LeadCost;
 }
 
 export function AdminLeadWorkspace({
@@ -150,6 +154,7 @@ export function AdminLeadWorkspace({
   artifact,
   scrapeResults,
   otherLeads,
+  cost,
 }: AdminLeadWorkspaceProps) {
   const router = useRouter();
   const [emailSent, setEmailSent] = useState(Boolean(lead.delivered_at));
@@ -709,21 +714,7 @@ export function AdminLeadWorkspace({
 
         {outreachLeads.length > 0 && <OutreachSequencePanel leads={outreachLeads} track="outreach" />}
 
-        <div className="space-y-3 rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
-          <span className="text-xs font-black uppercase tracking-wider text-slate-500">Weekly Target Pulse</span>
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-xs font-bold text-slate-600">Collected Revenue</span>
-            <span className="text-base font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-              ${collectedThisWeek.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-600">Pipeline To Close</span>
-            <span className="text-base font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
-              ${pendingCloseAmount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-            </span>
-          </div>
-        </div>
+        <PeriodPulsePanel collectedRevenue={collectedThisWeek} pipelineToClose={pendingCloseAmount} />
       </aside>
 
       {/* 2. RIGHT COLUMN: LINEAR STUDIO WORKSPACE */}
@@ -869,7 +860,7 @@ export function AdminLeadWorkspace({
           </div>
 
           {/* Key metrics grid */}
-          <div className="grid grid-cols-2 gap-3 border-y border-slate-100 py-4 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 border-y border-slate-100 py-4 sm:grid-cols-5">
             <HeaderStat
               label="Proposal link activity"
               value={lead.last_viewed_at ? "Opened ✓" : lead.delivered_at ? "Sent" : "Unsent"}
@@ -895,6 +886,29 @@ export function AdminLeadWorkspace({
             <HeaderStat
               label="Pages on their site"
               value={`${Array.isArray(facts.sitemap_urls) ? (facts.sitemap_urls as unknown[]).length : services.length || 0}`}
+              tone="neutral"
+            />
+            {/* Sits beside the price being asked, which is the only place
+                cost-to-process means anything. Tokens are always real;
+                dollars appear only for models that have been priced. */}
+            <HeaderStat
+              label="AI cost to process"
+              value={
+                cost.costUsd !== null
+                  ? `$${cost.costUsd.toFixed(2)}`
+                  : cost.calls > 0
+                    ? `${(cost.promptTokens + cost.completionTokens).toLocaleString()}`
+                    : "—"
+              }
+              suffix={
+                cost.costUsd !== null
+                  ? cost.unpricedCalls > 0
+                    ? ` · +${cost.unpricedCalls} unpriced`
+                    : ` · ${cost.calls} calls`
+                  : cost.calls > 0
+                    ? " tokens · set AI_MODEL_PRICES"
+                    : ""
+              }
               tone="neutral"
             />
           </div>

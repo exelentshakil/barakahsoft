@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AdminLeadWorkspace } from "@/components/admin/AdminLeadWorkspace";
+import { leadCost } from "@/lib/cost/lead-cost";
 import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -25,12 +26,15 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
     ...all.filter((l) => l.source === "outreach" || l.source === "manual"),
   ];
 
+  const cost = await leadCost(lead.id);
+
   return (
     <AdminLeadWorkspace
       lead={lead}
       artifact={artifact ?? null}
       scrapeResults={scrapeResults ?? null}
       otherLeads={sortedLeads}
+      cost={cost}
     />
   );
 }
