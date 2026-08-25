@@ -99,8 +99,18 @@ export function PeriodPulsePanel({ collectedRevenue, pipelineToClose }: { collec
     <div className="min-w-0 space-y-3 overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <span className="text-xs font-black uppercase tracking-wider text-slate-500">Target pulse</span>
-        <span className="flex items-center gap-1.5">
+        <span className="flex items-center gap-1">
           {loading && <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-400" />}
+          <button
+            type="button"
+            disabled={syncing}
+            onClick={() => void pullAdSpend()}
+            title="Pull ad spend from Meta"
+            aria-label="Pull ad spend from Meta"
+            className="rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-[#533afd] disabled:opacity-40"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
+          </button>
           <button type="button" onClick={() => setSettingsOpen(true)} title="Costs and model prices"
             className="rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
             <Settings className="h-3.5 w-3.5" />
@@ -137,18 +147,7 @@ export function PeriodPulsePanel({ collectedRevenue, pipelineToClose }: { collec
         {(data?.otherCosts ?? []).map((c) => (
           <Row key={c.kind} label={c.kind === "ads" ? "Ad spend" : c.kind} value={money(c.amountUsd)} tone="cost" />
         ))}
-        <div className="flex items-center justify-between pt-0.5">
-          <button
-            type="button"
-            disabled={syncing}
-            onClick={() => void pullAdSpend()}
-            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-bold text-slate-600 transition hover:border-[#533afd] hover:text-[#533afd] disabled:opacity-40"
-          >
-            {syncing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-            {syncing ? "Pulling…" : "Pull ad spend"}
-          </button>
-          {syncNote && <span className="text-[10px] font-semibold text-emerald-700">{syncNote}</span>}
-        </div>
+
         <div className="flex items-center justify-between border-t border-slate-100 pt-1.5">
           <span className="text-xs font-black text-slate-700">Net</span>
           <span className={`rounded border px-2 py-0.5 text-base font-black ${
@@ -159,6 +158,8 @@ export function PeriodPulsePanel({ collectedRevenue, pipelineToClose }: { collec
         </div>
         <Row label="Pipeline to close" value={money(pipelineToClose)} tone="neutral" />
       </div>
+
+      {syncNote && <p className="text-[10px] font-semibold text-emerald-700">Synced {syncNote}</p>}
 
       {data && (
         <p className="text-[10px] leading-snug text-slate-400">
