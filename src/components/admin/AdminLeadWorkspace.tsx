@@ -659,40 +659,55 @@ export function AdminLeadWorkspace({
             </span>
           </div>
 
-          {/* Inbound Form Submissions (Top Priority) */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+          {/* Collapsed by default once there are more than a handful: an
+              always-open list of every lead is unreadable the moment this
+              works, and the group that matters is usually the one holding
+              the lead already open. */}
+          <details className="group" open={inboundLeads.length > 0 && inboundLeads.length <= 8}>
+            <summary className="flex cursor-pointer list-none items-center justify-between rounded-lg px-1 py-1.5 hover:bg-slate-50">
+              <span className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-emerald-800">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                 Inbound Submissions ({inboundLeads.length})
               </span>
+              <ChevronRight className="h-3.5 w-3.5 text-slate-400 transition group-open:rotate-90" />
+            </summary>
+            <div className="space-y-2 pt-2">
+              {inboundLeads.length === 0 ? (
+                <p className="px-2 py-1 text-xs italic text-slate-400">No inbound submissions yet</p>
+              ) : (
+                inboundLeads.map((item) => renderLeadCard(item))
+              )}
             </div>
-            {inboundLeads.length === 0 ? (
-              <p className="text-xs text-slate-400 italic px-2 py-1">No inbound submissions yet</p>
-            ) : (
-              inboundLeads.map((item) => renderLeadCard(item))
-            )}
-          </div>
+          </details>
 
-          {/* Manual Outreach Prospects (Bottom of list) */}
-          <div className="space-y-2 pt-3 border-t border-slate-100">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 flex items-center gap-1">
+          <details className="group border-t border-slate-100 pt-2" open={outreachLeads.length > 0 && outreachLeads.length <= 8}>
+            <summary className="flex cursor-pointer list-none items-center justify-between rounded-lg px-1 py-1.5 hover:bg-slate-50">
+              <span className="flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-wider text-slate-600">
                 🎯 Manual Outreach ({outreachLeads.length})
               </span>
-            </div>
-            <div className="pt-1 pb-1">
+              <ChevronRight className="h-3.5 w-3.5 text-slate-400 transition group-open:rotate-90" />
+            </summary>
+            <div className="space-y-2 pt-2">
               <AddUrlDialog variant="sidebar" />
+              {outreachLeads.length === 0 ? (
+                <p className="px-2 py-1 text-xs italic text-slate-400">No outreach prospects added yet</p>
+              ) : (
+                outreachLeads.map((item) => renderLeadCard(item))
+              )}
             </div>
-            {outreachLeads.length === 0 ? (
-              <p className="text-xs text-slate-400 italic px-2 py-1">No outreach prospects added yet</p>
-            ) : (
-              outreachLeads.map((item) => renderLeadCard(item))
-            )}
-          </div>
+          </details>
         </div>
 
-        {outreachLeads.length > 0 && <OutreachSequencePanel leads={outreachLeads} />}
+        {inboundLeads.length > 0 && (
+          <OutreachSequencePanel
+            leads={inboundLeads}
+            track="inbound"
+            title="Inbound delivery sequence"
+            blurb="These people asked for the rebuild, so the first message delivers rather than introduces. Same three beats, warmer copy."
+          />
+        )}
+
+        {outreachLeads.length > 0 && <OutreachSequencePanel leads={outreachLeads} track="outreach" />}
 
         <div className="space-y-3 rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
           <span className="text-xs font-black uppercase tracking-wider text-slate-500">Weekly Target Pulse</span>

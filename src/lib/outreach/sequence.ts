@@ -12,9 +12,11 @@ import type { Lead } from "@/types/database";
 // built for them. A sequence that could be sent to anyone reads as bulk, and
 // the whole premise here is that the work is already done.
 
+export type SequenceTrack = "outreach" | "inbound";
+
 export interface OutreachStage {
   stage: 1 | 2 | 3;
-  key: "gift" | "bump" | "final";
+  key: string;
   label: string;
   purpose: string;
   /** How long after the previous touch this one is due. */
@@ -37,14 +39,15 @@ export interface OutreachContext {
  * omitting that is both unlawful under CAN-SPAM and the fastest way to be
  * marked as spam by the recipient.
  */
-function footer(ctx: OutreachContext): string {
-  return [
-    "",
-    "—",
-    "Shakil · BarakahSoft",
-    `You received this because ${ctx.businessName} came up while I was looking at local businesses whose websites I could rebuild.`,
-    "Reply STOP and I will not contact you again.",
-  ].join("\n");
+function footer(ctx: OutreachContext, track: SequenceTrack = "outreach"): string {
+  // The reason line has to be true for the track it is sent on. Telling
+  // someone who filled in the form that they "came up while I was looking at
+  // local businesses" is both wrong and the fastest way to lose them.
+  const because =
+    track === "inbound"
+      ? `You are receiving this because you requested a free rebuild for ${ctx.businessName}.`
+      : `You received this because ${ctx.businessName} came up while I was looking at local businesses whose websites I could rebuild.`;
+  return ["", "—", "Shakil · BarakahSoft", because, "Reply STOP and I will not contact you again."].join("\n");
 }
 
 export const OUTREACH_SEQUENCE: OutreachStage[] = [
@@ -110,13 +113,84 @@ export const OUTREACH_SEQUENCE: OutreachStage[] = [
   },
 ];
 
-export function stageFor(n: number): OutreachStage | null {
-  return OUTREACH_SEQUENCE.find((s) => s.stage === n) ?? null;
+// The warm track. Same three-beat shape, opposite premise: these people
+// asked for the rebuild, so the first message delivers rather than
+// introduces, and the last one says what happens to their files rather than
+// offering them.
+export const INBOUND_SEQUENCE: OutreachStage[] = [
+  {
+    stage: 1,
+    key: "delivery",
+    label: "Initial Delivery",
+    purpose: "Their requested 48h rebuild is ready",
+    dueAfterHours: 0,
+    subject: (ctx) => `Your ${ctx.businessName} rebuild is ready`,
+    body: (ctx) =>
+      [
+        `Hi,`,
+        ``,
+        `The rebuild you asked for is done. It is a working page, not a mockup:`,
+        ``,
+        ctx.previewUrl,
+        ``,
+        ctx.headlineFinding
+          ? `One thing worth flagging from the audit: ${ctx.headlineFinding}`
+          : `Have a click through it — every link, form and phone button works.`,
+        ``,
+        `Tell me what you want changed and I will change it. It is yours to keep either way.`,
+      ].join("\n") + footer(ctx, "inbound"),
+  },
+  {
+    stage: 2,
+    key: "bump",
+    label: "48h Follow-up Bump",
+    purpose: "Checking in on the requested concept",
+    dueAfterHours: 48,
+    subject: (ctx) => `Any thoughts on the ${ctx.businessName} rebuild?`,
+    body: (ctx) =>
+      [
+        `Hi,`,
+        ``,
+        `Did you get a chance to look?`,
+        ``,
+        ctx.previewUrl,
+        ``,
+        `If something is off I will fix it today — it is usually a ten-minute job. If the timing is wrong, tell me and I will leave it with you.`,
+      ].join("\n") + footer(ctx, "inbound"),
+  },
+  {
+    stage: 3,
+    key: "final",
+    label: "Final Notice",
+    purpose: "Final check before the staging copy is archived",
+    dueAfterHours: 96,
+    subject: (ctx) => `Before I archive the ${ctx.businessName} staging copy`,
+    body: (ctx) =>
+      [
+        `Hi,`,
+        ``,
+        `Last check on this one. The staging copy is still up:`,
+        ``,
+        ctx.previewUrl,
+        ``,
+        `I am going to archive it shortly to keep things tidy. If you want it kept, or you want the files handed over to your own developer, just reply — both are free and take me a minute.`,
+        ``,
+        `No reply is a fine answer.`,
+      ].join("\n") + footer(ctx, "inbound"),
+  },
+];
+
+export function sequenceFor(track: SequenceTrack): OutreachStage[] {
+  return track === "inbound" ? INBOUND_SEQUENCE : OUTREACH_SEQUENCE;
+}
+
+export function stageFor(n: number, track: SequenceTrack = "outreach"): OutreachStage | null {
+  return sequenceFor(track).find((s) => s.stage === n) ?? null;
 }
 
 /** The touch a prospect is next owed, or null once the sequence is done. */
-export function nextStage(lead: Pick<Lead, "outreach_stage">): OutreachStage | null {
-  return stageFor((lead.outreach_stage ?? 0) + 1);
+export function nextStage(lead: Pick<Lead, "outreach_stage">, track: SequenceTrack = "outreach"): OutreachStage | null {
+  return stageFor((lead.outreach_stage ?? 0) + 1, track);
 }
 
 /**
@@ -125,8 +199,11 @@ export function nextStage(lead: Pick<Lead, "outreach_stage">): OutreachStage | n
  * Sending the bump an hour after the gift reads as automated, which is the
  * one impression this sequence cannot afford.
  */
-export function isDue(lead: Pick<Lead, "outreach_stage" | "outreach_last_sent_at">): boolean {
-  const next = nextStage(lead);
+export function isDue(
+  lead: Pick<Lead, "outreach_stage" | "outreach_last_sent_at">,
+  track: SequenceTrack = "outreach"
+): boolean {
+  const next = nextStage(lead, track);
   if (!next) return false;
   if (!lead.outreach_last_sent_at) return true;
   const elapsedHours = (Date.now() - new Date(lead.outreach_last_sent_at).getTime()) / 3_600_000;

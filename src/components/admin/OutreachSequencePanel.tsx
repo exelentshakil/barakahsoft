@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Loader2, Send, Gift, Bell, DoorClosed, AlertTriangle, Check } from "lucide-react";
 import type { Lead } from "@/types/database";
-import { OUTREACH_SEQUENCE, isDue } from "@/lib/outreach/sequence";
+import { sequenceFor, isDue, type SequenceTrack } from "@/lib/outreach/sequence";
 
 // The outreach list, grouped by which touch each prospect is next owed.
 //
@@ -13,7 +13,18 @@ import { OUTREACH_SEQUENCE, isDue } from "@/lib/outreach/sequence";
 
 const ICONS = [Gift, Bell, DoorClosed];
 
-export function OutreachSequencePanel({ leads }: { leads: Lead[] }) {
+export function OutreachSequencePanel({
+  leads,
+  track = "outreach",
+  title,
+  blurb,
+}: {
+  leads: Lead[];
+  track?: SequenceTrack;
+  title?: string;
+  blurb?: string;
+}) {
+  const sequence = sequenceFor(track);
   const [stage, setStage] = useState<1 | 2 | 3>(1);
   const [selected, setSelected] = useState<string[]>([]);
   const [sending, setSending] = useState(false);
@@ -34,7 +45,7 @@ export function OutreachSequencePanel({ leads }: { leads: Lead[] }) {
   // Only prospects that would actually be sent can be selected — offering a
   // checkbox next to someone the server will skip is a promise the screen
   // cannot keep.
-  const sendable = inStage.filter((l) => l.email && isDue(l));
+  const sendable = inStage.filter((l) => l.email && isDue(l, track));
   const allSelected = sendable.length > 0 && selected.length === sendable.length;
 
   async function send() {
@@ -46,7 +57,7 @@ export function OutreachSequencePanel({ leads }: { leads: Lead[] }) {
       const res = await fetch("/api/outreach/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stage, leadIds: selected }),
+        body: JSON.stringify({ track, stage, leadIds: selected }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) { setError(data?.error ?? "Send failed."); return; }
@@ -63,15 +74,17 @@ export function OutreachSequencePanel({ leads }: { leads: Lead[] }) {
   return (
     <div className="space-y-3 rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
       <div>
-        <h3 className="text-sm font-black uppercase tracking-wider text-slate-500">Cold outreach sequence</h3>
+        <h3 className="text-sm font-black uppercase tracking-wider text-slate-500">
+          {title ?? "Cold outreach sequence"}
+        </h3>
         <p className="mt-1 text-[11px] leading-snug text-slate-500">
-          A gift, one bump, then a clean exit. Three touches and it stops — a fourth converts nobody and is what gets a
-          sending domain blocked.
+          {blurb ??
+            "A gift, one bump, then a clean exit. Three touches and it stops — a fourth converts nobody and is what gets a sending domain blocked."}
         </p>
       </div>
 
       <div className="grid gap-1.5">
-        {OUTREACH_SEQUENCE.map((s, i) => {
+        {sequence.map((s, i) => {
           const Icon = ICONS[i];
           const count = buckets[s.stage].length;
           return (
@@ -123,8 +136,8 @@ export function OutreachSequencePanel({ leads }: { leads: Lead[] }) {
             <p className="px-3 py-3 text-xs italic text-slate-400">Nobody is waiting on this touch.</p>
           ) : (
             inStage.map((lead) => {
-              const ready = Boolean(lead.email) && isDue(lead);
-              const why = !lead.email ? "no email on file" : !isDue(lead) ? "not due yet" : null;
+              const ready = Boolean(lead.email) && isDue(lead, track);
+              const why = !lead.email ? "no email on file" : !isDue(lead, track) ? "not due yet" : null;
               return (
                 <label
                   key={lead.id}

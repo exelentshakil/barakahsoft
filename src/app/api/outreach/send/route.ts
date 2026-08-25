@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminSession } from "@/lib/is-admin-session";
 import { sendEmail } from "@/lib/notifications";
-import { stageFor, isDue, type OutreachContext } from "@/lib/outreach/sequence";
+import { stageFor, isDue, type OutreachContext, type SequenceTrack } from "@/lib/outreach/sequence";
 import type { Lead } from "@/types/database";
 
 // Send one touch of the cold sequence to a selected set of prospects.
@@ -49,8 +49,12 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json().catch(() => null);
+  // Inbound leads asked for the rebuild and cold prospects did not, so they
+  // get different wording and a different reason-for-contact line. Sending
+  // one track's copy on the other is worse than sending nothing.
+  const track: SequenceTrack = body?.track === "inbound" ? "inbound" : "outreach";
   const stageNumber = Number(body?.stage);
-  const stage = stageFor(stageNumber);
+  const stage = stageFor(stageNumber, track);
   if (!stage) {
     return NextResponse.json({ error: "stage must be 1, 2 or 3" }, { status: 400 });
   }
@@ -85,7 +89,7 @@ export async function POST(req: Request) {
       skipped.push({ id: lead.id, business: name, reason: `already at stage ${lead.outreach_stage ?? 0}` });
       continue;
     }
-    if (!isDue(lead)) {
+    if (!isDue(lead, track)) {
       skipped.push({ id: lead.id, business: name, reason: `not due yet (${stage.dueAfterHours}h gap)` });
       continue;
     }
@@ -126,5 +130,5 @@ export async function POST(req: Request) {
     sent.push(lead.id);
   }
 
-  return NextResponse.json({ stage: stage.stage, label: stage.label, sent: sent.length, skipped });
+  return NextResponse.json({ track, stage: stage.stage, label: stage.label, sent: sent.length, skipped });
 }
