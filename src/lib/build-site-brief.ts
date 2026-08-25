@@ -7,6 +7,7 @@ import { conversionIntentFor, painPointInstructions } from "@/lib/conversion-int
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
 import type { PageInventory } from "@/lib/scrape/extract-text";
 import type { Lead, ScrapeResults } from "@/types/database";
+import { resolveBusinessContact } from "@/lib/business-contact";
 
 // Assembles the single source of truth a generation runs against.
 //
@@ -119,6 +120,8 @@ export function buildSiteBrief(
   const pages = (facts.pages as PageInventory[] | undefined) ?? [];
   const nap = (facts.nap as { phones?: string[]; emails?: string[] } | undefined) ?? {};
 
+  const contact = resolveBusinessContact(scrapeResults, { phone: lead.phone, email: lead.email });
+
   const services = overrides.services?.filter(Boolean).length
     ? overrides.services.filter(Boolean)
     : servicesFromFacts(facts);
@@ -156,8 +159,8 @@ export function buildSiteBrief(
     industry: overrides.industry?.trim() || lead.industry || "Local Services",
     city: overrides.city?.trim() || cityFromFacts(facts) || "the local area",
     founder: overrides.founder?.trim() || lead.contact_name || null,
-    phone: displayPhone(overrides.phone?.trim() || nap.phones?.find((p) => /\d{7,}/.test(p.replace(/\D/g, ""))) || lead.phone),
-    email: overrides.email?.trim() || nap.emails?.[0] || lead.email || null,
+    phone: displayPhone(overrides.phone?.trim() || contact.phone),
+    email: overrides.email?.trim() || contact.email,
     services,
     areas,
     rating,

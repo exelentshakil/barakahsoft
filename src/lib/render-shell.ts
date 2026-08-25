@@ -6,6 +6,7 @@ import { DEFAULT_CHROME, type ChromeSpec } from "@/lib/chrome-spec";
 import type { PageInventory } from "@/lib/scrape/extract-text";
 import { conversionIntentFor } from "@/lib/conversion-intent";
 import { displayPhone } from "@/lib/phone";
+import { resolveBusinessContact } from "@/lib/business-contact";
 
 // render_shell atom — resolves an artifact + its lead/scrape context into
 // the flat SitePayload every shell component renders from. This is the
@@ -118,7 +119,11 @@ export function renderShell(
     : differentiatorSection?.body_content && !META_COPY.test(differentiatorSection.body_content)
       ? differentiatorSection.body_content
       : "Clear communication, real local service, and a straightforward next step.";
-  const phone = displayPhone(((facts.nap as { phones?: string[] })?.phones ?? []).find((value) => /\d{7,}/.test(value.replace(/\D/g, ""))) ?? lead.phone);
+  // Same resolver as the brief. These were two chains that could disagree,
+  // and a page printing one number in the body and another in the footer is
+  // worse than a page printing none.
+  const contact = resolveBusinessContact(scrapeResults, { phone: lead.phone, email: lead.email });
+  const phone = displayPhone(contact.phone);
   const intent = conversionIntentFor(lead.industry, Boolean(phone));
 
   return {
@@ -154,8 +159,8 @@ export function renderShell(
       .slice(0, 8),
     nap: {
       phone,
-      email: (facts.nap as { emails?: string[] })?.emails?.[0] ?? null,
-      address: (facts.nap as { address?: string })?.address ?? null,
+      email: contact.email,
+      address: contact.address,
     },
     socialUrls: (facts.social_urls as string[]) ?? [],
     googleReviewsUrl: lead.place_id
