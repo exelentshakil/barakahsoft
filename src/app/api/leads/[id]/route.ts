@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { cleanupLeadStorage } from "@/lib/supabase/cleanup-storage";
 
 // Admin edit/delete for a single lead — cleanup of test/junk rows and
 // correcting bad scrape data, gated the same way as every other admin API.
@@ -40,6 +41,11 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
 
   const admin = createAdminClient();
+
+  // 1. Clean up all media assets, uploads, and visual QA screenshots from Supabase Storage
+  await cleanupLeadStorage(admin, [id]);
+
+  // 2. Delete database lead row
   const { error } = await admin.from("leads").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
