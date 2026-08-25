@@ -54,10 +54,12 @@ export async function callBestVisionModel(
   base64ImageUrl: string,
   options: BestModelCallOptions
 ): Promise<string | null> {
+   const pinned = options.model?.trim();
+   const houseChain = bestModelChain();
    return callOpenAI(prompt, {
       maxTokens: options.maxTokens,
       temperature: options.temperature,
-      modelChain: bestModelChain(),
+      modelChain: pinned ? [pinned, ...houseChain.filter((m) => m !== pinned)] : houseChain,
       system: options.system,
       images: [base64ImageUrl]
    });

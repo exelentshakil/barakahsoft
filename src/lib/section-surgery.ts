@@ -137,12 +137,46 @@ export async function criticiseSite(input: string): Promise<SectionCriticResult>
   return { passes: deterministic.passes && design.passes, deterministic, design, blockers, warnings };
 }
 
+/**
+ * Turn whatever the caller has into a data URL the vision model accepts.
+ *
+ * The CLI passes a path on disk. The browser cannot, so it sends either an
+ * uploaded file as a data URL or the address of an image it wants matched —
+ * a reference screenshot, or a frame exported from Figma. Reading the remote
+ * one server-side keeps the model call identical for all three.
+ */
+async function toImageDataUrl(image: string): Promise<string> {
+  if (image.startsWith("data:")) return image;
+
+  if (/^https?:\/\//i.test(image)) {
+    const res = await fetch(image);
+    if (!res.ok) throw new Error(`Could not fetch the reference image (${res.status}).`);
+    const type = res.headers.get("content-type") ?? "";
+    if (!type.startsWith("image/")) {
+      // A Figma file URL lands here: it returns HTML, not an image.
+      throw new Error(
+        `That URL returned ${type || "no content type"}, not an image. A Figma file link cannot be read directly — export the frame as PNG and upload it, or paste a direct image URL.`
+      );
+    }
+    const buffer = Buffer.from(await res.arrayBuffer());
+    return `data:${type};base64,${buffer.toString("base64")}`;
+  }
+
+  // A path on disk — the CLI's case, and never reachable from the browser.
+  const absolutePath = resolve(process.cwd(), image);
+  const buffer = readFileSync(absolutePath);
+  const ext = image.split(".").pop()?.toLowerCase();
+  const mime = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
+  return `data:${mime};base64,${buffer.toString("base64")}`;
+}
+
 export async function promptSection(
   input: string,
   sectionId: string,
   instruction: string,
   provider: GenerationProvider = "openai",
-  imagePath?: string
+  imagePath?: string,
+  model?: string
 ): Promise<EditableSection> {
   const data = await getSiteData(await resolveSlug(input));
   if (!data) throw new Error(`No site data found for ${input}`);
@@ -172,27 +206,13 @@ Return ONLY one complete <section id="${section.id}">...</section>. No markdown 
   let raw: string | null = null;
 
   if (imagePath) {
-    try {
-      const absolutePath = resolve(process.cwd(), imagePath);
-      const buffer = readFileSync(absolutePath);
-      const base64 = buffer.toString('base64');
-      const ext = imagePath.split('.').pop()?.toLowerCase();
-      let mimeType = "image/jpeg";
-      if (ext === 'png') mimeType = "image/png";
-      else if (ext === 'webp') mimeType = "image/webp";
-
-      raw = await callBestVisionModel(
-        promptText,
-        `data:${mimeType};base64,${base64}`,
-        {
-          maxTokens: 12000,
-          temperature: 0.45,
-          system: systemPrompt,
-        }
-      );
-    } catch (e: any) {
-      throw new Error(`Failed to read or process vision image at ${imagePath}: ${e.message}`);
-    }
+    const dataUrl = await toImageDataUrl(imagePath);
+    raw = await callBestVisionModel(promptText, dataUrl, {
+      maxTokens: 12000,
+      temperature: 0.45,
+      system: systemPrompt,
+      model,
+    });
   } else {
     raw = await callBestModel(
       promptText,
@@ -200,6 +220,7 @@ Return ONLY one complete <section id="${section.id}">...</section>. No markdown 
         maxTokens: 12000,
         temperature: 0.45,
         system: systemPrompt,
+        model,
       },
       provider
     );
