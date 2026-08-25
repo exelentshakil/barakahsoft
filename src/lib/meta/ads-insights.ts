@@ -88,7 +88,18 @@ export async function fetchDailyInsights(days = 14): Promise<InsightsResult> {
         return { days: [], error: `${message} — the token has expired or been revoked. A System User token with no expiry avoids this.` };
       }
       if (body?.error?.code === 200 || body?.error?.code === 10) {
-        return { days: [], error: `${message} — the token is valid but lacks ads_read on ${actId}, or the app is not installed on that System User.` };
+        // Almost always the asset assignment rather than the token itself,
+        // and the final step is the one that gets missed: a token carries the
+        // permissions it held when it was generated, so assigning the account
+        // afterwards changes nothing until a new token is issued.
+        return {
+          days: [],
+          error:
+            `${message}\n\nThe token is valid — ${actId} is not assigned to its System User. ` +
+            `Business Settings > Users > System Users > pick the user > Assigned assets ` +
+            `(not Installed apps) > Add assets > Ad accounts > ${actId} > enable View performance, ` +
+            `save, then generate a NEW token. The existing one will not pick up the new asset.`,
+        };
       }
       return { days: [], error: message };
     }
