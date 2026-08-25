@@ -71,6 +71,7 @@ import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStu
 import { RefinePanel } from "@/components/admin/RefinePanel";
 import { HandBuildPanel } from "@/components/admin/HandBuildPanel";
 import { LiveSectionStudio } from "@/components/admin/LiveSectionStudio";
+import { AddUrlDialog } from "@/components/admin/AddUrlDialog";
 import { VisibilityPanel } from "@/components/admin/VisibilityPanel";
 import { AuditPanel } from "@/components/admin/AuditPanel";
 import { CompetitorPanel } from "@/components/admin/CompetitorPanel";
@@ -599,6 +600,10 @@ export function AdminLeadWorkspace({
             <span className="rounded-full bg-indigo-50 border border-indigo-200/60 px-2.5 py-0.5 text-xs font-black text-indigo-700">
               {otherLeads.length} leads
             </span>
+          </div>
+
+          <div className="pt-1 pb-1">
+            <AddUrlDialog variant="sidebar" />
           </div>
 
           <div className="space-y-2">

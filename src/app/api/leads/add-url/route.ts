@@ -34,5 +34,5 @@ export async function POST(req: Request) {
   // which no function has listened to since analysis became operator-
   // triggered, so it was a silent no-op — and had it worked, it would have
   // reintroduced the automatic spend that intake was changed to avoid.
-  return NextResponse.json({ lead });
+  return NextResponse.json({ lead, lead_id: lead.id });
 }

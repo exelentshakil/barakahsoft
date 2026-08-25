@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Globe2, Zap, LogOut } from "lucide-react";
 import { CrispChat } from "@/components/CrispChat";
 import { NewLeadWatcher } from "@/components/admin/NewLeadWatcher";
+import { AddUrlDialog } from "@/components/admin/AddUrlDialog";
 
 const LOGO_URL = "https://barakahsoft.com/wp-content/uploads/2026/01/Logo1.png";
 
@@ -35,6 +36,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </div>
 
           <div className="flex items-center gap-4">
+            <AddUrlDialog />
             <Link
               href="/admin"
               className="text-xs font-semibold text-[#0d1738] hover:text-[#533afd] transition"
