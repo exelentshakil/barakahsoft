@@ -19,12 +19,18 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
   if (!lead) notFound();
 
+  const all = otherLeads ?? [];
+  const sortedLeads = [
+    ...all.filter((l) => l.source !== "outreach" && l.source !== "manual"),
+    ...all.filter((l) => l.source === "outreach" || l.source === "manual"),
+  ];
+
   return (
     <AdminLeadWorkspace
       lead={lead}
       artifact={artifact ?? null}
       scrapeResults={scrapeResults ?? null}
-      otherLeads={otherLeads ?? []}
+      otherLeads={sortedLeads}
     />
   );
 }

@@ -590,11 +590,68 @@ export function AdminLeadWorkspace({
     }
   }
 
+  const inboundLeads = otherLeads.filter((item) => item.source !== "outreach" && item.source !== "manual");
+  const outreachLeads = otherLeads.filter((item) => item.source === "outreach" || item.source === "manual");
+
+  function renderLeadCard(item: Lead) {
+    const isSelected = item.id === lead.id;
+    const itemTrade = item.industry || (item.persona ? item.persona.replace(/-/g, " ") : "Business");
+    return (
+      <Link
+        key={item.id}
+        href={`/admin/leads/${item.id}`}
+        className={`block rounded-xl p-3.5 transition border ${
+          isSelected
+            ? "bg-indigo-50/70 border-2 border-indigo-600 shadow-md ring-2 ring-indigo-500/10"
+            : "bg-white hover:bg-slate-50 border-slate-200/80 hover:border-slate-300"
+        }`}
+      >
+        <div className="flex items-center justify-between gap-1">
+          <div className="flex items-center gap-1.5 truncate">
+            <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-slate-700">
+              {itemTrade}
+            </span>
+            {(item.source === "outreach" || item.source === "manual") && (
+              <span className="rounded-md bg-sky-50 border border-sky-200 px-1.5 py-0.5 text-[10px] font-bold text-sky-700">
+                Outreach
+              </span>
+            )}
+          </div>
+          <span className="text-xs font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">$779</span>
+        </div>
+
+        <p className="mt-2 truncate text-sm font-black text-slate-900 leading-tight">
+          {item.business_name || item.slug}
+        </p>
+        <p className="truncate text-xs font-medium text-slate-500 mt-0.5">{item.contact_name || item.source_url}</p>
+
+        <div className="mt-2.5 flex items-center justify-between text-xs pt-2 border-t border-slate-100">
+          <span
+            className={`font-black text-[11px] uppercase tracking-wider ${
+              item.status === "paid"
+                ? "text-emerald-700"
+                : item.status === "delivered" || item.status === "qa_approved"
+                ? "text-indigo-600"
+                : "text-amber-700"
+            }`}
+          >
+            {STATUS_LABEL[item.status] ?? item.status}
+          </span>
+          <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+        </div>
+
+        <div className="mt-2">
+          <DeliverySlaTimer createdAt={item.created_at} deliveredAt={item.delivered_at} compact />
+        </div>
+      </Link>
+    );
+  }
+
   return (
     <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
       {/* 1. LEFT ASIDE: INBOUND LEAD ORDERS & WEEKLY PULSE */}
       <aside className="space-y-6">
-        <div className="rounded-2xl border border-slate-200/90 bg-white p-4 space-y-3 shadow-sm">
+        <div className="rounded-2xl border border-slate-200/90 bg-white p-4 space-y-4 shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 px-1">
             <span className="text-sm font-extrabold text-slate-900 tracking-tight">Your Pipeline</span>
             <span className="rounded-full bg-indigo-50 border border-indigo-200/60 px-2.5 py-0.5 text-xs font-black text-indigo-700">
@@ -602,64 +659,36 @@ export function AdminLeadWorkspace({
             </span>
           </div>
 
-          <div className="pt-1 pb-1">
-            <AddUrlDialog variant="sidebar" />
+          {/* Inbound Form Submissions (Top Priority) */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                Inbound Submissions ({inboundLeads.length})
+              </span>
+            </div>
+            {inboundLeads.length === 0 ? (
+              <p className="text-xs text-slate-400 italic px-2 py-1">No inbound submissions yet</p>
+            ) : (
+              inboundLeads.map((item) => renderLeadCard(item))
+            )}
           </div>
 
-          <div className="space-y-2">
-            {otherLeads.map((item) => {
-              const isSelected = item.id === lead.id;
-              const itemTrade = item.industry || (item.persona ? item.persona.replace(/-/g, " ") : "Business");
-              return (
-                <Link
-                  key={item.id}
-                  href={`/admin/leads/${item.id}`}
-                  className={`block rounded-xl p-3.5 transition border ${
-                    isSelected
-                      ? "bg-indigo-50/70 border-2 border-indigo-600 shadow-md ring-2 ring-indigo-500/10"
-                      : "bg-white hover:bg-slate-50 border-slate-200/80 hover:border-slate-300"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-1">
-                    <div className="flex items-center gap-1.5 truncate">
-                      <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-slate-700">
-                        {itemTrade}
-                      </span>
-                      {(item.source === "outreach" || item.source === "manual") && (
-                        <span className="rounded-md bg-sky-50 border border-sky-200 px-1.5 py-0.5 text-[10px] font-bold text-sky-700">
-                          Outreach
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-xs font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">$779</span>
-                  </div>
-
-                  <p className="mt-2 truncate text-sm font-black text-slate-900 leading-tight">
-                    {item.business_name || item.slug}
-                  </p>
-                  <p className="truncate text-xs font-medium text-slate-500 mt-0.5">{item.contact_name || item.source_url}</p>
-
-                  <div className="mt-2.5 flex items-center justify-between text-xs pt-2 border-t border-slate-100">
-                    <span
-                      className={`font-black text-[11px] uppercase tracking-wider ${
-                        item.status === "paid"
-                          ? "text-emerald-700"
-                          : item.status === "delivered" || item.status === "qa_approved"
-                          ? "text-indigo-600"
-                          : "text-amber-700"
-                      }`}
-                    >
-                      {STATUS_LABEL[item.status] ?? item.status}
-                    </span>
-                    <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
-                  </div>
-
-                  <div className="mt-2">
-                    <DeliverySlaTimer createdAt={item.created_at} deliveredAt={item.delivered_at} compact />
-                  </div>
-                </Link>
-              );
-            })}
+          {/* Manual Outreach Prospects (Bottom of list) */}
+          <div className="space-y-2 pt-3 border-t border-slate-100">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 flex items-center gap-1">
+                🎯 Manual Outreach ({outreachLeads.length})
+              </span>
+            </div>
+            <div className="pt-1 pb-1">
+              <AddUrlDialog variant="sidebar" />
+            </div>
+            {outreachLeads.length === 0 ? (
+              <p className="text-xs text-slate-400 italic px-2 py-1">No outreach prospects added yet</p>
+            ) : (
+              outreachLeads.map((item) => renderLeadCard(item))
+            )}
           </div>
         </div>
 

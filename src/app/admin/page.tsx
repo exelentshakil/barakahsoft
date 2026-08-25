@@ -13,7 +13,12 @@ export default async function AdminLeadsPage() {
     .order("created_at", { ascending: false })
     .returns<Lead[]>();
 
-  const rows = leads ?? [];
+  const all = leads ?? [];
+  // Show inbound submissions at the top; manual outreach at the bottom
+  const rows = [
+    ...all.filter((l) => l.source !== "outreach" && l.source !== "manual"),
+    ...all.filter((l) => l.source === "outreach" || l.source === "manual"),
+  ];
 
   if (rows.length === 0) {
     return (
