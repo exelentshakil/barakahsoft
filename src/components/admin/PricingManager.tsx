@@ -64,7 +64,7 @@ export function PricingManager({
           `${pageCount || 1} service pages based on your real offerings`,
           "Lead capture, click-to-call, and callback flow",
           "LocalBusiness schema and technical SEO foundation",
-          "Domain connection and 48-hour launch support",
+          "Domain connection and 2-4 week launch support",
           "100% client-owned website files",
         ]
   );
@@ -165,7 +165,7 @@ export function PricingManager({
                     "Lead capture, quote request & click-to-call flow",
                     "LocalBusiness JSON-LD schema & technical SEO foundation",
                     "Responsive visual assets with custom footer & logo badge integration",
-                    "100% client-owned website files with 48-hour launch support",
+                    "100% client-owned website files with 2-4 week launch support",
                   ]);
                 }}
                 className={`rounded-lg border p-2.5 text-center transition ${

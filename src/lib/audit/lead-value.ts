@@ -83,7 +83,7 @@ export function buildOfferOptions(corePageCount: number, businessName = "your bu
         "Lead capture, quote request & instant callback routing",
         "LocalBusiness JSON-LD schema & technical SEO foundation",
         "Responsive branding with custom footer & logo badge integration",
-        "100% client-owned website files with 48-hour launch support",
+        "100% client-owned website files with 2-4 week launch support",
       ],
     },
     {

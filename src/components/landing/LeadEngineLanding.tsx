@@ -190,7 +190,7 @@ const VISUAL_JOURNEY = [
     step: "04",
     tag: "Handoff & Go-Live",
     title: "Launch on Your Domain",
-    body: "Love the direction? We connect your domain, set up the full pages, and launch it live in 48 hours. Not ready? Keep the concept free.",
+    body: "Love the direction? We connect your domain, set up the full pages, and launch it live within 2-4 weeks. Not ready? Keep the concept free.",
     badge: "Step 04 · Your Terms",
     icon: Rocket,
     highlights: ["Connected to your domain", "100% Client-owned website", "Fast call conversion"],

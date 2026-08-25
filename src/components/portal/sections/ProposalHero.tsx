@@ -120,7 +120,7 @@ export function ProposalHero({
           </div>
           <div className={`rounded-xl p-4 border ${isPaid ? "border-2 border-[#0b8f5b] bg-[#eaf8f0] text-[#0b8f5b]" : "border-[#e5e7f2] bg-[#f9f9ff] text-[#777588]"}`}>
             <span className="font-bold">{isPaid ? "In progress" : "If you want it"}</span>
-            <p className="mt-1 font-semibold text-sm">{isPaid ? "Live within 48 hours" : "Live within 48 hours"}</p>
+            <p className="mt-1 font-semibold text-sm">{isPaid ? "Live within 2-4 weeks" : "Live within 2-4 weeks"}</p>
           </div>
         </div>
       </div>
