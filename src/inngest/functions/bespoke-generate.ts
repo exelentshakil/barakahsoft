@@ -88,11 +88,12 @@ export const bespokeGenerate = inngest.createFunction(
   },
   { event: "bespoke/generate.requested" },
   async ({ event, step }) => {
-    const { lead_id, overrides, phase, provider } = event.data as {
+    const { lead_id, overrides, phase, provider, model } = event.data as {
       lead_id: string;
       overrides: BriefOverrides;
       phase: 1 | 2;
       provider?: GenerationProvider;
+      model?: string;
     };
     const admin = createAdminClient();
 
@@ -219,7 +220,7 @@ export const bespokeGenerate = inngest.createFunction(
     ];
 
     const sitePlan = await step.run("plan-site", async () => {
-      const plan = await generateSitePlan(brief, dna, media, provider);
+      const plan = await generateSitePlan(brief, dna, media, provider, model);
       await admin
         .from("artifacts")
         .update({
@@ -248,7 +249,7 @@ export const bespokeGenerate = inngest.createFunction(
       const batch = batches[index];
       const generated = (await step.run(`structure-batch-${index + 1}`, async () => {
         await touchProgress(admin, lead_id);
-        const result = await generateStructureBatch(brief, dna, media, knownPaths, sitePlan, batch, provider);
+        const result = await generateStructureBatch(brief, dna, media, knownPaths, sitePlan, batch, provider, model);
         if (!result) {
           throw new Error(
             `Section batch ${index + 1} returned incomplete markup from ${provider ?? "openai"}. The previous live page was preserved.`
@@ -302,7 +303,8 @@ export const bespokeGenerate = inngest.createFunction(
         gateTokens,
         undefined,
         provider,
-        sitePlan.recurringPrimitive
+        sitePlan.recurringPrimitive,
+        model
       );
       if (!result) {
         throw new Error("Stylesheet generation returned nothing usable. The previous live page was preserved.");

@@ -189,7 +189,8 @@ export async function generateSitePlan(
   brief: SiteBrief,
   dna: DesignDna,
   media: MediaPlan,
-  provider: GenerationProvider = "openai"
+  provider: GenerationProvider = "openai",
+  model?: string
 ): Promise<SitePlan> {
   const assignedLens = strategyLensFor(brief);
   const prompt = `Act as a three-person commercial review: a marketing director, an experienced ${brief.industry} operator, and a local-search strategist. Diagnose and plan this homepage before any HTML is written. The owner should feel that the page understands their commercial problems better than they have articulated them.
@@ -242,6 +243,7 @@ Return strict JSON only:
     maxTokens: 8000,
     temperature: 0.5,
     system: "You are a conversion researcher and senior information architect. Diagnose from supplied evidence, make decisive section choices, never invent facts, and return valid JSON only.",
+    model,
   }, provider);
   const parsed = raw ? SitePlanSchema.safeParse(parseJsonResponse(raw)) : null;
   if (!parsed?.success) {

@@ -113,6 +113,30 @@ export function BespokeGenerationStudio({
   // proven default; Gemini is opt-in per generation so the two can be
   // compared on real leads before either becomes the default.
   const [provider, setProvider] = useState<"openai" | "gemini">("openai");
+  const [model, setModel] = useState("");
+  const [models, setModels] = useState<{ id: string; provider: "openai" | "gemini"; recommended: boolean; note?: string }[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(false);
+  const [modelsError, setModelsError] = useState<string | null>(null);
+
+  async function loadModels() {
+    setModelsLoading(true);
+    setModelsError(null);
+    try {
+      const res = await fetch("/api/models");
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setModelsError(data?.error ?? "Could not load models.");
+        return;
+      }
+      const all = [...(data.openai ?? []), ...(data.gemini ?? [])];
+      setModels(all);
+      if (all.length === 0) setModelsError("No usable models returned — check the provider keys.");
+    } catch {
+      setModelsError("Could not reach the server.");
+    } finally {
+      setModelsLoading(false);
+    }
+  }
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
   const [genWarnings, setGenWarnings] = useState<string[]>([]);
@@ -166,7 +190,7 @@ export function BespokeGenerationStudio({
       const res = await fetch(`/api/leads/${lead.id}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phase: 2, provider }),
+        body: JSON.stringify({ phase: 2, provider, model: model || undefined }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Could not start the full-site build");
@@ -213,6 +237,7 @@ export function BespokeGenerationStudio({
           phone: lead.phone || nap.phone || undefined,
           email: lead.email || nap.email || undefined,
           provider,
+          model: model || undefined,
         }),
       });
 
@@ -653,8 +678,8 @@ export function BespokeGenerationStudio({
             </p>
             <div className="mt-2.5 grid gap-2 sm:grid-cols-2">
               {([
-                { id: "openai", name: "OpenAI · GPT-4o & o3", note: "Flagship conversion chain: o3-mini → o1 → GPT-4o." },
-                { id: "gemini", name: "Gemini · 3.1 Pro", note: "Chain: Gemini 3.1 Pro → pro-latest → flash-latest." },
+                { id: "openai", name: "OpenAI", note: "House chain, or pick a specific model below." },
+                { id: "gemini", name: "Gemini", note: "House chain, or pick a specific model below." },
               ] as const).map((option) => (
                 <button
                   key={option.id}
@@ -674,6 +699,43 @@ export function BespokeGenerationStudio({
                   <span className="mt-0.5 block text-[10px] leading-snug text-muted-foreground">{option.note}</span>
                 </button>
               ))}
+            </div>
+
+            {/* Exact model, listed live from the provider rather than from a
+                list in source — a hardcoded roster is what left the Gemini
+                path silently running on Flash after its Pro head was retired. */}
+            <div className="mt-3 rounded-lg border border-border bg-white p-2.5">
+              <label htmlFor="model-pick" className="text-[11px] font-bold text-[#0d1738]">
+                Model
+              </label>
+              <select
+                id="model-pick"
+                value={model}
+                disabled={generating}
+                onChange={(e) => setModel(e.target.value)}
+                onFocus={() => { if (models.length === 0 && !modelsLoading) void loadModels(); }}
+                className="mt-1.5 h-9 w-full rounded-md border border-border bg-white px-2 text-xs font-semibold text-[#26324b] outline-none focus:border-[#533afd]"
+              >
+                <option value="">House chain (recommended default)</option>
+                {models
+                  .filter((m) => m.provider === provider)
+                  .map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.recommended ? "★ " : ""}
+                      {m.id}
+                      {m.note ? ` — ${m.note}` : ""}
+                    </option>
+                  ))}
+              </select>
+              <p className="mt-1.5 text-[10px] leading-snug text-muted-foreground">
+                {modelsLoading
+                  ? "Asking the provider what this key can reach…"
+                  : modelsError
+                    ? modelsError
+                    : models.length === 0
+                      ? "Click to load the models this key can actually reach."
+                      : `${models.filter((m) => m.provider === provider).length} usable models. Image, audio, embedding and research models are filtered out. A pinned model still falls back to the house chain if it has been retired.`}
+              </p>
             </div>
           </div>
 

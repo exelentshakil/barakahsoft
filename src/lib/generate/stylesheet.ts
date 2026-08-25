@@ -31,7 +31,8 @@ export async function generateStylesheet(
   // The site plan picks a signature graphic motif and, until this argument
   // existed, nothing ever told the stylesheet what it was — so the one
   // decision meant to tie the page together was made and then discarded.
-  recurringPrimitive?: string
+  recurringPrimitive?: string,
+  model?: string
 ): Promise<StylesheetResult | null> {
   const tokenList = Object.entries(tokens.vars)
     .map(([name, value]) => `  ${name}: ${value};`)
@@ -183,6 +184,7 @@ Reply with CSS ONLY. No markdown fences, no commentary, no <style> tag. Do not w
       temperature: 0.6,
       system:
         "You are a senior front-end designer who writes production CSS. You use only custom properties for colour, and you write a rule for every class in the markup you are given.",
+      model,
     },
     provider
   );

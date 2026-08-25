@@ -75,7 +75,8 @@ export async function generateStructureBatch(
   knownPaths: string[],
   plan: SitePlan,
   batch: PlannedSection[],
-  provider: GenerationProvider = "openai"
+  provider: GenerationProvider = "openai",
+  model?: string
 ): Promise<GeneratedSection[] | null> {
   const prompt = `${STANCE}
 
@@ -175,6 +176,7 @@ ${batch.map((section) => `<!-- SECTION:${section.id} -->\n<section id="${section
     maxTokens: 16000,
     temperature: 0.65,
     system: "You are a senior web designer, conversion strategist and copywriter producing grounded semantic HTML. You execute an approved plan, preserve one shared component system across batches, and never invent facts.",
+    model,
   }, provider);
   return raw ? parseSections(raw, batch) : null;
 }

@@ -7,6 +7,7 @@ import { NotBuiltYet } from "@/components/site-shell/NotBuiltYet";
 import { LiveClientProposal } from "@/components/portal/LiveClientProposal";
 import { PendingAutoRefresh } from "@/components/portal/PendingAutoRefresh";
 import { isAdminSession } from "@/lib/is-admin-session";
+import { OperatorSectionEditor } from "@/components/site-shell/OperatorSectionEditor";
 import { verifyPortalToken } from "@/lib/portal-token";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -127,6 +128,9 @@ export default async function LeadSitePage({
         ) : (
           <NotBuiltYet businessName={payload.businessName} />
         )}
+        {/* Operator-only, and resolved on the server — a client opening the
+            same URL never receives this component at all. */}
+        {operator && payload.bespokeHomepageHtml && <OperatorSectionEditor leadId={lead.id} />}
       </>
     );
   }

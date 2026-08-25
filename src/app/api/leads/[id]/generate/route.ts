@@ -18,9 +18,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { id: leadId } = await params;
   if (!(await isAdminSession())) return NextResponse.json({ error: "Not authorised" }, { status: 401 });
 
-  const body = (await req.json().catch(() => ({}))) as BriefOverrides & { phase?: 1 | 2; provider?: string };
+  const body = (await req.json().catch(() => ({}))) as BriefOverrides & { phase?: 1 | 2; provider?: string; model?: string };
   const phase = body.phase === 2 ? 2 : 1;
   const provider = body.provider === "gemini" ? "gemini" : "openai";
+  // An operator's explicit model choice. Kept as free text rather than an
+  // enum so a model released after this deploy is selectable without one —
+  // the chain behind it still catches an id that no longer resolves.
+  const model = typeof body.model === "string" && body.model.trim() ? body.model.trim().slice(0, 120) : undefined;
   const overrides = body;
   const admin = createAdminClient();
 
@@ -100,7 +104,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   await inngest.send({
     name: "bespoke/generate.requested",
-    data: { lead_id: leadId, overrides, phase, provider },
+    data: { lead_id: leadId, overrides, phase, provider, model },
   });
 
   return NextResponse.json({
