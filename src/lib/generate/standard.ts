@@ -23,12 +23,12 @@ export const COLOUR_STANDARD = `COLOUR — the 60-30-10 rule, and this is the wh
        Repetition creates identity; saturation everywhere destroys hierarchy.
 
 CONTRAST IS NOT NEGOTIABLE. Body text clears 4.5:1 against whatever it sits on. Never pure
-#000000 — pure black is eye fatigue and the clearest tell of an unconsidered palette; the
-tokens already give you a soft charcoal, which holds a reader far longer.
+black — pure black is eye fatigue and the clearest tell of an unconsidered palette; the
+tokens already give you a soft charcoal (--bs-ink), which holds a reader far longer.
 
-NEVER EVER USE BRIGHT ACCENT COLORS (such as yellow #FFD974, gold, lime, cyan, or pastel tints)
+NEVER USE BRIGHT ACCENT COLORS (such as bright yellow, gold, lime, cyan, or pastel tints)
 FOR FONT TEXT ON LIGHT BACKGROUNDS. It makes navigation, headings, and labels completely invisible.
-All text, navigation links, and body copy on light surfaces MUST use high-contrast dark neutral (--bs-ink, #0f172a).
+All text, navigation links, and body copy on light surfaces MUST use high-contrast dark neutral (--bs-ink).
 Bright brand colors belong on button fills and borders, never as body/heading font text on white.
 
 - Grounds and text are NEUTRAL. --bs-surface, --bs-surface-alt, --bs-ink, --bs-ink-muted.
@@ -39,10 +39,13 @@ Bright brand colors belong on button fills and borders, never as body/heading fo
 
 NEVER write \`color: var(--bs-accent)\` or \`color: var(--bs-primary)\`. Both are FILL colours.
 They are rejected by the build, with no exceptions, including for eyebrows, kickers, stat
-figures, icons-as-text and small labels — the places this rule is usually broken. A label like
-"24/7 Rapid Response" set in the accent is unreadable on a light ground and is exactly the
-failure this bans. For accent-coloured text use --bs-primary-on-surface; use --bs-on-accent
-ONLY inside an element whose own background is --bs-accent; otherwise use --bs-ink.
+figures, icons-as-text, SVGs, star ratings, and small labels — the places this rule is usually broken.
+- For star ratings and review badges: use \`color: var(--bs-primary-on-surface);\` (or \`fill: var(--bs-primary-on-surface);\`).
+- For icons and SVGs on light ground: use \`color: var(--bs-primary-on-surface);\` or \`color: var(--bs-ink);\` (never \`color: var(--bs-primary)\` or \`color: var(--bs-accent)\`).
+- For accent-coloured text/eyebrows/kickers on surface: use \`color: var(--bs-primary-on-surface);\`.
+- Use --bs-on-primary ONLY inside an element whose own background is --bs-primary.
+- Use --bs-on-accent ONLY inside an element whose own background is --bs-accent.
+- Otherwise use --bs-ink for copy and --bs-ink-muted for secondary text.
 
 TOKENS ARE PAIRS, NOT A PALETTE TO MIX FREELY. --bs-ink is correct against --bs-surface and
 WRONG against --bs-invert-surface or --bs-primary — inside a section whose background switches
@@ -158,7 +161,7 @@ DESKTOP SILHOUETTE (2-Column Balanced Grid, 55% / 45%):
    - Trust Proof Strip: Real Google review rating badge with ★★★★★ stars, verified review count, "Licensed & Insured" reassurance badge, and "Locally Owned" pill.
 
 2. RIGHT COLUMN — Framed Hero Visual with Inset Caption:
-   - High-resolution hero image or owner cutout set inside an elegant frame with generous border-radius (rounded-2xl / rounded-3xl), subtle 1px border, and deep ambient drop shadow (box-shadow: 0 20px 50px rgba(0,0,0,0.12)).
+   - High-resolution hero image or owner cutout set inside an elegant frame with generous border-radius (var(--bs-radius-lg)), subtle 1px border (var(--bs-border-color)), and deep ambient drop shadow (var(--bs-shadow-lift)).
    - Inset or floating caption pill in the brand accent color along the bottom edge (e.g., "Property restoration work in progress in Las Vegas").
    - Image must use object-fit: cover with explicit aspect-ratio (e.g. 4/3 or 1/1) and loading="eager" fetchpriority="high".
 
@@ -283,7 +286,7 @@ Then, in whatever order the design direction genuinely calls for:
 - A prominent Reviews section (id="reviews") only when real review text exists:
   - Build an agency-grade horizontal carousel using [data-review-slider] and [data-review-track].
   - Every review card MUST have equal height (flex column with justify-content: space-between, min-height 280px).
-  - Each card includes 5 gold stars ★★★★★ (#f59e0b), clean quotation body, and an author attribution block (<cite>) with verified Google badge.
+  - Each card includes 5 gold stars ★★★★★ (styled with var(--bs-primary-on-surface)), clean quotation body, and an author attribution block (<cite>) with verified Google badge.
   - Section header includes prev/next circular arrow controls ([data-review-prev], [data-review-next]).
 - Service areas & interactive territory map (id="areas"):
   - Desktop layout: 2-column balanced split.

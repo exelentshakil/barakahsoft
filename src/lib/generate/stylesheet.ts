@@ -133,7 +133,7 @@ LAYOUT & MASTER SECTIONS
 - HERO SECTION STYLING:
   * 2-column balanced grid on desktop (55% left / 45% right).
   * Left: Eyebrow label, massive bold heading (clamp(2.75rem, 4.5vw, 4.25rem)), clear subheadline, above-the-fold lead form or dual CTAs, and trust proof badges.
-  * Right: Framed hero image with border-radius (rounded-2xl or rounded-3xl), subtle 1px border, deep drop shadow (0 20px 50px rgba(0,0,0,0.12)), and an inset or floating brand-accent caption pill.
+  * Right: Framed hero image with border-radius (var(--bs-radius-lg)), subtle 1px border (var(--bs-border-color)), deep drop shadow (var(--bs-shadow-lift)), and an inset or floating brand-accent caption pill.
 - ABOUT SECTION STYLING (3-TIER LAYERED MASTERPIECE):
   * Tier 1: Asymmetric split with a framed documentary team/work photograph on the left and an editorial story block on the right (with eyebrow, headline, 2 paragraphs, 4px solid left-border guarantee box, and primary action buttons).
   * Tier 2: Full-width solid metric ribbon band with 3-4 high-contrast stats (Experience, Projects, Rating, Satisfaction) in --bs-primary or dark surface.

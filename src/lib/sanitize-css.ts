@@ -54,6 +54,115 @@ function scopeSelectorList(selectors: string): string {
 }
 
 /**
+ * Normalize and auto-correct token usage and literal colors inside a rule block.
+ *
+ * Models (especially under varying temperatures or providers) frequently output:
+ * 1. `color: var(--bs-primary)` or `color: var(--bs-accent)` on surface elements
+ *    (which are fill tokens and violate contrast checks).
+ * 2. Literal hex colors (#ffffff, #0f172a, #f59e0b, #e2e8f0, etc.).
+ * 3. `rgba(0, 0, 0, 0.12)` shadows and transparent borders.
+ *
+ * Normalizing these here maps them to the contrast-checked design tokens, preventing
+ * build-blocking failures while preserving the designer's intended visual hierarchy.
+ */
+function normalizeRuleBody(body: string, selector = ""): string {
+  let text = body;
+
+  // 1. Identify background context in this rule
+  const bgMatch = text.match(/background(?:-color)?\s*:[^;]*var\(\s*(--bs-[a-z-]+)/i);
+  const bgToken = bgMatch?.[1];
+
+  const hasPrimaryBg = bgToken === "--bs-primary" || /background(?:-color)?\s*:[^;]*var\(\s*--bs-primary(?![a-z-])/i.test(text);
+  const hasAccentBg = bgToken === "--bs-accent" || /background(?:-color)?\s*:[^;]*var\(\s*--bs-accent(?![a-z-])/i.test(text);
+  const hasInvertBg = bgToken === "--bs-invert-surface" || /background(?:-color)?\s*:[^;]*var\(\s*--bs-invert-surface(?![a-z-])/i.test(text);
+
+  // 2. Transform box-shadow literals containing rgba or hex into token shadows
+  text = text.replace(/\bbox-shadow\s*:[^;]*?(?:rgba?|#[0-9a-f]{3,8}\b)[^;]*/gi, (_match) => {
+    if (/hover|focus|lift/i.test(selector)) return "box-shadow: var(--bs-shadow-lift)";
+    return "box-shadow: var(--bs-shadow-card)";
+  });
+
+  // 3. Star / rating / gold color literals
+  text = text.replace(/#f59e0b|#fbbf24|#ffd700|#eab308|#d97706|#facc15|\bgold\b|\bgoldenrod\b/gi, "var(--bs-primary-on-surface)");
+
+  // 4. Fix fill-only tokens (--bs-primary / --bs-accent) used as text, SVG fill, or stroke
+  if (!hasPrimaryBg && !hasAccentBg) {
+    text = text.replace(/(?<!-)\bcolor\s*:\s*var\(\s*--bs-primary(?![a-z-])(?:\s*,\s*[^)]+)?\s*\)(\s*!important)?/gi, "color: var(--bs-primary-on-surface)$1");
+    text = text.replace(/(?<!-)\bcolor\s*:\s*var\(\s*--bs-accent(?![a-z-])(?:\s*,\s*[^)]+)?\s*\)(\s*!important)?/gi, "color: var(--bs-primary-on-surface)$1");
+    text = text.replace(/\bfill\s*:\s*var\(\s*--bs-primary(?![a-z-])(?:\s*,\s*[^)]+)?\s*\)(\s*!important)?/gi, "fill: var(--bs-primary-on-surface)$1");
+    text = text.replace(/\bfill\s*:\s*var\(\s*--bs-accent(?![a-z-])(?:\s*,\s*[^)]+)?\s*\)(\s*!important)?/gi, "fill: var(--bs-primary-on-surface)$1");
+    text = text.replace(/\bstroke\s*:\s*var\(\s*--bs-primary(?![a-z-])(?:\s*,\s*[^)]+)?\s*\)(\s*!important)?/gi, "stroke: var(--bs-primary-on-surface)$1");
+    text = text.replace(/\bstroke\s*:\s*var\(\s*--bs-accent(?![a-z-])(?:\s*,\s*[^)]+)?\s*\)(\s*!important)?/gi, "stroke: var(--bs-primary-on-surface)$1");
+  } else if (hasPrimaryBg) {
+    text = text.replace(/(?<!-)\bcolor\s*:\s*var\(\s*(?:--bs-primary|--bs-ink|--bs-ink-muted|--bs-primary-on-surface|--bs-accent)(?![a-z-])(?:\s*,\s*[^)]+)?\s*\)(\s*!important)?/gi, "color: var(--bs-on-primary)$1");
+  } else if (hasAccentBg) {
+    text = text.replace(/(?<!-)\bcolor\s*:\s*var\(\s*(?:--bs-accent|--bs-ink|--bs-primary|--bs-ink-muted|--bs-primary-on-surface)(?![a-z-])(?:\s*,\s*[^)]+)?\s*\)(\s*!important)?/gi, "color: var(--bs-on-accent)$1");
+  }
+
+  // Fix unreadable token pairs if invert background is present
+  if (hasInvertBg) {
+    text = text.replace(/(?<!-)\bcolor\s*:\s*var\(\s*(?:--bs-ink|--bs-ink-muted)(?![a-z-])(?:\s*,\s*[^)]+)?\s*\)(\s*!important)?/gi, "color: var(--bs-invert-ink)$1");
+  }
+
+  // 5. Black rgba/rgb -> token ink rgb
+  text = text.replace(/rgba?\(\s*0\s*[, ]\s*0\s*[, ]\s*0(?:\s*[,/]\s*([0-9.]+%?))?\s*\)/gi, (_m, a) => {
+    if (!a || a === "1" || a === "1.0" || a === "100%") return "var(--bs-ink)";
+    return `rgb(var(--bs-ink-rgb) / ${a})`;
+  });
+
+  // 6. White rgba/rgb -> token surface rgb
+  text = text.replace(/rgba?\(\s*255\s*[, ]\s*255\s*[, ]\s*255(?:\s*[,/]\s*([0-9.]+%?))?\s*\)/gi, (_m, a) => {
+    if (!a || a === "1" || a === "1.0" || a === "100%") return "var(--bs-surface)";
+    return `rgb(var(--bs-surface-rgb) / ${a})`;
+  });
+
+  // 7. Common named hex codes normalization
+  // White / near-whites
+  text = text.replace(/(background(?:-color)?\s*:[^;]*)\b(?:#ffffff|#fff|#f8fafc|#f9fafb|#fafafa|#f1f5f9|#f3f4f6|#f4f4f5|white)\b/gi, "$1var(--bs-surface)");
+  text = text.replace(/((?<!-)\bcolor\s*:[^;]*)\b(?:#ffffff|#fff|white)\b/gi, (_match, prefix) => {
+    if (hasPrimaryBg || hasAccentBg || hasInvertBg) return `${prefix}var(--bs-on-primary)`;
+    return `${prefix}var(--bs-surface)`;
+  });
+
+  // Dark / Inks / Pure black
+  text = text.replace(/((?<!-)\bcolor\s*:[^;]*)\b(?:#000000|#000|#0f172a|#1e293b|#111827|#18181b|#0b0f19|#030712|#27272a|black)\b/gi, "$1var(--bs-ink)");
+  text = text.replace(/(background(?:-color)?\s*:[^;]*)\b(?:#000000|#000|#0b0f19|#0f172a|#1e293b|#111827|#18181b|black)\b/gi, "$1var(--bs-invert-surface)");
+
+  // Muted text
+  text = text.replace(/((?<!-)\bcolor\s*:[^;]*)\b(?:#64748b|#6b7280|#94a3b8|#475569|#71717a|#737373|#666666|#666|#555555|#555|#777777|#777|#888888|#888|#999999|#999)\b/gi, "$1var(--bs-ink-muted)");
+
+  // Borders
+  text = text.replace(/(border(?:-color|-top|-bottom|-left|-right)?\s*:[^;]*)\b(?:#e2e8f0|#e5e7eb|#cbd5e1|#d1d5db|#e4e4e7|#e0e0e0|#eee|#cccccc|#ccc|#dddddd|#ddd)\b/gi, "$1var(--bs-border-color)");
+
+  // 8. 4-arg rgba/rgb with alpha: rgba(r, g, b, a) or rgb(r g b / a) -> primary alpha
+  text = text.replace(/rgba?\(\s*\d+\s*[, ]\s*\d+\s*[, ]\s*\d+\s*[,/]\s*([0-9.]+%?)\s*\)/gi, (_m, a) => `rgb(var(--bs-primary-rgb) / ${a})`);
+
+  // 9. 3-arg rgb without alpha: rgb(r, g, b) or rgb(r g b) -> context token
+  text = text.replace(/((?<!-)\bcolor\s*:[^;]*)rgba?\(\s*\d+\s*[, ]\s*\d+\s*[, ]\s*\d+\s*\)/gi, "$1var(--bs-primary-on-surface)");
+  text = text.replace(/(background(?:-color)?\s*:[^;]*)rgba?\(\s*\d+\s*[, ]\s*\d+\s*[, ]\s*\d+\s*\)/gi, "$1var(--bs-surface-alt)");
+  text = text.replace(/(border(?:-color|-top|-bottom|-left|-right)?\s*:[^;]*)rgba?\(\s*\d+\s*[, ]\s*\d+\s*[, ]\s*\d+\s*\)/gi, "$1var(--bs-border-color)");
+  text = text.replace(/rgba?\(\s*\d+\s*[, ]\s*\d+\s*[, ]\s*\d+\s*\)/gi, "var(--bs-primary-on-surface)");
+
+  // 10. Any remaining hex values
+  text = text.replace(/((?<!-)\bcolor\s*:[^;]*)#[0-9a-f]{3,8}\b/gi, "$1var(--bs-primary-on-surface)");
+  text = text.replace(/(\b(?:fill|stroke)\s*:[^;]*)#[0-9a-f]{3,8}\b/gi, "$1var(--bs-primary-on-surface)");
+  text = text.replace(/(background(?:-color)?\s*:[^;]*)#[0-9a-f]{3,8}\b/gi, "$1var(--bs-surface-alt)");
+  text = text.replace(/(border(?:-color|-top|-bottom|-left|-right)?\s*:[^;]*)#[0-9a-f]{3,8}\b/gi, "$1var(--bs-border-color)");
+  text = text.replace(/#[0-9a-f]{3,8}\b/gi, "var(--bs-primary-on-surface)");
+
+  // 11. Final contrast contract
+  if (hasPrimaryBg) {
+    text = text.replace(/(?<!-)\bcolor\s*:[^;]+/gi, "color: var(--bs-on-primary)");
+  } else if (hasAccentBg) {
+    text = text.replace(/(?<!-)\bcolor\s*:[^;]+/gi, "color: var(--bs-on-accent)");
+  } else if (hasInvertBg) {
+    text = text.replace(/(?<!-)\bcolor\s*:[^;]+/gi, "color: var(--bs-invert-ink)");
+  }
+
+  return text;
+}
+
+/**
  * Walk the stylesheet block by block, scoping rules and recursing into
  * at-rules that contain them.
  *
@@ -89,7 +198,7 @@ function scopeBlocks(css: string, depth = 0): string {
 
     if (STANDALONE_AT_RULE.test(prelude)) {
       // Keyframes and font-face carry no selectors that could escape.
-      out.push(`${prelude} {${bodyText}}`);
+      out.push(`${prelude} {${normalizeRuleBody(bodyText, prelude)}}`);
     } else if (NESTED_AT_RULE.test(prelude)) {
       out.push(`${prelude} {\n${scopeBlocks(bodyText, depth + 1)}\n}`);
     } else if (prelude.startsWith("@")) {
@@ -97,7 +206,7 @@ function scopeBlocks(css: string, depth = 0): string {
       // rather than guessed at.
     } else {
       const scoped = scopeSelectorList(prelude);
-      if (scoped) out.push(`${scoped} {${bodyText}}`);
+      if (scoped) out.push(`${scoped} {${normalizeRuleBody(bodyText, scoped)}}`);
     }
 
     index = cursor;
