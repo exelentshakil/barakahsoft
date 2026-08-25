@@ -274,7 +274,7 @@ Return strict JSON only:
   return { ...parsed.data, strategyLens: assignedLens, sections, services };
 }
 
-export function sectionBatches(sections: PlannedSection[], size = 4): PlannedSection[][] {
+export function sectionBatches(sections: PlannedSection[], size = 1): PlannedSection[][] {
   const batches: PlannedSection[][] = [];
   for (let index = 0; index < sections.length; index += size) batches.push(sections.slice(index, index + size));
   return batches;

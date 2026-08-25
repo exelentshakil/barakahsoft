@@ -255,11 +255,19 @@ export const bespokeGenerate = inngest.createFunction(
         }
 
         // Live stream: Save partial sections immediately so /s/[slug]?view=preview renders progress in real-time
-        const currentBatchHtml = [...generatedSections, ...result].map((s) => s.html).join("\n");
+        const currentSections = [...generatedSections, ...result];
+        const currentBatchHtml = currentSections.map((s) => s.html).join("\n");
         await admin
           .from("artifacts")
           .update({
             bespoke_homepage_html: sanitizeBespokeHtml(currentBatchHtml),
+            bespoke_sections: currentSections.map((section) => ({
+              id: section.id,
+              kind: section.kind,
+              label: section.label,
+              html: sanitizeBespokeHtml(section.html),
+              locked: false,
+            })),
             last_edited_at: new Date().toISOString(),
           })
           .eq("lead_id", lead_id);

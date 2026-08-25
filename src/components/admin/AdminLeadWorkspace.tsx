@@ -69,6 +69,7 @@ import { DeliverySlaTimer } from "@/components/admin/DeliverySlaTimer";
 import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStudio";
 import { RefinePanel } from "@/components/admin/RefinePanel";
 import { HandBuildPanel } from "@/components/admin/HandBuildPanel";
+import { LiveSectionStudio } from "@/components/admin/LiveSectionStudio";
 import { VisibilityPanel } from "@/components/admin/VisibilityPanel";
 import { AuditPanel } from "@/components/admin/AuditPanel";
 import { CompetitorPanel } from "@/components/admin/CompetitorPanel";
@@ -1001,6 +1002,7 @@ export function AdminLeadWorkspace({
           scrapeResults={scrapeResults}
           onGenerated={() => setReloadKey((k) => k + 1)}
         />
+        <LiveSectionStudio leadId={lead.id} isActive={tab === "build"} />
         </TabPanel>
 
         <TabPanel active={tab === "photos"}>
