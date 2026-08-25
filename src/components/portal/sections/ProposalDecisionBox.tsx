@@ -47,7 +47,7 @@ export function ProposalDecisionBox({
       </p>
       {!isPaid && (
         <p className="mx-auto max-w-xl text-xs leading-relaxed text-white/55">
-          Official go-live is typically 2-4 weeks after payment, final content approval, and domain access.
+          Official go-live is typically 48 hours after payment, final content approval, and domain access.
         </p>
       )}
 
