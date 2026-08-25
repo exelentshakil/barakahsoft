@@ -101,7 +101,7 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
                     className="bs-nav-panel-item"
                   >
                     {kind === "areas" ? (
-                      <MapPin className="h-4 w-4 text-[var(--bs-primary)] shrink-0 mt-0.5" />
+                      <MapPin className="h-4 w-4 text-[var(--bs-primary-on-surface)] shrink-0 mt-0.5" />
                     ) : (
                       <span className="h-2 w-2 rounded-full bg-[var(--bs-primary)] shrink-0 mt-1.5" />
                     )}

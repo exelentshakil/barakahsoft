@@ -167,14 +167,15 @@
 }
 .bs-band-primary .bs-eyebrow,
 .bs-band-gradient .bs-eyebrow { color: var(--bs-on-primary); opacity: 0.85; }
-.bs-band-invert .bs-eyebrow { color: var(--bs-accent); }
+.bs-band-invert .bs-eyebrow { color: var(--bs-invert-ink); opacity: 0.85; }
 
 .bs-lead { font-size: 1.15em; color: var(--bs-ink-muted); max-width: 62ch; }
 .bs-band-primary .bs-lead, .bs-band-gradient .bs-lead { color: rgb(255 255 255 / 0.88); }
 .bs-band-invert .bs-lead { color: rgb(255 255 255 / 0.72); }
 .bs-muted { color: var(--bs-ink-muted); }
 .bs-highlight { color: var(--bs-primary-on-surface); }
-.bs-accent-text { color: var(--bs-accent); }
+/* No guaranteed background, so it takes the contrast-corrected form. */
+.bs-accent-text { color: var(--bs-primary-on-surface); }
 
 .bs-pill {
   display: inline-flex;
@@ -263,7 +264,7 @@
 .bs-hero-over { color: #fff; }
 .bs-hero-over h1, .bs-hero-over h2 { color: #fff; }
 .bs-hero-over .bs-lead { color: rgb(255 255 255 / 0.85); }
-.bs-hero-over .bs-eyebrow { color: var(--bs-accent); }
+.bs-hero-over .bs-eyebrow { color: rgb(255 255 255 / 0.85); }
 
 /* A hero with a photo behind it is light-on-dark, whatever band class was
  * also applied. The generator paired bs-hero-media with bs-band-invert,
@@ -278,7 +279,7 @@
   color: #fff;
 }
 .bs-hero:has(.bs-hero-media) .bs-hero-content .bs-lead { color: rgb(255 255 255 / 0.88); }
-.bs-hero:has(.bs-hero-media) .bs-hero-content .bs-eyebrow { color: var(--bs-accent); }
+.bs-hero:has(.bs-hero-media) .bs-hero-content .bs-eyebrow { color: rgb(255 255 255 / 0.85); }
 .bs-hero:has(.bs-hero-media) .bs-hero-content .bs-muted { color: rgb(255 255 255 / 0.72); }
 /* The band's own background must not paint over the photograph. */
 .bs-hero:has(.bs-hero-media) { background: transparent; }
@@ -302,9 +303,9 @@
   line-height: 1;
   color: var(--bs-primary-on-surface);
 }
-.bs-band-invert .bs-stat-value,
+.bs-band-invert .bs-stat-value { color: var(--bs-invert-ink); }
 .bs-band-primary .bs-stat-value,
-.bs-band-gradient .bs-stat-value { color: var(--bs-accent); }
+.bs-band-gradient .bs-stat-value { color: var(--bs-on-primary); }
 .bs-stat-label { font-size: 0.875rem; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.72; }
 
 .bs-quote {
@@ -313,7 +314,7 @@
   font-size: 1.0625em;
   line-height: 1.6;
 }
-.bs-stars { color: var(--bs-accent); letter-spacing: 0.1em; font-size: 1rem; }
+.bs-stars { color: var(--bs-primary-on-surface); letter-spacing: 0.1em; font-size: 1rem; }
 
 /* --------------------------------------------------------------- listing */
 
@@ -597,7 +598,9 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--bs-primary);
+  /* Sits on a light dropdown panel. --bs-primary is a fill; on a pale brand
+     colour this rendered as unreadable yellow text. */
+  color: var(--bs-primary-on-surface);
 }
 
 .bs-nav-featured-title {
