@@ -360,8 +360,11 @@ function verifyStylesheet(css: string): QualityFinding[] {
   }
 
   // The reveal contract: elements must be visible without script.
-  if (/data-reveal-armed/.test(css) && !/data-revealed/.test(css)) {
+  if (/data-reveal-armed/.test(css) && !/data-revealed/.test(css) && !/is-revealed/.test(css)) {
     add("blocker", "interaction", "Reveal start state is styled but the revealed state is not — content will stay hidden.");
+  }
+  if (/\[data-reveal\][^{]*\{[^}]*opacity\s*:\s*0/i.test(css) && !/data-reveal-armed/.test(css)) {
+    add("blocker", "interaction", "Bare [data-reveal] is styled with opacity: 0 instead of [data-reveal-armed] — content will be hidden before script runs.");
   }
 
   // Colour discipline. Literal colours bypass the contrast-checked palette.

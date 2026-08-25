@@ -110,7 +110,10 @@ export function BespokeRuntime({ leadSlug }: { leadSlug: string }) {
             if (!entry.isIntersecting) continue;
             const el = entry.target as HTMLElement;
             const delay = Number(el.dataset.revealDelay ?? 0);
-            window.setTimeout(() => el.setAttribute("data-revealed", "true"), delay);
+            window.setTimeout(() => {
+              el.setAttribute("data-revealed", "true");
+              el.classList.add("is-revealed");
+            }, delay);
             observer.unobserve(el);
           }
         },
@@ -123,7 +126,10 @@ export function BespokeRuntime({ leadSlug }: { leadSlug: string }) {
       });
       cleanups.push(() => observer.disconnect());
     } else {
-      revealTargets.forEach((el) => el.setAttribute("data-revealed", "true"));
+      revealTargets.forEach((el) => {
+        el.setAttribute("data-revealed", "true");
+        el.classList.add("is-revealed");
+      });
     }
 
     // ---- Counting numbers ----------------------------------------------

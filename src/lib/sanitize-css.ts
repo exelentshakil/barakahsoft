@@ -205,8 +205,20 @@ function scopeBlocks(css: string, depth = 0): string {
       // An at-rule that is neither known-safe nor known-nested is dropped
       // rather than guessed at.
     } else {
-      const scoped = scopeSelectorList(prelude);
-      if (scoped) out.push(`${scoped} {${normalizeRuleBody(bodyText, scoped)}}`);
+      let scoped = scopeSelectorList(prelude);
+      if (scoped) {
+        // Auto-correct reveal start state: if the model styled [data-reveal] with opacity: 0
+        // instead of [data-reveal-armed], rewrite it so SSR / un-armed elements stay visible.
+        if (/\[data-reveal\]/i.test(scoped) && !/\[data-reveal-armed\]/i.test(scoped) && /opacity\s*:\s*0/i.test(bodyText)) {
+          scoped = scoped.replace(/\[data-reveal\](?!\w)/gi, "[data-reveal-armed]:not([data-revealed])");
+        }
+        // Auto-expand .is-revealed to also match the [data-revealed] attribute contract.
+        if (/\.is-revealed\b/i.test(scoped)) {
+          const attrVariant = scoped.replace(/\.is-revealed\b/gi, "[data-revealed]");
+          scoped = `${scoped}, ${attrVariant}`;
+        }
+        out.push(`${scoped} {${normalizeRuleBody(bodyText, scoped)}}`);
+      }
     }
 
     index = cursor;

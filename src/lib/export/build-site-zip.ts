@@ -828,7 +828,10 @@ export default function SiteRuntime() {
           for (const entry of entries) {
             if (!entry.isIntersecting) continue;
             const el = entry.target as HTMLElement;
-            window.setTimeout(() => el.setAttribute("data-revealed", "true"), Number(el.dataset.revealDelay ?? 0));
+            window.setTimeout(() => {
+              el.setAttribute("data-revealed", "true");
+              el.classList.add("is-revealed");
+            }, Number(el.dataset.revealDelay ?? 0));
             observer.unobserve(el);
           }
         },
@@ -840,7 +843,10 @@ export default function SiteRuntime() {
       });
       cleanups.push(() => observer.disconnect());
     } else {
-      revealTargets.forEach((el) => el.setAttribute("data-revealed", "true"));
+      revealTargets.forEach((el) => {
+        el.setAttribute("data-revealed", "true");
+        el.classList.add("is-revealed");
+      });
     }
 
     // ---- Counting numbers ----------------------------------------------
