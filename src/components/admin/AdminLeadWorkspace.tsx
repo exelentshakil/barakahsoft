@@ -667,9 +667,9 @@ export function AdminLeadWorkspace({
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
+    <div className="grid min-w-0 gap-8 lg:grid-cols-[320px_minmax(0,1fr)]">
       {/* 1. LEFT ASIDE: INBOUND LEAD ORDERS & WEEKLY PULSE */}
-      <aside className="space-y-6">
+      <aside className="min-w-0 space-y-6">
         <div className="rounded-2xl border border-slate-200/90 bg-white p-4 space-y-4 shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 px-1">
             <span className="text-sm font-extrabold text-slate-900 tracking-tight">Your Pipeline</span>

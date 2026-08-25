@@ -86,7 +86,7 @@ export async function GET(req: Request) {
     // Paid leads in the window. The amount actually charged lives in Stripe,
     // so this counts conversions rather than inventing a figure per lead.
     revenueUsd: 0,
-    pricingConfigured: pricingConfigured(),
+    pricingConfigured: await pricingConfigured(),
   };
 
   return NextResponse.json({ ...summary, paidLeads: (paid.data ?? []).length });

@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, Settings } from "lucide-react";
+import { CostSettingsDialog } from "@/components/admin/CostSettingsDialog";
 
 // Did this period pay for itself?
 //
@@ -37,6 +38,7 @@ export function PeriodPulsePanel({ collectedRevenue, pipelineToClose }: { collec
   const [data, setData] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (period === "custom" && !from) return;
@@ -66,10 +68,16 @@ export function PeriodPulsePanel({ collectedRevenue, pipelineToClose }: { collec
   const net = collectedRevenue - spend;
 
   return (
-    <div className="space-y-3 rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
+    <div className="min-w-0 space-y-3 overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <span className="text-xs font-black uppercase tracking-wider text-slate-500">Target pulse</span>
-        {loading && <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-400" />}
+        <span className="flex items-center gap-1.5">
+          {loading && <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-400" />}
+          <button type="button" onClick={() => setSettingsOpen(true)} title="Costs and model prices"
+            className="rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
+            <Settings className="h-3.5 w-3.5" />
+          </button>
+        </span>
       </div>
 
       <div className="flex flex-wrap gap-1">
@@ -125,7 +133,12 @@ export function PeriodPulsePanel({ collectedRevenue, pipelineToClose }: { collec
       {data && !data.pricingConfigured && (
         <p className="flex items-start gap-1.5 rounded-lg border border-amber-200 bg-amber-50 p-2 text-[10px] leading-snug text-amber-900">
           <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
-          No model prices set, so cost shows as $0. Set <code className="font-mono">AI_MODEL_PRICES</code> to see real spend — tokens above are already accurate.
+          <span>
+            No model prices set, so cost shows as $0 — tokens above are already accurate.{" "}
+            <button type="button" onClick={() => setSettingsOpen(true)} className="font-bold underline">
+              Set prices
+            </button>
+          </span>
         </p>
       )}
       {data?.pricingConfigured && data.ai.unpricedCalls > 0 && (
@@ -135,6 +148,8 @@ export function PeriodPulsePanel({ collectedRevenue, pipelineToClose }: { collec
       )}
 
       {error && <p className="text-[10px] font-semibold text-rose-600">{error}</p>}
+
+      {settingsOpen && <CostSettingsDialog onClose={() => setSettingsOpen(false)} />}
     </div>
   );
 }

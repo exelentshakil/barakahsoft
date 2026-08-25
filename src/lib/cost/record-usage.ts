@@ -35,7 +35,7 @@ export async function recordUsage(usage: UsageRecord): Promise<void> {
       completion_tokens: completion,
       // Priced at write time. A later price change should not rewrite what
       // last month reported it had spent.
-      cost_usd: costOf(usage.model, prompt, completion),
+      cost_usd: await costOf(usage.model, prompt, completion),
     });
   } catch (err) {
     console.error("[ai-usage] could not record usage", err);

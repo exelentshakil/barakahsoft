@@ -72,7 +72,7 @@ export function OutreachSequencePanel({
   }
 
   return (
-    <div className="space-y-3 rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
+    <div className="min-w-0 space-y-3 overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm">
       <div>
         <h3 className="text-sm font-black uppercase tracking-wider text-slate-500">
           {title ?? "Cold outreach sequence"}
@@ -92,13 +92,13 @@ export function OutreachSequencePanel({
               key={s.stage}
               type="button"
               onClick={() => { setStage(s.stage); setSelected([]); setResult(null); setError(null); }}
-              className={`flex items-center gap-2.5 rounded-lg border p-2.5 text-left transition ${
+              className={`flex w-full min-w-0 items-center gap-2.5 rounded-lg border p-2.5 text-left transition ${
                 stage === s.stage ? "border-[#533afd] bg-[#f0f3ff] ring-1 ring-[#533afd]" : "border-slate-200 hover:border-slate-300"
               }`}
             >
               <Icon className="h-4 w-4 shrink-0 text-[#533afd]" />
               <span className="min-w-0 flex-1">
-                <span className="block text-xs font-bold text-[#0d1738]">
+                <span className="block truncate text-xs font-bold text-[#0d1738]">
                   {s.stage}. {s.label}
                 </span>
                 <span className="block truncate text-[10px] text-slate-500">{s.purpose}</span>
