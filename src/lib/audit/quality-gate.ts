@@ -259,8 +259,34 @@ function verifyStylesheet(css: string): QualityFinding[] {
   const add = (severity: QualityFinding["severity"], check: string, detail: string) =>
     findings.push({ severity, check, detail });
 
-  if (css.trim().length < 1500) {
-    add("blocker", "stylesheet", `Only ${css.trim().length} characters of CSS. A page this size cannot be properly styled by it.`);
+  // The floor was 1500, which nothing real ever produces — a working page
+  // measured 14152 — so it only ever caught a total failure to generate,
+  // never a thin sheet. A homepage here is eight or nine sections, and a
+  // section that is genuinely composed costs roughly a kilobyte on its own.
+  const length = css.trim().length;
+  if (length < 6000) {
+    add("blocker", "stylesheet", `Only ${length} characters of CSS for a whole homepage. Sections are being left with token styling rather than a composition of their own.`);
+  } else if (length < 11000) {
+    add("warning", "stylesheet", `${length} characters of CSS is thin for this many sections — expect some to be styled generically.`);
+  }
+
+  // Custom shapes and decorative layers are what stop a page reading as
+  // stacked rectangles. These are cheap to detect and were previously not
+  // asked for at all.
+  // Graduated rather than a single line: three constructs is a floor any
+  // page with a repeated primitive clears without trying, and blocking there
+  // is what stops the generator settling for stacked rectangles. A page
+  // measured before this existed had exactly zero.
+  const shaping = (css.match(/clip-path\s*:|border-radius\s*:\s*[^;]*\/|::(before|after)\b|mask-image\s*:|transform\s*:\s*(skew|rotate)/gi) ?? []).length;
+  if (shaping < 3) {
+    add("blocker", "composition", `Only ${shaping} shaping constructs (clip-path, ::before/::after, skew/rotate, mask). Every section is a plain rectangle — build the recurring primitive and give at least three sections a shaped edge or offset ground.`);
+  } else if (shaping < 8) {
+    add("warning", "composition", `${shaping} shaping constructs. The page has some geometry but most sections are still plain rectangles.`);
+  }
+
+  const decorative = (css.match(/repeating-linear-gradient|radial-gradient|linear-gradient|filter\s*:\s*blur|opacity\s*:\s*0?\.\d/gi) ?? []).length;
+  if (decorative < 4) {
+    add("warning", "composition", `Only ${decorative} decorative layers (gradients, washes, blurred fields). Focal sections have no depth behind them.`);
   }
 
   // Whitespace: generous, and scaling with the viewport rather than jumping

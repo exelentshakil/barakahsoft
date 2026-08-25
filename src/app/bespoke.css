@@ -681,6 +681,53 @@
   color: var(--bs-ink-muted);
 }
 
+/* -------------------------------------------------- service area map */
+
+/* Injected after generation by src/lib/generate/service-map.ts, so it is
+   styled here rather than left to the per-page stylesheet — the map is the
+   same component on every site and must not degrade when a generated
+   stylesheet forgets it. */
+.bs-service-map {
+  margin: 0;
+  border-radius: var(--bs-radius-lg);
+  overflow: hidden;
+  border: var(--bs-border-width) solid var(--bs-border-color);
+  box-shadow: var(--bs-shadow-card);
+  background: var(--bs-surface-alt);
+}
+.bs-service-map-image { display: block; width: 100%; height: auto; }
+.bs-map-legend-wrap { padding: clamp(0.9rem, 2vw, 1.35rem); }
+.bs-map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bs-map-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8125rem;
+  color: var(--bs-ink);
+}
+.bs-map-pin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: none;
+  border-radius: 999px;
+  background: var(--bs-primary);
+  color: var(--bs-on-primary);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.bs-map-place { white-space: nowrap; }
+
 /* ------------------------------------------------------------- footer */
 
 .bs-footer { background: var(--bs-invert-surface); color: var(--bs-invert-ink); }

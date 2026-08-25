@@ -27,7 +27,11 @@ export async function generateStylesheet(
   dna: DesignDna,
   tokens: DesignTokens,
   previousFailures?: string,
-  provider: GenerationProvider = "openai"
+  provider: GenerationProvider = "openai",
+  // The site plan picks a signature graphic motif and, until this argument
+  // existed, nothing ever told the stylesheet what it was — so the one
+  // decision meant to tie the page together was made and then discarded.
+  recurringPrimitive?: string
 ): Promise<StylesheetResult | null> {
   const tokenList = Object.entries(tokens.vars)
     .map(([name, value]) => `  ${name}: ${value};`)
@@ -50,6 +54,48 @@ ${COLOUR_STANDARD}
 ═══ DESIGN DIRECTION ═══
 Mood: ${dna.mood} · Rhythm: ${dna.layout.sectionRhythm} · Geometry: ${dna.geometry.radius} corners, ${dna.geometry.elevation} elevation
 Motifs to actually build in CSS: ${dna.motifs.join("; ") || "none specified"}
+Recurring graphic primitive — the one shape or mark that repeats down the page and makes it feel authored: ${recurringPrimitive || "choose one and use it in at least four sections"}
+
+═══ SIGNATURE, SHAPES AND DESIGN ELEMENTS ═══
+This is what separates a styled page from a designed one, and it is the part
+that is usually missing. A page of neat rectangles with correct spacing is
+competent and forgettable. Build real geometry, in CSS, with no images:
+
+- SECTION SILHOUETTES. Sections must not all be plain rectangles stacked.
+  Give at least three of them a shaped edge or an offset ground — an angled
+  or curved boundary with clip-path, a ground that stops short so the next
+  section overlaps it, a full-bleed band that breaks the container, or a
+  panel that sits half-outside its section. Vary which sections get this.
+- THE PRIMITIVE, REPEATED. Build the recurring primitive above as an actual
+  CSS construct (::before / ::after, a border treatment, a numbered marker,
+  a rule that starts each heading) and repeat it in at least four sections so
+  the page reads as one authored system.
+- DECORATIVE LAYERS, EARNED. Behind or beside focal content: a token-tinted
+  gradient wash, a dot or grid field via repeating-linear-gradient or
+  radial-gradient, an oversized outlined numeral or letterform, a soft blurred
+  colour orb. Low contrast, always behind the content, never competing with
+  text, and never on more than about a third of the sections.
+- DEPTH AS STRUCTURE. Layer cards over bands, overlap an image and a panel,
+  let one element cross a section boundary. Flat stacking is the default look
+  this page is trying not to have.
+- EDGE AND CORNER DETAIL. Where the eye lands — hero, first card, primary
+  button, the review track — add one considered detail: an inset hairline, a
+  corner cut, a two-tone border, a caption pill anchored to an image edge.
+
+Constraints that keep this from becoming noise: every colour still comes from
+a token; decoration is always pointer-events: none and aria-hidden in effect;
+nothing decorative may reduce text contrast; and if a shape would push content
+off-screen at 360px wide, simplify it in the mobile branch instead of dropping
+the section.
+
+═══ HOW MUCH CSS ═══
+Every section gets its own substantial block — its layout, its internal
+rhythm, its states, its decorative layer where it has one, and its mobile
+branch. A section styled in three declarations has not been designed. Expect
+a real stylesheet for a real page: on the order of 12,000 characters or more,
+because there are typically eight or nine sections and each one earns its
+space. Do not pad it with repetition; earn the length with per-section
+composition.
 
 ═══ THE MARKUP YOU ARE STYLING ═══
 ${html.slice(0, 90000)}

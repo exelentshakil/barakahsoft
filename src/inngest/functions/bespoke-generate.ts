@@ -9,6 +9,7 @@ import {
 import { generateStructureBatch, type GeneratedSection } from "@/lib/generate/structure";
 import { generateSitePlan, sectionBatches } from "@/lib/generate/site-plan";
 import { generateStylesheet } from "@/lib/generate/stylesheet";
+import { renderServiceMap, injectServiceMap } from "@/lib/generate/service-map";
 import { critiqueHomepage, type PremiumCritique } from "@/lib/generate/critique";
 import type { GenerationProvider } from "@/lib/generate/model";
 import { DEFAULT_DESIGN_DNA, DesignDnaSchema, type DesignDna } from "@/lib/design-dna";
@@ -277,10 +278,32 @@ export const bespokeGenerate = inngest.createFunction(
       generatedSections.push(...generated);
     }
 
-    const composedHtml = generatedSections.map((section) => section.html).join("\n");
+    const composedRaw = generatedSections.map((section) => section.html).join("\n");
+
+    // The map is built here rather than asked for in the brief: the model
+    // reaches for an unofficial maps.google.com embed with a single pin
+    // however the instruction is worded, and "which towns do you cover" is
+    // the question this section exists to answer.
+    const composedHtml = await step.run("service-map", async () => {
+      if (brief.areas.length === 0) return composedRaw;
+      // The compiled primary, not the raw scraped hex — the pins have to
+      // match the colour the page actually renders with, and the palette
+      // may have adjusted or replaced what was scraped.
+      const map = await renderServiceMap(lead_id, brief.areas, gateTokens.vars["--bs-primary"] ?? null);
+      return map ? injectServiceMap(composedRaw, map, brief.businessName) : composedRaw;
+    });
+
     const stylesheet = await step.run("stylesheet", async () => {
       await touchProgress(admin, lead_id);
-      const result = await generateStylesheet(composedHtml, sitePlan.designNotes, dna, gateTokens, undefined, provider);
+      const result = await generateStylesheet(
+        composedHtml,
+        sitePlan.designNotes,
+        dna,
+        gateTokens,
+        undefined,
+        provider,
+        sitePlan.recurringPrimitive
+      );
       if (!result) {
         throw new Error("Stylesheet generation returned nothing usable. The previous live page was preserved.");
       }
