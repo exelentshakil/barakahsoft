@@ -253,6 +253,17 @@ export const bespokeGenerate = inngest.createFunction(
             `Section batch ${index + 1} returned incomplete markup from ${provider ?? "openai"}. The previous live page was preserved.`
           );
         }
+
+        // Live stream: Save partial sections immediately so /s/[slug]?view=preview renders progress in real-time
+        const currentBatchHtml = [...generatedSections, ...result].map((s) => s.html).join("\n");
+        await admin
+          .from("artifacts")
+          .update({
+            bespoke_homepage_html: sanitizeBespokeHtml(currentBatchHtml),
+            last_edited_at: new Date().toISOString(),
+          })
+          .eq("lead_id", lead_id);
+
         return result;
       })) as GeneratedSection[];
       generatedSections.push(...generated);
