@@ -153,7 +153,10 @@ ${truthStandard(brief.rating, brief.reviewCount)}
 
 ═══ HERO & LEAD CONVERSION REQUIREMENT ═══
 If this batch contains the hero section (id="hero"):
-- MUST include a high-converting, styled lead capture form ([data-lead-form]) in the hero left column above the fold!
+${
+  brief.intent.primary === "shop"
+    ? `- For this e-commerce business, feature high-impact product collection CTAs: <a href="#products" class="site-cta site-cta--primary">${brief.intent.primaryLabel}</a> paired with <a href="#about" class="site-cta site-cta--secondary">Learn More</a>.`
+    : `- For this service/appointment/contractor business, include a high-converting, styled lead capture form ([data-lead-form]) in the hero left column above the fold!
   Form fields:
     name="name" (text, required, placeholder="Your Full Name")
     name="phone" (tel, required, placeholder="Phone Number")
@@ -161,7 +164,8 @@ If this batch contains the hero section (id="hero"):
     name="service" (<select> with the business's real services, optional)
     <button type="submit" class="site-cta site-cta--primary">${brief.intent.primaryLabel || "Get Free Quote / Fast Callback"}</button>
     <div data-lead-form-message></div>
-- Pair with direct click-to-call phone link: <a href="tel:${brief.phone ? brief.phone.replace(/[^\d+]/g, "") : ""}" class="site-cta site-cta--secondary">Call ${brief.phone || "(XXX) XXX-XXXX"}</a>.
+- Pair with direct click-to-call phone link: <a href="tel:${brief.phone ? brief.phone.replace(/[^\d+]/g, "") : ""}" class="site-cta site-cta--secondary">Call ${brief.phone || "(XXX) XXX-XXXX"}</a>.`
+}
 - Every later primary CTA button further down the page uses data-open-quote-modal.
 
 Reply with every assigned section exactly once, in batch order, using these exact delimiters and no prose or markdown fences:
