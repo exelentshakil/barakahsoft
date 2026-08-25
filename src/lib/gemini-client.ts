@@ -19,13 +19,24 @@ export interface GeminiCallOptions {
 // A chain rather than one id, for the same reason openai-client keeps one:
 // the day a model is retired, generation degrades to the next instead of
 // taking the feature down.
+// Refreshed after every entry below the second was found dead against the
+// live key. gemini-2.5-pro now 404s with "no longer available to new users.
+// Please update your code to use models/gemini-3.1-pro-preview", and the
+// 2.0 and 1.5 ids are gone from the models listing entirely. That left one
+// reachable entry — gemini-2.5-flash — so every homepage Gemini built was
+// silently produced by a Flash model after the Pro head of the chain 404'd,
+// on the one call where output quality is the product.
+//
+// Each id here was verified with a real generateContent call against the
+// project key, not taken from documentation.
 const BEST_CHAIN = [
-  "gemini-2.5-pro",
+  // Google's named replacement for 2.5-pro.
+  "gemini-3.1-pro-preview",
+  // Stable alias tracking the current Pro, so a withdrawn preview does not
+  // drop the chain straight to Flash again.
+  "gemini-pro-latest",
+  "gemini-flash-latest",
   "gemini-2.5-flash",
-  "gemini-2.0-pro-exp-02-05",
-  "gemini-2.0-flash",
-  "gemini-1.5-pro",
-  "gemini-1.5-flash",
 ];
 
 export function bestGeminiChain(): string[] {

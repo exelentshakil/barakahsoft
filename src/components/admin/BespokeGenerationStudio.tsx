@@ -654,7 +654,7 @@ export function BespokeGenerationStudio({
             <div className="mt-2.5 grid gap-2 sm:grid-cols-2">
               {([
                 { id: "openai", name: "OpenAI · GPT-4o & o3", note: "Flagship conversion chain: o3-mini → o1 → GPT-4o." },
-                { id: "gemini", name: "Gemini · 2.5 Pro", note: "High-speed multimodal chain: Gemini 2.5 Pro → 2.5 Flash → 2.0 Pro." },
+                { id: "gemini", name: "Gemini · 3.1 Pro", note: "Chain: Gemini 3.1 Pro → pro-latest → flash-latest." },
               ] as const).map((option) => (
                 <button
                   key={option.id}

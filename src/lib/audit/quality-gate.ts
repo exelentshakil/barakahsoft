@@ -159,6 +159,12 @@ function maxVerticalPaddingPx(css: string): number | null {
 // rule is a contrast failure by construction — these pairings are what the
 // compiled palette guarantees, and nothing else is checked for contrast at
 // all.
+// Tokens that are fills and never text. Note that neither appears in any
+// `allowed` list below — the compiled palette has always treated them this
+// way, and this set just makes that enforceable for rules that set a colour
+// without a background.
+const FILL_ONLY_TOKENS = new Set(["--bs-accent", "--bs-primary"]);
+
 const READABLE_ON: { fill: string; allowed: string[]; label: string }[] = [
   {
     fill: "--bs-primary",
@@ -207,6 +213,28 @@ function verifyTokenPairs(css: string): QualityFinding[] {
 
     const bg = body.match(/background(?:-color)?\s*:[^;]*var\(\s*(--bs-[a-z-]+)/i)?.[1];
     const fg = body.match(/(?<!-)\bcolor\s*:[^;]*var\(\s*(--bs-[a-z-]+)/i)?.[1];
+
+    // Fill tokens used as text, with no background in the same rule to pair
+    // against. This is the case the both-must-be-present rule below cannot
+    // judge, and it is how accent-on-white text keeps shipping: the rule
+    // inherits its background from a parent, so nothing here sees a
+    // mismatch. --bs-accent and --bs-primary are saturated brand fills; at
+    // body size on the page ground they are the single most common
+    // unreadable-text failure, which is exactly why the palette compiles
+    // --bs-primary-on-surface as the contrast-corrected text form.
+    if (fg && !bg && FILL_ONLY_TOKENS.has(fg)) {
+      const key = `text-only|${fg}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        findings.push({
+          severity: "blocker",
+          check: "contrast",
+          detail: `\`${selector}\` sets text to ${fg}, which is a fill colour, not a text colour. It inherits whatever background its parent has, so on a light ground this renders low-contrast brand-coloured text. Use --bs-primary-on-surface for accent-coloured text on the page ground, --bs-on-accent only inside an element actually filled with --bs-accent, or --bs-ink for ordinary copy.`,
+        });
+      }
+      continue;
+    }
+
     if (!bg || !fg) continue;
 
     const pair = READABLE_ON.find((p) => p.fill === bg);

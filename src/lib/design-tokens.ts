@@ -203,6 +203,57 @@ function googleFontHref(display: string, body: string): string | null {
  */
 export type ColourSource = "reference" | "client" | "hybrid";
 
+/**
+ * Guarantee the accent reads as a different colour from the primary.
+ *
+ * Tries the honest options first — the DNA's own accent, then the house
+ * default's — before falling back to shifting the primary's own hue. The
+ * shift is a last resort but still beats shipping a palette whose two
+ * highlight slots are one colour.
+ */
+function distinguishAccent<T extends { primary: string; accent: string }>(palette: T, dna: DesignDna): T {
+  // Identical hexes, or two shades so close that no viewer reads them as
+  // separate colours.
+  const collides = (candidate: string) =>
+    candidate.toUpperCase() === palette.primary.toUpperCase() || contrastRatio(candidate, palette.primary) < 1.15;
+
+  if (!collides(palette.accent)) return palette;
+
+  for (const candidate of [dna.palette.accent, DEFAULT_DESIGN_DNA.palette.accent, DEFAULT_DESIGN_DNA.palette.primary]) {
+    if (candidate && !collides(candidate)) return { ...palette, accent: candidate };
+  }
+  return { ...palette, accent: rotateHue(palette.primary, 150) };
+}
+
+/** Rotate a hex colour's hue, keeping saturation and lightness. */
+function rotateHue(hex: string, degrees: number): string {
+  const n = parseInt(hex.replace("#", ""), 16);
+  const r = ((n >> 16) & 255) / 255;
+  const g = ((n >> 8) & 255) / 255;
+  const b = (n & 255) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  const d = max - min;
+  if (d === 0) return hex;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  h = (((h / 6) * 360 + degrees) % 360) / 360;
+
+  const hue = (t: number) => {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const pp = 2 * l - q;
+    if (t < 1 / 6) return pp + (q - pp) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return pp + (q - pp) * (2 / 3 - t) * 6;
+    return pp;
+  };
+  const to = (v: number) => Math.round(v * 255).toString(16).padStart(2, "0");
+  return `#${to(hue(h + 1 / 3))}${to(hue(h))}${to(hue(h - 1 / 3))}`.toUpperCase();
+}
+
 export function compileDesignTokens(
   input: DesignDna | null | undefined,
   options: { colourSource?: ColourSource; clientBrandHex?: string | null } = {}
@@ -214,12 +265,22 @@ export function compileDesignTokens(
     ? options.clientBrandHex.toUpperCase()
     : null;
 
-  const p =
+  const chosen =
     source === "client" && clientHex
       ? { ...dna.palette, primary: clientHex, accent: dna.palette.accent }
       : source === "hybrid" && clientHex
         ? { ...dna.palette, accent: clientHex }
         : dna.palette;
+
+  // Primary and accent must not be the same colour.
+  //
+  // Nothing stopped them colliding: "client" keeps the DNA's accent while
+  // replacing primary, "hybrid" does the reverse, and either can land on a
+  // hex the DNA already used. A real lead compiled with both at #FFD974,
+  // which leaves one colour doing two jobs — the "second, smaller highlight"
+  // the generator is told to use simply does not exist, and every page built
+  // from that palette comes out flat.
+  const p = distinguishAccent(chosen, dna);
   const radius = RADIUS_SCALE[dna.geometry.radius];
   const elevation = ELEVATION[dna.geometry.elevation];
   const rhythm = RHYTHM[dna.layout.sectionRhythm];

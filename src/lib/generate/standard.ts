@@ -37,6 +37,13 @@ Bright brand colors belong on button fills and borders, never as body/heading fo
 - --bs-primary-on-surface is the accent CORRECTED for readability as text. Any accent-coloured
   TEXT must use it; fills may use --bs-primary directly since they pair with --bs-on-primary.
 
+NEVER write \`color: var(--bs-accent)\` or \`color: var(--bs-primary)\`. Both are FILL colours.
+They are rejected by the build, with no exceptions, including for eyebrows, kickers, stat
+figures, icons-as-text and small labels — the places this rule is usually broken. A label like
+"24/7 Rapid Response" set in the accent is unreadable on a light ground and is exactly the
+failure this bans. For accent-coloured text use --bs-primary-on-surface; use --bs-on-accent
+ONLY inside an element whose own background is --bs-accent; otherwise use --bs-ink.
+
 TOKENS ARE PAIRS, NOT A PALETTE TO MIX FREELY. --bs-ink is correct against --bs-surface and
 WRONG against --bs-invert-surface or --bs-primary — inside a section whose background switches
 to --bs-invert-surface or --bs-primary, every text, icon and border in it switches with it, to
