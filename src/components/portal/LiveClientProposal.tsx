@@ -28,6 +28,8 @@ interface LiveClientProposalProps {
   payload: SitePayload;
   scrapeResults: ScrapeResults | null;
   artifact: Artifact | null;
+  /** True only for an allowlisted operator session; gates internal controls. */
+  isOperator?: boolean;
 }
 
 export function LiveClientProposal({
@@ -35,6 +37,7 @@ export function LiveClientProposal({
   payload,
   scrapeResults,
   artifact,
+  isOperator = false,
 }: LiveClientProposalProps) {
   const [showCheckout, setShowCheckout] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -168,6 +171,12 @@ export function LiveClientProposal({
           businessName={businessName}
           leadSlug={lead.slug}
           sourceUrl={lead.source_url}
+          isOperator={isOperator}
+          leadId={lead.id}
+          showcaseBeforeUrl={lead.showcase_before_url}
+          showcaseAfterUrl={lead.showcase_after_url}
+          showcaseApproved={lead.showcase_approved}
+          showcaseLabel={lead.showcase_label}
         />
 
         {/* 3D Website Redesign Showcase Mockup */}

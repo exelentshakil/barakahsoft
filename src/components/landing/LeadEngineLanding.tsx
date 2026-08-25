@@ -42,7 +42,17 @@ import { FAQAccordion } from "@/components/landing/FAQAccordion";
 import { Nav } from "@/components/landing/Nav";
 import { LandingTeamShowcase } from "@/components/landing/LandingTeamShowcase";
 import { Marquee } from "@/components/landing/primitives/Marquee";
+import { ShowcaseComparisons } from "@/components/landing/ShowcaseComparisons";
 import { CrispChat } from "@/components/CrispChat";
+
+// The standard the Design Quality Bar section commits to, kept next to the
+// copy that introduces it so the two never drift apart.
+const QUALITY_PROMISES = [
+  "Built around your real photos, reviews and services — never filler",
+  "Loads fast on a phone, on real mobile data",
+  "One obvious way to call or request a quote on every screen",
+  "You see it finished before you decide anything",
+] as const;
 
 const SUPABASE_STORAGE_URL = "https://liepxeeugfrxmidcmbxo.supabase.co/storage/v1/object/public/design-reference";
 
@@ -351,6 +361,9 @@ export function LeadEngineLanding() {
           </p>
         </div>
 
+        {/* Approved client rebuilds, as draggable before/after comparisons. */}
+        <ShowcaseComparisons />
+
         {/* Row 1: Scrolling Left */}
         <div className="relative space-y-6">
           <Marquee gap="gap-6" durationSeconds={35}>
@@ -365,6 +378,34 @@ export function LeadEngineLanding() {
               <ConceptBrowserCard key={concept.title} concept={concept} />
             ))}
           </Marquee>
+        </div>
+
+        {/* The standard behind everything above. */}
+        <div className="relative mx-auto max-w-5xl px-6">
+          <div className="rounded-2xl border border-[#c8ddec] bg-white/80 p-6 backdrop-blur-sm sm:p-8">
+            <div className="grid gap-6 sm:grid-cols-[1.1fr_0.9fr] sm:items-center">
+              <div className="space-y-2">
+                <h3 className="font-sans text-xl font-extrabold tracking-tight text-[#07284d] sm:text-2xl">
+                  We don&apos;t ship a design we wouldn&apos;t put our name on.
+                </h3>
+                <p className="text-sm leading-relaxed text-[#60778d]">
+                  Every build is measured against the best sites in your trade — not against the site you have now.
+                  That&apos;s a deliberately unfair comparison, and it&apos;s the only one worth making: your customers
+                  aren&apos;t judging you against your old homepage, they&apos;re judging you against whoever they
+                  found first. If a page doesn&apos;t clear that bar, it goes back to the drawing board before you
+                  ever see it.
+                </p>
+              </div>
+              <ul className="space-y-2.5">
+                {QUALITY_PROMISES.map((promise) => (
+                  <li key={promise} className="flex items-start gap-2.5 text-sm text-[#42506a]">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#0b8f5b]" />
+                    <span>{promise}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
       </section>
 

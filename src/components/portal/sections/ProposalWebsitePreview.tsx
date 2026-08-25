@@ -1,22 +1,37 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, Monitor, Smartphone, Sparkles, Globe, Eye } from "lucide-react";
+import { ExternalLink, Monitor, Smartphone, Sparkles, Globe } from "lucide-react";
+import { BeforeAfterSlider } from "@/components/shared/BeforeAfterSlider";
+import { ShowcaseApprovalControl } from "@/components/portal/sections/ShowcaseApprovalControl";
 
 interface ProposalWebsitePreviewProps {
   businessName: string;
   leadSlug: string;
   sourceUrl: string;
+  /** Only ever true for an allowlisted operator session. */
+  isOperator?: boolean;
+  leadId?: string;
+  showcaseBeforeUrl?: string | null;
+  showcaseAfterUrl?: string | null;
+  showcaseApproved?: boolean;
+  showcaseLabel?: string | null;
 }
 
 export function ProposalWebsitePreview({
   businessName,
   leadSlug,
   sourceUrl,
+  isOperator = false,
+  leadId,
+  showcaseBeforeUrl,
+  showcaseAfterUrl,
+  showcaseApproved = false,
+  showcaseLabel,
 }: ProposalWebsitePreviewProps) {
   const [viewport, setViewport] = useState<"desktop" | "mobile">("desktop");
-  const [activeTab, setActiveTab] = useState<"rebuild" | "original">("rebuild");
   const previewUrl = `/s/${leadSlug}?view=preview`;
+  const hasComparison = Boolean(showcaseBeforeUrl && showcaseAfterUrl);
 
   return (
     <section className="rounded-2xl border border-[#c7d0fb] bg-white p-6 sm:p-10 shadow-sm space-y-6">
@@ -75,6 +90,33 @@ export function ProposalWebsitePreview({
           </a>
         </div>
       </div>
+
+      {/* Before / After — drag to compare the current site against the rebuild. */}
+      {hasComparison && (
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h3 className="text-sm font-bold text-[#0d1738]">Drag to compare: your site today vs. the rebuild</h3>
+            <p className="text-xs text-[#42506a]">Same page, same screen width — nothing staged.</p>
+          </div>
+          <BeforeAfterSlider
+            beforeUrl={showcaseBeforeUrl as string}
+            afterUrl={showcaseAfterUrl as string}
+            beforeLabel="Your site now"
+            afterLabel="Rebuilt"
+            subject={`${businessName} homepage`}
+            className="border border-[#dfe3ef] shadow-sm"
+          />
+        </div>
+      )}
+
+      {isOperator && leadId && (
+        <ShowcaseApprovalControl
+          leadId={leadId}
+          initialApproved={showcaseApproved}
+          initialLabel={showcaseLabel ?? null}
+          hasImages={hasComparison}
+        />
+      )}
 
       {/* Frame Container */}
       <div className="overflow-x-auto rounded-xl border border-[#dfe3ef] bg-[#eef1f7] p-3 sm:p-6 shadow-inner">

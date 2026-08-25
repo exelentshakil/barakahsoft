@@ -72,6 +72,15 @@ export interface Lead {
   last_viewed_at?: string | null;
   paid_at: string | null;
   live_at: string | null;
+  // Operator-approved before/after showcase for the public landing page.
+  // Approval is deliberate per lead — a finished build does not put a real
+  // client's old site on the marketing homepage on its own.
+  showcase_approved: boolean;
+  showcase_before_url: string | null;
+  showcase_after_url: string | null;
+  showcase_label: string | null;
+  showcase_approved_at: string | null;
+  showcase_sort: number;
   created_at: string;
   updated_at: string;
 }

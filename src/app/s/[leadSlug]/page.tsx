@@ -149,6 +149,7 @@ export default async function LeadSitePage({
       payload={payload}
       scrapeResults={scrapeResults}
       artifact={artifact}
+      isOperator={operator}
     />
   );
 }
