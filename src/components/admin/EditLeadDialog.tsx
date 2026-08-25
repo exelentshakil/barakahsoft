@@ -97,6 +97,57 @@ export function EditLeadDialog({
             <Label htmlFor="edit-source-url">Website URL</Label>
             <Input id="edit-source-url" required type="url" value={url} onChange={(e) => setUrl(e.target.value)} className="mt-1" />
           </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="edit-contact-name">Contact name</Label>
+              <Input
+                id="edit-contact-name"
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+                className="mt-1"
+                placeholder="e.g. Shakil"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-phone">Phone</Label>
+              <Input
+                id="edit-phone"
+                type="tel"
+                value={phoneValue}
+                onChange={(e) => setPhoneValue(e.target.value)}
+                className="mt-1"
+                placeholder="e.g. (702) 213-5972"
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="edit-email">Email</Label>
+            <Input
+              id="edit-email"
+              type="email"
+              value={emailValue}
+              onChange={(e) => {
+                setEmailValue(e.target.value);
+                setNotes([]);
+              }}
+              className="mt-1"
+              placeholder="e.g. owner@business.com"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Where the proposal and every outreach email goes. Checked on save — the domain has to actually accept mail.
+            </p>
+          </div>
+
+          {notes.length > 0 && (
+            <ul className="space-y-1 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-900">
+              {notes.map((n) => (
+                <li key={n}>• {n}</li>
+              ))}
+            </ul>
+          )}
+
           <div>
             <Label htmlFor="edit-pixel-id">Client's Facebook Pixel ID (optional)</Label>
             <Input
