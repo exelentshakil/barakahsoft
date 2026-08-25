@@ -55,7 +55,13 @@
 .bespoke-page p  { margin: 0; text-wrap: pretty; }
 .bespoke-page ul, .bespoke-page ol { margin: 0; padding: 0; list-style: none; }
 .bespoke-page img { display: block; max-width: 100%; height: auto; }
-.bespoke-page a { color: inherit; text-decoration: none; }
+/* A link takes the colour of the band it sits in — unless it is a button,
+   which carries its own fill and the text token compiled to pair with it.
+   `.bespoke-page a` is (0,1,1) and .bs-btn-primary is (0,1,0), so without
+   the :not() every filled button on the page is repainted by inheritance
+   and only looks right where the surrounding ink happens to suit its fill. */
+.bespoke-page a:not(.bs-btn) { color: inherit; }
+.bespoke-page a { text-decoration: none; }
 
 /* ---------------------------------------------------------------- layout */
 
@@ -414,7 +420,7 @@
   color: var(--bs-invert-ink);
   font-size: 0.8125rem;
 }
-.bs-utility a { color: inherit; }
+.bs-utility a:not(.bs-btn) { color: inherit; }
 .bs-utility-inner {
   max-width: 1200px;
   margin-inline: auto;
@@ -678,7 +684,12 @@
 /* ------------------------------------------------------------- footer */
 
 .bs-footer { background: var(--bs-invert-surface); color: var(--bs-invert-ink); }
-.bs-footer a { color: inherit; }
+/* Plain footer links take the footer's inverted ink, but a button carries
+   its own fill and must keep the text token that pairs with it. Without the
+   :not(), this rule's (0,1,1) beat .bs-btn-primary's (0,1,0) and repainted
+   the filled CTA in the footer's white — on a light brand colour that
+   shipped a main call-to-action at about 1.4:1. */
+.bs-footer a:not(.bs-btn) { color: inherit; }
 .bs-footer-inner { max-width: 1240px; margin-inline: auto; padding: clamp(3rem, 6vw, 5.5rem) 1.5rem 0; }
 .bs-footer-cta {
   display: grid;
