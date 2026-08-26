@@ -25,6 +25,7 @@ export function AddUrlDialog({ variant = "default" }: { variant?: "default" | "o
   const [businessName, setBusinessName] = useState("");
   const [email, setEmail] = useState("");
   const [emailNotes, setEmailNotes] = useState<string[]>([]);
+  const [painPoints, setPainPoints] = useState("Outdated design / looks wrong on phones\nNot enough leads or enquiries\nNobody finds us on Google\nInvisible in AI search\nVisitors don't convert into calls");
 
   // Bulk mode state
   const [bulkText, setBulkText] = useState("");
@@ -99,6 +100,7 @@ export function AddUrlDialog({ variant = "default" }: { variant?: "default" | "o
           source_url: url.trim().startsWith("http") ? url.trim() : `https://${url.trim()}`,
           business_name: businessName.trim() || undefined,
           email: email.trim() || undefined,
+          pain_points: painPoints.split("\n").map(p => p.trim()).filter(Boolean),
         }),
       });
       const data = await res.json();
@@ -109,6 +111,7 @@ export function AddUrlDialog({ variant = "default" }: { variant?: "default" | "o
       setUrl("");
       setBusinessName("");
       setEmail("");
+      setPainPoints("Outdated design / looks wrong on phones\nNot enough leads or enquiries\nNobody finds us on Google\nInvisible in AI search\nVisitors don't convert into calls");
       const leadId = data.lead_id || data.lead?.id;
       if (leadId) {
         router.push(`/admin/leads/${leadId}`);
@@ -265,6 +268,19 @@ export function AddUrlDialog({ variant = "default" }: { variant?: "default" | "o
               <p className="text-[10px] leading-snug text-muted-foreground">
                 Checked on save: the address must be well formed and its domain must actually accept mail.
               </p>
+            </div>
+
+                        <div className="space-y-1.5">
+              <Label htmlFor="add-pain-points" className="text-xs font-bold text-[#0d1738]">
+                Target Intake Pains (One per line)
+              </Label>
+              <textarea
+                id="add-pain-points"
+                value={painPoints}
+                onChange={(e) => setPainPoints(e.target.value)}
+                rows={5}
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y text-xs font-mono"
+              />
             </div>
 
             {emailNotes.length > 0 && (

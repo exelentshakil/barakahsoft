@@ -1,17 +1,17 @@
 const fs = require("fs");
-let path = "src/app/api/leads/[id]/route.ts";
+let path = "src/app/api/leads/add-url/route.ts";
 let content = fs.readFileSync(path, "utf8");
 
 content = content.replace(
-  /const updates: Record<string, string \| null> = \{\};/,
-  "const updates: Record<string, any> = {};"
-);
-
-content = content.replace(
-  /if \(typeof body\?\.google_site_verification === "string"\) updates\.google_site_verification = body\.google_site_verification\.trim\(\) \|\| null;/,
-  `if (typeof body?.google_site_verification === "string") updates.google_site_verification = body.google_site_verification.trim() || null;
-  if (Array.isArray(body?.pain_points)) updates.pain_points = body.pain_points.filter(p => typeof p === "string" && p.trim() !== "");`
+  /pain_points: \[\n              "Outdated design \/ looks wrong on phones",\n              "Not enough leads or enquiries",\n              "Nobody finds us on Google",\n              "Invisible in AI search",\n              "Visitors don't convert into calls"\n            \],/g,
+  `pain_points: Array.isArray(body.pain_points) && body.pain_points.length > 0 ? body.pain_points : [
+              "Outdated design / looks wrong on phones",
+              "Not enough leads or enquiries",
+              "Nobody finds us on Google",
+              "Invisible in AI search",
+              "Visitors don't convert into calls"
+            ],`
 );
 
 fs.writeFileSync(path, content, "utf8");
-console.log("Updated PATCH route to support pain_points");
+console.log("Updated add-url route to respect custom pain points");

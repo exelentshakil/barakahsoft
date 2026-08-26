@@ -74,7 +74,7 @@ export async function POST(req: Request) {
             slug,
             status: "new",
             source: "outreach",
-            pain_points: [
+            pain_points: Array.isArray(body.pain_points) && body.pain_points.length > 0 ? body.pain_points : [
               "Outdated design / looks wrong on phones",
               "Not enough leads or enquiries",
               "Nobody finds us on Google",
@@ -130,7 +130,7 @@ export async function POST(req: Request) {
       slug,
       status: "new",
       source: "outreach",
-            pain_points: [
+            pain_points: Array.isArray(body.pain_points) && body.pain_points.length > 0 ? body.pain_points : [
               "Outdated design / looks wrong on phones",
               "Not enough leads or enquiries",
               "Nobody finds us on Google",
