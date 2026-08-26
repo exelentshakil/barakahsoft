@@ -5,12 +5,10 @@ import {
   Download,
   Image as ImageIcon,
   Layers,
-  RefreshCw,
   Sliders,
   Sparkles,
   Monitor,
   Layout,
-  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toPng } from "html-to-image";
@@ -99,6 +97,28 @@ export const HEADLINE_OPTIONS: { id: MockupHeadlineMode; line1: string; line2: s
 
 export const BG_THEMES = [
   {
+    id: "skyblue",
+    name: "Sky Blue Studio (Custom Painting)",
+    gradient: "from-[#8faec7] via-[#abc2d6] to-[#cfdde8]",
+    bgStart: "#8faec7",
+    bgMid: "#abc2d6",
+    bgEnd: "#cfdde8",
+    spotlight: "#ffffff",
+    watermarkColor: "rgba(13, 23, 56, 0.08)",
+    isDark: false,
+  },
+  {
+    id: "sage",
+    name: "Sage Forest Studio (NYC Renovation)",
+    gradient: "from-[#2d4436] via-[#486352] to-[#6d8a77]",
+    bgStart: "#2d4436",
+    bgMid: "#486352",
+    bgEnd: "#6d8a77",
+    spotlight: "#a7f3d0",
+    watermarkColor: "rgba(255, 255, 255, 0.08)",
+    isDark: true,
+  },
+  {
     id: "brand",
     name: "Brand Studio (Auto-Color)",
     gradient: "from-[#080d18] via-[#0f172a] to-[#1e293b]",
@@ -106,29 +126,7 @@ export const BG_THEMES = [
     bgMid: "#0f172a",
     bgEnd: "#1e293b",
     spotlight: "rgba(255, 217, 116, 0.35)",
-    watermarkColor: "rgba(255, 255, 255, 0.12)",
-    isDark: true,
-  },
-  {
-    id: "skyblue",
-    name: "Sky Blue Studio (Orange County / Custom Painting)",
-    gradient: "from-[#8faec7] via-[#abc2d6] to-[#cfdde8]",
-    bgStart: "#8faec7",
-    bgMid: "#abc2d6",
-    bgEnd: "#cfdde8",
-    spotlight: "#ffffff",
-    watermarkColor: "rgba(13, 23, 56, 0.12)",
-    isDark: false,
-  },
-  {
-    id: "sage",
-    name: "Sage Forest Studio (NYC Renovation / Green)",
-    gradient: "from-[#2d4436] via-[#486352] to-[#6d8a77]",
-    bgStart: "#2d4436",
-    bgMid: "#486352",
-    bgEnd: "#6d8a77",
-    spotlight: "#a7f3d0",
-    watermarkColor: "rgba(255, 255, 255, 0.12)",
+    watermarkColor: "rgba(255, 255, 255, 0.08)",
     isDark: true,
   },
   {
@@ -139,7 +137,7 @@ export const BG_THEMES = [
     bgMid: "#093022",
     bgEnd: "#124e39",
     spotlight: "#10b981",
-    watermarkColor: "rgba(255, 255, 255, 0.12)",
+    watermarkColor: "rgba(255, 255, 255, 0.08)",
     isDark: true,
   },
   {
@@ -150,7 +148,7 @@ export const BG_THEMES = [
     bgMid: "#0d2752",
     bgEnd: "#194080",
     spotlight: "#38bdf8",
-    watermarkColor: "rgba(255, 255, 255, 0.12)",
+    watermarkColor: "rgba(255, 255, 255, 0.08)",
     isDark: true,
   },
   {
@@ -161,7 +159,7 @@ export const BG_THEMES = [
     bgMid: "#3d0d12",
     bgEnd: "#63141c",
     spotlight: "#ef4444",
-    watermarkColor: "rgba(255, 255, 255, 0.12)",
+    watermarkColor: "rgba(255, 255, 255, 0.08)",
     isDark: true,
   },
   {
@@ -172,7 +170,7 @@ export const BG_THEMES = [
     bgMid: "#481d09",
     bgEnd: "#78300f",
     spotlight: "#f97316",
-    watermarkColor: "rgba(255, 255, 255, 0.12)",
+    watermarkColor: "rgba(255, 255, 255, 0.08)",
     isDark: true,
   },
   {
@@ -183,7 +181,7 @@ export const BG_THEMES = [
     bgMid: "#2c0b48",
     bgEnd: "#4c157a",
     spotlight: "#a855f7",
-    watermarkColor: "rgba(255, 255, 255, 0.12)",
+    watermarkColor: "rgba(255, 255, 255, 0.08)",
     isDark: true,
   },
   {
@@ -194,7 +192,7 @@ export const BG_THEMES = [
     bgMid: "#10141d",
     bgEnd: "#1a202c",
     spotlight: "#64748b",
-    watermarkColor: "rgba(255, 255, 255, 0.12)",
+    watermarkColor: "rgba(255, 255, 255, 0.08)",
     isDark: true,
   },
   {
@@ -205,12 +203,11 @@ export const BG_THEMES = [
     bgMid: "#474f5e",
     bgEnd: "#717b8f",
     spotlight: "#cbd5e1",
-    watermarkColor: "rgba(255, 255, 255, 0.2)",
+    watermarkColor: "rgba(255, 255, 255, 0.12)",
     isDark: true,
   },
 ];
 
-// Helper: Calculate WCAG luminance contrast text color (dark vs light)
 function getContrastColor(hexColor?: string | null, fallbackDark = "#1e242d", fallbackLight = "#ffffff"): string {
   if (!hexColor) return fallbackDark;
   let hex = hexColor.replace("#", "").trim();
@@ -225,7 +222,6 @@ function getContrastColor(hexColor?: string | null, fallbackDark = "#1e242d", fa
   return yiq >= 150 ? fallbackDark : fallbackLight;
 }
 
-// Helper: Thorough recursive unescaping of all HTML entities and leading punctuation
 function unescapeText(str: string | null | undefined): string {
   if (!str) return "";
   let res = str;
@@ -234,19 +230,19 @@ function unescapeText(str: string | null | undefined): string {
       .replace(/&amp;/gi, "&")
       .replace(/&lt;/gi, "<")
       .replace(/&gt;/gi, ">")
-      .replace(/&quot;/gi, "\"")
-      .replace(/&#039;/g, "\x27")
-      .replace(/&#39;/g, "\x27")
-      .replace(/&apos;/gi, "\x27")
+      .replace(/&quot;/gi, '"')
+      .replace(/&#039;/g, "'")
+      .replace(/&#39;/g, "'")
+      .replace(/&apos;/gi, "'")
       .replace(/&mdash;/gi, " ")
       .replace(/&ndash;/gi, " ")
       .replace(/&bull;/gi, " · ")
       .replace(/&nbsp;/gi, " ")
       .replace(/&hellip;/gi, "...")
-      .replace(/&#8217;/g, "\x27")
-      .replace(/&#8216;/g, "\x27")
-      .replace(/&#8220;/g, "\"")
-      .replace(/&#8221;/g, "\"")
+      .replace(/&#8217;/g, "'")
+      .replace(/&#8216;/g, "'")
+      .replace(/&#8220;/g, '"')
+      .replace(/&#8221;/g, '"')
       .replace(/&#8211;/g, "-")
       .replace(/&#8212;/g, "--");
     if (next === res) break;
@@ -286,10 +282,9 @@ export function SocialLaunchMockup({
   onHeadlineModeChange?: (mode: MockupHeadlineMode) => void;
   onStageModeChange?: (stage: MockupStageMode) => void;
 }) {
-  const [themeId, setThemeId] = useState<string>(data.themeId || "brand");
+  const [themeId, setThemeId] = useState<string>(data.themeId || "skyblue");
   const [headlineMode, setHeadlineMode] = useState<MockupHeadlineMode>(data.headlineMode || "launched");
-  const [stageMode, setStageMode] = useState<MockupStageMode>(data.stageMode || "rock");
-  const [showFloatingBlurb, setShowFloatingBlurb] = useState<boolean>(true);
+  const [stageMode, setStageMode] = useState<MockupStageMode>(data.stageMode || "poster");
   const [downloading, setDownloading] = useState<string | null>(null);
 
   const mockupRef = useRef<HTMLDivElement>(null);
@@ -331,30 +326,30 @@ export function SocialLaunchMockup({
   const theme = BG_THEMES.find((t) => t.id === themeId) || BG_THEMES[0];
 
   // Core brand color tokens directly synchronized with the bespoke website
-  const primaryColor = data.brandColor || "#FFD974";
+  const primaryColor = data.brandColor || "#1e40af";
   const onPrimaryColor = data.onPrimaryColor || getContrastColor(primaryColor, "#1e242d", "#ffffff");
   const isLightPrimary = onPrimaryColor !== "#ffffff";
   const invertSurface = data.invertSurface || "#0b0f19";
 
   const businessShortName = unescapeText(data.businessName || "Your Business");
-  const city = data.city || "Las Vegas";
-  const trade = data.trade || "Restoration Contractor";
+  const city = data.city || "Orange County";
+  const trade = data.trade || "Painting Contractor";
   const heroHeading = unescapeText(
     data.heroHeadline || `PREMIER ${trade.toUpperCase()} IN ${city.toUpperCase()}`
   );
   const aboutEyebrow = unescapeText(
-    data.aboutEyebrow || `ABOUT OUR TEAM IN ${city.toUpperCase()}`
+    data.aboutEyebrow || `ABOUT OUR LOCAL ${trade.toUpperCase()} COMPANY IN ${city.toUpperCase()}`
   );
   const aboutHeading = unescapeText(
-    data.aboutHeadline || `A real name & dedicated team behind every restoration in ${city}`
+    data.aboutHeadline || `About Our Local ${trade} Company In ${city}`
   );
   const aboutBody = unescapeText(
     data.aboutBody ||
-    `When disaster strikes, you need accountable local professionals who arrive fast. Led by owner ${data.founderName || "our team"}, ${businessShortName} provides a trusted single point of contact across ${city}.`
+    `When quality and craftsmanship matter, you need accountable local professionals who take pride in their work. Led by owner ${data.founderName || "our team"}, ${businessShortName} delivers premier results across ${city}.`
   );
   const ratingText = data.rating ? `${data.rating}★` : "4.9★";
-  const reviewsCountText = data.reviewCount ? `${data.reviewCount}+` : "109+";
-  const yearsExp = data.yearsExperience ? `${data.yearsExperience}+` : "15+";
+  const reviewsCountText = data.reviewCount ? `${data.reviewCount}+` : "2,000+";
+  const yearsExp = data.yearsExperience ? `${data.yearsExperience}+` : "2+";
 
   const activeHeadline = HEADLINE_OPTIONS.find((h) => h.id === headlineMode) || HEADLINE_OPTIONS[0];
 
@@ -416,63 +411,24 @@ export function SocialLaunchMockup({
     }
   }
 
-  {/* Background Typographic Brutalist Watermark & Emblem */}
+  {/* Background Subtle Watermark & Circle Emblem */}
   const renderBackgroundWatermark = () => (
     <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0 flex items-center justify-center">
-      {/* Giant Diagonal Ghost Typography */}
+      {/* Ghost Watermark Business Name in Lower Left */}
       <span
-        className="text-6xl sm:text-8xl lg:text-9xl font-black uppercase tracking-tighter transform -rotate-6 whitespace-nowrap opacity-[0.08] transition-all"
+        className="absolute -bottom-4 left-6 text-6xl sm:text-7xl lg:text-8xl font-black uppercase tracking-tighter opacity-[0.07] select-none"
         style={{
           color: theme.isDark ? "#ffffff" : "#0d1738",
           fontFamily: "system-ui, -apple-system, sans-serif",
         }}
       >
-        {businessShortName} · {trade}
+        {businessShortName}
       </span>
-      {/* Centered Circular Agency Emblem */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[480px] h-[340px] sm:h-[480px] rounded-full border border-white/5 opacity-40 pointer-events-none flex items-center justify-center">
+      {/* Subtle Circular Watermark Center */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[460px] h-[340px] sm:h-[460px] rounded-full border border-white/5 opacity-30 pointer-events-none flex items-center justify-center">
         <div className="w-[85%] h-[85%] rounded-full border border-dashed border-white/10" />
       </div>
     </div>
-  );
-
-  {/* Side Agency Brand Ribbons / Brutalist Stickers (as shown in reference Image 1) */}
-  const renderAgencySideRibbons = () => (
-    <>
-      {/* Left Vertical Ribbon Sticker */}
-      <div
-        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-black/70 backdrop-blur-md border border-white/15 text-white shadow-2xl transform -rotate-90 -translate-x-6 origin-center pointer-events-none"
-        style={{
-          boxShadow: "0 20px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1)",
-        }}
-      >
-        {data.logoUrl && (
-          <div className="h-4 w-4 rounded bg-white p-0.5 overflow-hidden flex items-center justify-center shrink-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={data.logoUrl} alt="Logo" className="h-full w-full object-contain" />
-          </div>
-        )}
-        <div className="flex items-center gap-1.5 whitespace-nowrap">
-          <span className="text-[9px] font-black uppercase tracking-wider">{businessShortName}</span>
-          <span className="text-[7.5px] text-slate-400 font-bold uppercase tracking-widest">
-            · {trade.toUpperCase()} CONTRACTOR · {city.toUpperCase()}
-          </span>
-        </div>
-      </div>
-
-      {/* Right Vertical Launch Pill */}
-      <div
-        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/15 text-white shadow-2xl transform rotate-90 translate-x-5 origin-center pointer-events-none"
-        style={{
-          boxShadow: "0 20px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1)",
-        }}
-      >
-        <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ backgroundColor: primaryColor }} />
-        <span className="text-[8px] font-black uppercase tracking-widest text-white whitespace-nowrap">
-          OFFICIAL LAUNCH · {city.toUpperCase()}
-        </span>
-      </div>
-    </>
   );
 
   const renderScreenContent = (customScale = screenScale) => {
@@ -570,11 +526,12 @@ export function SocialLaunchMockup({
     );
   };
 
-  {/* 3-Tier Layered 3D Floating Feature Blurb Card (Synchronized with Website Colors & Narrative) */}
-  const renderFloatingAboutCard = (scaleClass = "") => (
+  {/* 3-Tier Layered 3D Floating Feature Blurb Card (Layered BEHIND the MacBook, extending to top-right) */}
+  const renderFloatingAboutCard = () => (
     <div
-      className={`rounded-2xl bg-white shadow-2xl border border-slate-200/90 overflow-hidden transition-all duration-500 ${scaleClass}`}
+      className="absolute -right-1 sm:-right-3 top-0 sm:top-1 w-[82%] max-w-[385px] rounded-2xl bg-white shadow-2xl border border-slate-200/90 overflow-hidden transition-transform duration-500 z-0 select-none pointer-events-none"
       style={{
+        transform: "rotateY(-10deg) rotateX(6deg) rotateZ(-2deg) translateZ(-38px)",
         boxShadow: "0 35px 85px -15px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255,255,255,0.35)",
       }}
     >
@@ -593,7 +550,7 @@ export function SocialLaunchMockup({
             style={{ backgroundColor: primaryColor }}
           />
           <span className="text-[5px] sm:text-[6px] font-extrabold tracking-wider uppercase text-white truncate max-w-[170px]">
-            {businessShortName} · Verified Launch
+            {businessShortName} · Verified Redesign
           </span>
         </div>
         <div className="flex items-center gap-1 opacity-70">
@@ -602,7 +559,7 @@ export function SocialLaunchMockup({
       </div>
 
       {/* 3-Tier Layered Masterpiece About Card Synchronized to Website Colors */}
-      <div className="p-2.5 sm:p-3 bg-white grid grid-cols-12 gap-2 sm:gap-2.5 items-start">
+      <div className="p-3 sm:p-3.5 bg-white grid grid-cols-12 gap-2.5 items-start">
         {/* Left: Framed Photo of Founder / Team / Fleet with Bottom Name Badge Bar */}
         <div className="col-span-5 relative rounded-xl overflow-hidden shadow-md border border-slate-200 aspect-[4/4.8] bg-slate-900 flex flex-col justify-end">
           {data.aboutImageUrl ? (
@@ -622,9 +579,9 @@ export function SocialLaunchMockup({
             </div>
           )}
           {/* Bottom Founder & Leadership Name Badge Bar */}
-          <div className="relative z-10 bg-slate-900/90 backdrop-blur-xs p-1 sm:p-1.5 text-white flex items-center gap-1.5 border-t border-white/20">
+          <div className="relative z-10 bg-slate-900/90 backdrop-blur-xs p-1.5 text-white flex items-center gap-1.5 border-t border-white/20">
             {data.logoUrl && (
-              <div className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5 rounded-full bg-white p-0.5 shrink-0 overflow-hidden flex items-center justify-center">
+              <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-white p-0.5 shrink-0 overflow-hidden flex items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={data.logoUrl} alt="Logo" className="h-full w-full object-contain" />
               </div>
@@ -647,10 +604,10 @@ export function SocialLaunchMockup({
               {aboutEyebrow}
             </span>
           </div>
-          <h4 className="text-[8px] sm:text-[9.5px] font-black leading-tight text-slate-900 line-clamp-2">
+          <h4 className="text-[8.5px] sm:text-[10.5px] font-black leading-tight text-slate-900 line-clamp-2">
             {aboutHeading}
           </h4>
-          <p className="text-[4.5px] sm:text-[5.5px] text-slate-600 font-normal line-clamp-3 leading-relaxed">
+          <p className="text-[5px] sm:text-[6px] text-slate-600 font-normal line-clamp-3 leading-relaxed">
             {aboutBody}
           </p>
           <div className="pt-0.5 flex items-center gap-1.5">
@@ -675,7 +632,7 @@ export function SocialLaunchMockup({
         }}
       >
         <div>
-          <span className="block text-[7px] sm:text-[8.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
+          <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
             {yearsExp}
           </span>
           <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
@@ -683,7 +640,7 @@ export function SocialLaunchMockup({
           </span>
         </div>
         <div>
-          <span className="block text-[7px] sm:text-[8.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
+          <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
             {reviewsCountText}
           </span>
           <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
@@ -691,7 +648,7 @@ export function SocialLaunchMockup({
           </span>
         </div>
         <div>
-          <span className="block text-[7px] sm:text-[8.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
+          <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
             {ratingText}
           </span>
           <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
@@ -699,7 +656,7 @@ export function SocialLaunchMockup({
           </span>
         </div>
         <div>
-          <span className="block text-[7px] sm:text-[8.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
+          <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
             100%
           </span>
           <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
@@ -711,18 +668,18 @@ export function SocialLaunchMockup({
       {/* ROW 3: SECONDARY SERVICE / CRAFTSMANSHIP SNIPPET */}
       <div className="p-2 sm:p-2.5 bg-[#fafafc] flex items-center justify-between gap-2">
         <div className="min-w-0 flex-1 space-y-0.5">
-          <h5 className="text-[6px] sm:text-[7px] font-black text-slate-900 leading-tight truncate">
+          <h5 className="text-[6px] sm:text-[7.5px] font-black text-slate-900 leading-tight truncate">
             Professional Residential &amp; Commercial {trade} Services
           </h5>
-          <p className="text-[4px] sm:text-[4.5px] text-slate-500 truncate">
+          <p className="text-[4px] sm:text-[5px] text-slate-500 truncate">
             Dependable performance, direct insurance billing, and licensed experts across {city}.
           </p>
         </div>
         <span
-          className="shrink-0 rounded px-1.5 py-0.5 text-[4px] sm:text-[5px] font-extrabold shadow-xs"
+          className="shrink-0 rounded px-2 py-0.5 text-[4.5px] sm:text-[5.5px] font-extrabold shadow-xs"
           style={{ backgroundColor: primaryColor, color: onPrimaryColor }}
         >
-          READ REVIEWS →
+          GET A FREE QUOTE →
         </span>
       </div>
     </div>
@@ -732,21 +689,11 @@ export function SocialLaunchMockup({
   const renderRockPedestalShowcase = (
     customScreenRef = screenRef,
     customScale = screenScale,
-    containerClass = "w-[94%] max-w-[520px]",
-    includeFloatingBlurb = showFloatingBlurb
+    containerClass = "w-[94%] max-w-[490px]"
   ) => (
     <div className={`relative flex flex-col items-center justify-center ${containerClass} mx-auto perspective-[1600px]`}>
-      {/* 0. 3D Floating Feature Blurb Card Floating in 3D Perspective */}
-      {includeFloatingBlurb && (
-        <div
-          className="absolute -right-2 sm:-right-6 -top-3 sm:-top-5 w-[80%] max-w-[365px] z-30 pointer-events-none transition-transform duration-500"
-          style={{
-            transform: "rotateY(-7deg) rotateX(6deg) rotateZ(-1.5deg) translateZ(48px)",
-          }}
-        >
-          {renderFloatingAboutCard()}
-        </div>
-      )}
+      {/* 0. Layered Floating About Card Hovering BEHIND MacBook (Top-Right) */}
+      {renderFloatingAboutCard()}
 
       {/* 1. 3D MacBook Pro */}
       <div
@@ -866,53 +813,6 @@ export function SocialLaunchMockup({
     </div>
   );
 
-  {/* Top-Left Crisp Brand Logo Badge */}
-  const renderTopLeftBrandIdentity = () => (
-    <div className="relative z-20 flex items-center gap-3 select-none">
-      {data.logoUrl ? (
-        <div className="h-10 sm:h-12 w-10 sm:w-12 rounded-xl bg-white/95 p-1.5 shadow-xl border border-white/40 flex items-center justify-center shrink-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={data.logoUrl} alt={businessShortName} className="h-full w-full object-contain" />
-        </div>
-      ) : (
-        <div
-          className="h-10 sm:h-12 w-10 sm:w-12 rounded-xl flex items-center justify-center p-2 shadow-xl border shrink-0 backdrop-blur-md"
-          style={{
-            backgroundColor: isLightPrimary ? "rgba(255,255,255,0.95)" : "rgba(15,23,42,0.85)",
-            borderColor: primaryColor,
-          }}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={isLightPrimary ? primaryColor : "#ffffff"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-            <polyline points="9 22 9 12 15 12 15 22" />
-          </svg>
-        </div>
-      )}
-
-      <div className="space-y-0.5">
-        <h1
-          className="text-lg sm:text-2xl font-black uppercase tracking-tight text-white leading-none drop-shadow-md"
-          style={{
-            fontFamily: "var(--font-sans, sans-serif)",
-            textShadow: "0 2px 8px rgba(0,0,0,0.8)",
-          }}
-        >
-          {businessShortName}
-        </h1>
-        <p
-          className="text-[8px] sm:text-[10px] font-extrabold uppercase tracking-widest text-slate-300 drop-shadow flex items-center gap-1.5"
-          style={{
-            color: isLightPrimary ? primaryColor : "rgba(255,255,255,0.85)",
-          }}
-        >
-          <span>{trade.toUpperCase()}</span>
-          <span>·</span>
-          <span>{city.toUpperCase()}</span>
-        </p>
-      </div>
-    </div>
-  );
-
   const render3DMacBook = (customScreenRef = screenRef, customScale = screenScale) => (
     <div
       className="relative z-20 w-[92%] max-w-[475px] transition-transform duration-500"
@@ -964,7 +864,7 @@ export function SocialLaunchMockup({
 
   return (
     <div className={`flex flex-col items-center space-y-4 ${className}`}>
-      {/* 3D Mockup Canvas (4:5 Feed Default View) */}
+      {/* 3D Mockup Canvas (4:5 Feed Default View matching reference poster) */}
       <div
         ref={mockupRef}
         className={`relative w-full max-w-[560px] aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-b ${theme.gradient} select-none border border-white/20 flex flex-col justify-between p-6 sm:p-7`}
@@ -981,11 +881,8 @@ export function SocialLaunchMockup({
           }}
         />
 
-        {/* Brutalist Typographic Watermark & Emblem */}
+        {/* Brutalist Typographic Watermark */}
         {renderBackgroundWatermark()}
-
-        {/* Side Agency Brand Ribbons / Badges */}
-        {renderAgencySideRibbons()}
 
         {/* Ambient Radial Spotlight Halo Behind Mockup */}
         <div
@@ -995,85 +892,30 @@ export function SocialLaunchMockup({
           }}
         />
 
-        {/* Top Header Row */}
-        {stageMode === "rock" ? (
-          /* Rock Stage: Top-Left Brand Logo + Right Live Status + Centered 3D Campaign Angle Typography */
-          <div className="relative z-20 w-full pt-1">
-            <div className="w-full flex items-center justify-between gap-3 mb-1 sm:mb-2">
-              {renderTopLeftBrandIdentity()}
-              <div
-                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 sm:px-3 py-1 text-[8px] sm:text-[9.5px] font-black uppercase tracking-widest border backdrop-blur-md shadow-sm select-none shrink-0 ${
-                  theme.isDark
-                    ? "bg-white/10 text-white/95 border-white/20"
-                    : "bg-slate-900/80 text-white border-slate-700"
-                }`}
-              >
-                <span className="h-1.5 w-1.5 rounded-full animate-pulse shadow-sm" style={{ backgroundColor: primaryColor }} />
-                <span>{activeHeadline.tag}</span>
-              </div>
-            </div>
-
-            <div className="text-center pt-0.5 sm:pt-1 pb-0.5">
-              <h2
-                className="text-2xl sm:text-[38px] font-black tracking-tight uppercase font-sans leading-[0.93] text-white"
-                style={{
-                  letterSpacing: "0.03em",
-                  textShadow: "0 2px 0 rgba(255,255,255,0.35), 0 6px 16px rgba(0, 0, 0, 0.75), 0 16px 36px rgba(0, 0, 0, 0.55)",
-                }}
-              >
-                <span className="block drop-shadow-md">{activeHeadline.line1}</span>
-                <span
-                  className="block drop-shadow-md"
-                  style={{
-                    color: headlineMode === "launched" ? "#ffffff" : isLightPrimary ? primaryColor : "#ffffff",
-                    textShadow:
-                      isLightPrimary && headlineMode !== "launched"
-                        ? `0 0 24px ${primaryColor}80, 0 6px 16px rgba(0, 0, 0, 0.75)`
-                        : undefined,
-                  }}
-                >
-                  {activeHeadline.line2}
-                </span>
-              </h2>
-            </div>
-          </div>
-        ) : (
-          /* Agency Poster: Centered 3D Metallic Agency Typography */
-          <div className="relative z-10 text-center pt-1 sm:pt-2">
-            <div
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-[8.5px] sm:text-[9.5px] font-extrabold uppercase tracking-widest border backdrop-blur-md shadow-sm mb-1.5 ${
-                theme.isDark
-                  ? "bg-white/10 text-white/95 border-white/20"
-                  : "bg-slate-900/80 text-white border-slate-700"
-              }`}
-            >
-              <span className="h-1.5 w-1.5 rounded-full animate-pulse shadow-sm" style={{ backgroundColor: primaryColor }} />
-              <span>{businessShortName} · {activeHeadline.tag}</span>
-            </div>
-
-            <h2
-              className="text-3xl sm:text-[44px] font-black tracking-tight uppercase font-sans leading-[0.93] text-white"
+        {/* Top Centered 2-Line Bold Campaign Angle Typography */}
+        <div className="relative z-10 text-center pt-1 sm:pt-2">
+          <h2
+            className="text-3xl sm:text-[44px] font-black tracking-tight uppercase font-sans leading-[0.93] text-white"
+            style={{
+              letterSpacing: "0.03em",
+              textShadow: "0 2px 0 rgba(255,255,255,0.35), 0 6px 16px rgba(0, 0, 0, 0.75), 0 16px 36px rgba(0, 0, 0, 0.55)",
+            }}
+          >
+            <span className="block drop-shadow-md">{activeHeadline.line1}</span>
+            <span
+              className="block drop-shadow-md"
               style={{
-                letterSpacing: "0.03em",
-                textShadow: "0 2px 0 rgba(255,255,255,0.35), 0 6px 16px rgba(0, 0, 0, 0.75), 0 16px 36px rgba(0, 0, 0, 0.55)",
+                color: headlineMode === "launched" ? "#ffffff" : isLightPrimary ? primaryColor : "#ffffff",
+                textShadow:
+                  isLightPrimary && headlineMode !== "launched"
+                    ? `0 0 24px ${primaryColor}80, 0 6px 16px rgba(0, 0, 0, 0.75)`
+                    : undefined,
               }}
             >
-              <span className="block drop-shadow-md">{activeHeadline.line1}</span>
-              <span
-                className="block drop-shadow-md"
-                style={{
-                  color: headlineMode === "launched" ? "#ffffff" : isLightPrimary ? primaryColor : "#ffffff",
-                  textShadow:
-                    isLightPrimary && headlineMode !== "launched"
-                      ? `0 0 24px ${primaryColor}80, 0 6px 16px rgba(0, 0, 0, 0.75)`
-                      : undefined,
-                }}
-              >
-                {activeHeadline.line2}
-              </span>
-            </h2>
-          </div>
-        )}
+              {activeHeadline.line2}
+            </span>
+          </h2>
+        </div>
 
         {/* 3D Composition Stage */}
         <div
@@ -1089,23 +931,14 @@ export function SocialLaunchMockup({
           />
 
           {stageMode === "rock" ? (
-            renderRockPedestalShowcase(screenRef, screenScale, "w-[94%] max-w-[490px]", showFloatingBlurb)
+            renderRockPedestalShowcase(screenRef, screenScale, "w-[94%] max-w-[490px]")
           ) : (
             <>
               {/* Soft Ground Contact Shadow */}
               <div className="absolute bottom-1 sm:bottom-3 left-4 sm:left-8 right-4 sm:right-8 h-12 sm:h-16 bg-slate-950/70 blur-2xl rounded-full transform scale-x-115 -rotate-2" />
-              {/* Layered Floating About Card */}
-              {showFloatingBlurb && (
-                <div
-                  className="absolute -right-2 sm:-right-5 -top-3 sm:-top-5 w-[80%] max-w-[370px] z-30 pointer-events-none transition-transform duration-500"
-                  style={{
-                    transform: "rotateY(-8deg) rotateX(6deg) rotateZ(-1.5deg) translateZ(48px)",
-                  }}
-                >
-                  {renderFloatingAboutCard()}
-                </div>
-              )}
-              {/* 3D MacBook Pro */}
+              {/* Layered Floating About Card Behind Laptop */}
+              {renderFloatingAboutCard()}
+              {/* 3D MacBook Pro in Foreground */}
               {render3DMacBook()}
             </>
           )}
@@ -1121,9 +954,6 @@ export function SocialLaunchMockup({
           {/* Background Watermark */}
           {renderBackgroundWatermark()}
 
-          {/* Side Badges */}
-          {renderAgencySideRibbons()}
-
           {/* Ambient Lighting */}
           <div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[520px] rounded-full blur-3xl pointer-events-none opacity-40"
@@ -1131,15 +961,6 @@ export function SocialLaunchMockup({
               background: `radial-gradient(circle, ${activeSpotlight} 0%, transparent 70%)`,
             }}
           />
-
-          {/* Top Header with Top-Left Brand Logo */}
-          <div className="w-full flex items-center justify-between z-20">
-            {renderTopLeftBrandIdentity()}
-            <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-black uppercase tracking-widest bg-white/10 text-white border border-white/20 backdrop-blur-md">
-              <span className="h-2 w-2 rounded-full animate-pulse" style={{ backgroundColor: primaryColor }} />
-              <span>{activeHeadline.tag} · {city.toUpperCase()}</span>
-            </div>
-          </div>
 
           {/* Centered Campaign Angle Headline in Landscape */}
           <div className="text-center z-20 mt-1 mb-1 max-w-4xl">
@@ -1165,19 +986,10 @@ export function SocialLaunchMockup({
           {/* 3D Stage in Landscape */}
           <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1800px] mt-2">
             {stageMode === "rock" ? (
-              renderRockPedestalShowcase(landscapeScreenRef, 0.45, "w-[680px]", showFloatingBlurb)
+              renderRockPedestalShowcase(landscapeScreenRef, 0.45, "w-[680px]")
             ) : (
               <>
-                {showFloatingBlurb && (
-                  <div
-                    className="absolute right-12 -top-6 w-[400px] z-30 pointer-events-none transition-transform duration-500"
-                    style={{
-                      transform: "rotateY(-8deg) rotateX(6deg) rotateZ(-1.5deg) translateZ(48px)",
-                    }}
-                  >
-                    {renderFloatingAboutCard()}
-                  </div>
-                )}
+                {renderFloatingAboutCard()}
                 {render3DMacBook(landscapeScreenRef, 0.45)}
               </>
             )}
@@ -1194,9 +1006,6 @@ export function SocialLaunchMockup({
           {/* Background Watermark */}
           {renderBackgroundWatermark()}
 
-          {/* Side Badges */}
-          {renderAgencySideRibbons()}
-
           {/* Ambient Lighting */}
           <div
             className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[360px] rounded-full blur-3xl pointer-events-none opacity-35"
@@ -1206,14 +1015,7 @@ export function SocialLaunchMockup({
           />
 
           {/* Dynamic Top Header */}
-          <div className="relative z-20 w-full pt-8">
-            <div className="flex items-center justify-between w-full mb-3">
-              {renderTopLeftBrandIdentity()}
-              <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest bg-white/10 text-white border border-white/20 backdrop-blur-md shadow-sm">
-                <span className="h-2 w-2 rounded-full animate-pulse" style={{ backgroundColor: primaryColor }} />
-                <span>{activeHeadline.tag}</span>
-              </div>
-            </div>
+          <div className="relative z-20 w-full pt-8 text-center">
             <h2
               className="text-4xl font-black tracking-tight text-white uppercase font-sans leading-tight mt-4"
               style={{
@@ -1230,19 +1032,10 @@ export function SocialLaunchMockup({
           {/* 3D Stage */}
           <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1600px]">
             {stageMode === "rock" ? (
-              renderRockPedestalShowcase(screenRef, screenScale, "w-[96%] max-w-[480px]", showFloatingBlurb)
+              renderRockPedestalShowcase(screenRef, screenScale, "w-[96%] max-w-[480px]")
             ) : (
               <>
-                {showFloatingBlurb && (
-                  <div
-                    className="absolute -right-2 -top-4 w-[76%] max-w-[360px] z-30 pointer-events-none transition-transform duration-500"
-                    style={{
-                      transform: "rotateY(-8deg) rotateX(6deg) rotateZ(-1.5deg) translateZ(48px)",
-                    }}
-                  >
-                    {renderFloatingAboutCard()}
-                  </div>
-                )}
+                {renderFloatingAboutCard()}
                 {render3DMacBook()}
               </>
             )}
@@ -1260,27 +1053,15 @@ export function SocialLaunchMockup({
       {/* Control Panel */}
       {showControls && (
         <div className="w-full max-w-[560px] bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-3.5">
-          {/* 1. Stage Mode Switcher (Rock Pedestal vs Agency 3D Poster) */}
+          {/* 1. Stage Mode Switcher (Rock Pedestal vs Clean Studio) */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-900 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
                 <Layout className="h-3.5 w-3.5 text-indigo-600" /> 3D Stage Composition
               </span>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowFloatingBlurb(!showFloatingBlurb)}
-                  className={`text-[11px] font-bold flex items-center gap-1 transition ${
-                    showFloatingBlurb ? "text-indigo-600" : "text-slate-400"
-                  }`}
-                >
-                  <CheckCircle2 className={`h-3.5 w-3.5 ${showFloatingBlurb ? "text-indigo-600" : "text-slate-300"}`} />
-                  3D Feature Blurb
-                </button>
-                <span className="text-[10px] text-slate-500 font-normal">
-                  {stageMode === "rock" ? "Rugged Stone Pedestal & 3D Depth" : "Studio Ground & 3D Layering"}
-                </span>
-              </div>
+              <span className="text-[10px] text-slate-500 font-normal">
+                {stageMode === "rock" ? "Rugged Mountain Slate Pedestal" : "Studio 3D Poster (Clean Ground)"}
+              </span>
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
