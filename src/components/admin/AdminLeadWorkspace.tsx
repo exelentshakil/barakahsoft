@@ -1090,7 +1090,7 @@ Shaq`,
                   }} className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 transition animate-pulse">
                     <Eye className="h-3 w-3" />
                     Proposal Opened {proposalViews?.length > 1 ? `(${proposalViews.length}x) ` : ''}
-                    {new Date((proposalViews && proposalViews[0]) || lead.last_viewed_at!).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    {new Date((proposalViews && proposalViews[0]) || lead.last_viewed_at!).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })}
                   </button>
                 ) : lead.delivered_at ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200/70 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700">
@@ -1167,7 +1167,7 @@ Shaq`,
               }
               suffix={
                 proposalViews && proposalViews.length > 0 
-                  ? ` · ${new Date(proposalViews[0]).toLocaleDateString([], { month: "short", day: "numeric" })}` 
+                  ? ` · ${new Date(proposalViews[0]).toLocaleDateString([], { month: "short", day: "numeric" })} ${new Date(proposalViews[0]).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}`
                   : ""
               }
               tone={proposalViews && proposalViews.length > 0 ? "good" : "neutral"}
@@ -1193,7 +1193,7 @@ Shaq`,
                             {d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
                           </span>
                           <span className="text-slate-500 tabular-nums">
-                            {d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                            {d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true })}
                           </span>
                         </div>
                       );
