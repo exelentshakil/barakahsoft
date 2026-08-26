@@ -529,9 +529,9 @@ export function SocialLaunchMockup({
   {/* 3-Tier Layered 3D Floating Feature Blurb Card (Layered BEHIND the MacBook, lifted high to top-right) */}
   const renderFloatingAboutCard = () => (
     <div
-      className="absolute -right-2 sm:-right-4 -top-8 sm:-top-12 w-[86%] max-w-[405px] rounded-2xl bg-white shadow-2xl border border-slate-200/90 overflow-hidden transition-transform duration-500 z-0 select-none pointer-events-none"
+      className="absolute -right-1 sm:-right-3 -top-20 sm:-top-28 w-[88%] max-w-[420px] rounded-2xl bg-white shadow-2xl border border-slate-200/90 overflow-hidden transition-transform duration-500 z-0 select-none pointer-events-none"
       style={{
-        transform: "rotateY(-10deg) rotateX(6deg) rotateZ(-2.5deg) translateZ(-42px)",
+        transform: "rotateY(-8deg) rotateX(5deg) rotateZ(-1.5deg) translateZ(-42px)",
         boxShadow: "0 35px 85px -15px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255,255,255,0.35)",
       }}
     >
@@ -716,7 +716,7 @@ export function SocialLaunchMockup({
       <div
         className="relative z-20 w-full transition-transform duration-500"
         style={{
-          transform: "rotateY(-12deg) rotateX(10deg) rotateZ(1.5deg) translateY(6px)",
+          transform: "rotateY(-12deg) rotateX(10deg) rotateZ(1.5deg) translateY(12px)",
           transformStyle: "preserve-3d",
         }}
       >

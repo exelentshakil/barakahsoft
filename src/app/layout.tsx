@@ -64,9 +64,21 @@ fbq('track', 'PageView');`}
           />
         </noscript>
 
-        {/* Microsoft Clarity Analytics & Heatmaps */}
+        {/* Microsoft Clarity Analytics & Heatmaps (Restricted to main landing page only) */}
         <Script id="microsoft-clarity" strategy="afterInteractive">
           {`(function(c,l,a,r,i,t,y){
+        try {
+          var h = window.location.hostname.toLowerCase();
+          var p = window.location.pathname;
+          if (p.indexOf("/admin") === 0 || p.indexOf("/client-portal") === 0 || p.indexOf("/visual-qa") === 0 || p.indexOf("/api") === 0 || p.indexOf("/auth") === 0 || p.indexOf("/login") === 0) {
+            return;
+          }
+          var isLandingHost = h === "redesign.barakahsoft.com" || h === "barakahsoft.com" || h === "www.barakahsoft.com" || h === "home.barakahsoft.com";
+          var isLandingPath = p === "/";
+          if (!isLandingHost || !isLandingPath) {
+            return;
+          }
+        } catch(e) { return; }
         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
         t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
