@@ -967,7 +967,7 @@ export function SocialLaunchMockup({
         {/* 3D Composition Stage */}
         <div
           ref={transparentStageRef}
-          className="relative z-10 w-full flex-1 flex items-center justify-center mt-1 perspective-[1600px]"
+          className="relative z-10 w-full flex-1 flex items-center justify-center mt-4 sm:mt-6 perspective-[1600px] translate-y-6 sm:translate-y-8"
         >
           {/* Dynamic 3D Studio Spotlight Glow Behind Laptop */}
           <div
@@ -1042,7 +1042,7 @@ export function SocialLaunchMockup({
           </div>
 
           {/* 3D Stage in Feed HQ */}
-          <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1800px]">
+          <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1800px] mt-4 translate-y-12">
             {stageMode === "rock" ? (
               renderRockPedestalShowcase(feedScreenRef, 0.65, "w-[840px]", {
                 cardTop: "-top-16",
@@ -1156,7 +1156,7 @@ export function SocialLaunchMockup({
           </div>
 
           {/* 3D Stage */}
-          <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1600px]">
+          <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1600px] mt-4 translate-y-12">
             {stageMode === "rock" ? (
               renderRockPedestalShowcase(screenRef, screenScale, "w-[92%] max-w-[460px]", {
                 cardTop: "-top-12",
