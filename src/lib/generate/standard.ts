@@ -148,7 +148,8 @@ SECTION QUALITY. Every section needs a strong headline, a visual idea and a conv
 MOBILE IS A REDESIGN, NOT A COLLAPSE. Preserve hierarchy and colour rhythm at 360px. Reorder media before copy where it improves comprehension, remove decorative overlap, keep natural content height, and ensure no type, metric, form or image crop becomes cramped.`;
 
 export const MASTER_HERO_STANDARD = `═══ HERO SECTION — THE UNMISSABLE HIGH-CONVERTING MASTERPIECE ═══
-Every hero section must look like a high-end $20,000 bespoke agency build with clear visual hierarchy, disciplined grid, and above-the-fold conversion power:
+STRICT REQUIREMENT: The Hero section MUST use an image. Never generate a hero section without a high-quality real image representing the business. 
+Every hero section must look like a high-end , never center-align a generic brochure paragraph, and never leave the hero without immediate trust proof and action targets.0,000 bespoke agency build with clear visual hierarchy, disciplined grid, and above-the-fold conversion power. NO CHEAP website design will be accepted:
 
 DESKTOP SILHOUETTE (2-Column Balanced Grid, 55% / 45%):
 1. LEFT COLUMN — The Value Stack & Immediate Conversion Anchor:
@@ -158,22 +159,23 @@ DESKTOP SILHOUETTE (2-Column Balanced Grid, 55% / 45%):
    - Immediate Direct Call CTA: Click-to-call phone link (<a href="tel:..." class="site-cta site-cta--primary">Call (XXX) XXX-XXXX</a>) paired with a 24/7 live dispatch status badge / pulse indicator ("24/7 Emergency Dispatch · Avg 45 Min Response").
    - Trust Proof Strip: Real Google review rating badge with ★★★★★ stars, verified review count, "Licensed & Insured" reassurance badge, and "Locally Owned" pill.
 
-2. RIGHT COLUMN — Above-The-Fold Lead Capture Form Card OR Framed Hero Visual:
+2. RIGHT COLUMN — Framed Hero Visual AND/OR Above-The-Fold Lead Capture Form Card:
    - For Service / Quote / Contractor / Lead-Gen Businesses:
      * A sharp, elevated Lead Capture Card (.hero-lead-card) containing [data-lead-form] with service/pain dropdown, name, phone, email, high-contrast submit button, and reassurance guarantee note ("100% Free · No Obligation · Fast Response").
-     * Positioned strictly above the fold with compact padding so visitors can convert without scrolling!
+     * Pair the form with a stunning hero image behind it or next to it. Positioned strictly above the fold with compact padding so visitors can convert without scrolling!
    - For Portfolio / Story / E-commerce Businesses:
      * High-resolution hero image or owner cutout set inside an elegant frame with generous border-radius (var(--bs-radius-lg)), subtle 1px border (var(--bs-border-color)), deep ambient drop shadow (var(--bs-shadow-lift)), and inset caption pill.
      * Image must use object-fit: cover with explicit aspect-ratio (e.g. 4/3 or 1/1) and loading="eager" fetchpriority="high".
 
-NEVER output a bare text wall without photography or lead card, never center-align a generic brochure paragraph, and never leave the hero without immediate trust proof and action targets.`;
+NEVER output a bare text wall without photography, never center-align a generic brochure paragraph, and never leave the hero without immediate trust proof and action targets.`;
 
 export const MASTER_ABOUT_STANDARD = `═══ ABOUT / OUR STORY SECTION — THE 3-TIER LAYERED MASTERPIECE ═══
+STRICT REQUIREMENT: The About section MUST feature an ULTRA premium quality layout with a prominent left-side image. These sections are the main selling point and must use real images.
 The About section (id="about") is the ultimate credibility builder where a visitor decides whether to trust the people behind the business:
 
 3-TIER LAYERED STRUCTURE:
 1. TIER 1 — Top Story & Authentic Profile Split:
-   - LEFT: Substantial real photograph of the founder, team, or on-site work vehicle inside a rounded-2xl container with a documentary caption rail along the bottom (e.g., "Property damage restoration calls for careful coordination from the first conversation onward.").
+   - LEFT: Substantial real photograph of the founder, team, or on-site work vehicle inside a rounded-2xl container with a documentary caption rail along the bottom (e.g., "Property damage restoration calls for careful coordination from the first conversation onward."). THIS IS MANDATORY.
    - RIGHT:
      * Section Eyebrow: A clean uppercase badge or numbered tag (e.g., "ABOUT OUR COMPANY" or "05 / ABOUT"). NEVER prefix with a literal dash or em-dash (never write "— ").
      * Authoritative Customer-Relevant Headline (e.g., "A real name behind the restoration work" or "Built on Craftsmanship & Local Values").
