@@ -154,7 +154,10 @@ export function BespokeGenerationStudio({
       const res = await fetch("/api/models");
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Could not load models");
-      setModels(data.models ?? []);
+      const modelList = Array.isArray(data.models)
+        ? data.models
+        : [...(Array.isArray(data.openai) ? data.openai : []), ...(Array.isArray(data.gemini) ? data.gemini : [])];
+      setModels(modelList);
     } catch (err) {
       setModelsError(err instanceof Error ? err.message : "Could not reach the models endpoint.");
     } finally {
