@@ -2,6 +2,14 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateUniqueDomainSlug } from "@/lib/domain-slug";
+
+function extractDomain(urlStr: string) {
+  try {
+    return new URL(urlStr).hostname.replace(/^www\./, "").toLowerCase();
+  } catch {
+    return null;
+  }
+}
 import { validateOutreachEmail } from "@/lib/outreach/validate-email";
 
 export interface BulkLeadInput {
@@ -48,7 +56,15 @@ export async function POST(req: Request) {
       }
 
       try {
-        const slug = await generateUniqueDomainSlug(admin, rawUrl);
+        const domain = extractDomain(rawUrl);
+  if (domain) {
+    const { data: existing } = await admin.from("leads").select("id, status").ilike("source_url", `%${domain}%`).limit(1).maybeSingle();
+    if (existing) {
+      return NextResponse.json({ error: `A lead for ${domain} already exists (status: ${existing.status}).` }, { status: 400 });
+    }
+  }
+
+  const slug = await generateUniqueDomainSlug(admin, rawUrl);
         const { data: lead, error } = await admin
           .from("leads")
           .insert({
