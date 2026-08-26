@@ -66,6 +66,8 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
     </button>
   );
 
+  const promoImage = payload.heroImageUrl || payload.services?.find(s => s.imageUrl)?.imageUrl || payload.proof?.imageUrl;
+
   // Modern Multi-Column Mega Menu Panel with high-fidelity visual cards and thumbnail media
   const dropdown = (
     kind: "services" | "areas",
@@ -98,12 +100,14 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
               </div>
               <div className={`bs-nav-mega-cols ${items.length > 3 ? "bs-nav-mega-cols-2" : "bs-nav-mega-cols-1"}`}>
                 {items.map((item) => {
-                  const matchedService = kind === "services"
+                  const matchedItem = kind === "services"
                     ? payload.services.find(
                         (s) => s.slug === item.slug || s.h2?.toLowerCase() === item.label?.toLowerCase()
                       )
-                    : null;
-                  const itemImg = matchedService?.imageUrl || matchedService?.imageUrls?.[0];
+                    : payload.areas.find(
+                        (a) => a.slug === item.slug || a.h2?.toLowerCase() === item.label?.toLowerCase()
+                      );
+                  const itemImg = matchedItem?.imageUrl || matchedItem?.imageUrls?.[0];
 
                   return (
                     <a
@@ -111,24 +115,22 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
                       href={siteHref(payload, item.path)}
                       className="bs-nav-panel-item group"
                     >
-                      {kind === "services" ? (
-                        itemImg ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={itemImg}
-                            alt={item.label}
-                            className="h-10 w-10 rounded-lg object-cover border border-slate-200/90 shadow-xs shrink-0 group-hover:border-[var(--bs-primary)] transition-colors"
-                          />
-                        ) : (
-                          <div className="h-10 w-10 rounded-lg bg-[var(--bs-surface-alt,#f8fafc)] border border-[var(--bs-border-color,#e2e8f0)] flex items-center justify-center shrink-0 text-[var(--bs-primary-on-surface)] group-hover:bg-[var(--bs-primary)] group-hover:text-[var(--bs-on-primary)] transition-all">
-                            <ShieldCheck className="h-5 w-5" />
-                          </div>
-                        )
+                      itemImg ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={itemImg}
+                          alt={item.label}
+                          className={`${kind === "services" ? "h-10 w-10 rounded-lg" : "h-9 w-9 rounded-full"} object-cover border border-slate-200/90 shadow-xs shrink-0 group-hover:border-[var(--bs-primary)] transition-colors`}
+                        />
+                      ) : kind === "services" ? (
+                        <div className="h-10 w-10 rounded-lg bg-[var(--bs-surface-alt,#f8fafc)] border border-[var(--bs-border-color,#e2e8f0)] flex items-center justify-center shrink-0 text-[var(--bs-primary-on-surface)] group-hover:bg-[var(--bs-primary)] group-hover:text-[var(--bs-on-primary)] transition-all">
+                          <ShieldCheck className="h-5 w-5" />
+                        </div>
                       ) : (
-                        <div className="h-8 w-8 rounded-full bg-[var(--bs-surface-alt,#f8fafc)] border border-[var(--bs-border-color,#e2e8f0)] flex items-center justify-center shrink-0 text-[var(--bs-primary-on-surface)] group-hover:bg-[var(--bs-primary)] group-hover:text-[var(--bs-on-primary)] transition-all">
+                        <div className="h-9 w-9 rounded-full bg-[var(--bs-surface-alt,#f8fafc)] border border-[var(--bs-border-color,#e2e8f0)] flex items-center justify-center shrink-0 text-[var(--bs-primary-on-surface)] group-hover:bg-[var(--bs-primary)] group-hover:text-[var(--bs-on-primary)] transition-all">
                           <MapPin className="h-4 w-4" />
                         </div>
-                      )}
+                      )
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-1">
                           <span className="bs-nav-panel-title group-hover:text-[var(--bs-primary-on-surface)] transition-colors">
@@ -149,42 +151,67 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
             </div>
 
             {/* Right Side Featured Promo Card in Mega Menu */}
-            <div className="bs-nav-mega-featured">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="bs-nav-featured-badge">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                    24/7 Rapid Response
-                  </span>
-                  {payload.proof.rating && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                      <Star className="h-3 w-3 fill-amber-400 text-amber-500" />
-                      {payload.proof.rating}★
+            <div className="flex flex-col bg-white rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05),_0_0_0_1px_rgba(226,232,240,1)] overflow-hidden w-[280px] group isolate">
+              {/* Premium Image Header */}
+              {promoImage && (
+                <div className="relative h-32 w-full overflow-hidden bg-slate-100 flex-shrink-0">
+                  <div className="absolute inset-0 bg-slate-900/15 group-hover:bg-slate-900/5 transition-colors duration-500 z-10" />
+                  <img src={promoImage} alt="Immediate Response" className="absolute inset-0 w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700" />
+                  {/* Badges positioned over image */}
+                  <div className="absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/95 backdrop-blur-md shadow-sm text-[10px] font-extrabold uppercase tracking-[0.08em] text-emerald-700">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      24/7 Rapid Response
                     </span>
-                  )}
+                    {payload.proof.rating && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-amber-900 bg-white/95 backdrop-blur-md px-1.5 py-1 rounded-md shadow-sm">
+                        <Star className="h-3 w-3 fill-amber-400 text-amber-500" />
+                        {payload.proof.rating}★
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <p className="bs-nav-featured-title">Need Immediate On-Site Help?</p>
-                <p className="bs-nav-featured-desc">
-                  Certified local technicians are dispatched for fast emergency response and honest upfront estimates.
-                </p>
-              </div>
-
-              <div className="bs-nav-featured-actions space-y-2 pt-2">
-                {payload.nap.phone && (
-                  <a
-                    href={`tel:${phoneDigits}`}
-                    className="bs-btn bs-btn-primary bs-btn-sm w-full text-center flex items-center justify-center gap-1.5 shadow-sm font-bold"
+              )}
+              
+              <div className="p-4 flex flex-col justify-between flex-1 bg-gradient-to-b from-white to-slate-50 relative z-10">
+                <div className="space-y-1.5">
+                  {!promoImage && (
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.08em] text-emerald-700">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        24/7 Rapid Response
+                      </span>
+                      {payload.proof.rating && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                          <Star className="h-3 w-3 fill-amber-400 text-amber-500" />
+                          {payload.proof.rating}★
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <p className="text-[15px] font-black text-slate-900 leading-tight">Need Immediate On-Site Help?</p>
+                  <p className="text-[12px] text-slate-500 leading-[1.45]">
+                    Certified local technicians are dispatched for fast emergency response and honest upfront estimates.
+                  </p>
+                </div>
+                
+                <div className="space-y-2 mt-4 pt-4 border-t border-slate-100">
+                  {payload.nap.phone && (
+                    <a
+                      href={`tel:${phoneDigits}`}
+                      className="bs-btn bs-btn-primary w-full text-center flex items-center justify-center gap-2 shadow-sm font-bold py-2 rounded-lg text-[13px] transition-transform hover:-translate-y-[1px]"
+                    >
+                      <Phone className="h-3.5 w-3.5" /> Call {payload.nap.phone}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    onClick={openQuoteModal}
+                    className="w-full text-center font-bold text-[11px] text-slate-500 hover:text-slate-900 py-1.5 transition-colors uppercase tracking-wide"
                   >
-                    <Phone className="h-3.5 w-3.5" /> Call {payload.nap.phone}
-                  </a>
-                )}
-                <button
-                  type="button"
-                  onClick={openQuoteModal}
-                  className="bs-btn bs-btn-ghost bs-btn-sm w-full text-center font-bold text-[11px] border border-slate-200 hover:bg-white"
-                >
-                  Request Fast Quote →
-                </button>
+                    Request Fast Quote →
+                  </button>
+                </div>
               </div>
             </div>
           </div>
