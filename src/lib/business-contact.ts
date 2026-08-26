@@ -42,6 +42,14 @@ function plausiblePhone(candidate: string): boolean {
   return digits.length >= 7 && digits.length <= 15;
 }
 
+
+function sanitizeEmail(candidate: string | null | undefined): string | null {
+  if (!candidate) return null;
+  const strVal = typeof candidate === 'string' ? candidate : String(candidate);
+  const match = strVal.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  return match ? match[0].toLowerCase() : null;
+}
+
 function localBusinessSchema(facts: Record<string, unknown>): Record<string, unknown> {
   const entries = Array.isArray(facts.existing_schema) ? facts.existing_schema : [];
   for (const entry of entries) {
@@ -70,9 +78,9 @@ export function resolveBusinessContact(
     null;
 
   const email =
-    str(schema.email) ??
-    nap.emails?.find((candidate) => candidate.includes("@")) ??
-    str(fallback.email) ??
+    sanitizeEmail(str(schema.email)) ??
+    sanitizeEmail(nap.emails?.find((candidate) => candidate.includes("@"))) ??
+    sanitizeEmail(str(fallback.email)) ??
     null;
 
   return {

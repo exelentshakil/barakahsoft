@@ -24,7 +24,7 @@ export function LandingIndustries() {
           </p>
         </div>
         
-        <div className="relative mx-auto h-[400px] max-w-[800px] overflow-hidden sm:h-[500px]">
+        <div className="relative mx-auto h-[500px] max-w-[800px] overflow-hidden sm:h-[650px]">
           {/* Sun / Core */}
           <div className="absolute left-1/2 top-1/2 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-[0_0_60px_rgba(12,104,200,0.3)] z-20 overflow-hidden border border-[#e2e8f0]">
             <img src="https://redesign.barakahsoft.com/icon.png" alt="BarakahSoft" className="h-16 w-16 object-contain" />
@@ -49,17 +49,16 @@ export function LandingIndustries() {
                   className="absolute left-1/2 top-1/2 flex h-0 w-0 items-center justify-center animate-[spin_20s_linear_infinite]"
                   style={{ animationDelay: ind.delay, animationDuration: duration }}
                 >
-                  <div 
-                    className="flex h-[80px] w-[80px] flex-col items-center justify-center gap-1.5 rounded-full border border-white bg-white/90 shadow-md backdrop-blur-sm animate-[spin_20s_linear_infinite_reverse]"
-                    style={{ 
-                      animationDuration: duration,
-                      transform: `translateX(${radius}px)`
-                    }}
-                  >
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-full ${ind.bg} ${ind.color}`}>
-                      <ind.icon className="h-4 w-4" />
+                  <div style={{ transform: `translateX(${radius}px)` }}>
+                    <div 
+                      className="flex h-[80px] w-[80px] flex-col items-center justify-center gap-1.5 rounded-full border border-white bg-white/90 shadow-md backdrop-blur-sm animate-[spin_20s_linear_infinite_reverse]"
+                      style={{ animationDelay: ind.delay, animationDuration: duration }}
+                    >
+                      <div className={`flex h-8 w-8 items-center justify-center rounded-full ${ind.bg} ${ind.color}`}>
+                        <ind.icon className="h-4 w-4" />
+                      </div>
+                      <span className="text-center text-[9px] font-bold leading-tight text-[#07284d] px-2">{ind.label}</span>
                     </div>
-                    <span className="text-center text-[9px] font-bold leading-tight text-[#07284d] px-2">{ind.label}</span>
                   </div>
                 </div>
               );
