@@ -559,94 +559,281 @@ export function AdminLeadWorkspace({
     }
   }
 
-  const inboundLeads = otherLeads.filter((item) => item.source !== "outreach" && item.source !== "manual");
-  const outreachLeads = otherLeads.filter((item) => item.source === "outreach" || item.source === "manual");
+  // 1. Segmented Pipeline Management
+  const [pipelineView, setPipelineView] = useState<"active" | "won" | "lost" | "all">("active");
+  const [pipelineSearch, setPipelineSearch] = useState("");
+
+  const activeCount = otherLeads.filter((l) => !["paid", "live", "lost"].includes(l.status)).length;
+  const wonCount = otherLeads.filter((l) => ["paid", "live"].includes(l.status)).length;
+  const lostCount = otherLeads.filter((l) => l.status === "lost").length;
+
+  const filteredBySearch = otherLeads.filter((item) => {
+    if (!pipelineSearch.trim()) return true;
+    const q = pipelineSearch.toLowerCase().trim();
+    return (
+      (item.business_name && item.business_name.toLowerCase().includes(q)) ||
+      (item.slug && item.slug.toLowerCase().includes(q)) ||
+      (item.contact_name && item.contact_name.toLowerCase().includes(q)) ||
+      (item.phone && item.phone.includes(q)) ||
+      (item.email && item.email.toLowerCase().includes(q)) ||
+      (item.industry && item.industry.toLowerCase().includes(q))
+    );
+  });
+
+  const activeLeads = filteredBySearch.filter((item) => !["paid", "live", "lost"].includes(item.status));
+  const wonLeads = filteredBySearch.filter((item) => ["paid", "live"].includes(item.status));
+  const lostLeads = filteredBySearch.filter((item) => item.status === "lost");
+
+  const currentViewLeads =
+    pipelineView === "active"
+      ? activeLeads
+      : pipelineView === "won"
+      ? wonLeads
+      : pipelineView === "lost"
+      ? lostLeads
+      : filteredBySearch;
+
+  const inboundLeads = currentViewLeads.filter((item) => item.source !== "outreach" && item.source !== "manual");
+  const outreachLeads = currentViewLeads.filter((item) => item.source === "outreach" || item.source === "manual");
 
   function renderLeadCard(item: Lead) {
     const isSelected = item.id === lead.id;
     const itemTrade = item.industry || (item.persona ? item.persona.replace(/-/g, " ") : "Business");
+
+    const isPaid = item.status === "paid" || item.status === "live";
+    const isLost = item.status === "lost";
+    const isDelivered = item.status === "delivered";
+    const isEngaged = item.status === "contacted" || !!item.last_viewed_at;
+    const isBuilding = item.status === "scraping" || item.status === "rendering";
+    const isQa = item.status === "qa_pending" || item.status === "qa_approved";
+
     return (
       <Link
         key={item.id}
         href={`/admin/leads/${item.id}`}
         title={`${item.business_name || item.slug} · ${itemTrade}`}
-        className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 transition border ${
+        className={`group flex items-center justify-between gap-2.5 rounded-xl px-3 py-2.5 transition border ${
           isSelected
-            ? "border-indigo-500 bg-indigo-50/80 ring-1 ring-indigo-500/30 text-indigo-950 font-bold shadow-2xs"
+            ? "border-indigo-500 bg-indigo-50/90 ring-1 ring-indigo-500/30 text-indigo-950 font-bold shadow-2xs"
             : "border-transparent text-slate-700 hover:border-slate-200 hover:bg-slate-50/90"
         }`}
       >
-        <span
-          className={`h-2 w-2 shrink-0 rounded-full ${
-            item.status === "paid"
-              ? "bg-emerald-500 shadow-sm"
-              : item.status === "delivered" || item.status === "qa_approved"
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span
+            className={`h-2 w-2 shrink-0 rounded-full ${
+              isPaid
+                ? "bg-emerald-500 shadow-sm"
+                : isLost
+                ? "bg-rose-400"
+                : isEngaged
+                ? "bg-sky-500 shadow-sm animate-pulse"
+                : isDelivered
                 ? "bg-indigo-500 shadow-sm"
-                : "bg-amber-500 shadow-sm"
-          }`}
-          aria-hidden
-        />
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-xs font-bold leading-tight text-slate-900">
-            {item.business_name || item.slug}
+                : isQa
+                ? "bg-purple-500 shadow-sm"
+                : isBuilding
+                ? "bg-amber-500 shadow-sm animate-pulse"
+                : "bg-slate-400"
+            }`}
+            aria-hidden
+          />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-xs font-bold leading-tight text-slate-900">
+              {item.business_name || item.slug}
+            </span>
+            <span className="block truncate text-[10px] leading-tight text-slate-500 font-medium mt-0.5">
+              {isPaid
+                ? "🏆 Paid Client"
+                : isLost
+                ? "🗄️ Archived"
+                : isEngaged
+                ? "💬 In Conversation"
+                : isDelivered
+                ? "📧 Pitch Sent"
+                : isQa
+                ? "🔍 Ready for QA"
+                : isBuilding
+                ? "⚡ Building the site"
+                : STATUS_LABEL[item.status] ?? item.status}
+              {item.contact_name ? ` · ${item.contact_name}` : ""}
+            </span>
           </span>
-          <span className="block truncate text-[10px] leading-tight text-slate-500 font-medium mt-0.5">
-            {STATUS_LABEL[item.status] ?? item.status}
-            {item.contact_name ? ` · ${item.contact_name}` : ""}
-          </span>
-        </span>
-        {(item.source === "outreach" || item.source === "manual") && (
-          <span className="shrink-0 text-[11px] font-bold text-sky-600">🎯</span>
-        )}
+        </div>
+
+        <div className="flex items-center gap-1 shrink-0">
+          {(item.source === "outreach" || item.source === "manual") && (
+            <span className="text-[10px] font-bold text-sky-600 bg-sky-50 border border-sky-200/60 px-1.5 py-0.2 rounded-md">
+              🎯
+            </span>
+          )}
+          {isPaid && (
+            <span className="text-[9.5px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-md">
+              $997
+            </span>
+          )}
+        </div>
       </Link>
     );
   }
 
   return (
-    <div className="grid min-w-0 gap-6 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)]">
-      {/* 1. LEFT ASIDE: INBOUND LEAD ORDERS & WEEKLY PULSE */}
-      <aside className="min-w-0 space-y-6">
-        <div className="rounded-2xl border border-slate-200/90 bg-white p-4 space-y-4 shadow-sm">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3 px-1">
-            <span className="text-sm font-extrabold text-slate-900 tracking-tight">Lead Pipeline</span>
-            <span className="rounded-full bg-indigo-50 border border-indigo-200/70 px-2.5 py-0.5 text-xs font-extrabold text-indigo-700">
-              {otherLeads.length} total
+    <div className="grid min-w-0 gap-6 lg:grid-cols-[290px_minmax(0,1fr)] xl:grid-cols-[310px_minmax(0,1fr)]">
+      {/* 1. LEFT ASIDE: SEGMENTED LEAD PIPELINES & WEEKLY PULSE */}
+      <aside className="min-w-0 space-y-5">
+        <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 sm:p-4 space-y-3.5 shadow-sm">
+          {/* Header Row */}
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 px-0.5">
+            <div>
+              <span className="text-sm font-extrabold text-slate-900 tracking-tight block">Lead Pipeline</span>
+              <span className="text-[10px] text-slate-400 font-medium">Segmented by conversion stage</span>
+            </div>
+            <span className="rounded-full bg-indigo-50 border border-indigo-200/70 px-2 py-0.5 text-[11px] font-extrabold text-indigo-700">
+              {activeCount} active
             </span>
           </div>
 
-          <details className="group" open={inboundLeads.length > 0 && inboundLeads.length <= 8}>
-            <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl px-2 py-1.5 hover:bg-slate-50">
-              <span className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-wider text-emerald-800">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-sm" />
-                Inbound Leads ({inboundLeads.length})
-              </span>
-              <ChevronRight className="h-3.5 w-3.5 text-slate-400 transition group-open:rotate-90" />
-            </summary>
-            <div className="space-y-1.5 pt-2">
-              {inboundLeads.length === 0 ? (
-                <p className="px-2 py-1 text-xs italic text-slate-400">No inbound submissions yet</p>
-              ) : (
-                inboundLeads.map((item) => renderLeadCard(item))
-              )}
-            </div>
-          </details>
+          {/* Segmented Pipeline Stage Filter Buttons */}
+          <div className="grid grid-cols-4 gap-1 p-1 bg-slate-100 rounded-xl border border-slate-200/80 text-[11px] font-bold">
+            <button
+              type="button"
+              onClick={() => setPipelineView("active")}
+              className={`py-1.5 px-1 rounded-lg flex items-center justify-center gap-1 transition ${
+                pipelineView === "active"
+                  ? "bg-white text-indigo-900 shadow-2xs font-extrabold"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <span>⚡ Active</span>
+              <span className="text-[9.5px] px-1 bg-indigo-100 text-indigo-800 rounded-full font-extrabold">{activeCount}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPipelineView("won")}
+              className={`py-1.5 px-1 rounded-lg flex items-center justify-center gap-1 transition ${
+                pipelineView === "won"
+                  ? "bg-white text-emerald-900 shadow-2xs font-extrabold"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <span>🏆 Won</span>
+              <span className="text-[9.5px] px-1 bg-emerald-100 text-emerald-800 rounded-full font-extrabold">{wonCount}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPipelineView("lost")}
+              className={`py-1.5 px-1 rounded-lg flex items-center justify-center gap-1 transition ${
+                pipelineView === "lost"
+                  ? "bg-white text-rose-900 shadow-2xs font-extrabold"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <span>🗄️ Lost</span>
+              <span className="text-[9.5px] px-1 bg-rose-100 text-rose-800 rounded-full font-extrabold">{lostCount}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPipelineView("all")}
+              className={`py-1.5 px-1 rounded-lg flex items-center justify-center gap-1 transition ${
+                pipelineView === "all"
+                  ? "bg-white text-slate-900 shadow-2xs font-extrabold"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <span>All</span>
+              <span className="text-[9.5px] px-1 bg-slate-200 text-slate-700 rounded-full font-bold">{otherLeads.length}</span>
+            </button>
+          </div>
 
-          <details className="group border-t border-slate-100 pt-3" open={outreachLeads.length > 0 && outreachLeads.length <= 8}>
-            <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl px-2 py-1.5 hover:bg-slate-50">
-              <span className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-slate-600">
-                🎯 Manual Outreach ({outreachLeads.length})
-              </span>
-              <ChevronRight className="h-3.5 w-3.5 text-slate-400 transition group-open:rotate-90" />
-            </summary>
-            <div className="space-y-2 pt-2">
-              <AddUrlDialog variant="sidebar" />
-              {outreachLeads.length === 0 ? (
-                <p className="px-2 py-1 text-xs italic text-slate-400">No outreach prospects added yet</p>
-              ) : (
-                outreachLeads.map((item) => renderLeadCard(item))
-              )}
+          {/* Quick Search Input */}
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search leads by name, phone..."
+              value={pipelineSearch}
+              onChange={(e) => setPipelineSearch(e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white transition"
+            />
+          </div>
+
+          {/* 1. View: Won Pipeline */}
+          {pipelineView === "won" && (
+            <div className="space-y-2 pt-1">
+              <div className="p-2.5 rounded-xl bg-emerald-50/80 border border-emerald-200 text-xs text-emerald-900">
+                <span className="font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Closed &amp; Paid Clients ({wonLeads.length})
+                </span>
+                <p className="mt-0.5 text-[11px] text-emerald-700">These deals are won. Build handover &amp; go-live active.</p>
+              </div>
+              <div className="space-y-1.5 max-h-[360px] overflow-y-auto pr-0.5">
+                {wonLeads.length === 0 ? (
+                  <p className="px-2 py-3 text-xs italic text-slate-400 text-center">No won leads yet. Close your first deal!</p>
+                ) : (
+                  wonLeads.map((item) => renderLeadCard(item))
+                )}
+              </div>
             </div>
-          </details>
+          )}
+
+          {/* 2. View: Lost / Archived Pipeline */}
+          {pipelineView === "lost" && (
+            <div className="space-y-2 pt-1">
+              <div className="p-2.5 rounded-xl bg-rose-50/80 border border-rose-200 text-xs text-rose-900">
+                <span className="font-bold flex items-center gap-1.5">
+                  <ShieldAlert className="h-4 w-4 text-rose-600" /> Archived &amp; Not Interested ({lostLeads.length})
+                </span>
+                <p className="mt-0.5 text-[11px] text-rose-700">Removed from active queue. Click any lead to inspect or reactivate.</p>
+              </div>
+              <div className="space-y-1.5 max-h-[360px] overflow-y-auto pr-0.5">
+                {lostLeads.length === 0 ? (
+                  <p className="px-2 py-3 text-xs italic text-slate-400 text-center">No archived leads.</p>
+                ) : (
+                  lostLeads.map((item) => renderLeadCard(item))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 3. View: Active & All Pipelines */}
+          {(pipelineView === "active" || pipelineView === "all") && (
+            <div className="space-y-3 pt-1">
+              <details className="group" open={inboundLeads.length > 0 && inboundLeads.length <= 12}>
+                <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl px-2 py-1.5 hover:bg-slate-50">
+                  <span className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-wider text-emerald-800">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-sm" />
+                    Inbound Leads ({inboundLeads.length})
+                  </span>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-400 transition group-open:rotate-90" />
+                </summary>
+                <div className="space-y-1.5 pt-2 max-h-[320px] overflow-y-auto pr-0.5">
+                  {inboundLeads.length === 0 ? (
+                    <p className="px-2 py-2 text-xs italic text-slate-400">No active inbound submissions</p>
+                  ) : (
+                    inboundLeads.map((item) => renderLeadCard(item))
+                  )}
+                </div>
+              </details>
+
+              <details className="group border-t border-slate-100 pt-3" open={outreachLeads.length > 0 && outreachLeads.length <= 12}>
+                <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl px-2 py-1.5 hover:bg-slate-50">
+                  <span className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-slate-600">
+                    🎯 Manual Outreach ({outreachLeads.length})
+                  </span>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-400 transition group-open:rotate-90" />
+                </summary>
+                <div className="space-y-2 pt-2">
+                  <AddUrlDialog variant="sidebar" />
+                  <div className="space-y-1.5 max-h-[320px] overflow-y-auto pr-0.5">
+                    {outreachLeads.length === 0 ? (
+                      <p className="px-2 py-2 text-xs italic text-slate-400">No active outreach prospects</p>
+                    ) : (
+                      outreachLeads.map((item) => renderLeadCard(item))
+                    )}
+                  </div>
+                </div>
+              </details>
+            </div>
+          )}
         </div>
 
         {inboundLeads.length > 0 && (

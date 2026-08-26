@@ -886,12 +886,12 @@ export function SocialLaunchMockup({
 
         {/* Top Header Row */}
         {stageMode === "rock" ? (
-          /* Rock Stage: Top-Left Brand Logo & Right Campaign Angle Badge */
-          <div className="relative z-20 w-full flex items-center justify-between gap-3 pt-1">
-            {renderTopLeftBrandIdentity()}
-            <div className="flex flex-col items-end gap-0.5 select-none shrink-0">
+          /* Rock Stage: Top-Left Brand Logo + Right Live Status + Centered 3D Campaign Angle Typography */
+          <div className="relative z-20 w-full pt-1">
+            <div className="w-full flex items-center justify-between gap-3 mb-1 sm:mb-2">
+              {renderTopLeftBrandIdentity()}
               <div
-                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 sm:px-3 py-1 text-[8px] sm:text-[9.5px] font-black uppercase tracking-widest border backdrop-blur-md shadow-sm ${
+                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 sm:px-3 py-1 text-[8px] sm:text-[9.5px] font-black uppercase tracking-widest border backdrop-blur-md shadow-sm select-none shrink-0 ${
                   theme.isDark
                     ? "bg-white/10 text-white/95 border-white/20"
                     : "bg-slate-900/80 text-white border-slate-700"
@@ -900,9 +900,30 @@ export function SocialLaunchMockup({
                 <span className="h-1.5 w-1.5 rounded-full animate-pulse shadow-sm" style={{ backgroundColor: primaryColor }} />
                 <span>{activeHeadline.tag}</span>
               </div>
-              <span className="text-[9px] sm:text-[10.5px] font-black uppercase tracking-tight text-white/90 drop-shadow-md hidden sm:block">
-                {activeHeadline.line1} {activeHeadline.line2}
-              </span>
+            </div>
+
+            <div className="text-center pt-0.5 sm:pt-1 pb-0.5">
+              <h2
+                className="text-2xl sm:text-[38px] font-black tracking-tight uppercase font-sans leading-[0.93] text-white"
+                style={{
+                  letterSpacing: "0.03em",
+                  textShadow: "0 2px 0 rgba(255,255,255,0.35), 0 6px 16px rgba(0, 0, 0, 0.75), 0 16px 36px rgba(0, 0, 0, 0.55)",
+                }}
+              >
+                <span className="block drop-shadow-md">{activeHeadline.line1}</span>
+                <span
+                  className="block drop-shadow-md"
+                  style={{
+                    color: headlineMode === "launched" ? "#ffffff" : isLightPrimary ? primaryColor : "#ffffff",
+                    textShadow:
+                      isLightPrimary && headlineMode !== "launched"
+                        ? `0 0 24px ${primaryColor}80, 0 6px 16px rgba(0, 0, 0, 0.75)`
+                        : undefined,
+                  }}
+                >
+                  {activeHeadline.line2}
+                </span>
+              </h2>
             </div>
           </div>
         ) : (
@@ -997,6 +1018,27 @@ export function SocialLaunchMockup({
               <span className="h-2 w-2 rounded-full animate-pulse" style={{ backgroundColor: primaryColor }} />
               <span>{activeHeadline.tag} · {city.toUpperCase()}</span>
             </div>
+          </div>
+
+          {/* Centered Campaign Angle Headline in Landscape */}
+          <div className="text-center z-20 mt-1 mb-1 max-w-4xl">
+            <h2
+              className="text-4xl font-black tracking-tight uppercase font-sans leading-none text-white"
+              style={{
+                letterSpacing: "0.03em",
+                textShadow: "0 2px 0 rgba(255,255,255,0.35), 0 8px 24px rgba(0, 0, 0, 0.75)",
+              }}
+            >
+              <span className="inline-block text-white mr-3">{activeHeadline.line1}</span>
+              <span
+                className="inline-block"
+                style={{
+                  color: isLightPrimary ? primaryColor : "#ffffff",
+                }}
+              >
+                {activeHeadline.line2}
+              </span>
+            </h2>
           </div>
 
           {/* 3D Stage in Landscape */}
