@@ -260,35 +260,78 @@ export function AdminLeadWorkspace({
     if (mode === "inbound") {
       if (step === 1) {
         return {
-          subject: `Your Rebuilt Homepage & Speed Audit are Ready! (${businessName})`,
-          body: `Hi ${contactName}, we finished your requested 48-hour homepage redesign for ${businessName}. We audited your mobile speed, mapped your local search rankings, and built a fresh concept tailored to your brand. Your live concept is ready to review below.`,
+          subject: `Your requested 48h rebuild is ready`,
+          body: `Hi ${contactName},
+
+We finished the 48-hour homepage redesign and speed audit you requested for ${businessName}.
+
+Your live concept is ready to review below.
+
+Cheers,
+Shaq`,
         };
       } else if (step === 2) {
         return {
-          subject: `Quick follow up regarding ${businessName}'s homepage rebuild`,
-          body: `Hi ${contactName}, just checking in to see if you had a moment to review the homepage concept you requested for ${businessName}. Have you had any thoughts on the layout or features?`,
+          subject: `Checking in on requested concept`,
+          body: `Hi ${contactName},
+
+Just checking in to see if you had a moment to review the homepage concept we built for ${businessName}?
+
+Happy to make any tweaks, just let me know.
+
+Cheers,
+Shaq`,
         };
       } else {
         return {
-          subject: `Final check regarding ${businessName} website concept`,
-          body: `Hi ${contactName}, following up one last time on the custom website files and Google speed audit for ${businessName} before we archive the staging preview.`,
+          subject: `Final check before staging archive`,
+          body: `Hi ${contactName},
+
+Following up one last time on the custom website files for ${businessName} before we archive the staging preview.
+
+Are you open to taking a quick look?
+
+Cheers,
+Shaq`,
         };
       }
     } else {
       if (step === 1) {
         return {
-          subject: `Rebuilt ${businessName} homepage (no charge)`,
-          body: `Hi ${contactName}, we analyzed ${lead.source_url} and noticed a few mobile speed bottlenecks costing you local customer calls. Rather than send a sales pitch, we went ahead and rebuilt a clean, high-speed homepage concept for ${businessName} (no charge). We also mapped out your core services and service territory. Your concept is ready to review below.`,
+          subject: `${businessName} homepage rebuild (no charge)`,
+          body: `Hi ${contactName},
+
+We analysed ${businessName} and noticed a few mobile speed bottlenecks costing you local customer calls.
+We went ahead and rebuilt a clean, high-speed homepage concept for ${businessName} (no charge).
+
+Your concept is ready to review below.
+
+Cheers,
+Shaq`,
         };
       } else if (step === 2) {
         return {
-          subject: `Quick question about ${businessName}`,
-          body: `Hi ${contactName}, just wanted to check if you had a quick minute to take a look at the ${businessName} rebuild we put together. Any thoughts on the new layout?`,
+          subject: `Checking in on requested concept`,
+          body: `Hi ${contactName},
+
+Just checking in to see if you had a moment to review the homepage concept we built for ${businessName}?
+
+Happy to make any tweaks, just let me know.
+
+Cheers,
+Shaq`,
         };
       } else {
         return {
-          subject: `Rebuilt homepage files for ${businessName}`,
-          body: `Hi ${contactName}, following up one last time regarding the custom redesign for ${businessName}. The files and Google speed diagnostic are 100% yours to keep with zero obligation.`,
+          subject: `Final check before staging archive`,
+          body: `Hi ${contactName},
+
+Following up one last time on the custom website files for ${businessName} before we archive the staging preview.
+
+Are you open to taking a quick look?
+
+Cheers,
+Shaq`,
         };
       }
     }
@@ -1531,7 +1574,7 @@ export function AdminLeadWorkspace({
                     >
                       <span className="block text-xs font-bold text-slate-900">2. 48h Follow-up Bump</span>
                       <span className="text-[11px] text-slate-500 font-medium mt-0.5 block">
-                        {outreachMode === "inbound" ? "Checking in on requested concept" : "Quick 2-sentence check on layout"}
+                        {outreachMode === "inbound" ? "Checking in on requested concept" : "Checking in on requested concept"}
                       </span>
                     </button>
                     <button
@@ -1545,7 +1588,7 @@ export function AdminLeadWorkspace({
                     >
                       <span className="block text-xs font-bold text-slate-900">3. Final Notice</span>
                       <span className="text-[11px] text-slate-500 font-medium mt-0.5 block">
-                        {outreachMode === "inbound" ? "Final check before staging archive" : "Free files transfer & zero-obligation wrap"}
+                        {outreachMode === "inbound" ? "Final check before staging archive" : "Final check before staging archive"}
                       </span>
                     </button>
                   </div>
@@ -1623,13 +1666,25 @@ export function AdminLeadWorkspace({
                         Sending Step {activeOutreachStep} will update status to{" "}
                         <strong>{activeOutreachStep === 1 ? "Delivered" : "Contacted"}</strong>.
                       </span>
-                      <button
-                        onClick={handleSendBrevoEmail}
-                        disabled={sendingEmail}
-                        className="rounded-xl bg-[#533afd] hover:bg-[#432ec4] px-5 py-2 text-xs font-bold text-white shadow-sm shadow-indigo-500/20 transition disabled:opacity-50"
-                      >
-                        {sendingEmail ? "Sending via Brevo..." : emailSent ? "Sent ✓" : `Send Step ${activeOutreachStep} via Brevo`}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={async () => {
+                            await handleUpdateLeadStatus(activeOutreachStep === 1 ? "delivered" : "contacted");
+                            setEmailSent(true);
+                          }}
+                          disabled={sendingEmail}
+                          className="rounded-xl border border-slate-300 bg-white hover:bg-slate-50 px-5 py-2 text-xs font-bold text-slate-700 shadow-sm transition disabled:opacity-50"
+                        >
+                          Mark Sent Manually (Zoho)
+                        </button>
+                        <button
+                          onClick={handleSendBrevoEmail}
+                          disabled={sendingEmail}
+                          className="rounded-xl bg-[#533afd] hover:bg-[#432ec4] px-5 py-2 text-xs font-bold text-white shadow-sm shadow-indigo-500/20 transition disabled:opacity-50"
+                        >
+                          {sendingEmail ? "Sending via Brevo..." : emailSent ? "Sent ✓" : `Send Step ${activeOutreachStep}`}
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
