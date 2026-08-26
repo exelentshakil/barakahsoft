@@ -101,6 +101,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     .from("leads")
     .update({
       delivered_at: lead.delivered_at || now,
+      outreach_stage: stepNumber,
+      outreach_last_sent_at: now,
       status: nextStatus,
     })
     .eq("id", leadId);
