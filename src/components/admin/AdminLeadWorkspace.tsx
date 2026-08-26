@@ -262,12 +262,13 @@ export function AdminLeadWorkspace({
     if (mode === "inbound") {
       if (step === 1) {
         return {
-          subject: `Your requested 48h rebuild is ready`,
+          subject: `${businessName} homepage rebuild (no charge)`,
           body: `Hi ${contactName},
 
-We finished the 48-hour homepage redesign and speed audit you requested for ${businessName}.
+We analysed ${businessName} and noticed a few mobile speed bottlenecks costing you local customer calls.
+We went ahead and rebuilt a clean, high-speed homepage concept for ${businessName} (no charge).
 
-Your live concept is ready to review below:
+Your concept is ready to review below:
 ${portalUrl}
 
 Cheers,
@@ -370,10 +371,21 @@ Shaq`,
   async function handleUpdateLeadStatus(newStatus: LeadStatus) {
     setCurrentLeadStatus(newStatus);
     try {
+      // Update both status and outreach metadata
+      const now = new Date().toISOString();
+      const payload: any = {
+        status: newStatus,
+      };
+      
+      if (newStatus === "delivered" || newStatus === "contacted") {
+        payload.outreach_stage = activeOutreachStep;
+        payload.outreach_last_sent_at = now;
+      }
+
       await fetch(`/api/leads/${lead.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify(payload),
       });
       router.refresh();
     } catch (err) {

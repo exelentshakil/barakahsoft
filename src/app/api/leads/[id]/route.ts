@@ -34,6 +34,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }
   if (typeof body?.phone === "string") updates.phone = body.phone.trim() || null;
   if (typeof body?.status === "string") updates.status = body.status;
+  if (typeof body?.outreach_stage === "number") updates.outreach_stage = body.outreach_stage;
+  if (typeof body?.outreach_last_sent_at === "string") updates.outreach_last_sent_at = body.outreach_last_sent_at;
   if (typeof body?.source_url === "string" && body.source_url) updates.source_url = body.source_url;
   if (typeof body?.facebook_pixel_id === "string") updates.facebook_pixel_id = body.facebook_pixel_id.trim() || null;
   if (typeof body?.google_site_verification === "string") updates.google_site_verification = body.google_site_verification.trim() || null;
