@@ -50,8 +50,9 @@ export async function POST(req: Request) {
         if (verdict.ok) {
           validEmail = rawEmail.toLowerCase();
         } else {
-          // If strict validation fails on bulk, record note but still allow or log
-          validEmail = rawEmail.toLowerCase();
+          // If strict validation fails on bulk, we DROP the invalid email entirely.
+          // This forces the admin to see "No email on file" in the UI so they know they need to hunt down a real one.
+          validEmail = null;
         }
       }
 

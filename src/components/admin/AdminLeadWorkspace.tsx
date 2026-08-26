@@ -971,7 +971,11 @@ Shaq`,
                 <span className="text-slate-300">·</span>
                 <span className="text-slate-800 font-bold">{phone}</span>
                 <span className="text-slate-300">·</span>
-                <span className="truncate text-slate-800">{email}</span>
+                {email === "No email on file" ? (
+                  <span className="truncate text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">Missing Email (Needs Update)</span>
+                ) : (
+                  <span className="truncate text-slate-800">{email}</span>
+                )}
               </p>
             </div>
 
@@ -1608,7 +1612,7 @@ Shaq`,
                 <div className="space-y-4 rounded-2xl border border-indigo-200/80 bg-indigo-50/40 p-5">
                   <div className="flex flex-col gap-2 border-b border-indigo-200/60 pb-3 text-xs sm:flex-row sm:items-center sm:justify-between">
                     <span className="font-semibold text-slate-800">
-                      <strong>Recipient:</strong> {email}
+                      <strong>Recipient:</strong> {email === "No email on file" ? <span className="text-rose-600 font-bold">Missing valid email</span> : email}
                     </span>
                     <div className="flex flex-wrap items-center gap-3">
                       <button
