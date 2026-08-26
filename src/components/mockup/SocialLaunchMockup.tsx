@@ -701,7 +701,7 @@ export function SocialLaunchMockup({
 
   const renderFloatingAboutCard = () => (
     <div
-      className="absolute -right-1 sm:-right-3 top-[-26px] sm:top-[-36px] w-[82%] max-w-[385px] rounded-2xl bg-white shadow-2xl border border-slate-200/90 overflow-hidden transition-transform duration-500 z-0"
+      className="absolute -right-1 sm:-right-3 top-0 sm:top-0 w-[82%] max-w-[385px] rounded-2xl bg-white shadow-2xl border border-slate-200/90 overflow-hidden transition-transform duration-500 z-0"
       style={{
         transform: "rotateY(-10deg) rotateX(6deg) rotateZ(-2deg) translateZ(-38px)",
         boxShadow: "0 35px 85px -15px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255,255,255,0.25)",
@@ -886,8 +886,25 @@ export function SocialLaunchMockup({
 
         {/* Top Header Row */}
         {stageMode === "rock" ? (
-          /* Rock Stage: Top-Left Brand Logo & Authority Tagline (Reference Screenshots 1-21) */
-          renderTopLeftBrandIdentity()
+          /* Rock Stage: Top-Left Brand Logo & Right Campaign Angle Badge */
+          <div className="relative z-20 w-full flex items-center justify-between gap-3 pt-1">
+            {renderTopLeftBrandIdentity()}
+            <div className="flex flex-col items-end gap-0.5 select-none shrink-0">
+              <div
+                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 sm:px-3 py-1 text-[8px] sm:text-[9.5px] font-black uppercase tracking-widest border backdrop-blur-md shadow-sm ${
+                  theme.isDark
+                    ? "bg-white/10 text-white/95 border-white/20"
+                    : "bg-slate-900/80 text-white border-slate-700"
+                }`}
+              >
+                <span className="h-1.5 w-1.5 rounded-full animate-pulse shadow-sm" style={{ backgroundColor: primaryColor }} />
+                <span>{activeHeadline.tag}</span>
+              </div>
+              <span className="text-[9px] sm:text-[10.5px] font-black uppercase tracking-tight text-white/90 drop-shadow-md hidden sm:block">
+                {activeHeadline.line1} {activeHeadline.line2}
+              </span>
+            </div>
+          </div>
         ) : (
           /* Agency Poster: Centered 3D Metallic Agency Typography */
           <div className="relative z-10 text-center pt-1 sm:pt-2">
@@ -1014,8 +1031,14 @@ export function SocialLaunchMockup({
           />
 
           {/* Dynamic Top Header */}
-          <div className="relative z-10 text-center pt-8">
-            {renderTopLeftBrandIdentity()}
+          <div className="relative z-20 w-full pt-8">
+            <div className="flex items-center justify-between w-full mb-3">
+              {renderTopLeftBrandIdentity()}
+              <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest bg-white/10 text-white border border-white/20 backdrop-blur-md shadow-sm">
+                <span className="h-2 w-2 rounded-full animate-pulse" style={{ backgroundColor: primaryColor }} />
+                <span>{activeHeadline.tag}</span>
+              </div>
+            </div>
             <h2
               className="text-4xl font-black tracking-tight text-white uppercase font-sans leading-tight mt-4"
               style={{
