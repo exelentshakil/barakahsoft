@@ -486,7 +486,21 @@ export function verifyHomepage(
     add("blocker", "cta-system", `${inconsistentPrimaryActions.length} primary action(s) do not use the shared site-cta--primary treatment.`);
   }
   const inconsistentPrimaryLabels = [...html.matchAll(/<(a|button)\b([^>]*)>([\s\S]*?)<\/\1>/gi)].filter(
-    ([, , attrs, inner]) => /\bsite-cta--primary\b/i.test(attrs) && normalizedText(inner) !== primaryLabel
+    ([, tag, attrs, inner]) => {
+      if (!/\bsite-cta--primary\b/i.test(attrs)) return false;
+      const text = normalizedText(inner);
+      if (text === primaryLabel) return false;
+      // Allow direct phone dialer CTAs containing numbers or "call"
+      if (/\bhref=["']tel:/i.test(attrs) && (text.startsWith("call") || (brief.phone && text.includes(brief.phone.replace(/\D/g, ""))))) {
+        return false;
+      }
+      // Allow form submit buttons
+      if (tag.toLowerCase() === "button" && /\btype=["']submit["']/i.test(attrs)) {
+        return false;
+      }
+      if (brief.intent.secondaryLabel && text === brief.intent.secondaryLabel.toLowerCase()) return false;
+      return true;
+    }
   );
   if (inconsistentPrimaryLabels.length > 0) {
     add("blocker", "cta-system", `${inconsistentPrimaryLabels.length} primary action(s) use wording other than "${brief.intent.primaryLabel}".`);

@@ -225,6 +225,15 @@ export const bespokeGenerate = inngest.createFunction(
       })),
     ];
 
+    const facts = (loaded.scrapeResults.facts as Record<string, unknown>) || {};
+    const clientBrandHex =
+      (facts.brand_color_hex as string) ||
+      ((facts.colors as any)?.primary as string) ||
+      ((facts.branding as any)?.colors?.primary as string) ||
+      ((loaded.artifact?.extracted_assets as any)?.branding?.colors?.primary as string) ||
+      ((loaded.artifact?.extracted_assets as any)?.brand_color_hex as string) ||
+      null;
+
     const sitePlan = await step.run("plan-site", async () => {
       const plan = await generateSitePlan(brief, dna, media, provider, model);
       await admin
@@ -233,8 +242,8 @@ export const bespokeGenerate = inngest.createFunction(
           copy_plan: plan,
           funnel_pages: funnelPages,
           design_tokens: compileDesignTokens(dna, {
-            colourSource: loaded.artifact?.colour_source,
-            clientBrandHex: (loaded.scrapeResults.facts as Record<string, unknown>)?.brand_color_hex as string | null,
+            colourSource: loaded.artifact?.colour_source ?? (clientBrandHex ? "client" : "reference"),
+            clientBrandHex,
           }),
           inspiration_branding: dna,
         })
@@ -246,8 +255,8 @@ export const bespokeGenerate = inngest.createFunction(
     // assembled page once. A local CSS or visual preference no longer throws
     // away good copy and starts four complete homepage builds from scratch.
     const gateTokens = compileDesignTokens(dna, {
-      colourSource: loaded.artifact?.colour_source,
-      clientBrandHex: (loaded.scrapeResults.facts as Record<string, unknown>)?.brand_color_hex as string | null,
+      colourSource: loaded.artifact?.colour_source ?? (clientBrandHex ? "client" : "reference"),
+      clientBrandHex,
     });
     const generatedSections: GeneratedSection[] = [];
     const batches = sectionBatches(sitePlan.sections);
