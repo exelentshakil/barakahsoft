@@ -72,6 +72,9 @@ import { EditLeadDialog } from "@/components/admin/EditLeadDialog";
 import { DeleteLeadButton } from "@/components/admin/DeleteLeadButton";
 import { SocialMockupPanel } from "@/components/admin/SocialMockupPanel";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { buildOfferOptions, type OfferOption } from "@/lib/audit/lead-value";
@@ -95,11 +98,13 @@ function HeaderStat({
   value,
   suffix = "",
   tone = "neutral",
+  onClick,
 }: {
   label: string;
-  value: string;
+  value: string | React.ReactNode;
   suffix?: string;
   tone?: "good" | "bad" | "neutral";
+  onClick?: () => void;
 }) {
   const colour =
     tone === "bad"
@@ -114,7 +119,10 @@ function HeaderStat({
       ? "bg-emerald-50/70 border-emerald-200/80"
       : "bg-slate-50/80 border-slate-200/70";
   return (
-    <div className={`min-w-0 rounded-xl border p-2.5 transition ${bgBadge}`}>
+    <div
+      className={`min-w-0 rounded-xl border p-2.5 transition ${bgBadge} ${onClick ? 'cursor-pointer hover:shadow-sm' : ''}`}
+      onClick={onClick}
+    >
       <p className="truncate text-[10px] font-extrabold uppercase tracking-wider text-slate-500">{label}</p>
       <p className={`mt-0.5 truncate text-base sm:text-lg font-extrabold tabular-nums tracking-tight ${colour}`}>
         {value}
@@ -132,6 +140,7 @@ interface AdminLeadWorkspaceProps {
   scrapeResults: ScrapeResults | null;
   otherLeads: Lead[];
   cost: LeadCost;
+  proposalViews?: string[];
 }
 
 export function AdminLeadWorkspace({
@@ -140,9 +149,11 @@ export function AdminLeadWorkspace({
   scrapeResults,
   otherLeads,
   cost,
+  proposalViews = [],
 }: AdminLeadWorkspaceProps) {
   const router = useRouter();
   const [emailSent, setEmailSent] = useState(Boolean(lead.delivered_at));
+  const [viewsModalOpen, setViewsModalOpen] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [copiedPortalLink, setCopiedPortalLink] = useState(false);
   const [generatingStripe, setGeneratingStripe] = useState(false);
@@ -252,8 +263,9 @@ export function AdminLeadWorkspace({
   const defaultIsCold = lead.source !== "redesign" && lead.source !== "home";
   const [outreachMode, setOutreachMode] = useState<"inbound" | "cold">(defaultIsCold ? "cold" : "inbound");
   const [currentLeadStatus, setCurrentLeadStatus] = useState<LeadStatus>(lead.status);
+  const [localOutreachStage, setLocalOutreachStage] = useState<number>(lead.outreach_stage || 0);
   const [activeOutreachStep, setActiveOutreachStep] = useState<1 | 2 | 3>(
-    lead.status === "contacted" ? 2 : lead.status === "delivered" ? 2 : 1
+    ((lead.outreach_stage || 0) < 3 ? (lead.outreach_stage || 0) + 1 : 3) as 1 | 2 | 3
   );
 
   const contactName = lead.contact_name || "there";
@@ -378,7 +390,9 @@ Shaq`,
       };
       
       if (newStatus === "delivered" || newStatus === "contacted") {
+        if (newStatus === "delivered" && !lead.delivered_at) payload.delivered_at = now;
         payload.outreach_stage = activeOutreachStep;
+        setLocalOutreachStage(activeOutreachStep);
         payload.outreach_last_sent_at = now;
       }
 
@@ -522,6 +536,7 @@ Shaq`,
         throw new Error(data.error || "The email did not send. Please check your Brevo/Resend API keys.");
       }
       setEmailSent(true);
+      setLocalOutreachStage(activeOutreachStep);
       if (data.status) {
         setCurrentLeadStatus(data.status);
       }
@@ -1069,11 +1084,14 @@ Shaq`,
                     : "Ready for Outreach"}
                 </span>
 
-                {lead.last_viewed_at ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 animate-pulse">
+                {(proposalViews && proposalViews.length > 0) || lead.last_viewed_at ? (
+                  <button onClick={() => {
+                    if (proposalViews && proposalViews.length > 0) setViewsModalOpen(true);
+                  }} className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 transition animate-pulse">
                     <Eye className="h-3 w-3" />
-                    Proposal Opened {new Date(lead.last_viewed_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  </span>
+                    Proposal Opened {proposalViews?.length > 1 ? `(${proposalViews.length}x) ` : ''}
+                    {new Date((proposalViews && proposalViews[0]) || lead.last_viewed_at!).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </button>
                 ) : lead.delivered_at ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200/70 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700">
                     <Clock3 className="h-3 w-3" /> Email Sent · Awaiting Open
@@ -1139,10 +1157,54 @@ Shaq`,
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-5">
             <HeaderStat
               label="Proposal link activity"
-              value={lead.last_viewed_at ? "Opened ✓" : lead.delivered_at ? "Sent" : "Unsent"}
-              suffix={lead.last_viewed_at ? ` · ${new Date(lead.last_viewed_at).toLocaleDateString([], { month: "short", day: "numeric" })}` : ""}
-              tone={lead.last_viewed_at ? "good" : "neutral"}
+              value={
+                proposalViews && proposalViews.length > 0 ? (
+                  <span className="flex items-center gap-1.5">
+                    Opened ✓
+                    <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full">{proposalViews.length}</span>
+                  </span>
+                ) : lead.delivered_at ? "Sent" : "Unsent"
+              }
+              suffix={
+                proposalViews && proposalViews.length > 0 
+                  ? ` · ${new Date(proposalViews[0]).toLocaleDateString([], { month: "short", day: "numeric" })}` 
+                  : ""
+              }
+              tone={proposalViews && proposalViews.length > 0 ? "good" : "neutral"}
+              onClick={() => {
+                if (proposalViews && proposalViews.length > 0) setViewsModalOpen(true);
+              }}
             />
+            <Dialog open={viewsModalOpen} onOpenChange={setViewsModalOpen}>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Proposal View History</DialogTitle>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                  <div className="text-sm text-slate-500 pb-2 border-b">
+                    Total opens: <span className="font-bold text-slate-900">{proposalViews?.length || 0}</span>
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto pr-2 space-y-2">
+                    {proposalViews?.map((viewDate, i) => {
+                      const d = new Date(viewDate);
+                      return (
+                        <div key={i} className="flex items-center justify-between text-sm p-2 rounded bg-slate-50 border border-slate-100">
+                          <span className="font-semibold text-slate-700">
+                            {d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                          </span>
+                          <span className="text-slate-500 tabular-nums">
+                            {d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button variant="outline" onClick={() => setViewsModalOpen(false)}>Close</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
             <HeaderStat
               label="Their mobile speed"
               value={typeof scrapeResults?.pagespeed_mobile?.score === "number" ? `${scrapeResults.pagespeed_mobile.score}` : "—"}
@@ -1587,8 +1649,11 @@ Shaq`,
                           : "border-slate-200 bg-white hover:bg-slate-50"
                       }`}
                     >
-                      <span className="block text-xs font-bold text-slate-900">
-                        {outreachMode === "inbound" ? "1. Initial Delivery" : "1. Value Drop Gift"}
+                      <span className="flex items-center justify-between">
+                        <span className="block text-xs font-bold text-slate-900">
+                          {outreachMode === "inbound" ? "1. Initial Delivery" : "1. Value Drop Gift"}
+                        </span>
+                        {localOutreachStage >= 1 && <Check className="h-4 w-4 text-emerald-500" />}
                       </span>
                       <span className="text-[11px] text-slate-500 font-medium mt-0.5 block">
                         {outreachMode === "inbound" ? "Your requested 48h rebuild is ready" : "Rebuilt concept & speed audit (no charge)"}
@@ -1603,7 +1668,10 @@ Shaq`,
                           : "border-slate-200 bg-white hover:bg-slate-50"
                       }`}
                     >
-                      <span className="block text-xs font-bold text-slate-900">2. 48h Follow-up Bump</span>
+                      <span className="flex items-center justify-between">
+                        <span className="block text-xs font-bold text-slate-900">2. 48h Follow-up Bump</span>
+                        {localOutreachStage >= 2 && <Check className="h-4 w-4 text-emerald-500" />}
+                      </span>
                       <span className="text-[11px] text-slate-500 font-medium mt-0.5 block">
                         {outreachMode === "inbound" ? "Checking in on requested concept" : "Checking in on requested concept"}
                       </span>
@@ -1617,7 +1685,10 @@ Shaq`,
                           : "border-slate-200 bg-white hover:bg-slate-50"
                       }`}
                     >
-                      <span className="block text-xs font-bold text-slate-900">3. Final Notice</span>
+                      <span className="flex items-center justify-between">
+                        <span className="block text-xs font-bold text-slate-900">3. Final Notice</span>
+                        {localOutreachStage >= 3 && <Check className="h-4 w-4 text-emerald-500" />}
+                      </span>
                       <span className="text-[11px] text-slate-500 font-medium mt-0.5 block">
                         {outreachMode === "inbound" ? "Final check before staging archive" : "Final check before staging archive"}
                       </span>
@@ -1703,17 +1774,17 @@ Shaq`,
                             await handleUpdateLeadStatus(activeOutreachStep === 1 ? "delivered" : "contacted");
                             setEmailSent(true);
                           }}
-                          disabled={sendingEmail}
+                          disabled={sendingEmail || localOutreachStage >= activeOutreachStep}
                           className="rounded-xl border border-slate-300 bg-white hover:bg-slate-50 px-5 py-2 text-xs font-bold text-slate-700 shadow-sm transition disabled:opacity-50"
                         >
                           Mark Sent Manually (Zoho)
                         </button>
                         <button
                           onClick={handleSendBrevoEmail}
-                          disabled={sendingEmail}
+                          disabled={sendingEmail || localOutreachStage >= activeOutreachStep}
                           className="rounded-xl bg-[#533afd] hover:bg-[#432ec4] px-5 py-2 text-xs font-bold text-white shadow-sm shadow-indigo-500/20 transition disabled:opacity-50"
                         >
-                          {sendingEmail ? "Sending via Brevo..." : emailSent ? "Sent ✓" : `Send Step ${activeOutreachStep}`}
+                          {sendingEmail ? "Sending via Brevo..." : (localOutreachStage >= activeOutreachStep) ? "Sent ✓" : `Send Step ${activeOutreachStep}`}
                         </button>
                       </div>
                     </div>
