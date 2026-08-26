@@ -960,6 +960,7 @@ Shaq`,
                     contactName={lead.contact_name}
                     phone={lead.phone}
                     email={lead.email}
+                    painPoints={lead.pain_points}
                   />
                   <DeleteLeadButton leadId={lead.id} />
                 </div>

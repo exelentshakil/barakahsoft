@@ -14,7 +14,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
 
   const body = await req.json().catch(() => null);
-  const updates: Record<string, string | null> = {};
+  const updates: Record<string, any> = {};
   if (typeof body?.business_name === "string") updates.business_name = body.business_name || null;
   if (typeof body?.contact_name === "string") updates.contact_name = body.contact_name || null;
   // Checked here as well as at intake: this is the address the proposal and
@@ -37,6 +37,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (typeof body?.source_url === "string" && body.source_url) updates.source_url = body.source_url;
   if (typeof body?.facebook_pixel_id === "string") updates.facebook_pixel_id = body.facebook_pixel_id.trim() || null;
   if (typeof body?.google_site_verification === "string") updates.google_site_verification = body.google_site_verification.trim() || null;
+  if (Array.isArray(body?.pain_points)) updates.pain_points = body.pain_points.filter((p: any) => typeof p === "string" && p.trim() !== "");
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
   }

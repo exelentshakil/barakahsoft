@@ -17,6 +17,7 @@ export function EditLeadDialog({
   contactName,
   phone,
   email,
+  painPoints,
 }: {
   leadId: string;
   businessName: string | null;
@@ -26,6 +27,7 @@ export function EditLeadDialog({
   contactName?: string | null;
   phone?: string | null;
   email?: string | null;
+  painPoints?: string[];
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -36,6 +38,7 @@ export function EditLeadDialog({
   const [contact, setContact] = useState(contactName ?? "");
   const [phoneValue, setPhoneValue] = useState(phone ?? "");
   const [emailValue, setEmailValue] = useState(email ?? "");
+  const [painPointsValue, setPainPointsValue] = useState(painPoints?.join("\n") ?? "");
   const [notes, setNotes] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +59,7 @@ export function EditLeadDialog({
           contact_name: contact,
           phone: phoneValue,
           email: emailValue,
+          pain_points: painPointsValue.split("\n").map((p) => p.trim()).filter(Boolean),
         }),
       });
       const data = await res.json();
@@ -137,6 +141,22 @@ export function EditLeadDialog({
             />
             <p className="mt-1 text-xs text-muted-foreground">
               Where the proposal and every outreach email goes. Checked on save — the domain has to actually accept mail.
+            </p>
+          </div>
+
+          
+          <div>
+            <Label htmlFor="edit-pain-points">Target Intake Pains (One per line)</Label>
+            <textarea
+              id="edit-pain-points"
+              value={painPointsValue}
+              onChange={(e) => setPainPointsValue(e.target.value)}
+              rows={4}
+              className="mt-1 flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+              placeholder="e.g. Outdated design\nNot enough leads"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              These pains are fed to the AI to customize the generated copy and audit sections.
             </p>
           </div>
 
