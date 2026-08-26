@@ -254,7 +254,7 @@ Use these deliberately and sparingly. A reveal on every element is noise; a reve
 export function truthStandard(rating: number | null, reviewCount: number | null): string {
   return `═══ THE RULE ON TRUTH ═══
 Every FACT must be true — never a price, a founding year, a certification, an award, a guarantee, a rating or a testimonial that is not above.
-The FRAMING is yours. If the hours say open 24 hours you may write "Someone picks up at 3am." If they hold ${rating ?? "4.9"} stars across ${reviewCount ?? "273"} reviews you may write that as a sentence with force.
+The FRAMING is yours. If the hours say open 24 hours you may write "Someone picks up at 3am." ${rating ? `If they hold ${rating} stars across ${reviewCount} reviews you may write that as a sentence with force.` : `Never mention star ratings, reviews, or testimonials because none are verified for this business.`}
 Never write about the source data or about the website itself.
 
 NEVER write anything like these — each came from real failed output:

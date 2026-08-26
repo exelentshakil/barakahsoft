@@ -536,7 +536,7 @@ export function verifyHomepage(
   }
 
   // ---- Truth -----------------------------------------------------------
-  if (!brief.rating && /\b\d(\.\d)?\s*(star|★)/i.test(body)) {
+  if (!brief.rating && /\b([1-5](\.[0-9])?\s*(star|★)s?\s*(rating|reviews?))/i.test(body)) {
     add("blocker", "truth", "The page claims a star rating and no verified rating exists for this business.");
   }
   if (!brief.licensedInsured && /\b(licensed|insured|bonded|certified)\b/i.test(body)) {
