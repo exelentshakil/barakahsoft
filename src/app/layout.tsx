@@ -41,6 +41,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <head>
+        
+
+
+        
+      </head>
+      <body className="min-h-screen bg-white font-sans text-slate-900 antialiased">
         {/* Meta Pixel for Facebook Ads */}
         <Script id="meta-pixel" strategy="afterInteractive">
           {`!function(f,b,e,v,n,t,s)
@@ -54,16 +60,6 @@ s.parentNode.insertBefore(t,s)}(window, document,'script',
 fbq('init', '1777973306713413');
 fbq('track', 'PageView');`}
         </Script>
-        <noscript>
-          <img
-            height="1"
-            width="1"
-            style={{ display: "none" }}
-            src="https://www.facebook.com/tr?id=1777973306713413&ev=PageView&noscript=1"
-            alt=""
-          />
-        </noscript>
-
         {/* Microsoft Clarity Analytics & Heatmaps (Restricted to main landing page only) */}
         <Script id="microsoft-clarity" strategy="afterInteractive">
           {`(function(c,l,a,r,i,t,y){
@@ -84,8 +80,16 @@ fbq('track', 'PageView');`}
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "y86f9mlgdd");`}
         </Script>
-      </head>
-      <body className="min-h-screen bg-white font-sans text-slate-900 antialiased">
+        {/* Meta Pixel Fallback */}
+        <noscript>
+          <img
+            height="1"
+            width="1"
+            style={{ display: "none" }}
+            src="https://www.facebook.com/tr?id=1777973306713413&ev=PageView&noscript=1"
+            alt=""
+          />
+        </noscript>
         {children}
         <CookieConsent />
       </body>
