@@ -54,6 +54,7 @@ import { DeliverySlaTimer } from "@/components/admin/DeliverySlaTimer";
 import { ShowcaseApprovalControl } from "@/components/portal/sections/ShowcaseApprovalControl";
 import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStudio";
 import { RefinePanel } from "@/components/admin/RefinePanel";
+import { ManualPhotoUpload } from "@/components/admin/ManualPhotoUpload";
 import { HandBuildPanel } from "@/components/admin/HandBuildPanel";
 import { OutreachSequencePanel } from "@/components/admin/OutreachSequencePanel";
 import { PeriodPulsePanel } from "@/components/admin/PeriodPulsePanel";
@@ -1305,6 +1306,8 @@ Shaq`,
             </TabPanel>
 
             <TabPanel active={tab === "photos"}>
+              <ManualPhotoUpload leadId={lead.id} onUploadComplete={() => setReloadKey((k) => k + 1)} />
+
               {artifact?.bespoke_homepage_html && (
                 <RefinePanel key={`slots-${reloadKey}`} leadId={lead.id} />
               )}
