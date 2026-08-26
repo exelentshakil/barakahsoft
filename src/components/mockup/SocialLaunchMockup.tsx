@@ -13,12 +13,12 @@ import { Button } from "@/components/ui/button";
 import { toPng } from "html-to-image";
 
 export type MockupHeadlineMode =
+  | "launched" // "NEW WEBSITE LAUNCHED"
   | "proposed" // "REDESIGN CONCEPT"
   | "concept"  // "WEBSITE CONCEPT"
   | "upgrade"  // "HIGH PERFORMANCE"
   | "preview"  // "PRIVATE DESIGN"
-  | "rebuild"  // "BRAND REBUILD"
-  | "launched"; // "NEW WEBSITE"
+  | "rebuild"; // "BRAND REBUILD"
 
 export interface MockupData {
   businessName: string;
@@ -55,8 +55,8 @@ export interface MockupData {
 export const HEADLINE_OPTIONS: { id: MockupHeadlineMode; line1: string; line2: string; tag: string }[] = [
   {
     id: "launched",
-    line1: "NEW",
-    line2: "WEBSITE",
+    line1: "NEW WEBSITE",
+    line2: "LAUNCHED",
     tag: "Official Launch",
   },
   {
@@ -95,82 +95,90 @@ export const BG_THEMES = [
   {
     id: "brand",
     name: "Brand Studio (Default)",
-    gradient: "from-[#080d1a] via-[#0f172a] to-[#1e293b]",
-    bgStart: "#080d1a",
-    bgMid: "#0f172a",
+    gradient: "from-[#0a101d] via-[#111927] to-[#1e293b]",
+    bgStart: "#0a101d",
+    bgMid: "#111927",
     bgEnd: "#1e293b",
-    watermarkColor: "rgba(255, 255, 255, 0.08)",
+    watermarkColor: "rgba(255, 255, 255, 0.12)",
     ribbonBg: "#FFD974",
+    isDark: true,
+  },
+  {
+    id: "emerald",
+    name: "Emerald Sage (NYC Reference)",
+    gradient: "from-[#082218] via-[#0d3326] to-[#1e4839]",
+    bgStart: "#082218",
+    bgMid: "#0d3326",
+    bgEnd: "#1e4839",
+    watermarkColor: "rgba(255, 255, 255, 0.12)",
+    ribbonBg: "#0d3326",
+    isDark: true,
+  },
+  {
+    id: "sky",
+    name: "Azure Sky (OC Reference)",
+    gradient: "from-[#5b8fb9] via-[#85b1d4] to-[#bedbf1]",
+    bgStart: "#5b8fb9",
+    bgMid: "#85b1d4",
+    bgEnd: "#bedbf1",
+    watermarkColor: "rgba(20, 50, 80, 0.15)",
+    ribbonBg: "#2b4c6f",
+    isDark: false,
   },
   {
     id: "midnight",
     name: "Midnight Navy",
-    gradient: "from-[#0a1128] via-[#001f54] to-[#034078]",
-    bgStart: "#0a1128",
-    bgMid: "#001f54",
-    bgEnd: "#034078",
-    watermarkColor: "rgba(255, 255, 255, 0.08)",
-    ribbonBg: "#001f54",
+    gradient: "from-[#070e22] via-[#0c1a40] to-[#1a2f6c]",
+    bgStart: "#070e22",
+    bgMid: "#0c1a40",
+    bgEnd: "#1a2f6c",
+    watermarkColor: "rgba(255, 255, 255, 0.12)",
+    ribbonBg: "#0c1a40",
+    isDark: true,
   },
   {
     id: "charcoal",
     name: "Studio Charcoal",
-    gradient: "from-[#181a20] via-[#111317] to-[#08090b]",
-    bgStart: "#181a20",
-    bgMid: "#111317",
-    bgEnd: "#08090b",
-    watermarkColor: "rgba(255, 255, 255, 0.08)",
-    ribbonBg: "#1e2229",
-  },
-  {
-    id: "emerald",
-    name: "Emerald Obsidian",
-    gradient: "from-[#064e3b] via-[#022c22] to-[#01140f]",
-    bgStart: "#064e3b",
-    bgMid: "#022c22",
-    bgEnd: "#01140f",
-    watermarkColor: "rgba(255, 255, 255, 0.08)",
-    ribbonBg: "#064e3b",
+    gradient: "from-[#14161b] via-[#101216] to-[#090a0c]",
+    bgStart: "#14161b",
+    bgMid: "#101216",
+    bgEnd: "#090a0c",
+    watermarkColor: "rgba(255, 255, 255, 0.12)",
+    ribbonBg: "#1c2028",
+    isDark: true,
   },
   {
     id: "royal",
     name: "Royal Amethyst",
-    gradient: "from-[#311042] via-[#1f0b2b] to-[#12041d]",
-    bgStart: "#311042",
-    bgMid: "#1f0b2b",
-    bgEnd: "#12041d",
-    watermarkColor: "rgba(255, 255, 255, 0.08)",
-    ribbonBg: "#311042",
+    gradient: "from-[#290d38] via-[#1a0824] to-[#0f0417]",
+    bgStart: "#290d38",
+    bgMid: "#1a0824",
+    bgEnd: "#0f0417",
+    watermarkColor: "rgba(255, 255, 255, 0.12)",
+    ribbonBg: "#290d38",
+    isDark: true,
   },
   {
     id: "sunset",
     name: "Sunset Amber",
-    gradient: "from-[#7c2d12] via-[#431407] to-[#1c1917]",
-    bgStart: "#7c2d12",
-    bgMid: "#431407",
-    bgEnd: "#1c1917",
-    watermarkColor: "rgba(255, 255, 255, 0.08)",
-    ribbonBg: "#7c2d12",
+    gradient: "from-[#63220e] via-[#3a1206] to-[#190804]",
+    bgStart: "#63220e",
+    bgMid: "#3a1206",
+    bgEnd: "#190804",
+    watermarkColor: "rgba(255, 255, 255, 0.12)",
+    ribbonBg: "#63220e",
+    isDark: true,
   },
   {
     id: "cobalt",
     name: "Electric Cobalt",
-    gradient: "from-[#1e40af] via-[#1e3a8a] to-[#0f172a]",
-    bgStart: "#1e40af",
-    bgMid: "#1e3a8a",
-    bgEnd: "#0f172a",
-    watermarkColor: "rgba(255, 255, 255, 0.08)",
-    ribbonBg: "#1e40af",
-  },
-  {
-    id: "sky",
-    name: "Azure Sky",
-    gradient: "from-[#6fa6cb] via-[#94bedc] to-[#c7dfef]",
-    bgStart: "#6fa6cb",
-    bgMid: "#94bedc",
-    bgEnd: "#c7dfef",
-    watermarkColor: "rgba(30, 64, 95, 0.14)",
-    ribbonBg: "#2b4c6f",
+    gradient: "from-[#1d3bb5] via-[#162e91] to-[#0d1c59]",
+    bgStart: "#1d3bb5",
+    bgMid: "#162e91",
+    bgEnd: "#0d1c59",
+    watermarkColor: "rgba(255, 255, 255, 0.12)",
+    ribbonBg: "#162e91",
+    isDark: true,
   },
 ];
 
@@ -189,20 +197,29 @@ function getContrastColor(hexColor?: string | null, fallbackDark = "#1e242d", fa
   return yiq >= 150 ? fallbackDark : fallbackLight;
 }
 
+// Helper: Thorough recursive unescaping of all HTML entities and leading punctuation
 function unescapeText(str: string | null | undefined): string {
   if (!str) return "";
-  return str
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'")
-    .replace(/&mdash;/gi, " ")
-    .replace(/&ndash;/gi, " ")
-    .replace(/&#8212;/g, " ")
-    .replace(/&#8211;/g, " ")
-    .replace(/^[—–-]\s*/, "")
-    .trim();
+  let res = str;
+  for (let i = 0; i < 3; i++) {
+    const next = res
+      .replace(/&amp;/gi, "&")
+      .replace(/&lt;/gi, "<")
+      .replace(/&gt;/gi, ">")
+      .replace(/&quot;/gi, '"')
+      .replace(/&#039;/g, "'")
+      .replace(/&#39;/g, "'")
+      .replace(/&apos;/gi, "'")
+      .replace(/&mdash;/gi, " ")
+      .replace(/&ndash;/gi, " ")
+      .replace(/&#8212;/g, " ")
+      .replace(/&#8211;/g, " ")
+      .replace(/&nbsp;/gi, " ")
+      .trim();
+    if (next === res) break;
+    res = next;
+  }
+  return res.replace(/^[—–-]\s*/, "").trim();
 }
 
 // Helper: Convert remote image to base64 proxy for reliable html-to-image export
@@ -298,8 +315,8 @@ export function SocialLaunchMockup({
   const invertSurface = data.invertSurface || "#0b0f19";
 
   const businessShortName = unescapeText(data.businessName || "Your Business");
-  const city = data.city || "New York";
-  const trade = data.trade || "Contractor";
+  const city = data.city || "Las Vegas";
+  const trade = data.trade || "Restoration Contractor";
   const heroHeading = unescapeText(
     data.heroHeadline || `PREMIER ${trade.toUpperCase()} IN ${city.toUpperCase()}`
   );
@@ -307,14 +324,14 @@ export function SocialLaunchMockup({
     data.aboutEyebrow || `ABOUT OUR TEAM IN ${city.toUpperCase()}`
   );
   const aboutHeading = unescapeText(
-    data.aboutHeadline || `About Our Local ${trade} Company In ${city}`
+    data.aboutHeadline || `A real name & dedicated team behind every restoration in ${city}`
   );
   const aboutBody = unescapeText(
     data.aboutBody ||
-    `${businessShortName} provides expert ${trade.toLowerCase()} and dependable performance across ${city}. Our team delivers personalized service and craftsmanship from start to finish.`
+    `When disaster strikes, you need accountable local professionals who arrive fast. Led by owner ${data.founderName || "our team"}, ${businessShortName} provides a trusted single point of contact across ${city}.`
   );
-  const ratingText = data.rating ? `${data.rating}★` : "5.0★";
-  const reviewsCountText = data.reviewCount ? String(data.reviewCount) : "100+";
+  const ratingText = data.rating ? `${data.rating}★` : "4.9★";
+  const reviewsCountText = data.reviewCount ? `${data.reviewCount}+` : "109+";
   const yearsExp = data.yearsExperience ? `${data.yearsExperience}+` : "15+";
 
   const activeHeadline = HEADLINE_OPTIONS.find((h) => h.id === headlineMode) || HEADLINE_OPTIONS[0];
@@ -503,25 +520,25 @@ export function SocialLaunchMockup({
   const render3DStage = () => (
     <div
       ref={stageRef}
-      className="relative z-10 w-full flex-1 flex items-center justify-center mt-1 perspective-[1600px]"
+      className="relative z-10 w-full flex-1 flex items-center justify-center mt-2 perspective-[1600px]"
     >
       {/* Dynamic 3D Studio Spotlight Glow Behind Laptop */}
       <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[440px] h-[240px] rounded-full blur-3xl pointer-events-none opacity-30"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[360px] sm:w-[460px] h-[260px] rounded-full blur-3xl pointer-events-none opacity-35"
         style={{
           background: `radial-gradient(circle, ${primaryColor} 0%, transparent 70%)`,
         }}
       />
 
       {/* Soft Ground Contact Shadow Under Laptop */}
-      <div className="absolute bottom-2 sm:bottom-4 left-4 sm:left-8 right-4 sm:right-8 h-12 sm:h-16 bg-slate-950/65 blur-2xl rounded-full transform scale-x-115 -rotate-2" />
+      <div className="absolute bottom-1 sm:bottom-3 left-4 sm:left-8 right-4 sm:right-8 h-12 sm:h-16 bg-slate-950/70 blur-2xl rounded-full transform scale-x-115 -rotate-2" />
 
       {/* 1. FLOATING ABOUT / PREVIEW CARD LAYERED BEHIND THE MACBOOK (Unobscured Foreground Screen) */}
       <div
-        className="absolute -right-1 sm:-right-3 top-[-24px] sm:top-[-34px] w-[80%] max-w-[375px] rounded-2xl bg-white shadow-2xl border border-slate-200/90 overflow-hidden transition-transform duration-500 z-0"
+        className="absolute -right-1 sm:-right-3 top-[-26px] sm:top-[-36px] w-[82%] max-w-[385px] rounded-2xl bg-white shadow-2xl border border-slate-200/90 overflow-hidden transition-transform duration-500 z-0"
         style={{
-          transform: "rotateY(-10deg) rotateX(6deg) rotateZ(-2deg) translateZ(-35px)",
-          boxShadow: "0 35px 80px -15px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255,255,255,0.2)",
+          transform: "rotateY(-10deg) rotateX(6deg) rotateZ(-2deg) translateZ(-38px)",
+          boxShadow: "0 35px 85px -15px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255,255,255,0.25)",
         }}
       >
         {/* Dynamic Island Header Bar on Top of the Card */}
@@ -546,149 +563,137 @@ export function SocialLaunchMockup({
           </div>
         </div>
 
-        {data.aboutCaptureUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={data.aboutCaptureUrl}
-            alt={`${businessShortName} about section`}
-            crossOrigin="anonymous"
-            className="block h-auto w-full"
-          />
-        ) : (
-          <>
-            {/* 3-Tier Layered Masterpiece About Card Synchronized to Website Colors */}
-            <div className="p-3 sm:p-3.5 bg-white grid grid-cols-12 gap-2.5 items-start">
-              {/* Left: Framed Photo of Founder / Team / Fleet with Bottom Name Badge Bar */}
-              <div className="col-span-5 relative rounded-xl overflow-hidden shadow-md border border-slate-200 aspect-[4/4.8] bg-slate-900 flex flex-col justify-end">
-                {data.aboutImageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={data.aboutImageUrl}
-                    alt={data.founderName || `${businessShortName} team`}
-                    crossOrigin="anonymous"
-                    className="absolute inset-0 h-full w-full object-cover object-center"
-                  />
-                ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 flex flex-col items-center justify-center p-2 text-center">
-                    <span className="text-white text-[8px] font-black tracking-wider uppercase opacity-80">{businessShortName}</span>
-                    <span className="text-[6px] font-bold uppercase mt-0.5" style={{ color: primaryColor }}>
-                      Team &amp; Operations
-                    </span>
-                  </div>
-                )}
-                {/* Bottom Founder & Leadership Name Badge Bar */}
-                <div className="relative z-10 bg-slate-900/90 backdrop-blur-xs p-1.5 text-white flex items-center gap-1.5 border-t border-white/20">
-                  {data.logoUrl && (
-                    <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-white p-0.5 shrink-0 overflow-hidden flex items-center justify-center">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={data.logoUrl} alt="Logo" className="h-full w-full object-contain" />
-                    </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <span className="block text-[6px] sm:text-[7.5px] font-black truncate leading-tight">
-                      {data.founderName || "Local Leadership"}
-                    </span>
-                    <span className="block text-[4px] sm:text-[5px] font-medium text-slate-300 truncate">
-                      {data.founderTitle || `Owner of ${businessShortName}`}
-                    </span>
-                  </div>
+        {/* 3-Tier Layered Masterpiece About Card Synchronized to Website Colors */}
+        <div className="p-3 sm:p-3.5 bg-white grid grid-cols-12 gap-2.5 items-start">
+          {/* Left: Framed Photo of Founder / Team / Fleet with Bottom Name Badge Bar */}
+          <div className="col-span-5 relative rounded-xl overflow-hidden shadow-md border border-slate-200 aspect-[4/4.8] bg-slate-900 flex flex-col justify-end">
+            {data.aboutImageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={data.aboutImageUrl}
+                alt={data.founderName || `${businessShortName} team`}
+                crossOrigin="anonymous"
+                className="absolute inset-0 h-full w-full object-cover object-center"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 flex flex-col items-center justify-center p-2 text-center">
+                <span className="text-white text-[8px] font-black tracking-wider uppercase opacity-80">{businessShortName}</span>
+                <span className="text-[6px] font-bold uppercase mt-0.5" style={{ color: primaryColor }}>
+                  Team &amp; Operations
+                </span>
+              </div>
+            )}
+            {/* Bottom Founder & Leadership Name Badge Bar */}
+            <div className="relative z-10 bg-slate-900/90 backdrop-blur-xs p-1.5 text-white flex items-center gap-1.5 border-t border-white/20">
+              {data.logoUrl && (
+                <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-white p-0.5 shrink-0 overflow-hidden flex items-center justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={data.logoUrl} alt="Logo" className="h-full w-full object-contain" />
                 </div>
-              </div>
-
-              {/* Right: Story Eyebrow, Authoritative Title & Narrative */}
-              <div className="col-span-7 space-y-1">
-                <div className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-1.5 py-0.5 border border-slate-200/80">
-                  <span className="text-[4.5px] sm:text-[5.5px] font-extrabold uppercase tracking-wider text-slate-800">
-                    {aboutEyebrow}
-                  </span>
-                </div>
-                <h4 className="text-[8.5px] sm:text-[10.5px] font-black leading-tight text-slate-900 line-clamp-2">
-                  {aboutHeading}
-                </h4>
-                <p className="text-[5px] sm:text-[6px] text-slate-600 font-normal line-clamp-3 leading-relaxed">
-                  {aboutBody}
-                </p>
-                <div className="pt-0.5 flex items-center gap-1.5">
-                  <span
-                    className="inline-block rounded px-2 py-0.5 text-[4.5px] sm:text-[5.5px] font-extrabold shadow-xs"
-                    style={{ backgroundColor: primaryColor, color: onPrimaryColor }}
-                  >
-                    GET A FREE QUOTE →
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* ROW 2: FULL-WIDTH SOLID METRIC RIBBON BAND (4 STATS MATCHING WEBSITE BRAND COLOR) */}
-            <div
-              className="px-2 py-1.5 grid grid-cols-4 gap-0.5 text-center shadow-inner"
-              style={{
-                backgroundColor: primaryColor,
-                color: onPrimaryColor,
-                borderTop: isLightPrimary ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.2)",
-                borderBottom: isLightPrimary ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.2)",
-              }}
-            >
-              <div>
-                <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
-                  {yearsExp}
+              )}
+              <div className="min-w-0 flex-1">
+                <span className="block text-[6px] sm:text-[7.5px] font-black truncate leading-tight">
+                  {data.founderName || "Local Leadership"}
                 </span>
-                <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
-                  Experience
-                </span>
-              </div>
-              <div>
-                <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
-                  {reviewsCountText}
-                </span>
-                <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
-                  Completed
-                </span>
-              </div>
-              <div>
-                <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
-                  {ratingText}
-                </span>
-                <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
-                  Avg Rating
-                </span>
-              </div>
-              <div>
-                <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
-                  100%
-                </span>
-                <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
-                  Guaranteed
+                <span className="block text-[4px] sm:text-[5px] font-medium text-slate-300 truncate">
+                  {data.founderTitle || `Owner of ${businessShortName}`}
                 </span>
               </div>
             </div>
+          </div>
 
-            {/* ROW 3: SECONDARY SERVICE / CRAFTSMANSHIP SNIPPET */}
-            <div className="p-2 sm:p-2.5 bg-[#fafafc] flex items-center justify-between gap-2">
-              <div className="min-w-0 flex-1 space-y-0.5">
-                <h5 className="text-[6px] sm:text-[7.5px] font-black text-slate-900 leading-tight truncate">
-                  Professional Residential &amp; Commercial {trade} Services
-                </h5>
-                <p className="text-[4px] sm:text-[5px] text-slate-500 truncate">
-                  Dependable performance, direct insurance billing, and licensed experts across {city}.
-                </p>
-              </div>
+          {/* Right: Story Eyebrow, Authoritative Title & Narrative */}
+          <div className="col-span-7 space-y-1">
+            <div className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-1.5 py-0.5 border border-slate-200/80">
+              <span className="text-[4.5px] sm:text-[5.5px] font-extrabold uppercase tracking-wider text-slate-800">
+                {aboutEyebrow}
+              </span>
+            </div>
+            <h4 className="text-[8.5px] sm:text-[10.5px] font-black leading-tight text-slate-900 line-clamp-2">
+              {aboutHeading}
+            </h4>
+            <p className="text-[5px] sm:text-[6px] text-slate-600 font-normal line-clamp-3 leading-relaxed">
+              {aboutBody}
+            </p>
+            <div className="pt-0.5 flex items-center gap-1.5">
               <span
-                className="shrink-0 rounded px-2 py-0.5 text-[4.5px] sm:text-[5.5px] font-extrabold shadow-xs"
+                className="inline-block rounded px-2 py-0.5 text-[4.5px] sm:text-[5.5px] font-extrabold shadow-xs"
                 style={{ backgroundColor: primaryColor, color: onPrimaryColor }}
               >
                 GET A FREE QUOTE →
               </span>
             </div>
-          </>
-        )}
+          </div>
+        </div>
+
+        {/* ROW 2: FULL-WIDTH SOLID METRIC RIBBON BAND (4 STATS MATCHING WEBSITE BRAND COLOR) */}
+        <div
+          className="px-2 py-1.5 grid grid-cols-4 gap-0.5 text-center shadow-inner"
+          style={{
+            backgroundColor: primaryColor,
+            color: onPrimaryColor,
+            borderTop: isLightPrimary ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.2)",
+            borderBottom: isLightPrimary ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.2)",
+          }}
+        >
+          <div>
+            <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
+              {yearsExp}
+            </span>
+            <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
+              Experience
+            </span>
+          </div>
+          <div>
+            <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
+              {reviewsCountText}
+            </span>
+            <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
+              Completed
+            </span>
+          </div>
+          <div>
+            <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
+              {ratingText}
+            </span>
+            <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
+              Avg Rating
+            </span>
+          </div>
+          <div>
+            <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
+              100%
+            </span>
+            <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
+              Guaranteed
+            </span>
+          </div>
+        </div>
+
+        {/* ROW 3: SECONDARY SERVICE / CRAFTSMANSHIP SNIPPET */}
+        <div className="p-2 sm:p-2.5 bg-[#fafafc] flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <h5 className="text-[6px] sm:text-[7.5px] font-black text-slate-900 leading-tight truncate">
+              Professional Residential &amp; Commercial {trade} Services
+            </h5>
+            <p className="text-[4px] sm:text-[5px] text-slate-500 truncate">
+              Dependable performance, direct insurance billing, and licensed experts across {city}.
+            </p>
+          </div>
+          <span
+            className="shrink-0 rounded px-2 py-0.5 text-[4.5px] sm:text-[5.5px] font-extrabold shadow-xs"
+            style={{ backgroundColor: primaryColor, color: onPrimaryColor }}
+          >
+            GET A FREE QUOTE →
+          </span>
+        </div>
       </div>
 
       {/* 2. REALISTIC 3D MACBOOK PRO (Stands Proud in the Foreground, 100% Unobscured) */}
       <div
-        className="relative z-20 w-[92%] max-w-[470px] transition-transform duration-500"
+        className="relative z-20 w-[92%] max-w-[475px] transition-transform duration-500"
         style={{
-          transform: "rotateY(-16deg) rotateX(12deg) rotateZ(2deg) translateY(14px) translateZ(30px)",
+          transform: "rotateY(-16deg) rotateX(12deg) rotateZ(2deg) translateY(14px) translateZ(32px)",
           transformStyle: "preserve-3d",
         }}
       >
@@ -762,7 +767,7 @@ export function SocialLaunchMockup({
         />
 
         {/* Refined Upper Backdrop Monogram */}
-        <div className="absolute inset-0 flex items-start justify-center pt-28 pointer-events-none overflow-hidden select-none opacity-10">
+        <div className="absolute inset-0 flex items-start justify-center pt-28 pointer-events-none overflow-hidden select-none opacity-12">
           <span
             className="font-black text-6xl sm:text-8xl tracking-widest uppercase text-transparent whitespace-nowrap"
             style={{
@@ -773,33 +778,46 @@ export function SocialLaunchMockup({
           </span>
         </div>
 
-        {/* Big 3D Visual Impact Headline at Top */}
+        {/* Killer 3D Metallic Agency Typography at Top */}
         <div className="relative z-10 text-center pt-1 sm:pt-2">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-0.5 text-[8.5px] sm:text-[9.5px] font-extrabold uppercase tracking-widest text-white/95 border border-white/20 backdrop-blur-md shadow-sm mb-1.5">
+          <div
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-[8.5px] sm:text-[9.5px] font-extrabold uppercase tracking-widest border backdrop-blur-md shadow-sm mb-1.5 ${
+              theme.isDark
+                ? "bg-white/10 text-white/95 border-white/20"
+                : "bg-slate-900/80 text-white border-slate-700"
+            }`}
+          >
             <span className="h-1.5 w-1.5 rounded-full animate-pulse shadow-sm" style={{ backgroundColor: primaryColor }} />
             <span>{businessShortName} · {activeHeadline.tag}</span>
           </div>
 
           <h2
-            className="text-3xl sm:text-[42px] font-black tracking-tight uppercase font-sans leading-[0.94]"
+            className="text-3xl sm:text-[44px] font-black tracking-tight uppercase font-sans leading-[0.93] text-white"
             style={{
-              textShadow: "0 10px 30px rgba(0, 0, 0, 0.7), 0 2px 4px rgba(0, 0, 0, 0.5)",
-              letterSpacing: "0.02em",
+              letterSpacing: "0.03em",
+              textShadow: "0 2px 0 rgba(255,255,255,0.35), 0 6px 16px rgba(0, 0, 0, 0.75), 0 16px 36px rgba(0, 0, 0, 0.55)",
             }}
           >
-            <span className="text-white drop-shadow-md">{activeHeadline.line1}</span>
-            <br />
+            <span className="block drop-shadow-md">{activeHeadline.line1}</span>
             <span
+              className="block drop-shadow-md"
               style={{
-                color: isLightPrimary ? primaryColor : "#ffffff",
-                textShadow: isLightPrimary ? `0 0 24px ${primaryColor}80` : undefined,
+                color: headlineMode === "launched" ? "#ffffff" : isLightPrimary ? primaryColor : "#ffffff",
+                textShadow:
+                  isLightPrimary && headlineMode !== "launched"
+                    ? `0 0 24px ${primaryColor}80, 0 6px 16px rgba(0, 0, 0, 0.75)`
+                    : undefined,
               }}
             >
               {activeHeadline.line2}
             </span>
           </h2>
 
-          <p className="text-[8px] sm:text-[9px] font-bold text-white/65 uppercase tracking-widest mt-1">
+          <p
+            className={`text-[8px] sm:text-[9px] font-bold uppercase tracking-widest mt-1 ${
+              theme.isDark ? "text-white/70" : "text-slate-800 font-extrabold"
+            }`}
+          >
             {city.toUpperCase()} · HIGH-CONVERTING BESPOKE REDESIGN
           </p>
         </div>
@@ -832,7 +850,7 @@ export function SocialLaunchMockup({
           />
 
           {/* Refined Upper Backdrop Monogram */}
-          <div className="absolute inset-0 flex items-start justify-center pt-36 pointer-events-none overflow-hidden select-none opacity-10">
+          <div className="absolute inset-0 flex items-start justify-center pt-36 pointer-events-none overflow-hidden select-none opacity-12">
             <span
               className="font-black text-7xl tracking-widest uppercase text-transparent whitespace-nowrap"
               style={{
@@ -845,28 +863,40 @@ export function SocialLaunchMockup({
 
           {/* Dynamic Top Header */}
           <div className="relative z-10 text-center pt-8">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-widest text-white border border-white/20 backdrop-blur-md mb-2">
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-widest border backdrop-blur-md mb-2 ${
+                theme.isDark ? "bg-white/10 text-white border-white/20" : "bg-slate-900/80 text-white border-slate-700"
+              }`}
+            >
               <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ backgroundColor: primaryColor }} />
               {businessShortName} · {activeHeadline.tag}
             </span>
             <h2
               className="text-4xl sm:text-5xl font-black tracking-tight text-white uppercase font-sans leading-tight"
               style={{
-                textShadow: "0 10px 30px rgba(0, 0, 0, 0.7)",
+                letterSpacing: "0.03em",
+                textShadow: "0 2px 0 rgba(255,255,255,0.35), 0 8px 24px rgba(0, 0, 0, 0.75)",
               }}
             >
-              <span className="text-white">{activeHeadline.line1}</span>
-              <br />
+              <span className="block text-white drop-shadow-md">{activeHeadline.line1}</span>
               <span
+                className="block drop-shadow-md"
                 style={{
-                  color: isLightPrimary ? primaryColor : "#ffffff",
-                  textShadow: isLightPrimary ? `0 0 24px ${primaryColor}80` : undefined,
+                  color: headlineMode === "launched" ? "#ffffff" : isLightPrimary ? primaryColor : "#ffffff",
+                  textShadow:
+                    isLightPrimary && headlineMode !== "launched"
+                      ? `0 0 24px ${primaryColor}80, 0 8px 24px rgba(0, 0, 0, 0.75)`
+                      : undefined,
                 }}
               >
                 {activeHeadline.line2}
               </span>
             </h2>
-            <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest mt-1">
+            <p
+              className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${
+                theme.isDark ? "text-white/70" : "text-slate-800 font-extrabold"
+              }`}
+            >
               {city.toUpperCase()} · HIGH-CONVERTING BESPOKE REDESIGN
             </p>
           </div>
