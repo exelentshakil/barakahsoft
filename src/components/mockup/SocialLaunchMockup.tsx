@@ -95,11 +95,11 @@ export const BG_THEMES = [
   {
     id: "brand",
     name: "Brand Studio (Default)",
-    gradient: "from-[#0b0f19] via-[#111827] to-[#1f2937]",
-    bgStart: "#0b0f19",
-    bgMid: "#111827",
-    bgEnd: "#1f2937",
-    watermarkColor: "rgba(255, 255, 255, 0.07)",
+    gradient: "from-[#080d1a] via-[#0f172a] to-[#1e293b]",
+    bgStart: "#080d1a",
+    bgMid: "#0f172a",
+    bgEnd: "#1e293b",
+    watermarkColor: "rgba(255, 255, 255, 0.08)",
     ribbonBg: "#FFD974",
   },
   {
@@ -115,10 +115,10 @@ export const BG_THEMES = [
   {
     id: "charcoal",
     name: "Studio Charcoal",
-    gradient: "from-[#1e2229] via-[#14171d] to-[#0b0d10]",
-    bgStart: "#1e2229",
-    bgMid: "#14171d",
-    bgEnd: "#0b0d10",
+    gradient: "from-[#181a20] via-[#111317] to-[#08090b]",
+    bgStart: "#181a20",
+    bgMid: "#111317",
+    bgEnd: "#08090b",
     watermarkColor: "rgba(255, 255, 255, 0.08)",
     ribbonBg: "#1e2229",
   },
@@ -187,6 +187,22 @@ function getContrastColor(hexColor?: string | null, fallbackDark = "#1e242d", fa
   const b = parseInt(hex.substring(4, 6), 16);
   const yiq = (r * 299 + g * 587 + b * 114) / 1000;
   return yiq >= 150 ? fallbackDark : fallbackLight;
+}
+
+function unescapeText(str: string | null | undefined): string {
+  if (!str) return "";
+  return str
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/&mdash;/gi, " ")
+    .replace(/&ndash;/gi, " ")
+    .replace(/&#8212;/g, " ")
+    .replace(/&#8211;/g, " ")
+    .replace(/^[—–-]\s*/, "")
+    .trim();
 }
 
 // Helper: Convert remote image to base64 proxy for reliable html-to-image export
@@ -279,21 +295,24 @@ export function SocialLaunchMockup({
   const primaryColor = data.brandColor || "#FFD974";
   const onPrimaryColor = data.onPrimaryColor || getContrastColor(primaryColor, "#1e242d", "#ffffff");
   const isLightPrimary = onPrimaryColor !== "#ffffff";
-  const accentColor = data.accentColor || primaryColor;
   const invertSurface = data.invertSurface || "#0b0f19";
 
-  const businessShortName = data.businessName || "Your Business";
+  const businessShortName = unescapeText(data.businessName || "Your Business");
   const city = data.city || "New York";
   const trade = data.trade || "Contractor";
-  const heroHeading =
-    data.heroHeadline || `PREMIER ${trade.toUpperCase()} IN ${city.toUpperCase()}`;
-  const rawEyebrow = data.aboutEyebrow || `ABOUT OUR TEAM IN ${city.toUpperCase()}`;
-  const aboutEyebrow = rawEyebrow.replace(/^[—–-]\s*/, "").replace(/^&mdash;\s*/i, "").trim();
-  const aboutHeading =
-    data.aboutHeadline || `About Our Local ${trade} Company In ${city}`;
-  const aboutBody =
+  const heroHeading = unescapeText(
+    data.heroHeadline || `PREMIER ${trade.toUpperCase()} IN ${city.toUpperCase()}`
+  );
+  const aboutEyebrow = unescapeText(
+    data.aboutEyebrow || `ABOUT OUR TEAM IN ${city.toUpperCase()}`
+  );
+  const aboutHeading = unescapeText(
+    data.aboutHeadline || `About Our Local ${trade} Company In ${city}`
+  );
+  const aboutBody = unescapeText(
     data.aboutBody ||
-    `${businessShortName} provides expert ${trade.toLowerCase()} and dependable performance across ${city}. Our team delivers personalized service and craftsmanship from start to finish.`;
+    `${businessShortName} provides expert ${trade.toLowerCase()} and dependable performance across ${city}. Our team delivers personalized service and craftsmanship from start to finish.`
+  );
   const ratingText = data.rating ? `${data.rating}★` : "5.0★";
   const reviewsCountText = data.reviewCount ? String(data.reviewCount) : "100+";
   const yearsExp = data.yearsExperience ? `${data.yearsExperience}+` : "15+";
@@ -484,18 +503,18 @@ export function SocialLaunchMockup({
   const render3DStage = () => (
     <div
       ref={stageRef}
-      className="relative z-10 w-full flex-1 flex items-center justify-center mt-2 perspective-[1600px]"
+      className="relative z-10 w-full flex-1 flex items-center justify-center mt-1 perspective-[1600px]"
     >
-      {/* Subtle Studio Spotlight Ambient Halo Behind Laptop */}
+      {/* Dynamic 3D Studio Spotlight Glow Behind Laptop */}
       <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] sm:w-[400px] h-[220px] rounded-full blur-3xl pointer-events-none opacity-25"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[440px] h-[240px] rounded-full blur-3xl pointer-events-none opacity-30"
         style={{
           background: `radial-gradient(circle, ${primaryColor} 0%, transparent 70%)`,
         }}
       />
 
       {/* Soft Ground Contact Shadow Under Laptop */}
-      <div className="absolute bottom-2 sm:bottom-4 left-4 sm:left-8 right-4 sm:right-8 h-12 sm:h-16 bg-slate-950/60 blur-2xl rounded-full transform scale-x-115 -rotate-2" />
+      <div className="absolute bottom-2 sm:bottom-4 left-4 sm:left-8 right-4 sm:right-8 h-12 sm:h-16 bg-slate-950/65 blur-2xl rounded-full transform scale-x-115 -rotate-2" />
 
       {/* 1. FLOATING ABOUT / PREVIEW CARD LAYERED BEHIND THE MACBOOK (Unobscured Foreground Screen) */}
       <div
@@ -720,34 +739,69 @@ export function SocialLaunchMockup({
       {/* 3D Mockup Stage (4:5 Aspect Ratio matching reference poster composition) */}
       <div
         ref={mockupRef}
-        className={`relative w-full max-w-[560px] aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-b ${theme.gradient} select-none border border-white/20 flex flex-col justify-between p-6 sm:p-8`}
+        className={`relative w-full max-w-[560px] aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-b ${theme.gradient} select-none border border-white/20 flex flex-col justify-between p-6 sm:p-7`}
         style={{
-          boxShadow: "0 35px 75px -15px rgba(15, 23, 42, 0.45), inset 0 1px 2px rgba(255,255,255,0.5)",
+          boxShadow: "0 35px 75px -15px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255,255,255,0.3)",
         }}
       >
-        {/* Background Watermark Text Behind MacBook */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none">
+        {/* Subtle Atmospheric Grid Lines */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-5 select-none"
+          style={{
+            backgroundImage: "radial-gradient(rgba(255,255,255,0.8) 1px, transparent 1px)",
+            backgroundSize: "24px 24px",
+          }}
+        />
+
+        {/* Ambient Halo behind Mockup */}
+        <div
+          className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[440px] sm:w-[520px] h-[300px] rounded-full blur-3xl pointer-events-none opacity-25"
+          style={{
+            background: `radial-gradient(circle, ${primaryColor} 0%, transparent 70%)`,
+          }}
+        />
+
+        {/* Refined Upper Backdrop Monogram */}
+        <div className="absolute inset-0 flex items-start justify-center pt-28 pointer-events-none overflow-hidden select-none opacity-10">
           <span
-            className="font-black text-6xl sm:text-8xl tracking-widest uppercase text-center max-w-full px-4 transform translate-y-36"
-            style={{ color: theme.watermarkColor }}
+            className="font-black text-6xl sm:text-8xl tracking-widest uppercase text-transparent whitespace-nowrap"
+            style={{
+              WebkitTextStroke: `1.5px ${theme.watermarkColor || "rgba(255,255,255,0.35)"}`,
+            }}
           >
             {businessShortName}
           </span>
         </div>
 
-        {/* Big 3D Headline at Top */}
-        <div className="relative z-10 text-center pt-2 sm:pt-4">
+        {/* Big 3D Visual Impact Headline at Top */}
+        <div className="relative z-10 text-center pt-1 sm:pt-2">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-0.5 text-[8.5px] sm:text-[9.5px] font-extrabold uppercase tracking-widest text-white/95 border border-white/20 backdrop-blur-md shadow-sm mb-1.5">
+            <span className="h-1.5 w-1.5 rounded-full animate-pulse shadow-sm" style={{ backgroundColor: primaryColor }} />
+            <span>{businessShortName} · {activeHeadline.tag}</span>
+          </div>
+
           <h2
-            className="text-3xl sm:text-5xl font-black tracking-wider text-white uppercase font-sans"
+            className="text-3xl sm:text-[42px] font-black tracking-tight uppercase font-sans leading-[0.94]"
             style={{
-              textShadow: "0 8px 24px rgba(24, 48, 77, 0.45), 0 2px 6px rgba(0,0,0,0.3)",
-              letterSpacing: "0.05em",
+              textShadow: "0 10px 30px rgba(0, 0, 0, 0.7), 0 2px 4px rgba(0, 0, 0, 0.5)",
+              letterSpacing: "0.02em",
             }}
           >
-            {activeHeadline.line1}
+            <span className="text-white drop-shadow-md">{activeHeadline.line1}</span>
             <br />
-            {activeHeadline.line2}
+            <span
+              style={{
+                color: isLightPrimary ? primaryColor : "#ffffff",
+                textShadow: isLightPrimary ? `0 0 24px ${primaryColor}80` : undefined,
+              }}
+            >
+              {activeHeadline.line2}
+            </span>
           </h2>
+
+          <p className="text-[8px] sm:text-[9px] font-bold text-white/65 uppercase tracking-widest mt-1">
+            {city.toUpperCase()} · HIGH-CONVERTING BESPOKE REDESIGN
+          </p>
         </div>
 
         {/* 3D Composition Stage */}
@@ -760,11 +814,30 @@ export function SocialLaunchMockup({
           ref={storyRef}
           className={`w-[540px] h-[960px] bg-gradient-to-b ${theme.gradient} p-8 flex flex-col justify-between items-center relative overflow-hidden`}
         >
-          {/* Watermark */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none">
+          {/* Atmospheric Grid */}
+          <div
+            className="absolute inset-0 pointer-events-none opacity-5 select-none"
+            style={{
+              backgroundImage: "radial-gradient(rgba(255,255,255,0.8) 1px, transparent 1px)",
+              backgroundSize: "28px 28px",
+            }}
+          />
+
+          {/* Ambient Lighting */}
+          <div
+            className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[360px] rounded-full blur-3xl pointer-events-none opacity-25"
+            style={{
+              background: `radial-gradient(circle, ${primaryColor} 0%, transparent 70%)`,
+            }}
+          />
+
+          {/* Refined Upper Backdrop Monogram */}
+          <div className="absolute inset-0 flex items-start justify-center pt-36 pointer-events-none overflow-hidden select-none opacity-10">
             <span
-              className="font-black text-7xl tracking-widest uppercase text-center max-w-full px-4 transform translate-y-48"
-              style={{ color: theme.watermarkColor }}
+              className="font-black text-7xl tracking-widest uppercase text-transparent whitespace-nowrap"
+              style={{
+                WebkitTextStroke: `1.5px ${theme.watermarkColor || "rgba(255,255,255,0.35)"}`,
+              }}
             >
               {businessShortName}
             </span>
@@ -772,19 +845,30 @@ export function SocialLaunchMockup({
 
           {/* Dynamic Top Header */}
           <div className="relative z-10 text-center pt-8">
-            <span className="inline-block rounded-full bg-white/20 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-white backdrop-blur-sm mb-3">
-              {activeHeadline.tag}
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-widest text-white border border-white/20 backdrop-blur-md mb-2">
+              <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ backgroundColor: primaryColor }} />
+              {businessShortName} · {activeHeadline.tag}
             </span>
             <h2
-              className="text-4xl sm:text-5xl font-black tracking-wider text-white uppercase font-sans leading-tight"
+              className="text-4xl sm:text-5xl font-black tracking-tight text-white uppercase font-sans leading-tight"
               style={{
-                textShadow: "0 8px 24px rgba(24, 48, 77, 0.45), 0 2px 6px rgba(0,0,0,0.3)",
+                textShadow: "0 10px 30px rgba(0, 0, 0, 0.7)",
               }}
             >
-              {activeHeadline.line1}
+              <span className="text-white">{activeHeadline.line1}</span>
               <br />
-              {activeHeadline.line2}
+              <span
+                style={{
+                  color: isLightPrimary ? primaryColor : "#ffffff",
+                  textShadow: isLightPrimary ? `0 0 24px ${primaryColor}80` : undefined,
+                }}
+              >
+                {activeHeadline.line2}
+              </span>
             </h2>
+            <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest mt-1">
+              {city.toUpperCase()} · HIGH-CONVERTING BESPOKE REDESIGN
+            </p>
           </div>
 
           {/* 3D Composition Stage (Scaled for 9:16) */}

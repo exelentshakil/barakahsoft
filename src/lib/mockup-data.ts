@@ -11,6 +11,22 @@ export interface ExtractMockupOptions {
   isPaid?: boolean;
 }
 
+function unescapeHtml(str: string | null | undefined): string {
+  if (!str) return "";
+  return str
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/&mdash;/gi, " ")
+    .replace(/&ndash;/gi, " ")
+    .replace(/&#8212;/g, " ")
+    .replace(/&#8211;/g, " ")
+    .replace(/^[—–-]\s*/, "")
+    .trim();
+}
+
 export function extractMockupData({
   lead,
   artifact,
@@ -31,7 +47,7 @@ export function extractMockupData({
   const bespokeHtml = artifact?.bespoke_homepage_html || payload?.bespokeHomepageHtml || null;
   const bespokeCss = artifact?.bespoke_css || payload?.bespokeCss || null;
 
-  const businessName = lead.business_name || (facts?.business_name as string) || payload?.businessName || lead.slug;
+  const businessName = unescapeHtml(lead.business_name || (facts?.business_name as string) || payload?.businessName || lead.slug);
   const city = (facts?.town as string) || (facts?.city as string) || "";
   const trade = lead.industry || (facts?.industry as string) || payload?.services?.[0]?.h2 || "Home services";
 
@@ -52,7 +68,7 @@ export function extractMockupData({
   const rating = (facts?.rating as number) || (payload?.proof?.rating as number) || null;
   const reviewCount = (facts?.review_count as number) || (payload?.proof?.reviewCount as number) || null;
   const yearsExperience = (facts?.years_in_business as number) || null;
-  const founderName = (facts?.founder_name as string) || lead.contact_name || null;
+  const founderName = unescapeHtml((facts?.founder_name as string) || lead.contact_name || null);
   const founderTitle = founderName ? "Founder / Operator" : null;
 
   const phone =
@@ -71,7 +87,7 @@ export function extractMockupData({
     // Hero Headline from Homepage H1
     const h1Match = bespokeHtml.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
     if (h1Match) {
-      const cleanH1 = h1Match[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+      const cleanH1 = unescapeHtml(h1Match[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " "));
       if (cleanH1) extractedHeroHeadline = cleanH1;
     }
 
@@ -83,36 +99,32 @@ export function extractMockupData({
     if (aboutSectionMatch) {
       const aboutContent = aboutSectionMatch[1];
 
-      // Extract About eyebrow (strip any leading dashes or em-dashes)
+      // Extract About eyebrow (strip any leading dashes or em-dashes and unescape)
       const eyebrowMatch =
         aboutContent.match(/<span[^>]*(?:class=["'][^"']*(?:eyebrow|subtitle|label|tag)[^"']*["'])[^>]*>([\s\S]*?)<\/span>/i) ||
         aboutContent.match(/<p[^>]*(?:class=["'][^"']*(?:eyebrow|subtitle|label|tag)[^"']*["'])[^>]*>([\s\S]*?)<\/p>/i);
       if (eyebrowMatch) {
-        const cleanE = eyebrowMatch[1]
-          .replace(/<[^>]+>/g, "")
-          .replace(/^[—–-]\s*/, "")
-          .replace(/^&mdash;\s*/i, "")
-          .trim();
+        const cleanE = unescapeHtml(eyebrowMatch[1].replace(/<[^>]+>/g, ""));
         if (cleanE) extractedAboutEyebrow = cleanE;
       }
 
       // Extract About heading (h2 / h3 / h4)
       const hMatch = aboutContent.match(/<h[234][^>]*>([\s\S]*?)<\/h[234]>/i);
       if (hMatch) {
-        const cleanH = hMatch[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+        const cleanH = unescapeHtml(hMatch[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " "));
         if (cleanH) extractedAboutHeadline = cleanH;
       }
 
       // Extract all paragraphs and select the substantial narrative body text
       const pMatches = Array.from(aboutContent.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi));
       const validParagraphs = pMatches
-        .map((m) => m[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim())
+        .map((m) => unescapeHtml(m[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ")))
         .filter((p) => p.length >= 35 && !p.toLowerCase().startsWith("about ") && !p.toLowerCase().startsWith("who we are"));
 
       if (validParagraphs.length > 0) {
         extractedAboutBody = validParagraphs.slice(0, 2).join(" ");
       } else if (pMatches.length > 0) {
-        extractedAboutBody = pMatches[0][1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+        extractedAboutBody = unescapeHtml(pMatches[0][1].replace(/<[^>]+>/g, "").replace(/\s+/g, " "));
       }
     }
   }
@@ -123,13 +135,13 @@ export function extractMockupData({
     if (aboutSec?.html) {
       if (!extractedAboutHeadline) {
         const hMatch = aboutSec.html.match(/<h[234][^>]*>([\s\S]*?)<\/h[234]>/i);
-        if (hMatch) extractedAboutHeadline = hMatch[1].replace(/<[^>]+>/g, "").trim();
+        if (hMatch) extractedAboutHeadline = unescapeHtml(hMatch[1].replace(/<[^>]+>/g, ""));
       }
 
       if (!extractedAboutBody) {
         const pMatches = Array.from(aboutSec.html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi));
         const validParagraphs = pMatches
-          .map((m) => m[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim())
+          .map((m) => unescapeHtml(m[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ")))
           .filter((p) => p.length >= 35);
         if (validParagraphs.length > 0) {
           extractedAboutBody = validParagraphs[0];
@@ -144,13 +156,13 @@ export function extractMockupData({
 
   const heroHeadline =
     extractedHeroHeadline ||
-    copyPlan.headline ||
-    payload?.headline ||
+    unescapeHtml(copyPlan.headline) ||
+    unescapeHtml(payload?.headline) ||
     `PREMIER ${trade.toUpperCase()} IN ${city.toUpperCase()}`;
 
   const aboutHeadline =
     extractedAboutHeadline ||
-    copyPlanAbout?.heading ||
+    unescapeHtml(copyPlanAbout?.heading) ||
     `Meet the team behind ${businessName}.`;
 
   const aboutEyebrow =
@@ -159,8 +171,8 @@ export function extractMockupData({
 
   const aboutBody =
     extractedAboutBody ||
-    copyPlanAbout?.body ||
-    payload?.differentiator ||
+    unescapeHtml(copyPlanAbout?.body) ||
+    unescapeHtml(payload?.differentiator) ||
     `${businessName} is a licensed and insured ${trade.toLowerCase()} serving ${city}. The work covers premium craftsmanship, inspections, repairs and full replacements with verified customer satisfaction.`;
 
   const previewUrl = `/s/${lead.slug}?view=preview`;

@@ -303,3 +303,41 @@ Service areas are a specific content type, not a generic text list — give each
 Section ids the real navigation links to: services, about, reviews, faq, contact
 
 Aim for seven to twelve sections according to the amount of real evidence available. Enough that the page feels complete, never padded with a section that says nothing.`;
+
+
+export const EYEPATH_ICONOGRAPHY_SEO_STANDARD = `═══ VISUAL EYE-PATH, SEO ANCHORS & ICONOGRAPHY STANDARD ═══
+A $20,000 agency website never presents dull, unbroken text or generic numbered lists. Every section must guide the visitor's eye with deliberate visual anchors, high-intent local SEO keywords, and soothing iconography:
+
+1. BOLD LEAD VALUE ANCHORS (<strong>...</strong>):
+   - In every paragraph, card, feature list, process step, why-choose-us point, and FAQ answer, wrap the first 2–5 key words in <strong>...</strong>.
+   - Example 1 (Process Step): <p><strong>Emergency Extraction & Water Removal:</strong> Our certified technicians deploy commercial truck-mounted extraction units within 45 minutes to halt water migration and save subflooring.</p>
+   - Example 2 (Why Choose Us): <p><strong>Direct Insurance Billing:</strong> We document all structural moisture levels with thermal imaging and bill your carrier directly so you have zero out-of-pocket delays.</p>
+   - Example 3 (About Paragraph): <p><strong>Locally Rooted & Family Operated:</strong> For over 15 years, our team has protected homes and businesses with round-the-clock emergency response.</p>
+   - WHY THIS MATTERS:
+     * Scanning Visitors (F-Shaped Eye-Path): 85% of mobile visitors skim bolded anchors before reading full copy.
+     * Local SEO & Topical Authority: Search engines give extra semantic weight to <strong> keywords inside descriptive body copy.
+
+2. SOOTHING VECTOR SVG ICON BADGES (.site-icon-badge):
+   - For all processes, step-by-step workflows, feature grids, why-choose-us cards, and decision guides:
+     * NEVER leave raw, naked numbers (like 1, 2, 3) or unstyled bullet dots.
+     * Enclose every step or feature point with a soothing vector SVG icon badge:
+       <span class="site-icon-badge">
+         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+         </svg>
+       </span>
+     * Use meaningful inline SVG icons matching the topic:
+       - Shield / Trust (<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>)
+       - Check / Verification (<polyline points="20 6 9 17 4 12"/>)
+       - 24/7 Clock / Speed (<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>)
+       - Lightning / Emergency (<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>)
+       - Phone / Dispatch (<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>)
+       - Map Pin / Local (<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>)
+       - Tools / Craftsmanship (<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>)
+       - Award / Excellence (<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>)
+
+3. EDITORIAL PHOTO COMPOSITIONS & FLOATING BADGES:
+   - For photos in About, Hero, and Proof sections:
+     * Frame images with generous border radius (var(--bs-radius-lg, 1rem)) or elegant editorial arched crops.
+     * Overlay floating circular experience badges (.site-floating-badge) on top corners (e.g. <div class="site-floating-badge"><span>15+</span><small>Years</small></div>).
+     * Pair with a documentary caption rail along the bottom to anchor credibility.`;

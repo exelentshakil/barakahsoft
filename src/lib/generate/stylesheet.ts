@@ -2,7 +2,7 @@ import { callBestModel, type GenerationProvider } from "@/lib/generate/model";
 import { sanitizeGeneratedCss } from "@/lib/sanitize-css";
 import type { DesignDna } from "@/lib/design-dna";
 import type { DesignTokens } from "@/lib/design-tokens";
-import { STANCE, COLOUR_STANDARD, TYPE_STANDARD, SPACE_STANDARD } from "@/lib/generate/standard";
+import { STANCE, COLOUR_STANDARD, TYPE_STANDARD, SPACE_STANDARD, EYEPATH_ICONOGRAPHY_SEO_STANDARD } from "@/lib/generate/standard";
 
 // Pass two: a stylesheet written for this exact page.
 //
@@ -144,11 +144,17 @@ LAYOUT & MASTER SECTIONS
 - Every .site-cta--primary has one identical fill, text pairing, radius, weight, padding and hover/focus treatment everywhere. Use --bs-primary with --bs-on-primary. Do not recolour it by section.
 - Every .site-cta--secondary uses one consistent subordinate treatment. Do not introduce red, blue or section-specific button colours.
 - Every .site-cta has white-space: nowrap, flex-shrink: 0 and a minimum height of 44px. CTA groups wrap as whole buttons on narrow screens; individual labels never collapse into one word per line.
-- [data-review-track] is a horizontal overflow track with scroll-snap and touch scrolling. Review cards visibly prioritise rating, quote and attribution in that order; do not leave an unexplained empty rail beside quotes.
+- [data-review-track] is a horizontal overflow track with scroll-snap and touch scrolling.
+- ICON BADGES & FLOATING TRUST ELEMENTS:
+  * .site-icon-badge / .site-step-badge / .site-feature-icon: style as soothing vector badge containers (display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; border-radius: var(--bs-radius-md, 0.75rem); background: var(--bs-surface-alt); border: 1px solid var(--bs-border-color); color: var(--bs-primary-on-surface); flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.04);).
+  * .site-floating-badge: position: absolute; border-radius: 9999px; background: var(--bs-surface); border: 2px solid var(--bs-primary); box-shadow: var(--bs-shadow-lift); text-align: center; z-index: 10;
+  * strong: font-weight: 700; color: var(--bs-ink); (ensures bold lead keyword anchors pop out clearly for visual scanning). Review cards visibly prioritise rating, quote and attribution in that order; do not leave an unexplained empty rail beside quotes.
 
 ${SPACE_STANDARD}
 
 ${TYPE_STANDARD}
+
+${EYEPATH_ICONOGRAPHY_SEO_STANDARD}
 
 DEPTH AND MOTION
 - Shadows from --bs-shadow-card / --bs-shadow-lift. Depth is structural, not decorative.

@@ -1034,3 +1034,70 @@ iframe[src*="openstreetmap.org"],
   box-shadow: var(--bs-shadow-card, 0 8px 24px rgba(0, 0, 0, 0.08)) !important;
   display: block !important;
 }
+
+
+/* ------------------------------------------------------------- universal site icon badges & eye-path anchors */
+
+.bespoke-page strong {
+  font-weight: 700;
+  color: var(--bs-ink);
+}
+
+.site-icon-badge,
+.site-step-badge,
+.site-feature-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+  border-radius: var(--bs-radius-md, 0.75rem) !important;
+  background: var(--bs-surface-alt, #f8fafc) !important;
+  border: 1px solid var(--bs-border-color, #e2e8f0) !important;
+  color: var(--bs-primary-on-surface, var(--bs-ink)) !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+  transition: transform 0.2s ease, background 0.2s ease !important;
+}
+
+.site-icon-badge svg,
+.site-step-badge svg,
+.site-feature-icon svg {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  display: block !important;
+  stroke: currentColor !important;
+  stroke-width: 2 !important;
+}
+
+.site-floating-badge {
+  position: absolute !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.75rem 1rem !important;
+  border-radius: 9999px !important;
+  background: var(--bs-surface, #ffffff) !important;
+  border: 2px solid var(--bs-primary, #ffd974) !important;
+  box-shadow: var(--bs-shadow-lift, 0 12px 30px rgba(0, 0, 0, 0.15)) !important;
+  text-align: center !important;
+  z-index: 10 !important;
+  pointer-events: none !important;
+}
+
+.site-floating-badge span {
+  font-family: var(--bs-font-display, inherit) !important;
+  font-size: 1.125rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  color: var(--bs-ink, #0f172a) !important;
+}
+
+.site-floating-badge small {
+  font-size: 0.625rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: var(--bs-ink-muted, #64748b) !important;
+}
