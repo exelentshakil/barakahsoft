@@ -11,7 +11,16 @@ const INDUSTRIES = [
 
 export function LandingIndustries() {
   return (
-    <section className="relative overflow-hidden border-t border-[#d9e8f4] bg-white py-24 lg:py-32">
+    <>
+      <style suppressHydrationWarning>{
+        `
+        @keyframes spin-reverse {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(-360deg); }
+        }
+        `
+      }</style>
+      <section className="relative overflow-hidden border-t border-[#d9e8f4] bg-white py-24 lg:py-32">
       <div className="mx-auto max-w-6xl px-6 relative z-10">
         <div className="text-center mb-16">
           <p className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Global Coverage</p>
@@ -26,7 +35,7 @@ export function LandingIndustries() {
         
         <div className="relative mx-auto h-[500px] max-w-[800px] overflow-hidden sm:h-[650px]">
           {/* Sun / Core */}
-          <div className="absolute left-1/2 top-1/2 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-[0_0_60px_rgba(12,104,200,0.3)] z-20 overflow-hidden border border-[#e2e8f0]">
+          <div className="absolute left-1/2 top-1/2 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-none z-20 overflow-hidden border border-[#e2e8f0]">
             <img src="https://redesign.barakahsoft.com/icon.png" alt="BarakahSoft" className="h-16 w-16 object-contain" />
           </div>
 
@@ -46,13 +55,19 @@ export function LandingIndustries() {
               return (
                 <div 
                   key={ind.label} 
-                  className="absolute left-1/2 top-1/2 flex h-0 w-0 items-center justify-center animate-[spin_20s_linear_infinite]"
-                  style={{ animationDelay: ind.delay, animationDuration: duration }}
+                  className="absolute left-1/2 top-1/2 flex h-0 w-0 items-center justify-center"
+                  style={{ 
+                    animation: `spin ${duration} linear infinite`,
+                    animationDelay: ind.delay 
+                  }}
                 >
                   <div style={{ transform: `translateX(${radius}px)` }}>
                     <div 
-                      className="flex h-[80px] w-[80px] flex-col items-center justify-center gap-1.5 rounded-full border border-white bg-white/90 shadow-md backdrop-blur-sm animate-[spin_20s_linear_infinite_reverse]"
-                      style={{ animationDelay: ind.delay, animationDuration: duration }}
+                      className="flex h-[80px] w-[80px] flex-col items-center justify-center gap-1.5 rounded-full border border-white bg-white/90 shadow-md backdrop-blur-sm"
+                      style={{ 
+                        animation: `spin-reverse ${duration} linear infinite`,
+                        animationDelay: ind.delay 
+                      }}
                     >
                       <div className={`flex h-8 w-8 items-center justify-center rounded-full ${ind.bg} ${ind.color}`}>
                         <ind.icon className="h-4 w-4" />
@@ -67,5 +82,6 @@ export function LandingIndustries() {
         </div>
       </div>
     </section>
+    </>
   );
 }
