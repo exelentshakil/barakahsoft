@@ -293,6 +293,8 @@ export function SocialLaunchMockup({
   const transparentStageRef = useRef<HTMLDivElement>(null);
   const screenRef = useRef<HTMLDivElement>(null);
   const landscapeScreenRef = useRef<HTMLDivElement>(null);
+  const feedRef = useRef<HTMLDivElement>(null);
+  const feedScreenRef = useRef<HTMLDivElement>(null);
 
   const [screenScale, setScreenScale] = useState(0.35);
 
@@ -378,7 +380,7 @@ export function SocialLaunchMockup({
       if (format === "landscape") {
         targetEl = landscapeRef.current || mockupRef.current;
       } else if (format === "feed") {
-        targetEl = mockupRef.current;
+        targetEl = feedRef.current || mockupRef.current;
       } else if (format === "story") {
         targetEl = storyRef.current;
       } else if (format === "transparent") {
@@ -526,15 +528,24 @@ export function SocialLaunchMockup({
     );
   };
 
-  {/* 3-Tier Layered 3D Floating Feature Blurb Card (Layered BEHIND the MacBook, lifted high to top-right) */}
-  const renderFloatingAboutCard = () => (
-    <div
-      className="absolute -right-1 sm:-right-3 -top-20 sm:-top-28 w-[88%] max-w-[420px] rounded-2xl bg-white shadow-2xl border border-slate-200/90 overflow-hidden transition-transform duration-500 z-0 select-none pointer-events-none"
-      style={{
-        transform: "rotateY(-8deg) rotateX(5deg) rotateZ(-1.5deg) translateZ(-42px)",
-        boxShadow: "0 35px 85px -15px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255,255,255,0.35)",
-      }}
-    >
+  {/* 3-Tier Layered 3D Floating Feature Blurb Card (Layered BEHIND the MacBook) */}
+  const renderFloatingAboutCard = (opts?: {
+    topOffset?: string;
+    rightOffset?: string;
+    widthClass?: string;
+  }) => {
+    const topClass = opts?.topOffset || "-top-12 sm:-top-16";
+    const rightClass = opts?.rightOffset || "-right-1 sm:-right-2";
+    const widthClass = opts?.widthClass || "w-[86%] max-w-[405px]";
+
+    return (
+      <div
+        className={`absolute ${rightClass} ${topClass} ${widthClass} rounded-2xl bg-white shadow-2xl border border-slate-200/90 overflow-hidden transition-transform duration-500 z-0 select-none pointer-events-none`}
+        style={{
+          transform: "rotateY(-8deg) rotateX(5deg) rotateZ(-1.5deg) translateZ(-42px)",
+          boxShadow: "0 35px 85px -15px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255,255,255,0.35)",
+        }}
+      >
       {/* Dynamic Island Header Bar on Top of the Card */}
       <div className="w-full bg-slate-950 px-3 py-1.5 flex items-center justify-between border-b border-white/10 select-none">
         <div className="flex items-center gap-1">
@@ -700,23 +711,34 @@ export function SocialLaunchMockup({
         </>
       )}
     </div>
-  );
+    );
+  };
 
   {/* Integrated 3D MacBook Pro Resting on Organic Sculpted Slate Rock Pedestal */}
   const renderRockPedestalShowcase = (
     customScreenRef = screenRef,
     customScale = screenScale,
-    containerClass = "w-[94%] max-w-[490px]"
+    containerClass = "w-[92%] max-w-[465px]",
+    opts?: {
+      cardTop?: string;
+      cardRight?: string;
+      widthClass?: string;
+      macTranslateY?: string;
+    }
   ) => (
     <div className={`relative flex flex-col items-center justify-center ${containerClass} mx-auto perspective-[1600px]`}>
-      {/* 0. Layered Floating About Card Hovering BEHIND MacBook (Lifted to Top-Right) */}
-      {renderFloatingAboutCard()}
+      {/* 0. Layered Floating About Card Hovering BEHIND MacBook */}
+      {renderFloatingAboutCard({
+        topOffset: opts?.cardTop,
+        rightOffset: opts?.cardRight,
+        widthClass: opts?.widthClass,
+      })}
 
       {/* 1. 3D MacBook Pro in Foreground */}
       <div
         className="relative z-20 w-full transition-transform duration-500"
         style={{
-          transform: "rotateY(-12deg) rotateX(10deg) rotateZ(1.5deg) translateY(12px)",
+          transform: `rotateY(-12deg) rotateX(10deg) rotateZ(1.5deg) ${opts?.macTranslateY || "translateY(12px)"}`,
           transformStyle: "preserve-3d",
         }}
       >
@@ -945,7 +967,7 @@ export function SocialLaunchMockup({
         {/* 3D Composition Stage */}
         <div
           ref={transparentStageRef}
-          className="relative z-10 w-full flex-1 flex items-center justify-center mt-2 perspective-[1600px]"
+          className="relative z-10 w-full flex-1 flex items-center justify-center mt-1 perspective-[1600px]"
         >
           {/* Dynamic 3D Studio Spotlight Glow Behind Laptop */}
           <div
@@ -956,13 +978,17 @@ export function SocialLaunchMockup({
           />
 
           {stageMode === "rock" ? (
-            renderRockPedestalShowcase(screenRef, screenScale, "w-[94%] max-w-[490px]")
+            renderRockPedestalShowcase(screenRef, screenScale, "w-[92%] max-w-[465px]", {
+              cardTop: "-top-12 sm:-top-16",
+              cardRight: "-right-1 sm:-right-2",
+              macTranslateY: "translateY(12px)",
+            })
           ) : (
             <>
               {/* Soft Ground Contact Shadow */}
               <div className="absolute bottom-1 sm:bottom-3 left-4 sm:left-8 right-4 sm:right-8 h-12 sm:h-16 bg-slate-950/70 blur-2xl rounded-full transform scale-x-115 -rotate-2" />
               {/* Layered Floating About Card Behind Laptop */}
-              {renderFloatingAboutCard()}
+              {renderFloatingAboutCard({ topOffset: "-top-12 sm:-top-16", rightOffset: "-right-1 sm:-right-2" })}
               {/* 3D MacBook Pro in Foreground */}
               {render3DMacBook()}
             </>
@@ -970,29 +996,96 @@ export function SocialLaunchMockup({
         </div>
       </div>
 
-      {/* Hidden 16:9 Landscape Container for Widescreen Presentation Export */}
+      {/* Hidden 4:5 Feed HQ Container for Full-Bleed Social Feed Post Export (1080x1350) */}
       <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden="true">
         <div
-          ref={landscapeRef}
-          className={`w-[1280px] h-[720px] bg-gradient-to-b ${theme.gradient} p-10 flex flex-col justify-between items-center relative overflow-hidden`}
+          ref={feedRef}
+          className={`w-[1080px] h-[1350px] bg-gradient-to-b ${theme.gradient} pt-12 pb-8 px-12 flex flex-col justify-between items-center relative overflow-hidden`}
+          style={{
+            borderRadius: "0px",
+          }}
         >
           {/* Background Watermark */}
           {renderBackgroundWatermark()}
 
           {/* Ambient Lighting */}
           <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[520px] rounded-full blur-3xl pointer-events-none opacity-40"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[650px] rounded-full blur-3xl pointer-events-none opacity-40"
             style={{
               background: `radial-gradient(circle, ${activeSpotlight} 0%, transparent 70%)`,
             }}
           />
 
-          {/* Centered Campaign Angle Headline in Landscape */}
-          <div className="text-center z-20 mt-1 mb-1 max-w-4xl">
+          {/* Top Centered 2-Line Campaign Angle Typography */}
+          <div className="relative z-10 text-center pt-2 mb-2">
             <h2
-              className="text-4xl font-black tracking-tight uppercase font-sans leading-none text-white"
+              className="text-5xl font-black tracking-tight uppercase font-sans leading-[0.95] text-white"
               style={{
                 letterSpacing: "0.03em",
+                textShadow: "0 3px 0 rgba(255,255,255,0.35), 0 8px 24px rgba(0, 0, 0, 0.75), 0 20px 48px rgba(0, 0, 0, 0.55)",
+              }}
+            >
+              <span className="block drop-shadow-md">{activeHeadline.line1}</span>
+              <span
+                className="block drop-shadow-md"
+                style={{
+                  color: headlineMode === "launched" ? "#ffffff" : isLightPrimary ? primaryColor : "#ffffff",
+                  textShadow:
+                    isLightPrimary && headlineMode !== "launched"
+                      ? `0 0 28px ${primaryColor}80, 0 8px 24px rgba(0, 0, 0, 0.75)`
+                      : undefined,
+                }}
+              >
+                {activeHeadline.line2}
+              </span>
+            </h2>
+          </div>
+
+          {/* 3D Stage in Feed HQ */}
+          <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1800px]">
+            {stageMode === "rock" ? (
+              renderRockPedestalShowcase(feedScreenRef, 0.65, "w-[840px]", {
+                cardTop: "-top-16",
+                cardRight: "-right-4",
+                macTranslateY: "translateY(16px)",
+              })
+            ) : (
+              <>
+                <div className="absolute bottom-4 left-12 right-12 h-24 bg-slate-950/70 blur-3xl rounded-full transform scale-x-115 -rotate-2" />
+                {renderFloatingAboutCard({ topOffset: "-top-16", rightOffset: "-right-4", widthClass: "w-[84%] max-w-[700px]" })}
+                {render3DMacBook(feedScreenRef, 0.65)}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Hidden 16:9 Landscape Container for Widescreen Presentation Export (1280x720) */}
+      <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden="true">
+        <div
+          ref={landscapeRef}
+          className={`w-[1280px] h-[720px] bg-gradient-to-b ${theme.gradient} pt-6 pb-4 px-8 flex flex-col justify-between items-center relative overflow-hidden`}
+          style={{
+            borderRadius: "0px",
+          }}
+        >
+          {/* Background Watermark */}
+          {renderBackgroundWatermark()}
+
+          {/* Ambient Lighting */}
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[480px] rounded-full blur-3xl pointer-events-none opacity-40"
+            style={{
+              background: `radial-gradient(circle, ${activeSpotlight} 0%, transparent 70%)`,
+            }}
+          />
+
+          {/* Centered Campaign Angle Headline in Landscape - Clean top placement with ample breathing room */}
+          <div className="text-center z-20 mt-1 mb-2 max-w-4xl">
+            <h2
+              className="text-3xl font-black tracking-tight uppercase font-sans leading-none text-white"
+              style={{
+                letterSpacing: "0.04em",
                 textShadow: "0 2px 0 rgba(255,255,255,0.35), 0 8px 24px rgba(0, 0, 0, 0.75)",
               }}
             >
@@ -1008,14 +1101,19 @@ export function SocialLaunchMockup({
             </h2>
           </div>
 
-          {/* 3D Stage in Landscape */}
-          <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1800px] mt-2">
+          {/* 3D Stage in Landscape - Perfectly scaled to 500px width so Mac and Card never touch the top headline */}
+          <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1800px] mt-1">
             {stageMode === "rock" ? (
-              renderRockPedestalShowcase(landscapeScreenRef, 0.45, "w-[680px]")
+              renderRockPedestalShowcase(landscapeScreenRef, 0.38, "w-[500px]", {
+                cardTop: "-top-8",
+                cardRight: "-right-2",
+                macTranslateY: "translateY(16px)",
+              })
             ) : (
               <>
-                {renderFloatingAboutCard()}
-                {render3DMacBook(landscapeScreenRef, 0.45)}
+                <div className="absolute bottom-2 left-8 right-8 h-14 bg-slate-950/70 blur-2xl rounded-full transform scale-x-115 -rotate-2" />
+                {renderFloatingAboutCard({ topOffset: "-top-8", rightOffset: "-right-2", widthClass: "w-[80%] max-w-[360px]" })}
+                {render3DMacBook(landscapeScreenRef, 0.38)}
               </>
             )}
           </div>
@@ -1027,6 +1125,9 @@ export function SocialLaunchMockup({
         <div
           ref={storyRef}
           className={`w-[540px] h-[960px] bg-gradient-to-b ${theme.gradient} p-8 flex flex-col justify-between items-center relative overflow-hidden`}
+          style={{
+            borderRadius: "0px",
+          }}
         >
           {/* Background Watermark */}
           {renderBackgroundWatermark()}
@@ -1057,10 +1158,14 @@ export function SocialLaunchMockup({
           {/* 3D Stage */}
           <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1600px]">
             {stageMode === "rock" ? (
-              renderRockPedestalShowcase(screenRef, screenScale, "w-[96%] max-w-[480px]")
+              renderRockPedestalShowcase(screenRef, screenScale, "w-[92%] max-w-[460px]", {
+                cardTop: "-top-12",
+                cardRight: "-right-2",
+                macTranslateY: "translateY(12px)",
+              })
             ) : (
               <>
-                {renderFloatingAboutCard()}
+                {renderFloatingAboutCard({ topOffset: "-top-12", rightOffset: "-right-2", widthClass: "w-[84%] max-w-[390px]" })}
                 {render3DMacBook()}
               </>
             )}
