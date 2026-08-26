@@ -115,7 +115,7 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
                       href={siteHref(payload, item.path)}
                       className="bs-nav-panel-item group"
                     >
-                      itemImg ? (
+                      {itemImg ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={itemImg}
@@ -130,7 +130,7 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
                         <div className="h-9 w-9 rounded-full bg-[var(--bs-surface-alt,#f8fafc)] border border-[var(--bs-border-color,#e2e8f0)] flex items-center justify-center shrink-0 text-[var(--bs-primary-on-surface)] group-hover:bg-[var(--bs-primary)] group-hover:text-[var(--bs-on-primary)] transition-all">
                           <MapPin className="h-4 w-4" />
                         </div>
-                      )
+                      )}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-1">
                           <span className="bs-nav-panel-title group-hover:text-[var(--bs-primary-on-surface)] transition-colors">
