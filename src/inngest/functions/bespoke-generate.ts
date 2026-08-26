@@ -324,6 +324,8 @@ export const bespokeGenerate = inngest.createFunction(
       return generatedSections.map((section) => section.html).join("\n");
     });
 
+    await bumpProgress(admin, lead_id, 3);
+
     const stylesheet = await step.run("stylesheet", async () => {
       await touchProgress(admin, lead_id);
       const result = await generateStylesheet(
