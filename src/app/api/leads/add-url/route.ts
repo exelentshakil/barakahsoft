@@ -58,6 +58,13 @@ export async function POST(req: Request) {
             slug,
             status: "new",
             source: "outreach",
+            pain_points: [
+              "Outdated design / looks wrong on phones",
+              "Not enough leads or enquiries",
+              "Nobody finds us on Google",
+              "Invisible in AI search",
+              "Visitors don't convert into calls"
+            ],
           })
           .select()
           .single();
@@ -107,6 +114,13 @@ export async function POST(req: Request) {
       slug,
       status: "new",
       source: "outreach",
+            pain_points: [
+              "Outdated design / looks wrong on phones",
+              "Not enough leads or enquiries",
+              "Nobody finds us on Google",
+              "Invisible in AI search",
+              "Visitors don't convert into calls"
+            ],
     })
     .select()
     .single();
