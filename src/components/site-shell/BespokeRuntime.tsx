@@ -209,9 +209,17 @@ export function BespokeRuntime({ leadSlug }: { leadSlug: string }) {
       const track = container.querySelector<HTMLElement>("[data-review-track]") || root.querySelector<HTMLElement>("[data-review-track]");
       if (!track) return;
 
+      // The scroll container can be the track itself OR its parent wrapper (e.g. [data-review-slider] / .reviews-carousel__slider-wrapper)
+      const wrapper = track.closest<HTMLElement>("[data-review-slider]") || track.parentElement;
+      const scrollTarget = (wrapper && wrapper.scrollWidth > wrapper.clientWidth) ? wrapper : track;
+
       const card = track.firstElementChild as HTMLElement | null;
-      const step = card?.offsetWidth ? card.offsetWidth + 24 : track.clientWidth * 0.85;
-      track.scrollBy({ left: direction * step, behavior: reduceMotion ? "auto" : "smooth" });
+      const step = card?.offsetWidth ? card.offsetWidth + 24 : scrollTarget.clientWidth * 0.85;
+
+      scrollTarget.scrollBy({ left: direction * step, behavior: reduceMotion ? "auto" : "smooth" });
+      if (scrollTarget !== track) {
+        track.scrollBy({ left: direction * step, behavior: reduceMotion ? "auto" : "smooth" });
+      }
     };
     root.addEventListener("click", onReviewSliderClick);
     cleanups.push(() => root.removeEventListener("click", onReviewSliderClick));

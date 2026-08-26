@@ -450,67 +450,38 @@ export function SocialLaunchMockup({
   const render3DStage = () => (
     <div
       ref={stageRef}
-      className="relative z-10 w-full flex-1 flex items-center justify-center mt-2 perspective-[1500px]"
+      className="relative z-10 w-full flex-1 flex items-center justify-center mt-2 perspective-[1600px]"
     >
       {/* Soft Ground Contact Shadow Under Laptop */}
-      <div className="absolute bottom-2 sm:bottom-4 left-4 sm:left-8 right-4 sm:right-8 h-12 sm:h-16 bg-slate-900/45 blur-2xl rounded-full transform scale-x-115 -rotate-2" />
+      <div className="absolute bottom-2 sm:bottom-4 left-4 sm:left-8 right-4 sm:right-8 h-12 sm:h-16 bg-slate-950/55 blur-2xl rounded-full transform scale-x-115 -rotate-2" />
 
-      {/* 1. REALISTIC 3D MACBOOK PRO (Angled Left 3/4 Perspective) */}
+      {/* 1. FLOATING ABOUT / PREVIEW CARD LAYERED ELEGANTLY BEHIND THE MACBOOK */}
       <div
-        className="relative w-[90%] max-w-[460px] transition-transform duration-500"
+        className="absolute -right-1 sm:-right-3 top-[-24px] sm:top-[-34px] w-[80%] max-w-[375px] rounded-2xl bg-white shadow-2xl border border-slate-200/90 overflow-hidden transition-transform duration-500 z-0"
         style={{
-          transform: "rotateY(-16deg) rotateX(12deg) rotateZ(2deg) translateY(14px)",
-          transformStyle: "preserve-3d",
+          transform: "rotateY(-10deg) rotateX(6deg) rotateZ(-2deg) translateZ(-35px)",
+          boxShadow: "0 35px 80px -15px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255,255,255,0.2)",
         }}
       >
-        {/* Screen Bezel & Glass Lid */}
-        <div className="relative rounded-t-2xl bg-[#0f1217] p-2 sm:p-2.5 pb-3.5 sm:pb-4 shadow-2xl border border-white/30 ring-1 ring-black/80">
-          {/* Top Center Camera Notch */}
-          <div className="absolute top-1 left-1/2 -translate-x-1/2 h-1.5 w-12 bg-black rounded-b-md z-20 flex items-center justify-center">
-            <span className="h-0.5 w-0.5 rounded-full bg-[#334155]" />
+        {/* Dynamic Island Header Bar on Top of the Card */}
+        <div className="w-full bg-slate-950 px-3 py-1.5 flex items-center justify-between border-b border-white/10 select-none">
+          <div className="flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-red-400 opacity-80" />
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-400 opacity-80" />
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 opacity-80" />
           </div>
-
-          {/* Screen Display Inner Frame */}
-          <div
-            ref={screenRef}
-            className="relative aspect-[16/10] w-full rounded-lg bg-[#0e1626] overflow-hidden shadow-inner border border-black/90 flex flex-col"
-          >
-            {renderScreenContent()}
+          {/* Dynamic Island Pill with Live Pulse Dot */}
+          <div className="h-3.5 sm:h-4 px-2 sm:px-2.5 rounded-full bg-black border border-white/20 shadow-inner flex items-center gap-1.5">
+            <span className="h-1 w-1 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[5px] sm:text-[6px] font-extrabold tracking-wider uppercase text-white truncate max-w-[170px]">
+              {businessShortName} · Verified Redesign
+            </span>
+          </div>
+          <div className="flex items-center gap-1 opacity-70">
+            <span className="text-[5px] sm:text-[5.5px] text-white/90 font-mono font-bold">100%</span>
           </div>
         </div>
 
-        {/* Aluminum Laptop Deck & Ports (Silver MacBook Pro Style) */}
-        <div
-          className="relative h-4 sm:h-5 w-[108%] -left-[4%] rounded-b-2xl bg-gradient-to-b from-[#e8ecf2] via-[#ced3dc] to-[#a2a8b4] shadow-2xl border-t border-white/95 flex items-center justify-between px-3"
-          style={{
-            transform: "rotateX(56deg) translateZ(-4px)",
-            boxShadow: "0 24px 50px rgba(0,0,0,0.55), 0 2px 4px rgba(255,255,255,0.7) inset",
-          }}
-        >
-          {/* Left Ports (MagSafe + Thunderbolt) */}
-          <div className="flex items-center gap-1 opacity-70">
-            <span className="h-1 w-1.5 rounded-xs bg-slate-600" />
-            <span className="h-0.5 w-1 rounded-xs bg-slate-600" />
-          </div>
-
-          {/* Center Thumb Groove */}
-          <div className="h-1 w-16 sm:w-24 bg-[#7a818d] rounded-full mx-auto" />
-
-          {/* Right Ports */}
-          <div className="flex items-center gap-1 opacity-70">
-            <span className="h-0.5 w-1 rounded-xs bg-slate-600" />
-          </div>
-        </div>
-      </div>
-
-      {/* 2. FLOATING WEBSITE ABOUT & METRIC SHEET (Exact Match to Reference Poster) */}
-      <div
-        className="absolute -right-2 sm:-right-4 top-[-10px] sm:top-[-4px] w-[78%] max-w-[365px] rounded-2xl bg-white shadow-2xl border border-slate-200/90 overflow-hidden transition-transform duration-500"
-        style={{
-          transform: "rotateY(-12deg) rotateX(8deg) rotateZ(-2deg) translateZ(65px)",
-          boxShadow: "0 35px 70px -12px rgba(15, 23, 42, 0.45), 0 0 0 1px rgba(0,0,0,0.06)",
-        }}
-      >
         {data.aboutCaptureUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -632,6 +603,54 @@ export function SocialLaunchMockup({
         </div>
           </>
         )}
+      </div>
+
+      {/* 2. REALISTIC 3D MACBOOK PRO (Stands Proud in the Foreground, 100% Unobscured) */}
+      <div
+        className="relative z-20 w-[92%] max-w-[470px] transition-transform duration-500"
+        style={{
+          transform: "rotateY(-16deg) rotateX(12deg) rotateZ(2deg) translateY(14px) translateZ(30px)",
+          transformStyle: "preserve-3d",
+        }}
+      >
+        {/* Screen Bezel & Glass Lid */}
+        <div className="relative rounded-t-2xl bg-[#0f1217] p-2 sm:p-2.5 pb-3.5 sm:pb-4 shadow-2xl border border-white/30 ring-1 ring-black/80">
+          {/* Top Center Camera Notch */}
+          <div className="absolute top-1 left-1/2 -translate-x-1/2 h-1.5 w-12 bg-black rounded-b-md z-20 flex items-center justify-center">
+            <span className="h-0.5 w-0.5 rounded-full bg-[#334155]" />
+          </div>
+
+          {/* Screen Display Inner Frame */}
+          <div
+            ref={screenRef}
+            className="relative aspect-[16/10] w-full rounded-lg bg-[#0e1626] overflow-hidden shadow-inner border border-black/90 flex flex-col"
+          >
+            {renderScreenContent()}
+          </div>
+        </div>
+
+        {/* Aluminum Laptop Deck & Ports (Silver MacBook Pro Style) */}
+        <div
+          className="relative h-4 sm:h-5 w-[108%] -left-[4%] rounded-b-2xl bg-gradient-to-b from-[#e8ecf2] via-[#ced3dc] to-[#a2a8b4] shadow-2xl border-t border-white/95 flex items-center justify-between px-3"
+          style={{
+            transform: "rotateX(56deg) translateZ(-4px)",
+            boxShadow: "0 24px 50px rgba(0,0,0,0.55), 0 2px 4px rgba(255,255,255,0.7) inset",
+          }}
+        >
+          {/* Left Ports (MagSafe + Thunderbolt) */}
+          <div className="flex items-center gap-1 opacity-70">
+            <span className="h-1 w-1.5 rounded-xs bg-slate-600" />
+            <span className="h-0.5 w-1 rounded-xs bg-slate-600" />
+          </div>
+
+          {/* Center Thumb Groove */}
+          <div className="h-1 w-16 sm:w-24 bg-[#7a818d] rounded-full mx-auto" />
+
+          {/* Right Ports */}
+          <div className="flex items-center gap-1 opacity-70">
+            <span className="h-0.5 w-1 rounded-xs bg-slate-600" />
+          </div>
+        </div>
       </div>
     </div>
   );
