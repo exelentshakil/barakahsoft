@@ -206,6 +206,13 @@ NO <style> and NO <script> — both are stripped. NO inline style attributes for
 
 export const INTERACTION_CONTRACT = `INTERACTIONS — the page gets motion and behaviour by requesting it with data attributes. A reviewed script in the application implements these. Do not write <script> tags; they are stripped.
 
+ZERO-JS PREMIUM INTERACTIONS — Inject CSS-only premium interactions using standard utility patterns to make the site feel high-end without JS overhead.
+  - Use `group` and `group-hover` for card scaling or icon color shifting (e.g. `transform hover:-translate-y-1 transition-transform duration-500`).
+  - Use `animate-pulse` on urgent badges (like "24/7 Dispatch").
+  - Add staggered fade-ins for features using CSS animation delays if writing custom keyframes.
+  - Rely on native CSS `hover:scale-105 transition-transform duration-700` for hero background images inside an `overflow-hidden` container.
+
+
   data-lead-form                a real, working lead-capture form. Use it in the hero or in a dedicated callback section.
                                 DESKTOP LAYOUT REQUIREMENT: Any section containing [data-lead-form] MUST be a balanced 2-column layout on desktop:
                                 - Left Column (50%-55%): Eyebrow label, strong outcome headline (e.g. "Prefer a direct callback?"), reassuring narrative description, direct click-to-call phone link, and 24/7 emergency badge.
