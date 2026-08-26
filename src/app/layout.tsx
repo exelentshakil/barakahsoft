@@ -47,7 +47,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         
               {/* Meta Pixel Code */}
         <Script id="meta-pixel" strategy="afterInteractive">
-          {`!function(f,b,e,v,n,t,s)
+          {`try {
+  var h = window.location.hostname.toLowerCase();
+  var p = window.location.pathname;
+  if (p.indexOf("/admin") === 0 || p.indexOf("/client-portal") === 0 || p.indexOf("/visual-qa") === 0 || p.indexOf("/api") === 0 || p.indexOf("/auth") === 0 || p.indexOf("/login") === 0) {
+    throw new Error('skip_pixel');
+  }
+  var isLandingHost = h === "redesign.barakahsoft.com" || h === "barakahsoft.com" || h === "www.barakahsoft.com" || h === "home.barakahsoft.com";
+  var isLandingPath = p === "/";
+  if (!isLandingHost || !isLandingPath) {
+    throw new Error('skip_pixel');
+  }
+} catch(e) { if(e.message === 'skip_pixel') { window.fbq = function(){}; return; } }
+
+!function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};
 if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
