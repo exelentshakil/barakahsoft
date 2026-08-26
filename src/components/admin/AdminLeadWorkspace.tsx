@@ -692,55 +692,75 @@ export function AdminLeadWorkspace({
             </span>
           </div>
 
-          {/* Segmented Pipeline Stage Filter Buttons */}
-          <div className="grid grid-cols-4 gap-1 p-1 bg-slate-100 rounded-xl border border-slate-200/80 text-[11px] font-bold">
+          {/* Segmented Pipeline Stage Filter Buttons (Ultra-compact, single-line tabs) */}
+          <div className="grid grid-cols-4 gap-0.5 p-0.5 bg-slate-100 rounded-lg border border-slate-200/80 text-[10.5px] font-semibold">
             <button
               type="button"
               onClick={() => setPipelineView("active")}
-              className={`py-1.5 px-1 rounded-lg flex items-center justify-center gap-1 transition ${
+              className={`py-1 px-1 rounded-md flex items-center justify-center gap-1 whitespace-nowrap transition ${
                 pipelineView === "active"
-                  ? "bg-white text-indigo-900 shadow-2xs font-extrabold"
+                  ? "bg-white text-indigo-700 shadow-2xs font-bold"
                   : "text-slate-600 hover:text-slate-900"
               }`}
+              title="Active in-flight leads"
             >
-              <span>⚡ Active</span>
-              <span className="text-[9.5px] px-1 bg-indigo-100 text-indigo-800 rounded-full font-extrabold">{activeCount}</span>
+              <span>Active</span>
+              <span className={`text-[9px] px-1 py-0.2 rounded-full font-bold ${
+                pipelineView === "active" ? "bg-indigo-100 text-indigo-700" : "bg-slate-200/80 text-slate-600"
+              }`}>
+                {activeCount}
+              </span>
             </button>
             <button
               type="button"
               onClick={() => setPipelineView("won")}
-              className={`py-1.5 px-1 rounded-lg flex items-center justify-center gap-1 transition ${
+              className={`py-1 px-1 rounded-md flex items-center justify-center gap-1 whitespace-nowrap transition ${
                 pipelineView === "won"
-                  ? "bg-white text-emerald-900 shadow-2xs font-extrabold"
+                  ? "bg-white text-emerald-700 shadow-2xs font-bold"
                   : "text-slate-600 hover:text-slate-900"
               }`}
+              title="Won & closed clients"
             >
-              <span>🏆 Won</span>
-              <span className="text-[9.5px] px-1 bg-emerald-100 text-emerald-800 rounded-full font-extrabold">{wonCount}</span>
+              <span>Won</span>
+              <span className={`text-[9px] px-1 py-0.2 rounded-full font-bold ${
+                pipelineView === "won" ? "bg-emerald-100 text-emerald-700" : "bg-slate-200/80 text-slate-600"
+              }`}>
+                {wonCount}
+              </span>
             </button>
             <button
               type="button"
               onClick={() => setPipelineView("lost")}
-              className={`py-1.5 px-1 rounded-lg flex items-center justify-center gap-1 transition ${
+              className={`py-1 px-1 rounded-md flex items-center justify-center gap-1 whitespace-nowrap transition ${
                 pipelineView === "lost"
-                  ? "bg-white text-rose-900 shadow-2xs font-extrabold"
+                  ? "bg-white text-rose-700 shadow-2xs font-bold"
                   : "text-slate-600 hover:text-slate-900"
               }`}
+              title="Lost or archived leads"
             >
-              <span>🗄️ Lost</span>
-              <span className="text-[9.5px] px-1 bg-rose-100 text-rose-800 rounded-full font-extrabold">{lostCount}</span>
+              <span>Lost</span>
+              <span className={`text-[9px] px-1 py-0.2 rounded-full font-bold ${
+                pipelineView === "lost" ? "bg-rose-100 text-rose-700" : "bg-slate-200/80 text-slate-600"
+              }`}>
+                {lostCount}
+              </span>
             </button>
             <button
               type="button"
               onClick={() => setPipelineView("all")}
-              className={`py-1.5 px-1 rounded-lg flex items-center justify-center gap-1 transition ${
+              className={`py-1 px-1 rounded-md flex items-center justify-center gap-1 whitespace-nowrap transition ${
                 pipelineView === "all"
-                  ? "bg-white text-slate-900 shadow-2xs font-extrabold"
+                  ? "bg-white text-slate-900 shadow-2xs font-bold"
                   : "text-slate-600 hover:text-slate-900"
               }`}
+              title="All leads"
             >
               <span>All</span>
-              <span className="text-[9.5px] px-1 bg-slate-200 text-slate-700 rounded-full font-bold">{otherLeads.length}</span>
+              <span className={`text-[9px] px-1 py-0.2 rounded-full font-bold ${
+                pipelineView === "all" ? "bg-slate-200 text-slate-900" : "bg-slate-200/80 text-slate-600"
+              }`}>
+                {otherLeads.length}
+              </span>
             </button>
           </div>
 
