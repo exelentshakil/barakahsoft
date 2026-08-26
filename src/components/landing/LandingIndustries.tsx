@@ -26,8 +26,8 @@ export function LandingIndustries() {
         
         <div className="relative mx-auto h-[400px] max-w-[800px] overflow-hidden sm:h-[500px]">
           {/* Sun / Core */}
-          <div className="absolute left-1/2 top-1/2 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-gradient-to-tr from-[#0c68c8] to-[#043366] shadow-[0_0_60px_rgba(12,104,200,0.5)] z-20">
-            <span className="text-lg font-bold text-white text-center leading-tight">Barakah<br/>Soft</span>
+          <div className="absolute left-1/2 top-1/2 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-[0_0_60px_rgba(12,104,200,0.3)] z-20 overflow-hidden border border-[#e2e8f0]">
+            <img src="https://redesign.barakahsoft.com/icon.png" alt="BarakahSoft" className="h-16 w-16 object-contain" />
           </div>
 
           {/* Orbit Rings */}
@@ -38,28 +38,32 @@ export function LandingIndustries() {
 
           {/* Orbits */}
           <div className="absolute inset-0">
-            {INDUSTRIES.map((ind) => (
-              <div 
-                key={ind.label} 
-                className={`absolute left-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 animate-[spin_20s_linear_infinite]`}
-                style={{ animationDelay: ind.delay, animationDuration: ind.orbit === 'orbit-1' ? '15s' : ind.orbit === 'orbit-2' ? '25s' : ind.orbit === 'orbit-3' ? '35s' : '45s' }}
-              >
+            {INDUSTRIES.map((ind) => {
+              // Radiuses match the rings: 100px, 160px, 230px, 300px
+              const radius = ind.orbit === 'orbit-1' ? 100 : ind.orbit === 'orbit-2' ? 160 : ind.orbit === 'orbit-3' ? 230 : 300;
+              const duration = ind.orbit === 'orbit-1' ? '15s' : ind.orbit === 'orbit-2' ? '25s' : ind.orbit === 'orbit-3' ? '35s' : '45s';
+              
+              return (
                 <div 
-                  className={`absolute -ml-[40px] -mt-[40px] flex h-[80px] w-[80px] flex-col items-center justify-center gap-1.5 rounded-full border border-white bg-white/90 shadow-md backdrop-blur-sm animate-[spin_20s_linear_infinite_reverse] ${
-                    ind.orbit === 'orbit-1' ? 'left-[50%] top-[calc(50%-100px)]' : 
-                    ind.orbit === 'orbit-2' ? 'left-[50%] top-[calc(50%-160px)]' : 
-                    ind.orbit === 'orbit-3' ? 'left-[50%] top-[calc(50%-230px)]' : 
-                    'left-[50%] top-[calc(50%-300px)]'
-                  }`}
-                  style={{ animationDuration: ind.orbit === 'orbit-1' ? '15s' : ind.orbit === 'orbit-2' ? '25s' : ind.orbit === 'orbit-3' ? '35s' : '45s' }}
+                  key={ind.label} 
+                  className="absolute left-1/2 top-1/2 flex h-0 w-0 items-center justify-center animate-[spin_20s_linear_infinite]"
+                  style={{ animationDelay: ind.delay, animationDuration: duration }}
                 >
-                  <div className={`flex h-8 w-8 items-center justify-center rounded-full ${ind.bg} ${ind.color}`}>
-                    <ind.icon className="h-4 w-4" />
+                  <div 
+                    className="flex h-[80px] w-[80px] flex-col items-center justify-center gap-1.5 rounded-full border border-white bg-white/90 shadow-md backdrop-blur-sm animate-[spin_20s_linear_infinite_reverse]"
+                    style={{ 
+                      animationDuration: duration,
+                      transform: `translateX(${radius}px)`
+                    }}
+                  >
+                    <div className={`flex h-8 w-8 items-center justify-center rounded-full ${ind.bg} ${ind.color}`}>
+                      <ind.icon className="h-4 w-4" />
+                    </div>
+                    <span className="text-center text-[9px] font-bold leading-tight text-[#07284d] px-2">{ind.label}</span>
                   </div>
-                  <span className="text-center text-[9px] font-bold leading-tight text-[#07284d] px-2">{ind.label}</span>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
