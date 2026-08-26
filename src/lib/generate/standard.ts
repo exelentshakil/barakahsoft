@@ -340,4 +340,66 @@ A $20,000 agency website never presents dull, unbroken text or generic numbered 
    - For photos in About, Hero, and Proof sections:
      * Frame images with generous border radius (var(--bs-radius-lg, 1rem)) or elegant editorial arched crops.
      * Overlay floating circular experience badges (.site-floating-badge) on top corners (e.g. <div class="site-floating-badge"><span>15+</span><small>Years</small></div>).
-     * Pair with a documentary caption rail along the bottom to anchor credibility.`;
+     * Pair with a documentary caption rail along the bottom to anchor credibility.
+4. HIGH-IMPACT REASSURANCE & 24/7 DISPATCH CARDS (.site-dispatch-card):
+   - When communicating emergency coverage, reassurance, or dispatch availability:
+     * NEVER emit bare, flat paragraphs floating across huge white space (e.g. "Unsure what your property needs? We can dispatch a technician. Call now").
+     * Frame the message in an elevated, high-contrast container with live pulse dot indicator, clear headline, value-driven text, and action buttons:
+       <div class="site-dispatch-card">
+         <div class="site-dispatch-card__header">
+           <span class="site-status-pulse"></span>
+           <span class="site-dispatch-card__tag">24/7 Live Emergency Dispatch</span>
+         </div>
+         <h3 class="site-dispatch-card__title">Need Immediate On-Site Assessment?</h3>
+         <p class="site-dispatch-card__text"><strong>Certified Crews Ready for Fast Dispatch:</strong> Our rapid-response technicians evaluate structural damage within 45 minutes across all coverage zones.</p>
+         <div class="site-dispatch-card__actions">
+           <a href="tel:..." class="site-cta site-cta--primary">Call for Immediate Dispatch</a>
+           <button type="button" data-open-quote-modal class="site-cta site-cta--secondary">Request Free Estimate</button>
+         </div>
+       </div>
+
+5. HIGH-CONTRAST STAT & METRIC CARDS (.site-stat-card):
+   - When presenting aggregate ratings, review counts, response times, or years of experience:
+     * NEVER leave loose unstyled text or bare floating numbers.
+     * Place each metric inside a dedicated .site-stat-card in a responsive grid (.site-stats-grid):
+       <div class="site-stats-grid">
+         <div class="site-stat-card">
+           <span class="site-stat-card__number">4.9★</span>
+           <span class="site-stat-card__label">Average Google Rating</span>
+         </div>
+         <div class="site-stat-card">
+           <span class="site-stat-card__number">100+</span>
+           <span class="site-stat-card__label">Verified Local Reviews</span>
+         </div>
+         <div class="site-stat-card">
+           <span class="site-stat-card__number">45 min</span>
+           <span class="site-stat-card__label">Emergency Response Time</span>
+         </div>
+         <div class="site-stat-card">
+           <span class="site-stat-card__number">100%</span>
+           <span class="site-stat-card__label">Locally Owned & Operated</span>
+         </div>
+       </div>
+
+6. TERRITORY & LOCATION COVERAGE PILLS (.site-location-pill):
+   - When presenting service areas, cities, and neighborhoods:
+     * NEVER output a plain unstyled text list of cities.
+     * Format every territory target as a .site-location-pill with an inline vector map-pin icon:
+       <div class="site-locations-grid">
+         <span class="site-location-pill">
+           <svg class="site-location-pin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+             <circle cx="12" cy="10" r="3"/>
+           </svg>
+           <span>Las Vegas, NV</span>
+         </span>
+       </div>
+
+7. ARCHITECTURAL DOT MATRIX PATTERNS & GRAPHIC ACCENTS:
+   - Give hero, media showcases, and feature sections depth with architectural radial dot matrix grids (.site-pattern-dots or [class*="__media"]::before with radial-gradient(var(--bs-border-color) 2px, transparent 2px) background-size 16px 16px).
+   - Layer soft gradient halos (radial-gradient(circle, rgb(var(--bs-primary-rgb) / 0.12) 0%, transparent 70%)) behind framed image compositions.
+
+8. SLIDER CONTROLS WITH CENTERED VECTOR ARROWS:
+   - For [data-review-prev] and [data-review-next], ALWAYS include full inline SVG vector arrows with stroke="currentColor":
+     * Prev: <button type="button" data-review-prev aria-label="Previous review" class="site-slider-btn site-slider-btn--prev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+     * Next: <button type="button" data-review-next aria-label="Next review" class="site-slider-btn site-slider-btn--next"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></button>`;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, ChevronDown, MapPin, Menu, Phone, Sparkles, X } from "lucide-react";
+import { ArrowRight, ChevronDown, MapPin, Menu, Phone, Sparkles, X, ShieldCheck, Star } from "lucide-react";
 import { useQuoteModal } from "@/components/site-shell/QuoteModalProvider";
 import type { ChromeSpec } from "@/lib/chrome-spec";
 import { homepageAnchor, siteHref, type SiteNavItem, type SitePayload } from "@/components/site-shell/types";
@@ -66,7 +66,7 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
     </button>
   );
 
-  // Modern Multi-Column Mega Menu Panel
+  // Modern Multi-Column Mega Menu Panel with high-fidelity visual cards and thumbnail media
   const dropdown = (
     kind: "services" | "areas",
     label: string,
@@ -86,55 +86,102 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
           <div className="bs-nav-mega-grid">
             <div className="bs-nav-mega-links">
               <div className="bs-nav-mega-header">
-                <span className="bs-nav-mega-kicker">
-                  {kind === "services" ? "Core Services" : "Coverage Locations"}
-                </span>
-                <span className="text-[11px] opacity-60">
-                  {items.length} {kind === "services" ? "offerings" : "coverage zones"}
+                <div className="flex items-center gap-2">
+                  <span className="bs-nav-mega-kicker">
+                    {kind === "services" ? "Core Services" : "Coverage Locations"}
+                  </span>
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--bs-primary)]" />
+                </div>
+                <span className="text-[11px] font-semibold text-slate-500">
+                  {items.length} {kind === "services" ? "offerings available" : "zones covered"}
                 </span>
               </div>
-              <div className={`bs-nav-mega-cols ${items.length > 4 ? "bs-nav-mega-cols-2" : "bs-nav-mega-cols-1"}`}>
-                {items.map((item) => (
-                  <a
-                    key={item.slug}
-                    href={siteHref(payload, item.path)}
-                    className="bs-nav-panel-item"
-                  >
-                    {kind === "areas" ? (
-                      <MapPin className="h-4 w-4 text-[var(--bs-primary-on-surface)] shrink-0 mt-0.5" />
-                    ) : (
-                      <span className="h-2 w-2 rounded-full bg-[var(--bs-primary)] shrink-0 mt-1.5" />
-                    )}
-                    <span className="min-w-0">
-                      <span className="bs-nav-panel-title">{item.label}</span>
-                      {item.description ? (
-                        <span className="bs-nav-panel-desc">{item.description.slice(0, 72)}</span>
-                      ) : null}
-                    </span>
-                  </a>
-                ))}
+              <div className={`bs-nav-mega-cols ${items.length > 3 ? "bs-nav-mega-cols-2" : "bs-nav-mega-cols-1"}`}>
+                {items.map((item) => {
+                  const matchedService = kind === "services"
+                    ? payload.services.find(
+                        (s) => s.slug === item.slug || s.h2?.toLowerCase() === item.label?.toLowerCase()
+                      )
+                    : null;
+                  const itemImg = matchedService?.imageUrl || matchedService?.imageUrls?.[0];
+
+                  return (
+                    <a
+                      key={item.slug}
+                      href={siteHref(payload, item.path)}
+                      className="bs-nav-panel-item group"
+                    >
+                      {kind === "services" ? (
+                        itemImg ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={itemImg}
+                            alt={item.label}
+                            className="h-10 w-10 rounded-lg object-cover border border-slate-200/90 shadow-xs shrink-0 group-hover:border-[var(--bs-primary)] transition-colors"
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-lg bg-[var(--bs-surface-alt,#f8fafc)] border border-[var(--bs-border-color,#e2e8f0)] flex items-center justify-center shrink-0 text-[var(--bs-primary-on-surface)] group-hover:bg-[var(--bs-primary)] group-hover:text-[var(--bs-on-primary)] transition-all">
+                            <ShieldCheck className="h-5 w-5" />
+                          </div>
+                        )
+                      ) : (
+                        <div className="h-8 w-8 rounded-full bg-[var(--bs-surface-alt,#f8fafc)] border border-[var(--bs-border-color,#e2e8f0)] flex items-center justify-center shrink-0 text-[var(--bs-primary-on-surface)] group-hover:bg-[var(--bs-primary)] group-hover:text-[var(--bs-on-primary)] transition-all">
+                          <MapPin className="h-4 w-4" />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="bs-nav-panel-title group-hover:text-[var(--bs-primary-on-surface)] transition-colors">
+                            {item.label}
+                          </span>
+                          <ArrowRight className="h-3 w-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-[var(--bs-primary-on-surface)] shrink-0" />
+                        </div>
+                        {item.description ? (
+                          <span className="bs-nav-panel-desc line-clamp-1">{item.description.slice(0, 68)}</span>
+                        ) : (
+                          <span className="bs-nav-panel-desc">Professional {item.label.toLowerCase()} services</span>
+                        )}
+                      </div>
+                    </a>
+                  );
+                })}
               </div>
             </div>
 
             {/* Right Side Featured Promo Card in Mega Menu */}
             <div className="bs-nav-mega-featured">
-              <span className="bs-nav-featured-badge">
-                <Sparkles className="h-3 w-3" /> 24/7 Rapid Response
-              </span>
-              <p className="bs-nav-featured-title">Need Immediate On-Site Help?</p>
-              <p className="bs-nav-featured-desc">
-                Certified technicians are ready for emergency dispatch and fast estimates.
-              </p>
-              <div className="bs-nav-featured-actions">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="bs-nav-featured-badge">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    24/7 Rapid Response
+                  </span>
+                  {payload.proof.rating && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                      <Star className="h-3 w-3 fill-amber-400 text-amber-500" />
+                      {payload.proof.rating}★
+                    </span>
+                  )}
+                </div>
+                <p className="bs-nav-featured-title">Need Immediate On-Site Help?</p>
+                <p className="bs-nav-featured-desc">
+                  Certified local technicians are dispatched for fast emergency response and honest upfront estimates.
+                </p>
+              </div>
+
+              <div className="bs-nav-featured-actions space-y-2 pt-2">
                 {payload.nap.phone && (
-                  <a href={`tel:${phoneDigits}`} className="bs-btn bs-btn-primary bs-btn-sm w-full text-center">
-                    <Phone className="mr-1.5 inline h-3.5 w-3.5" /> Call {payload.nap.phone}
+                  <a
+                    href={`tel:${phoneDigits}`}
+                    className="bs-btn bs-btn-primary bs-btn-sm w-full text-center flex items-center justify-center gap-1.5 shadow-sm font-bold"
+                  >
+                    <Phone className="h-3.5 w-3.5" /> Call {payload.nap.phone}
                   </a>
                 )}
                 <button
                   type="button"
                   onClick={openQuoteModal}
-                  className="bs-btn bs-btn-ghost bs-btn-sm w-full text-center"
+                  className="bs-btn bs-btn-ghost bs-btn-sm w-full text-center font-bold text-[11px] border border-slate-200 hover:bg-white"
                 >
                   Request Fast Quote →
                 </button>

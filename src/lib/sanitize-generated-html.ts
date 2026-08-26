@@ -16,7 +16,8 @@ import sanitizeHtml from "sanitize-html";
 
 const ALLOWED_TAGS = [
   "div", "section", "main", "article", "aside", "header", "footer", "nav",
-  "h1", "h2", "h3", "h4", "h5", "h6", "p", "span", "a", "img", "svg", "path",
+  "h1", "h2", "h3", "h4", "h5", "h6", "p", "span", "a", "img",
+  "svg", "path", "circle", "polyline", "polygon", "rect", "line", "g", "defs", "linearGradient", "stop", "clipPath",
   "ul", "ol", "li", "button", "strong", "em", "br", "hr", "figure", "figcaption",
   "blockquote", "cite", "time", "small", "dl", "dt", "dd",
   // Interactive Google Maps / OpenStreetMap territory embeds
@@ -69,12 +70,22 @@ const TARGET_STRIPPED_TAGS = new Set(["form", "input", "button", "select", "text
 const SAFE_INPUT_TYPES = new Set(["text", "tel", "email", "number", "checkbox", "radio", "submit", "search", "url", "date", "time"]);
 
 const ALLOWED_ATTRIBUTES = {
-  "*": ["class", "id", "style", ...INTERACTION_ATTRS],
+  "*": ["class", "id", "style", "aria-hidden", "aria-label", "role", ...INTERACTION_ATTRS],
   a: ["href", "target", "rel", "aria-label", "aria-expanded", "aria-controls"],
   button: ["type", "aria-label", "aria-expanded", "aria-controls"],
   img: ["src", "alt", "loading", "width", "height", "fetchpriority", "decoding", "sizes", "srcset"],
-  svg: ["viewBox", "fill", "stroke", "xmlns", "width", "height", "stroke-width", "stroke-linecap", "stroke-linejoin"],
-  path: ["d", "fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin"],
+  svg: ["viewBox", "viewbox", "fill", "stroke", "xmlns", "width", "height", "stroke-width", "stroke-linecap", "stroke-linejoin", "class", "id", "style", "aria-hidden", "aria-label", "role"],
+  path: ["d", "fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin", "opacity", "transform", "class", "style"],
+  circle: ["cx", "cy", "r", "fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin", "opacity", "transform", "class", "style"],
+  polyline: ["points", "fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin", "opacity", "transform", "class", "style"],
+  polygon: ["points", "fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin", "opacity", "transform", "class", "style"],
+  rect: ["x", "y", "width", "height", "rx", "ry", "fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin", "opacity", "transform", "class", "style"],
+  line: ["x1", "y1", "x2", "y2", "fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin", "opacity", "transform", "class", "style"],
+  g: ["fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin", "opacity", "transform", "class", "style"],
+  defs: ["class"],
+  linearGradient: ["id", "x1", "y1", "x2", "y2", "gradientUnits"],
+  stop: ["offset", "stop-color", "stop-opacity", "style"],
+  clipPath: ["id"],
   time: ["datetime"],
   iframe: ["src", "width", "height", "style", "loading", "title", "class", "aria-label", "tabindex", "allowfullscreen", "referrerpolicy"],
   // No action/method anywhere here by construction — see FORM_TARGET_ATTRS.
