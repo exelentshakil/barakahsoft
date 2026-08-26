@@ -134,10 +134,17 @@ export const scrapeRun = inngest.createFunction(
         !!artifact?.inspiration_url || (!!existingSource && !existingSource.startsWith("House "));
       if (alreadyChosen) return;
 
+      const { data: scrapeRes } = await admin
+        .from("scrape_results")
+        .select("facts")
+        .eq("lead_id", lead_id)
+        .maybeSingle<{ facts: Record<string, unknown> }>();
+      const clientHex = (scrapeRes?.facts?.brand_color_hex as string | undefined) ?? null;
+
       const patch = {
         inspiration_branding: dna,
         inspiration_url: sourceUrl,
-        design_tokens: compileDesignTokens(dna),
+        design_tokens: compileDesignTokens(dna, { clientBrandHex: clientHex }),
       };
 
       if (artifact) {

@@ -11,9 +11,6 @@ import { DEFAULT_DESIGN_DNA } from "@/lib/design-dna";
 //
 //   1. A generated page CANNOT come out off-brand, because there is no
 //      channel through which it could express a color that isn't a token.
-//      The previous approach -- instructing the model in prose to avoid 15
-//      color families, then regex-rewriting the ones that slipped through
-//      -- was fighting the same battle every generation and losing some.
 //
 //   2. Two leads with the same class vocabulary still look nothing alike,
 //      because mood, geometry, type scale and section rhythm all shift the
@@ -113,11 +110,6 @@ function neutralise(hex: string, keepHue = 0.06): string {
 
 /**
  * Force a foreground to clear a contrast threshold against its background.
- *
- * Body text at 4.5:1 and large text at 3:1 are the accessibility floor, but
- * the reason to enforce them here is commercial: low-contrast text is the
- * most common way a generated page looks amateur, and it cannot be caught by
- * a prompt.
  */
 function ensureContrast(foreground: string, background: string, minimum: number): string {
   if (contrastRatio(foreground, background) >= minimum) return foreground;
@@ -128,8 +120,6 @@ function ensureContrast(foreground: string, background: string, minimum: number)
   let g = parseInt(clean.slice(2, 4), 16);
   let b = parseInt(clean.slice(4, 6), 16);
 
-  // Walk the foreground away from the background until it passes, rather
-  // than snapping to black or white, so the hue survives where it can.
   for (let step = 0; step < 24; step++) {
     const shift = towardsWhite ? 10 : -10;
     r = Math.max(0, Math.min(255, r + shift));
@@ -170,13 +160,6 @@ function contrastRatio(a: string, b: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-/**
- * A reference site's measured "on primary" color is frequently wrong once
- * it's re-applied to a different primary — the reference may have used it
- * over a lighter tint, or Firecrawl may have sampled the wrong element.
- * Rather than ship unreadable button text, pick whichever of black/white
- * actually passes against the resolved background.
- */
 function readableOn(background: string, preferred: string): string {
   if (contrastRatio(background, preferred) >= 4.5) return preferred;
   return contrastRatio(background, "#FFFFFF") >= contrastRatio(background, "#0B0B0F") ? "#FFFFFF" : "#0B0B0F";
@@ -191,29 +174,9 @@ function googleFontHref(display: string, body: string): string | null {
   return `https://fonts.googleapis.com/css2?${params}&display=swap`;
 }
 
-/**
- * Whose colours the rebuilt site uses.
- *
- * The default is the reference palette, because a redesign is what is being
- * sold — a rebuild in the client's existing colours often does not read as a
- * redesign at all, particularly when their colours were part of the problem.
- * "client" keeps their real brand colour for owners who are attached to it,
- * and "hybrid" keeps their colour as the accent over the reference's
- * structure and surfaces.
- */
 export type ColourSource = "reference" | "client" | "hybrid";
 
-/**
- * Guarantee the accent reads as a different colour from the primary.
- *
- * Tries the honest options first — the DNA's own accent, then the house
- * default's — before falling back to shifting the primary's own hue. The
- * shift is a last resort but still beats shipping a palette whose two
- * highlight slots are one colour.
- */
 function distinguishAccent<T extends { primary: string; accent: string }>(palette: T, dna: DesignDna): T {
-  // Identical hexes, or two shades so close that no viewer reads them as
-  // separate colours.
   const collides = (candidate: string) =>
     candidate.toUpperCase() === palette.primary.toUpperCase() || contrastRatio(candidate, palette.primary) < 1.15;
 
@@ -225,7 +188,6 @@ function distinguishAccent<T extends { primary: string; accent: string }>(palett
   return { ...palette, accent: rotateHue(palette.primary, 150) };
 }
 
-/** Rotate a hex colour's hue, keeping saturation and lightness. */
 function rotateHue(hex: string, degrees: number): string {
   const n = parseInt(hex.replace("#", ""), 16);
   const r = ((n >> 16) & 255) / 255;
@@ -260,10 +222,13 @@ export function compileDesignTokens(
 ): DesignTokens {
   const dna = input ?? DEFAULT_DESIGN_DNA;
 
-  const source = options.colourSource ?? "reference";
   const clientHex = options.clientBrandHex && /^#[0-9a-fA-F]{6}$/.test(options.clientBrandHex)
     ? options.clientBrandHex.toUpperCase()
     : null;
+
+  // Default to preserving the client's real brand color when available (from their original scrape / logo),
+  // while applying the inspiration trade's layout, spacing, typography, motifs and geometry.
+  const source = options.colourSource ?? (clientHex ? "client" : "reference");
 
   const chosen =
     source === "client" && clientHex
@@ -272,29 +237,16 @@ export function compileDesignTokens(
         ? { ...dna.palette, accent: clientHex }
         : dna.palette;
 
-  // Primary and accent must not be the same colour.
-  //
-  // Nothing stopped them colliding: "client" keeps the DNA's accent while
-  // replacing primary, "hybrid" does the reverse, and either can land on a
-  // hex the DNA already used. A real lead compiled with both at #FFD974,
-  // which leaves one colour doing two jobs — the "second, smaller highlight"
-  // the generator is told to use simply does not exist, and every page built
-  // from that palette comes out flat.
   const p = distinguishAccent(chosen, dna);
   const radius = RADIUS_SCALE[dna.geometry.radius];
   const elevation = ELEVATION[dna.geometry.elevation];
   const rhythm = RHYTHM[dna.layout.sectionRhythm];
   const type = TYPE_SCALE[dna.typography.scale];
 
-  // Ground and text are neutral; the brand colour is reserved for accents.
-  // A saturated surface with tinted body text is what makes a generated page
-  // read as cheap, and it leaves the accent nothing to stand against.
   const surface = neutralise(p.surface);
   const surfaceAlt = neutralise(p.surfaceAlt);
   const onPrimary = readableOn(p.primary, p.onPrimary);
 
-  // Contrast is enforced rather than hoped for: body text at 4.5:1 and muted
-  // text at 4.5:1 against the ground it actually sits on.
   const ink = ensureContrast(neutralise(p.ink), surface, 4.5);
   const inkMuted = ensureContrast(neutralise(p.inkMuted, 0.1), surface, 4.5);
 
@@ -312,9 +264,6 @@ export function compileDesignTokens(
     "--bs-ink-rgb": rgbChannels(ink),
     "--bs-ink-muted": inkMuted,
 
-    // Inverted band — used by dark CTA/stat sections on a light page (and
-    // the reverse on a dark one). Derived rather than authored so it always
-    // has real contrast against the section it sits next to.
     "--bs-invert-surface": relativeLuminance(surface) > 0.4 ? "#0B0F19" : "#FFFFFF",
     "--bs-invert-ink": relativeLuminance(surface) > 0.4 ? "#FFFFFF" : "#0B0F19",
 
@@ -338,8 +287,6 @@ export function compileDesignTokens(
     "--bs-shadow-lift": elevation.lift,
     "--bs-border-width": BORDER[dna.geometry.borderTreatment],
     "--bs-border-color": `rgb(${rgbChannels(ink)} / 0.14)`,
-    // The accent, guaranteed readable as text on the page's own ground —
-    // a saturated brand colour is often unreadable at body size on white.
     "--bs-primary-on-surface": ensureContrast(p.primary, surface, 4.5),
 
     "--bs-section-y": rhythm.section,
@@ -347,9 +294,4 @@ export function compileDesignTokens(
   };
 
   return { vars, fontHref: googleFontHref(dna.typography.displayFamily, dna.typography.bodyFamily), mood: dna.mood };
-}
-
-/** Tokens as a React inline style object for the page wrapper element. */
-export function tokensToStyle(tokens: DesignTokens): React.CSSProperties {
-  return tokens.vars as React.CSSProperties;
 }
