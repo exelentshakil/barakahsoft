@@ -57,7 +57,7 @@ export async function POST(req: Request) {
             email: validEmail,
             slug,
             status: "new",
-            source: "home",
+            source: "outreach",
           })
           .select()
           .single();
@@ -106,7 +106,7 @@ export async function POST(req: Request) {
       email: rawEmail ? rawEmail.toLowerCase() : null,
       slug,
       status: "new",
-      source: "home",
+      source: "outreach",
     })
     .select()
     .single();
