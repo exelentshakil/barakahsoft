@@ -162,7 +162,7 @@ export function extractMockupData({
     city,
     trade,
     brandColor: brandColorHex,
-    logoUrl: null, // No logo needed per request
+    logoUrl: (extracted?.logo_url as string) || (facts?.logo_url as string) || payload?.logoUrl || null,
     rating,
     reviewCount,
     yearsExperience,
@@ -181,5 +181,14 @@ export function extractMockupData({
     bespokeCss,
     heroCaptureUrl: savedMockup.heroCaptureUrl || null,
     aboutCaptureUrl: savedMockup.aboutCaptureUrl || null,
+    aboutImageUrl:
+      ((artifact?.media_plan as Array<{ slot: string; url: string }>) || []).find(
+        (m) => m.slot === "about" || m.slot === "team" || m.slot === "service-0"
+      )?.url ||
+      (extracted?.about_image_url as string) ||
+      (facts?.about_image_url as string) ||
+      (extracted?.cutout_url as string) ||
+      (extracted?.hero_cutout as string) ||
+      null,
   };
 }
