@@ -66,14 +66,18 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
     </button>
   );
 
-  const promoImage = payload.heroImageUrl || payload.services?.find(s => s.imageUrl)?.imageUrl || payload.proof?.imageUrl;
-
   // Modern Multi-Column Mega Menu Panel with high-fidelity visual cards and thumbnail media
   const dropdown = (
     kind: "services" | "areas",
     label: string,
     items: SiteNavItem[]
-  ) => (
+  ) => {
+    // Dynamic image assignment based on menu type
+    const cardImage = kind === "services"
+      ? (payload.heroImageUrl || payload.services?.find(s => s.imageUrl)?.imageUrl || payload.proof?.imageUrl)
+      : (payload.areas?.find(a => a.imageUrl)?.imageUrl || payload.services?.find(s => s.imageUrl)?.imageUrl || payload.heroImageUrl || payload.proof?.imageUrl);
+      
+    return (
     <div
       className="bs-nav-group"
       onMouseEnter={() => setOpenPanel(kind)}
@@ -153,10 +157,10 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
             {/* Right Side Featured Promo Card in Mega Menu */}
             <div className="flex flex-col bg-white rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05),_0_0_0_1px_rgba(226,232,240,1)] overflow-hidden w-[280px] group isolate">
               {/* Premium Image Header */}
-              {promoImage && (
+              {cardImage ? (
                 <div className="relative h-32 w-full overflow-hidden bg-slate-100 flex-shrink-0">
                   <div className="absolute inset-0 bg-slate-900/15 group-hover:bg-slate-900/5 transition-colors duration-500 z-10" />
-                  <img src={promoImage} alt="Immediate Response" className="absolute inset-0 w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700" />
+                  <img src={cardImage} alt="Immediate Response" className="absolute inset-0 w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700" />
                   {/* Badges positioned over image */}
                   <div className="absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between">
                     <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/95 backdrop-blur-md shadow-sm text-[10px] font-extrabold uppercase tracking-[0.08em] text-emerald-700">
@@ -171,11 +175,32 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
                     )}
                   </div>
                 </div>
+              ) : (
+                <div className="relative h-32 w-full overflow-hidden bg-slate-900 flex-shrink-0">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+                  <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/20 rounded-full blur-2xl translate-y-1/3 -translate-x-1/4" />
+                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay" />
+                  <div className="absolute inset-0 border-b border-white/10" />
+                  
+                  {/* Badges positioned over gradient */}
+                  <div className="absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/10 backdrop-blur-md shadow-sm text-[10px] font-extrabold uppercase tracking-[0.08em] text-white border border-white/20">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      24/7 Rapid Response
+                    </span>
+                    {payload.proof.rating && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-amber-300 bg-white/10 backdrop-blur-md px-1.5 py-1 rounded-md shadow-sm border border-white/20">
+                        <Star className="h-3 w-3 fill-amber-400" />
+                        {payload.proof.rating}★
+                      </span>
+                    )}
+                  </div>
+                </div>
               )}
               
               <div className="p-4 flex flex-col justify-between flex-1 bg-gradient-to-b from-white to-slate-50 relative z-10">
                 <div className="space-y-1.5">
-                  {!promoImage && (
+                  {!cardImage && (
                     <div className="flex items-center justify-between mb-3">
                       <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.08em] text-emerald-700">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -189,8 +214,8 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
                       )}
                     </div>
                   )}
-                  <p className="text-[15px] font-black text-slate-900 leading-tight">Need Immediate On-Site Help?</p>
-                  <p className="text-[12px] text-slate-500 leading-[1.45]">
+                  <p className="text-[17px] font-black text-slate-900 leading-tight tracking-tight">Need Immediate On-Site Help?</p>
+                  <p className="text-[13px] text-slate-500 leading-[1.45]">
                     Certified local technicians are dispatched for fast emergency response and honest upfront estimates.
                   </p>
                 </div>
@@ -219,6 +244,7 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
       )}
     </div>
   );
+  };
 
   const links = (
     <>
