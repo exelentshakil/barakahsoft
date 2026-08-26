@@ -89,8 +89,8 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
       </button>
       {openPanel === kind && (
         <div className="bs-nav-panel bs-nav-panel-mega">
-          <div className="bs-nav-mega-grid">
-            <div className="bs-nav-mega-links">
+          <div className="flex items-stretch gap-6 w-full">
+            <div className="bs-nav-mega-links flex-1">
               <div className="bs-nav-mega-header">
                 <div className="flex items-center gap-2">
                   <span className="bs-nav-mega-kicker">
@@ -155,7 +155,7 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
             </div>
 
             {/* Right Side Featured Promo Card in Mega Menu */}
-            <div className="flex flex-col bg-white rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05),_0_0_0_1px_rgba(226,232,240,1)] overflow-hidden w-[280px] group isolate">
+            <div className="flex flex-col bg-white rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05),_0_0_0_1px_rgba(226,232,240,1)] overflow-hidden w-[240px] shrink-0 group isolate">
               {/* Premium Image Header */}
               {cardImage ? (
                 <div className="relative h-32 w-full overflow-hidden bg-slate-100 flex-shrink-0">

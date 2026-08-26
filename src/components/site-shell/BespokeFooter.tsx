@@ -106,7 +106,7 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
   const servicesList = payload.services.length > 0 ? payload.services : [];
   const areasList = payload.areas.length > 0 ? payload.areas : [];
 
-  const companyBio = payload.differentiator || `${payload.businessName} is dedicated to providing premium local property solutions with fast response times, expert technicians, and verified customer satisfaction.`;
+  const companyBio = payload.differentiator || `${payload.businessName} is dedicated to providing premium local ${(payload as any).industry ? (payload as any).industry.toLowerCase() : "professional"} solutions with expert service and verified customer satisfaction.`;
 
   return (
     <footer className="bs-footer">
@@ -114,11 +114,23 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
         {footer.ctaBand && !isCompact && (
           <div className="bs-footer-cta">
             <div>
-              <p className="bs-footer-kicker">Emergency Dispatch &amp; Free Quotes</p>
-              <h2>Need emergency restoration or property damage help?</h2>
-              <p className="bs-footer-cta-sub">
-                Our certified technicians are on call 24/7. Speak directly with a specialist or request an instant on-site assessment.
-              </p>
+              {(payload as any).industry ? (
+                <>
+                  <p className="bs-footer-kicker">Professional {(payload as any).industry} Services</p>
+                  <h2>Ready to get started with your project?</h2>
+                  <p className="bs-footer-cta-sub">
+                    Speak directly with a specialist or request a consultation today. We are here to help you achieve your goals.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="bs-footer-kicker">Expert Services &amp; Free Quotes</p>
+                  <h2>Need professional assistance or an expert consultation?</h2>
+                  <p className="bs-footer-cta-sub">
+                    Our team is ready to help. Speak directly with a specialist or request an instant assessment.
+                  </p>
+                </>
+              )}
             </div>
             <div className="bs-row bs-footer-cta-actions">
               {primaryCta}
@@ -132,7 +144,7 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
         )}
 
         {!isCompact && (
-          <div className="bs-footer-cols bs-footer-cols-4">
+          <div className={`bs-footer-cols ${areasList.length === 0 ? "bs-footer-cols-3" : "bs-footer-cols-4"}`}>
             {/* Col 1: Brand, Bio, Contact, Trust, Socials */}
             <div className="bs-footer-col-brand">
               <a href={siteHref(payload)} className="bs-logo bs-footer-logo">
@@ -150,7 +162,11 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
 
               <div className="bs-footer-badges">
                 <span className="bs-footer-badge">
-                  <Clock className="h-3.5 w-3.5 text-emerald-400" /> 24/7 Emergency Service
+                  {(payload as any).industry ? (
+                    <><Clock className="h-3.5 w-3.5 text-emerald-400" /> Fast &amp; Reliable Response</>
+                  ) : (
+                    <><Clock className="h-3.5 w-3.5 text-emerald-400" /> 24/7 Emergency Service</>
+                  )}
                 </span>
                 <span className="bs-footer-badge">
                   <ShieldCheck className="h-3.5 w-3.5 text-blue-400" /> Licensed &amp; Insured
@@ -227,11 +243,11 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
             </div>
 
             {/* Col 3: Service Areas / Locations */}
-            <div>
-              <p className="bs-footer-heading">Service Areas</p>
-              <div className="bs-footer-list">
-                {areasList.length > 0 ? (
-                  areasList.map((area) => {
+            {areasList.length > 0 && (
+              <div>
+                <p className="bs-footer-heading">Service Areas</p>
+                <div className="bs-footer-list">
+                  {areasList.map((area) => {
                     const hasPage = payload.bespokePages[`areas/${area.slug}`] && payload.innerPagesBuilt;
                     const href = hasPage
                       ? siteHref(payload, `/areas/${area.slug}`)
@@ -242,12 +258,10 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
                         <span>{area.h2}</span>
                       </a>
                     );
-                  })
-                ) : (
-                  <a href={homepageAnchor(payload, "areas")}>Service Area Coverage</a>
-                )}
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Col 4: Quick Links / Sitemap */}
             <div>
@@ -280,7 +294,7 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
         <div className="bs-footer-legal">
           <div className="bs-footer-legal-copy">
             <p>
-              &copy; {year} {payload.businessName}. All rights reserved. Professional Property Damage Restoration &amp; Cleaning.
+              &copy; {year} {payload.businessName}. All rights reserved. {(payload as any).industry ? `Professional ${(payload as any).industry} Services.` : ""}
             </p>
           </div>
           <nav>
