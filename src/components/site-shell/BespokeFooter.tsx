@@ -106,7 +106,7 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
   const servicesList = payload.services.length > 0 ? payload.services : [];
   const areasList = payload.areas.length > 0 ? payload.areas : [];
 
-  const companyBio = payload.differentiator || `${payload.businessName} is dedicated to providing premium local ${(payload as any).industry ? (payload as any).industry.toLowerCase() : "professional"} solutions with expert service and verified customer satisfaction.`;
+  const companyBio = payload.differentiator || `${payload.businessName} is dedicated to providing premium local ${payload.industry ? payload.industry.toLowerCase() : "professional"} solutions with expert service and verified customer satisfaction.`;
 
   return (
     <footer className="bs-footer">
@@ -114,9 +114,9 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
         {footer.ctaBand && !isCompact && (
           <div className="bs-footer-cta">
             <div>
-              {(payload as any).industry ? (
+              {payload.industry ? (
                 <>
-                  <p className="bs-footer-kicker">Professional {(payload as any).industry} Services</p>
+                  <p className="bs-footer-kicker">Professional {payload.industry} Services</p>
                   <h2>Ready to get started with your project?</h2>
                   <p className="bs-footer-cta-sub">
                     Speak directly with a specialist or request a consultation today. We are here to help you achieve your goals.
@@ -162,15 +162,16 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
 
               <div className="bs-footer-badges">
                 <span className="bs-footer-badge">
-                  {(payload as any).industry ? (
-                    <><Clock className="h-3.5 w-3.5 text-emerald-400" /> Fast &amp; Reliable Response</>
-                  ) : (
-                    <><Clock className="h-3.5 w-3.5 text-emerald-400" /> 24/7 Emergency Service</>
-                  )}
+                  <Clock className="h-3.5 w-3.5 text-emerald-400" /> 
+                  {payload.industry && !payload.industry.match(/plumb|hvac|electric|roof|water|fire|damage|restore|pest|locksmith|glass/i) 
+                    ? "Fast & Reliable Service" 
+                    : "24/7 Emergency Response"}
                 </span>
-                <span className="bs-footer-badge">
-                  <ShieldCheck className="h-3.5 w-3.5 text-blue-400" /> Licensed &amp; Insured
-                </span>
+                {payload.licensedInsured && (
+                  <span className="bs-footer-badge">
+                    <ShieldCheck className="h-3.5 w-3.5 text-blue-400" /> Licensed &amp; Insured
+                  </span>
+                )}
               </div>
 
               <div className="bs-footer-list bs-footer-contact">
@@ -183,7 +184,7 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
                 {payload.nap.email && (
                   <a href={`mailto:${payload.nap.email}`} className="bs-footer-contact-link">
                     <Mail className="mr-2 inline h-4 w-4 shrink-0 opacity-80" aria-hidden />
-                    <span>{payload.nap.email}</span>
+                    <span className="break-all line-clamp-2">{payload.nap.email}</span>
                   </a>
                 )}
                 {payload.nap.address && (
@@ -294,7 +295,7 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
         <div className="bs-footer-legal">
           <div className="bs-footer-legal-copy">
             <p>
-              &copy; {year} {payload.businessName}. All rights reserved. {(payload as any).industry ? `Professional ${(payload as any).industry} Services.` : ""}
+              &copy; {year} {payload.businessName}. All rights reserved. {payload.industry ? `Professional ${payload.industry} Services.` : ""}
             </p>
           </div>
           <nav>

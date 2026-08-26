@@ -41,6 +41,7 @@ import { Footer } from "@/components/landing/Footer";
 import { FAQAccordion } from "@/components/landing/FAQAccordion";
 import { Nav } from "@/components/landing/Nav";
 import { LandingTeamShowcase } from "@/components/landing/LandingTeamShowcase";
+import { LandingIndustries } from "@/components/landing/LandingIndustries";
 import { Marquee } from "@/components/landing/primitives/Marquee";
 import { ShowcaseComparisons } from "@/components/landing/ShowcaseComparisons";
 import { CrispChat } from "@/components/CrispChat";
@@ -293,6 +294,7 @@ export function LeadEngineLanding() {
 
       {/* 3. TEAM SHOWCASE */}
       <LandingTeamShowcase />
+      <LandingIndustries />
 
       {/* 4. 3-STEP EVIDENCE VALUE BANNER (High-Contrast Navy & Gold) */}
       <section className="relative overflow-hidden border-b border-[#d9e8f4] bg-[#07284d] py-10 text-white shadow-inner">

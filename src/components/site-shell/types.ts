@@ -18,6 +18,8 @@ export interface SiteNavItem {
 // so the shell components themselves never touch Supabase directly.
 export interface SitePayload {
   businessName: string;
+  industry: string;
+  licensedInsured: boolean;
   primaryAction: ConversionAction;
   primaryActionLabel: string;
   headline: string;

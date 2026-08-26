@@ -7,6 +7,7 @@ import type { PageInventory } from "@/lib/scrape/extract-text";
 import { conversionIntentFor } from "@/lib/conversion-intent";
 import { displayPhone } from "@/lib/phone";
 import { resolveBusinessContact } from "@/lib/business-contact";
+import { findLicenseInsuranceMention } from "@/lib/trust-signals";
 
 // render_shell atom — resolves an artifact + its lead/scrape context into
 // the flat SitePayload every shell component renders from. This is the
@@ -128,6 +129,8 @@ export function renderShell(
 
   return {
     businessName,
+    industry: lead.industry || "Local Services",
+    licensedInsured: findLicenseInsuranceMention(facts),
     primaryAction: intent.primary,
     primaryActionLabel: intent.primaryLabel,
     headline,
