@@ -47,20 +47,6 @@ import {
   Upload,
   User,
 } from "lucide-react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  PolarAngleAxis,
-  PolarGrid,
-  PolarRadiusAxis,
-  Radar,
-  RadarChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import type { Lead, LeadStatus, Artifact, ScrapeResults } from "@/types/database";
 import { toBlob } from "html-to-image";
 import { WorkspaceTabs, WorkspaceTabHint, TabPanel, type WorkspaceStep } from "@/components/admin/WorkspaceTabs";
@@ -89,17 +75,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { buildOfferOptions, type OfferOption } from "@/lib/audit/lead-value";
 import type { LeadCost } from "@/lib/cost/lead-cost";
 
-// Database status values, said the way an operator would say them. The raw
-// values are how the pipeline talks to itself; "qa_pending" tells someone
-// working this queue nothing about what they are supposed to do next.
 const STATUS_LABEL: Record<string, string> = {
   new: "New — not looked at yet",
   scraping: "Reading their site",
   ready: "Ready to build",
   rendering: "Building the site",
-  qa_pending: "Waiting for you to approve",
+  qa_pending: "Waiting for approval",
   qa_approved: "Approved — ready to send",
-  delivered: "Sent to the client",
+  delivered: "Sent to client",
   paid: "Paid",
   live: "Live",
   lost: "Lost",
@@ -124,14 +107,14 @@ function HeaderStat({
       : "text-slate-900";
   const bgBadge =
     tone === "bad"
-      ? "bg-rose-50/80 border-rose-200"
+      ? "bg-rose-50/70 border-rose-200/80"
       : tone === "good"
-      ? "bg-emerald-50/80 border-emerald-200"
-      : "bg-slate-50 border-slate-200/80";
+      ? "bg-emerald-50/70 border-emerald-200/80"
+      : "bg-slate-50/80 border-slate-200/70";
   return (
-    <div className={`min-w-0 rounded-lg border p-2 transition ${bgBadge}`}>
-      <p className="truncate text-[10px] font-bold uppercase tracking-wider text-slate-600">{label}</p>
-      <p className={`mt-0.5 truncate text-lg font-bold tabular-nums tracking-tight ${colour}`}>
+    <div className={`min-w-0 rounded-xl border p-2.5 transition ${bgBadge}`}>
+      <p className="truncate text-[10px] font-extrabold uppercase tracking-wider text-slate-500">{label}</p>
+      <p className={`mt-0.5 truncate text-base sm:text-lg font-extrabold tabular-nums tracking-tight ${colour}`}>
         {value}
         {suffix && <span className="ml-1 text-[11px] font-bold text-slate-500">{suffix}</span>}
       </p>
@@ -139,8 +122,6 @@ function HeaderStat({
   );
 }
 
-// The workspace steps, as ids only. `steps` itself is built from lead state
-// far below this point, and the tab has to be resolved before that.
 const TAB_IDS = ["lead", "build", "photos", "audit", "rivals", "review", "send", "close"];
 
 interface AdminLeadWorkspaceProps {
@@ -148,7 +129,6 @@ interface AdminLeadWorkspaceProps {
   artifact: Artifact | null;
   scrapeResults: ScrapeResults | null;
   otherLeads: Lead[];
-  /** Model spend so far on this lead. Zeroed when nothing has been recorded. */
   cost: LeadCost;
 }
 
@@ -168,17 +148,7 @@ export function AdminLeadWorkspace({
   const [previewPath, setPreviewPath] = useState("");
   const [previewViewport, setPreviewViewport] = useState<"desktop" | "mobile">("desktop");
   const [reloadKey, setReloadKey] = useState(0);
-  // The tab is local state, mirrored into the URL.
-  //
-  // It was read straight from useSearchParams and written with
-  // router.replace, which on a force-dynamic page is a server round trip —
-  // so every tab click sat for half a second re-rendering a page whose data
-  // had not changed. The panels are all already mounted; switching between
-  // them should cost nothing.
-  //
-  // history.replaceState updates the address bar without telling the router
-  // anything, so a refresh still lands on the right tab and the tab is still
-  // linkable, but the click itself is instant.
+
   const searchParams = useSearchParams();
   const [tab, setTabState] = useState(() => {
     const initial = searchParams.get("tab");
@@ -191,20 +161,11 @@ export function AdminLeadWorkspace({
     const url = new URL(window.location.href);
     if (next === "lead") url.searchParams.delete("tab");
     else url.searchParams.set("tab", next);
-    // replaceState, not pushState: stepping through the build should not make
-    // the back button walk every tab visited on the way.
     window.history.replaceState(window.history.state, "", url.toString());
   }, []);
 
-  // Scrape and generation both run in the background. This keeps every panel
-  // -- verified facts, brief defaults, preview, refine slots -- in step with
-  // the pipeline so nothing here needs a manual reload to become true.
   useLeadLive(lead.id, () => setReloadKey((k) => k + 1));
 
-  // The contact's name is not the business's name. Falling back to it put
-  // "Matt" in the header where the company belongs, and into the delivery
-  // email as the thing being redesigned. The domain is a far better stand-in
-  // until the real name is scraped.
   const businessName =
     lead.business_name ||
     (() => {
@@ -221,52 +182,29 @@ export function AdminLeadWorkspace({
   const email = nap.emails?.[0] || nap.email || lead.email || "No email on file";
   const portalUrl = `https://portal.barakahsoft.com/s/${lead.slug}`;
   
-  // Preview mode suppresses proposal/chat UI on every route, not just home.
   const previewUrl = `/s/${lead.slug}${previewPath}?view=preview`;
 
-  // 1. Real Extracted Brand & Proof Facts
   const colors = (facts.colors as { primary?: string; accent?: string } | undefined) || {};
   const primaryColor = colors.primary || (artifact?.extracted_assets as any)?.branding?.colors?.primary || "#533AFD";
   const accentColor = colors.accent || (artifact?.extracted_assets as any)?.branding?.colors?.accent || "#FFD12D";
   const resolvedLogo = (artifact?.extracted_assets as any)?.branding?.logo || (artifact?.extracted_assets as any)?.logo_url || facts.logo_url || (facts.branding as any)?.images?.logo || (facts.branding as any)?.logo || null;
   const logoName = resolvedLogo ? "Brand Logo Verified" : "Logo Pending";
 
-  // The scrape writes these at the top level of facts — there is no
-  // facts.proof object, so this read always missed and the header showed a
-  // hardcoded 5.0 with no count while the real 4.9 from 109 reviews sat
-  // beside it. A rating this screen invented is one an operator can repeat
-  // to a client on a call, so a missing value now reads as missing.
   const rating = typeof facts.rating === "number" ? facts.rating : null;
   const reviewCount = typeof facts.review_count === "number" ? facts.review_count : 0;
   const city = typeof nap.address === "string" ? nap.address.split(",")[0] : typeof facts.town === "string" ? facts.town : null;
-
-  // 2. Real Google Places Competitor Benchmark (Zero Fake Fallbacks)
-  // Rivals actually benchmarked, from the column the audit route writes.
-  // Excludes the client's own row, which is in there as a comparison.
-  const benchmark = scrapeResults?.competitors as { rows?: { isClient?: boolean }[] } | null | undefined;
-  const measuredRivals = benchmark?.rows?.filter((row) => !row.isClient).length ?? 0;
 
   const scrapedCompetitors = (facts.competitors as Array<{ name: string; user_ratings_total?: number; rating?: number; website?: string }>) || [];
   const competitorsList = scrapedCompetitors.length > 0
     ? [
         {
           name: `${businessName} (your lead)`,
-          // Their real review count, or nothing. This row used to assert
-          // "5.0 ★", "0.12s (98/100)", "28 Pages" and "Leader" for a site
-          // that had not been measured — invented figures about our own
-          // rebuild, sitting in a table of real competitor data.
           reviews: reviewCount > 0 ? `${reviewCount} ★ ${rating}` : "—",
           speed: typeof scrapeResults?.pagespeed_mobile?.score === "number" ? `${scrapeResults.pagespeed_mobile.score}/100` : "—",
           routes: "—",
           territory: city ?? "—",
           status: "Your lead",
         },
-        // The same rule the row above already follows, applied to the rows it
-        // is compared against. These three fields were invented: reviews fell
-        // back to "50+ ★ 4.8", and speed and page count were computed from
-        // the row's index — competitor one always 0.45s and 4 pages, two
-        // always 0.65s and 6. An operator reads this table to a client as
-        // evidence, so an unmeasured cell has to look unmeasured.
         ...scrapedCompetitors.slice(0, 3).map((c) => ({
           name: c.name,
           reviews:
@@ -309,7 +247,6 @@ export function AdminLeadWorkspace({
   const pricing = (artifact?.extracted_assets?.pricing as any) ?? null;
   const pricingIsConfigured = typeof pricing?.offerId === "string" || (Array.isArray(pricing?.offerOptions) && pricing.offerOptions.length > 0);
 
-  // Outreach Mode & Sequence State
   const defaultIsCold = lead.source !== "redesign" && lead.source !== "home";
   const [outreachMode, setOutreachMode] = useState<"inbound" | "cold">(defaultIsCold ? "cold" : "inbound");
   const [currentLeadStatus, setCurrentLeadStatus] = useState<LeadStatus>(lead.status);
@@ -338,7 +275,6 @@ export function AdminLeadWorkspace({
         };
       }
     } else {
-      // Cold Outreach (Born-to-Help / Value Gift)
       if (step === 1) {
         return {
           subject: `Rebuilt ${businessName} homepage (no charge)`,
@@ -390,7 +326,6 @@ export function AdminLeadWorkspace({
     }
   }
 
-  // Price formatting
   const setupPrice = pricingIsConfigured ? pricing.setupPrice : aiLeadValue?.suggested.setupPrice ?? 997;
   const monthlyPrice = pricingIsConfigured ? pricing.monthlyPrice : aiLeadValue?.suggested.monthlyPrice ?? 0;
   const priceDisplay =
@@ -400,7 +335,6 @@ export function AdminLeadWorkspace({
       ? `$${setupPrice} setup · $${monthlyPrice}/mo`
       : `$${setupPrice}`;
 
-  // Dynamic real-time revenue metrics from actual database leads
   const collectedThisWeek = otherLeads
     .filter((l) => Boolean(l.paid_at) || l.status === "paid" || l.status === "live")
     .reduce((acc) => acc + 779, 0);
@@ -409,10 +343,6 @@ export function AdminLeadWorkspace({
     .filter((l) => !l.paid_at && !["paid", "live", "lost"].includes(l.status))
     .reduce((acc) => acc + 779, 0);
 
-  // The job, as five steps in the order they actually happen. `done` is read
-  // from real state rather than from where the operator has clicked, so the
-  // strip is the lead's progress record: the next thing to do is the first
-  // step without a tick.
   const isApproved = artifact?.qa_status === "approved" || ["qa_approved", "delivered", "paid", "live"].includes(lead.status);
   const steps: WorkspaceStep[] = [
     {
@@ -425,57 +355,54 @@ export function AdminLeadWorkspace({
     {
       id: "build",
       label: "Build",
-      hint: "Check the brief reads like their real business, pick the model, then generate. This is the slow pass — a few minutes.",
+      hint: "Check the brief reads like their real business, pick the model, then generate. High-converting homepage pass.",
       icon: Sparkles,
       done: !!artifact?.bespoke_homepage_html,
     },
     {
       id: "photos",
       label: "Photos",
-      hint: "Swap the generated placeholders for the client's own photography. Generated imagery sells the concept; it is never the deliverable.",
+      hint: "Swap the generated placeholders for the client's own photography.",
       icon: ImageIcon,
       done: !!artifact?.bespoke_homepage_html,
     },
     {
       id: "audit",
       label: "Their faults",
-      hint: "What is wrong with the site they have now. Every line is checkable against their own site — this is the sales conversation, not a report.",
+      hint: "What is wrong with the site they have now. Every line is checkable against their own site.",
       icon: ShieldAlert,
       done: !!scrapeResults,
     },
     {
       id: "rivals",
       label: "Rivals",
-      hint: "Where they are invisible in local search, and how real competitors compare. Costs real searches, so it runs only when you ask.",
+      hint: "Where they are invisible in local search, and how real competitors compare.",
       icon: BarChart3,
       done: !!(scrapeResults?.competitors || scrapeResults?.search_visibility),
     },
     {
       id: "review",
       label: "Approve",
-      hint: "Look at the real page the client will see, then approve it. Nothing reaches them as a proposal until this is done.",
+      hint: "Look at the real page the client will see, then approve it.",
       icon: Eye,
       done: isApproved,
     },
     {
       id: "send",
       label: "Send",
-      hint: "Email the proposal link. This is the moment the 48-hour clock is answering for.",
+      hint: "Email the proposal link. This is the moment the 48-hour clock answers for.",
       icon: Send,
       done: !!lead.delivered_at,
     },
     {
       id: "close",
       label: "Get paid",
-      hint: "Set the price and dispatch the payment link. Payment unlocks the deep site build and go-live.",
+      hint: "Set the price and dispatch the payment link. Payment unlocks full build and go-live.",
       icon: CircleDollarSign,
       done: !!lead.paid_at,
     },
   ];
 
-  // Step 1. This is the first point at which a lead costs anything: intake
-  // deliberately spends nothing, so a spam submission sits in the list for
-  // free until someone decides it is real.
   async function handleAnalyse(depth: "light" | "deep") {
     setRescraping(true);
     try {
@@ -486,8 +413,6 @@ export function AdminLeadWorkspace({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Could not start analysis");
-      // The workspace follows the job live, so there is nothing to wait for
-      // here — panels fill in as each step lands.
     } catch (err) {
       alert(err instanceof Error ? err.message : "Could not start analysis");
       setRescraping(false);
@@ -504,7 +429,7 @@ export function AdminLeadWorkspace({
       });
       if (!res.ok) throw new Error("Scrape failed");
     } catch {
-      alert("Could not start reading their site. Try again in a moment — if it keeps failing, the site may be blocking us.");
+      alert("Could not start reading their site. Try again in a moment.");
       setRescraping(false);
     }
   }
@@ -622,9 +547,6 @@ export function AdminLeadWorkspace({
         }),
       });
       const data = await res.json().catch(() => ({}));
-      // A failure used to report itself as "checkout session prepared!",
-      // so an operator would tell a client a payment link was on its way
-      // when nothing had been created at all.
       if (!res.ok || !data.url) {
         alert(data.error || "Could not create the payment link. Check the price is set for this lead.");
         return;
@@ -643,72 +565,64 @@ export function AdminLeadWorkspace({
   function renderLeadCard(item: Lead) {
     const isSelected = item.id === lead.id;
     const itemTrade = item.industry || (item.persona ? item.persona.replace(/-/g, " ") : "Business");
-    // Two lines instead of six. Everything trimmed from here — the trade
-    // pill, the price, the SLA timer — is on the right-hand pane for the
-    // lead actually open, so repeating it once per row in a list that grows
-    // was buying nothing and costing the list its scannability.
     return (
       <Link
         key={item.id}
         href={`/admin/leads/${item.id}`}
         title={`${item.business_name || item.slug} · ${itemTrade}`}
-        className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition border ${
+        className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 transition border ${
           isSelected
-            ? "border-indigo-500 bg-indigo-50/70 ring-1 ring-indigo-500/20"
-            : "border-transparent hover:border-slate-200 hover:bg-slate-50"
+            ? "border-indigo-500 bg-indigo-50/80 ring-1 ring-indigo-500/30 text-indigo-950 font-bold shadow-2xs"
+            : "border-transparent text-slate-700 hover:border-slate-200 hover:bg-slate-50/90"
         }`}
       >
         <span
-          className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+          className={`h-2 w-2 shrink-0 rounded-full ${
             item.status === "paid"
-              ? "bg-emerald-500"
+              ? "bg-emerald-500 shadow-sm"
               : item.status === "delivered" || item.status === "qa_approved"
-                ? "bg-indigo-500"
-                : "bg-amber-500"
+                ? "bg-indigo-500 shadow-sm"
+                : "bg-amber-500 shadow-sm"
           }`}
           aria-hidden
         />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13px] font-bold leading-tight text-slate-900">
+          <span className="block truncate text-xs font-bold leading-tight text-slate-900">
             {item.business_name || item.slug}
           </span>
-          <span className="block truncate text-[10px] leading-tight text-slate-500">
+          <span className="block truncate text-[10px] leading-tight text-slate-500 font-medium mt-0.5">
             {STATUS_LABEL[item.status] ?? item.status}
             {item.contact_name ? ` · ${item.contact_name}` : ""}
           </span>
         </span>
         {(item.source === "outreach" || item.source === "manual") && (
-          <span className="shrink-0 text-[10px] font-bold text-sky-600">🎯</span>
+          <span className="shrink-0 text-[11px] font-bold text-sky-600">🎯</span>
         )}
       </Link>
     );
   }
 
   return (
-    <div className="grid min-w-0 gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
+    <div className="grid min-w-0 gap-6 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)]">
       {/* 1. LEFT ASIDE: INBOUND LEAD ORDERS & WEEKLY PULSE */}
       <aside className="min-w-0 space-y-6">
         <div className="rounded-2xl border border-slate-200/90 bg-white p-4 space-y-4 shadow-sm">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 px-1">
-            <span className="text-sm font-extrabold text-slate-900 tracking-tight">Your Pipeline</span>
-            <span className="rounded-full bg-indigo-50 border border-indigo-200/60 px-2.5 py-0.5 text-xs font-black text-indigo-700">
-              {otherLeads.length} leads
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3 px-1">
+            <span className="text-sm font-extrabold text-slate-900 tracking-tight">Lead Pipeline</span>
+            <span className="rounded-full bg-indigo-50 border border-indigo-200/70 px-2.5 py-0.5 text-xs font-extrabold text-indigo-700">
+              {otherLeads.length} total
             </span>
           </div>
 
-          {/* Collapsed by default once there are more than a handful: an
-              always-open list of every lead is unreadable the moment this
-              works, and the group that matters is usually the one holding
-              the lead already open. */}
           <details className="group" open={inboundLeads.length > 0 && inboundLeads.length <= 8}>
-            <summary className="flex cursor-pointer list-none items-center justify-between rounded-lg px-1 py-1.5 hover:bg-slate-50">
-              <span className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-emerald-800">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                Inbound Submissions ({inboundLeads.length})
+            <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl px-2 py-1.5 hover:bg-slate-50">
+              <span className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-wider text-emerald-800">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-sm" />
+                Inbound Leads ({inboundLeads.length})
               </span>
               <ChevronRight className="h-3.5 w-3.5 text-slate-400 transition group-open:rotate-90" />
             </summary>
-            <div className="space-y-2 pt-2">
+            <div className="space-y-1.5 pt-2">
               {inboundLeads.length === 0 ? (
                 <p className="px-2 py-1 text-xs italic text-slate-400">No inbound submissions yet</p>
               ) : (
@@ -717,9 +631,9 @@ export function AdminLeadWorkspace({
             </div>
           </details>
 
-          <details className="group border-t border-slate-100 pt-2" open={outreachLeads.length > 0 && outreachLeads.length <= 8}>
-            <summary className="flex cursor-pointer list-none items-center justify-between rounded-lg px-1 py-1.5 hover:bg-slate-50">
-              <span className="flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-wider text-slate-600">
+          <details className="group border-t border-slate-100 pt-3" open={outreachLeads.length > 0 && outreachLeads.length <= 8}>
+            <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl px-2 py-1.5 hover:bg-slate-50">
+              <span className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-slate-600">
                 🎯 Manual Outreach ({outreachLeads.length})
               </span>
               <ChevronRight className="h-3.5 w-3.5 text-slate-400 transition group-open:rotate-90" />
@@ -740,7 +654,7 @@ export function AdminLeadWorkspace({
             leads={inboundLeads}
             track="inbound"
             title="Inbound delivery sequence"
-            blurb="These people asked for the rebuild, so the first message delivers rather than introduces. Same three beats, warmer copy."
+            blurb="These prospects requested their rebuild, so message 1 delivers rather than pitches."
           />
         )}
 
@@ -749,59 +663,111 @@ export function AdminLeadWorkspace({
         <PeriodPulsePanel collectedRevenue={collectedThisWeek} pipelineToClose={pendingCloseAmount} />
       </aside>
 
-      {/* 2. RIGHT COLUMN: LINEAR STUDIO WORKSPACE */}
-      <div className="space-y-8">
-        <div className="min-w-0 space-y-2.5 rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-sm sm:p-4">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              {lead.source === "outreach" || lead.source === "manual" ? (
-                <Badge variant="outline" className="whitespace-nowrap text-xs font-bold px-2.5 py-1 bg-sky-50 text-sky-700 border-sky-300">
-                  🎯 Manual Outreach
+      {/* 2. RIGHT COLUMN: MASTER COMMAND STUDIO */}
+      <div className="space-y-6">
+        {/* Master Command Card */}
+        <div className="min-w-0 space-y-4 rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm">
+          {/* Header Row: Lead Identity & Actions */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between border-b border-slate-100 pb-4">
+            <div className="space-y-1.5 min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                {lead.source === "outreach" || lead.source === "manual" ? (
+                  <Badge variant="outline" className="whitespace-nowrap text-[11px] font-extrabold px-2.5 py-0.5 bg-sky-50 text-sky-700 border-sky-300 rounded-lg">
+                    🎯 Manual Outreach
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="whitespace-nowrap text-[11px] font-extrabold px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border-emerald-300 rounded-lg">
+                    ⚡ Inbound Ad Lead
+                  </Badge>
+                )}
+                <Badge variant="outline" className="whitespace-nowrap text-[11px] font-bold px-2.5 py-0.5 bg-slate-50 text-slate-700 border-slate-300 rounded-lg">
+                  {STATUS_LABEL[lead.status] ?? lead.status}
                 </Badge>
-              ) : (
-                <Badge variant="outline" className="whitespace-nowrap text-xs font-bold px-2.5 py-1 bg-emerald-50 text-emerald-700 border-emerald-300">
-                  ⚡ Inbound Lead
-                </Badge>
-              )}
-              <Badge variant="outline" className="whitespace-nowrap text-xs font-bold px-2.5 py-1">
-                {STATUS_LABEL[lead.status] ?? lead.status}
-              </Badge>
-              <DeliverySlaTimer createdAt={lead.created_at} deliveredAt={lead.delivered_at} />
-            </div>
-            <div className="mt-2 flex flex-wrap items-center gap-2.5">
-              <h1 className="truncate text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
-                {businessName}
-              </h1>
-              <div className="flex shrink-0 items-center rounded-xl border border-slate-200 bg-white">
-                <EditLeadDialog
-                  leadId={lead.id}
-                  businessName={lead.business_name}
-                  sourceUrl={lead.source_url}
-                  facebookPixelId={lead.facebook_pixel_id}
-                  googleSiteVerification={lead.google_site_verification}
-                  contactName={lead.contact_name}
-                  phone={lead.phone}
-                  email={lead.email}
-                />
-                <DeleteLeadButton leadId={lead.id} />
+                <DeliverySlaTimer createdAt={lead.created_at} deliveredAt={lead.delivered_at} />
               </div>
+
+              <div className="flex items-center gap-3 pt-0.5">
+                <h1 className="truncate text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">
+                  {businessName}
+                </h1>
+                <div className="flex shrink-0 items-center rounded-xl border border-slate-200/90 bg-white shadow-2xs">
+                  <EditLeadDialog
+                    leadId={lead.id}
+                    businessName={lead.business_name}
+                    sourceUrl={lead.source_url}
+                    facebookPixelId={lead.facebook_pixel_id}
+                    googleSiteVerification={lead.google_site_verification}
+                    contactName={lead.contact_name}
+                    phone={lead.phone}
+                    email={lead.email}
+                  />
+                  <DeleteLeadButton leadId={lead.id} />
+                </div>
+              </div>
+
+              <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-semibold text-slate-600">
+                <span>{lead.contact_name || "Business Owner"}</span>
+                <span className="text-slate-300">·</span>
+                <span className="text-slate-800 font-bold">{phone}</span>
+                <span className="text-slate-300">·</span>
+                <span className="truncate text-slate-800">{email}</span>
+              </p>
             </div>
-            <p className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-sm font-semibold text-slate-600">
-              <span>{lead.contact_name || "Owner"}</span>
-              <span className="text-slate-300">|</span>
-              <span className="text-slate-800">{phone}</span>
-              <span className="text-slate-300">|</span>
-              <span className="truncate text-slate-800">{email}</span>
-            </p>
+
+            {/* Quick Action Buttons */}
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <a
+                href={portalUrl}
+                target="_blank"
+                rel="noreferrer"
+                title="Opens the page the client sees: their new homepage, the report and the price."
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-2xs hover:border-slate-300 hover:bg-slate-50 transition"
+              >
+                <ExternalLink className="h-3.5 w-3.5 text-slate-400" /> Client Portal
+              </a>
+
+              <button
+                onClick={handleSendBrevoEmail}
+                disabled={sendingEmail}
+                title="Emails the client a private link to their new homepage and report."
+                className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-bold shadow-2xs transition ${
+                  emailSent
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100/80"
+                    : "border-slate-200/90 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                }`}
+              >
+                <Mail className="h-3.5 w-3.5 text-slate-400" />
+                {sendingEmail ? "Sending..." : emailSent ? "Pitch Sent ✓" : "Email Pitch"}
+              </button>
+
+              {lead.phone && (
+                <a
+                  href={`tel:${lead.phone.replace(/\D/g, "")}`}
+                  title={`Calls ${lead.phone}`}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-2xs hover:border-slate-300 hover:bg-slate-50 transition"
+                >
+                  <PhoneCall className="h-3.5 w-3.5 text-slate-400" /> Call
+                </a>
+              )}
+
+              <button
+                onClick={handleGenerateStripeCheckout}
+                disabled={generatingStripe}
+                title="Creates a Stripe payment link for this price and opens it."
+                className="inline-flex items-center gap-1.5 rounded-xl bg-[#533afd] hover:bg-[#432ec4] text-white px-4 py-2 text-xs font-bold shadow-sm shadow-indigo-500/20 transition"
+              >
+                <CircleDollarSign className="h-3.5 w-3.5 text-amber-300" /> Ask Payment ({priceDisplay})
+              </button>
+            </div>
           </div>
 
           {/* Outreach Pipeline Status & Outcome Toolbar */}
-          <div className="min-w-0 rounded-xl border border-slate-200 bg-slate-50/80 p-2 space-y-1.5">
-            <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2.5">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Outreach Stage:</span>
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Stage:</span>
                 <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-extrabold ${
                     currentLeadStatus === "paid" || currentLeadStatus === "live"
                       ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
                       : currentLeadStatus === "lost"
@@ -814,9 +780,9 @@ export function AdminLeadWorkspace({
                   }`}
                 >
                   {currentLeadStatus === "lost"
-                    ? "🚫 Not Interested / Do Not Contact"
+                    ? "🚫 Not Interested / Lost"
                     : currentLeadStatus === "paid" || currentLeadStatus === "live"
-                    ? "🏆 Won & Paid (Live)"
+                    ? "🏆 Won & Paid"
                     : currentLeadStatus === "contacted"
                     ? "💬 In Conversation"
                     : currentLeadStatus === "delivered"
@@ -824,7 +790,6 @@ export function AdminLeadWorkspace({
                     : "Ready for Outreach"}
                 </span>
 
-                {/* Real-time Email Link View Tracker */}
                 {lead.last_viewed_at ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 animate-pulse">
                     <Eye className="h-3 w-3" />
@@ -832,19 +797,19 @@ export function AdminLeadWorkspace({
                   </span>
                 ) : lead.delivered_at ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200/70 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700">
-                    <Clock3 className="h-3 w-3" /> Email Sent · Waiting for click
+                    <Clock3 className="h-3 w-3" /> Email Sent · Awaiting Open
                   </span>
                 ) : null}
               </div>
 
-              {/* Quick 1-Click Outcome Buttons */}
+              {/* 1-Click Outcome Buttons */}
               <div className="flex flex-wrap items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => handleUpdateLeadStatus("contacted")}
-                  className={`rounded-md px-2.5 py-1 text-xs font-bold transition border ${
+                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition border ${
                     currentLeadStatus === "contacted"
-                      ? "bg-blue-600 text-white border-blue-700 shadow-xs"
+                      ? "bg-blue-600 text-white border-blue-700 shadow-2xs"
                       : "bg-white text-slate-700 border-slate-200 hover:bg-blue-50 hover:text-blue-700"
                   }`}
                 >
@@ -853,9 +818,9 @@ export function AdminLeadWorkspace({
                 <button
                   type="button"
                   onClick={() => handleUpdateLeadStatus("paid")}
-                  className={`rounded-md px-2.5 py-1 text-xs font-bold transition border ${
+                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition border ${
                     currentLeadStatus === "paid" || currentLeadStatus === "live"
-                      ? "bg-emerald-600 text-white border-emerald-700 shadow-xs"
+                      ? "bg-emerald-600 text-white border-emerald-700 shadow-2xs"
                       : "bg-white text-slate-700 border-slate-200 hover:bg-emerald-50 hover:text-emerald-700"
                   }`}
                 >
@@ -864,9 +829,9 @@ export function AdminLeadWorkspace({
                 <button
                   type="button"
                   onClick={() => handleUpdateLeadStatus("lost")}
-                  className={`rounded-md px-2.5 py-1 text-xs font-bold transition border ${
+                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition border ${
                     currentLeadStatus === "lost"
-                      ? "bg-rose-600 text-white border-rose-700 shadow-xs"
+                      ? "bg-rose-600 text-white border-rose-700 shadow-2xs"
                       : "bg-white text-slate-700 border-slate-200 hover:bg-rose-50 hover:text-rose-700"
                   }`}
                 >
@@ -876,7 +841,7 @@ export function AdminLeadWorkspace({
                   <button
                     type="button"
                     onClick={() => handleUpdateLeadStatus("qa_approved")}
-                    className="rounded-md bg-white px-2 py-1 text-[11px] font-semibold text-slate-500 border border-slate-200 hover:bg-slate-100"
+                    className="rounded-lg bg-white px-2 py-1 text-[11px] font-semibold text-slate-500 border border-slate-200 hover:bg-slate-100"
                   >
                     Reset
                   </button>
@@ -885,14 +850,14 @@ export function AdminLeadWorkspace({
             </div>
 
             {currentLeadStatus === "lost" && (
-              <p className="text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded p-2">
-                ⚠️ Lead is marked as Not Interested. Email delivery is disabled to prevent spam.
+              <p className="text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-2">
+                ⚠️ Lead is marked as Not Interested. Email delivery is disabled.
               </p>
             )}
           </div>
 
-          {/* Key metrics grid */}
-          <div className="grid grid-cols-2 gap-2 border-y border-slate-100 py-2 sm:grid-cols-3 xl:grid-cols-5">
+          {/* Key Metrics Grid */}
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-5">
             <HeaderStat
               label="Proposal link activity"
               value={lead.last_viewed_at ? "Opened ✓" : lead.delivered_at ? "Sent" : "Unsent"}
@@ -920,12 +885,6 @@ export function AdminLeadWorkspace({
               value={`${Array.isArray(facts.sitemap_urls) ? (facts.sitemap_urls as unknown[]).length : services.length || 0}`}
               tone="neutral"
             />
-            {/* Sits beside the price being asked, which is the only place
-                cost-to-process means anything. Tokens are always real;
-                dollars appear only for models that have been priced. */}
-            {/* Ads plus models, against the price being asked two rows
-                below. Falls back to whichever half is known rather than
-                showing nothing, and to raw tokens when no model is priced. */}
             <HeaderStat
               label="Cost to acquire"
               value={
@@ -941,655 +900,580 @@ export function AdminLeadWorkspace({
                     ? ` · ads $${cost.adShareUsd.toFixed(2)} of ${cost.adShareCohort}`
                     : ` · ${cost.calls} model calls`
                   : cost.calls > 0
-                    ? " tokens · no price set"
+                    ? " tokens · no price"
                     : ""
               }
               tone="neutral"
             />
           </div>
-
-          <div className="flex flex-wrap items-center gap-1.5">
-            <a
-              href={portalUrl}
-              target="_blank"
-              rel="noreferrer"
-              title="Opens the page the client sees: their new homepage, the report and the price."
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 shadow-xs hover:border-slate-300 hover:bg-slate-50 transition"
-            >
-              <ExternalLink className="h-3.5 w-3.5 text-slate-400" /> See what the client sees
-            </a>
-
-            <button
-              onClick={handleSendBrevoEmail}
-              disabled={sendingEmail}
-              title="Emails the client a private link to their new homepage and report."
-              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-xs transition ${
-                emailSent
-                  ? "border-emerald-200 bg-emerald-50/70 text-emerald-700 hover:bg-emerald-100/80"
-                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
-              }`}
-            >
-              <Mail className="h-3.5 w-3.5 text-slate-400" />
-              {sendingEmail ? "Sending..." : emailSent ? "Link sent ✓" : "Email their site to them"}
-            </button>
-
-            {lead.phone && (
-              <a
-                href={`tel:${lead.phone.replace(/\D/g, "")}`}
-                title={`Calls ${lead.phone}`}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 shadow-xs hover:border-slate-300 hover:bg-slate-50 transition"
-              >
-                <PhoneCall className="h-3.5 w-3.5 text-slate-400" /> Call them
-              </a>
-            )}
-
-            <button
-              onClick={handleGenerateStripeCheckout}
-              disabled={generatingStripe}
-              title="Creates a Stripe payment link for this price and opens it."
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 shadow-xs hover:border-slate-300 hover:bg-slate-50 transition"
-            >
-              <CircleDollarSign className="h-3.5 w-3.5 text-slate-400" /> Ask for payment ({priceDisplay})
-            </button>
-          </div>
         </div>
 
-        {/* Rail and content are siblings in a row, so the step's own work
-            gets every pixel the rail is not using. */}
+        {/* Rail and content are siblings in a row */}
         <div className="flex flex-col gap-4 lg:flex-row lg:gap-5">
-        <WorkspaceTabs steps={steps} active={tab} onChange={setTab} />
+          <WorkspaceTabs steps={steps} active={tab} onChange={setTab} />
 
-        <div className="min-w-0 flex-1 space-y-4">
-        <WorkspaceTabHint steps={steps} active={tab} />
+          <div className="min-w-0 flex-1 space-y-4">
+            <WorkspaceTabHint steps={steps} active={tab} />
 
-        <TabPanel active={tab === "lead"}>
-        {/* LINEAR STEP 1: INBOUND INTAKE & VERIFIED FACTS */}
-        <div className="rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-sm space-y-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4">
-            <div className="flex items-center gap-3">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 border border-indigo-200 text-xs font-black text-indigo-700 shrink-0">
-                1
-              </span>
-              <h3 className="font-bold text-base sm:text-lg text-slate-900">Inbound Lead &amp; Verified Facts</h3>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {!scrapeResults ? (
-                <button
-                  onClick={() => handleAnalyse("light")}
-                  disabled={rescraping}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-indigo-700 disabled:opacity-60 shadow-xs transition"
-                >
-                  <RefreshCw className={`h-3.5 w-3.5 ${rescraping ? "animate-spin" : ""}`} />
-                  {rescraping ? "Reading site..." : "Read site (2 pages)"}
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={() => handleRescrape("light")}
-                    disabled={rescraping}
-                    title="Refresh brand colours, logo, rating and reviews. One page."
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-xs"
-                  >
-                    <RefreshCw className={`h-3.5 w-3.5 text-indigo-600 ${rescraping ? "animate-spin" : ""}`} />
-                    Refresh (1 page)
-                  </button>
-                  <button
-                    onClick={() => handleAnalyse("deep")}
-                    disabled={rescraping}
-                    title="Reads up to 25 of their pages instead of 2. Slower and costs more, but it is what finds the page-by-page faults you sell against."
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-xs"
-                  >
-                    Deep crawl (25 pages)
-                  </button>
-                </>
-              )}
-              {scrapeResults && (
-                <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-bold text-emerald-700 shrink-0">
-                  <ShieldCheck className="h-3.5 w-3.5" /> Verified
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="grid gap-5 sm:grid-cols-3 text-sm leading-relaxed">
-            <div className="rounded-xl bg-slate-50/80 p-5 border border-slate-200/80 space-y-2">
-              <span className="font-extrabold uppercase tracking-wider text-slate-500 text-xs">Selected Intake Pains</span>
-              {lead.pain_points.length > 0 ? (
-                lead.pain_points.map((p) => <p key={p} className="font-bold text-slate-900 text-sm">• {p}</p>)
-              ) : (
-                <p className="text-slate-600 font-medium text-sm">Standard Speed &amp; Conversion Optimization</p>
-              )}
-            </div>
-
-            <div className="rounded-xl bg-slate-50/80 p-5 border border-slate-200/80 space-y-2">
-              <span className="font-extrabold uppercase tracking-wider text-slate-500 text-xs">Verified Credentials</span>
-              <p className="font-bold text-slate-900 text-sm">
-                • Google Rating: {reviewCount > 0 ? `${rating} ★ (${reviewCount}+ Reviews)` : "Pending Verification"}
-              </p>
-              <p className="font-bold text-slate-900 text-sm">
-                • Location: {city || "Global / Digital"}
-              </p>
-              <p className="font-bold text-slate-900 text-sm">• Operating Business Entity</p>
-            </div>
-
-            <div className="rounded-xl bg-slate-50/80 p-5 border border-slate-200/80 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="font-extrabold uppercase tracking-wider text-slate-500 text-xs">Extracted Brand Tokens</span>
-                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                  {logoName}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1.5 font-mono text-xs font-bold text-slate-800 bg-white px-2 py-1 rounded border border-slate-200 shadow-2xs">
-                  <span className="h-4 w-4 rounded-full border shadow-inner shrink-0" style={{ backgroundColor: primaryColor }} /> {primaryColor}
-                </span>
-                <span className="flex items-center gap-1.5 font-mono text-xs font-bold text-slate-800 bg-white px-2 py-1 rounded border border-slate-200 shadow-2xs">
-                  <span className="h-4 w-4 rounded-full border shadow-inner shrink-0" style={{ backgroundColor: accentColor }} /> {accentColor}
-                </span>
-              </div>
-
-              {resolvedLogo && (
-                <div className="mt-2 flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-2.5 shadow-2xs">
-                  <div className="flex h-10 w-24 items-center justify-center rounded bg-slate-50 border border-slate-100 p-1 shrink-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={resolvedLogo}
-                      alt={businessName}
-                      className="max-h-full max-w-full object-contain"
-                      onError={(e) => (e.currentTarget.style.display = "none")}
-                    />
+            <TabPanel active={tab === "lead"}>
+              {/* STEP 1: INBOUND INTAKE & VERIFIED FACTS */}
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-sm space-y-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-200 text-xs font-black text-indigo-700 shrink-0">
+                      1
+                    </span>
+                    <h3 className="font-bold text-base sm:text-lg text-slate-900">Inbound Lead &amp; Verified Facts</h3>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-slate-800 truncate">{businessName}</p>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#0b8f5b]">
-                      <CheckCircle2 className="h-3 w-3" /> Brand Asset Ready
+                  <div className="flex flex-wrap items-center gap-2">
+                    {!scrapeResults ? (
+                      <button
+                        onClick={() => handleAnalyse("light")}
+                        disabled={rescraping}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-[#533afd] hover:bg-[#432ec4] px-4 py-2 text-xs font-bold text-white disabled:opacity-60 shadow-sm shadow-indigo-500/20 transition"
+                      >
+                        <RefreshCw className={`h-3.5 w-3.5 ${rescraping ? "animate-spin" : ""}`} />
+                        {rescraping ? "Reading site..." : "Read site (2 pages)"}
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => handleRescrape("light")}
+                          disabled={rescraping}
+                          title="Refresh brand colours, logo, rating and reviews. One page."
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
+                        >
+                          <RefreshCw className={`h-3.5 w-3.5 text-indigo-600 ${rescraping ? "animate-spin" : ""}`} />
+                          Refresh (1 page)
+                        </button>
+                        <button
+                          onClick={() => handleAnalyse("deep")}
+                          disabled={rescraping}
+                          title="Reads up to 25 of their pages instead of 2."
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
+                        >
+                          Deep crawl (25 pages)
+                        </button>
+                      </>
+                    )}
+                    {scrapeResults && (
+                      <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-bold text-emerald-700 shrink-0">
+                        <ShieldCheck className="h-3.5 w-3.5" /> Verified
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-3 text-xs leading-relaxed">
+                  <div className="rounded-xl bg-slate-50/80 p-4 border border-slate-200/80 space-y-2">
+                    <span className="font-extrabold uppercase tracking-wider text-slate-500 text-[10px]">Selected Intake Pains</span>
+                    {lead.pain_points.length > 0 ? (
+                      lead.pain_points.map((p) => <p key={p} className="font-bold text-slate-900 text-xs">• {p}</p>)
+                    ) : (
+                      <p className="text-slate-600 font-medium text-xs">Standard Speed &amp; Conversion Optimization</p>
+                    )}
+                  </div>
+
+                  <div className="rounded-xl bg-slate-50/80 p-4 border border-slate-200/80 space-y-2">
+                    <span className="font-extrabold uppercase tracking-wider text-slate-500 text-[10px]">Verified Credentials</span>
+                    <p className="font-bold text-slate-900 text-xs">
+                      • Google Rating: {reviewCount > 0 ? `${rating} ★ (${reviewCount}+ Reviews)` : "Pending Verification"}
+                    </p>
+                    <p className="font-bold text-slate-900 text-xs">
+                      • Location: {city || "Global / Digital"}
+                    </p>
+                    <p className="font-bold text-slate-900 text-xs">• Operating Business Entity</p>
+                  </div>
+
+                  <div className="rounded-xl bg-slate-50/80 p-4 border border-slate-200/80 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold uppercase tracking-wider text-slate-500 text-[10px]">Extracted Brand Tokens</span>
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                        {logoName}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex items-center gap-1.5 font-mono text-[11px] font-bold text-slate-800 bg-white px-2 py-1 rounded-lg border border-slate-200 shadow-2xs">
+                        <span className="h-3.5 w-3.5 rounded-full border shadow-inner shrink-0" style={{ backgroundColor: primaryColor }} /> {primaryColor}
+                      </span>
+                      <span className="flex items-center gap-1.5 font-mono text-[11px] font-bold text-slate-800 bg-white px-2 py-1 rounded-lg border border-slate-200 shadow-2xs">
+                        <span className="h-3.5 w-3.5 rounded-full border shadow-inner shrink-0" style={{ backgroundColor: accentColor }} /> {accentColor}
+                      </span>
+                    </div>
+
+                    {resolvedLogo && (
+                      <div className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white p-2 shadow-2xs">
+                        <div className="flex h-8 w-20 items-center justify-center rounded bg-slate-50 border border-slate-100 p-1 shrink-0">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={resolvedLogo}
+                            alt={businessName}
+                            className="max-h-full max-w-full object-contain"
+                            onError={(e) => (e.currentTarget.style.display = "none")}
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-bold text-slate-800 truncate">{businessName}</p>
+                          <span className="inline-flex items-center gap-1 text-[9.5px] font-semibold text-emerald-600">
+                            <CheckCircle2 className="h-3 w-3" /> Brand Asset Ready
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Social Media Launch Studio (3D Poster & Motion Kit) */}
+              <SocialMockupPanel lead={lead} artifact={artifact} facts={facts} />
+            </TabPanel>
+
+            <TabPanel active={tab === "build"}>
+              {/* STEP 2: BESPOKE GENERATOR STUDIO */}
+              <BespokeGenerationStudio
+                lead={lead}
+                artifact={artifact}
+                scrapeResults={scrapeResults}
+                onGenerated={() => setReloadKey((k) => k + 1)}
+              />
+            </TabPanel>
+
+            <TabPanel active={tab === "photos"}>
+              {artifact?.bespoke_homepage_html && (
+                <RefinePanel key={`slots-${reloadKey}`} leadId={lead.id} />
+              )}
+
+              {scrapeResults && (
+                <HandBuildPanel leadId={lead.id} hasPage={!!artifact?.bespoke_homepage_html} />
+              )}
+            </TabPanel>
+
+            <TabPanel active={tab === "audit"}>
+              {scrapeResults && <AuditPanel key={`audit-${reloadKey}`} leadId={lead.id} />}
+            </TabPanel>
+
+            <TabPanel active={tab === "rivals"}>
+              {scrapeResults && <CompetitorPanel key={`rivals-${reloadKey}`} leadId={lead.id} />}
+
+              {scrapeResults && (
+                <VisibilityPanel key={`visibility-${reloadKey}`} leadId={lead.id} industry={lead.industry} />
+              )}
+
+              {/* Competitor Benchmark */}
+              {competitorsList.length > 0 && (
+                <div className="rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-sm space-y-6">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-200 text-xs font-black text-indigo-700">
+                        3
+                      </span>
+                      <h3 className="font-bold text-base text-slate-900">Competitor Head-to-Head Benchmark ({competitorsList.length} Competitors)</h3>
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-bold text-emerald-700 shrink-0">
+                      <BarChart3 className="h-3 w-3" /> Market Analysis
                     </span>
                   </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-100 text-slate-400 uppercase text-[10px] font-extrabold tracking-wider">
+                          <th className="pb-3">Company</th>
+                          <th className="pb-3">Google Reviews</th>
+                          <th className="pb-3">Mobile Speed</th>
+                          <th className="pb-3">Service Routes</th>
+                          <th className="pb-3">Domain</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {competitorsList.map((comp) => (
+                          <tr
+                            key={comp.name}
+                            className={comp.status === "Leader" ? "bg-indigo-50/60 font-bold text-indigo-700" : "text-slate-700"}
+                          >
+                            <td className="py-3 font-semibold">{comp.name}</td>
+                            <td className="py-3">{comp.reviews}</td>
+                            <td className="py-3">{comp.speed}</td>
+                            <td className="py-3">{comp.routes}</td>
+                            <td className="py-3">{comp.territory}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
-            </div>
-          </div>
-        </div>
+            </TabPanel>
 
-        {/* Social Media Launch Studio (3D Poster & Motion Kit) prominently below Lead Data */}
-        <SocialMockupPanel lead={lead} artifact={artifact} facts={facts} />
-
-        </TabPanel>
-
-        <TabPanel active={tab === "build"}>
-        {/* LINEAR STEP 2: BESPOKE GENERATOR STUDIO (On-Demand High-Value Builder) */}
-        <BespokeGenerationStudio
-          lead={lead}
-          artifact={artifact}
-          scrapeResults={scrapeResults}
-          onGenerated={() => setReloadKey((k) => k + 1)}
-        />
-        </TabPanel>
-
-        <TabPanel active={tab === "photos"}>
-        {/* The human pass between the generator's first draft and the client
-            seeing anything. Generated imagery is a placeholder, and this is
-            where it gets replaced with the client's real photography. */}
-        {artifact?.bespoke_homepage_html && (
-          <RefinePanel key={`slots-${reloadKey}`} leadId={lead.id} />
-        )}
-
-        {/* The manual override, for the run that still comes out wrong: the
-            whole brief as one prompt for any tool, and a way back in. */}
-        {scrapeResults && (
-          <HandBuildPanel leadId={lead.id} hasPage={!!artifact?.bespoke_homepage_html} />
-        )}
-
-        </TabPanel>
-
-        <TabPanel active={tab === "audit"}>
-        {/* Measured on demand, at a size the operator chooses — every cell
-            is a paid search and the measurement is worth far more to a
-            metro-wide roofer than to a painter working three postcodes. */}
-        {/* The sales conversation: what is wrong with their current site,
-            and who is beating them. Both derived from data already paid for
-            during analysis. */}
-        {scrapeResults && <AuditPanel key={`audit-${reloadKey}`} leadId={lead.id} />}
-        </TabPanel>
-
-        <TabPanel active={tab === "rivals"}>
-        {scrapeResults && <CompetitorPanel key={`rivals-${reloadKey}`} leadId={lead.id} />}
-
-        {scrapeResults && (
-          <VisibilityPanel key={`visibility-${reloadKey}`} leadId={lead.id} industry={lead.industry} />
-        )}
-
-        {/* LINEAR STEP 3: COMPETITOR BENCHMARK & MARKET POSITIONING (Only Real Competitors) */}
-        {competitorsList.length > 0 && (
-          <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-6">
-            <div className="flex items-center justify-between border-b border-[#e5e7f2] pb-4">
-              <div className="flex items-center gap-2.5">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f0f3ff] text-xs font-bold text-[#533afd]">
-                  3
-                </span>
-                <h3 className="font-bold text-base text-[#0d1738]">Competitor Head-to-Head Benchmark ({competitorsList.length} Competitors)</h3>
-              </div>
-              <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf8f0] px-2.5 py-0.5 text-xs font-bold text-[#0b8f5b] shrink-0">
-                <BarChart3 className="h-3 w-3" /> Market Analysis
-              </span>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-[#e5e7f2] text-[#777588] uppercase text-[10px]">
-                    <th className="pb-3 font-bold">Company</th>
-                    <th className="pb-3 font-bold">Google Reviews</th>
-                    <th className="pb-3 font-bold">Mobile Speed</th>
-                    <th className="pb-3 font-bold">Service Routes</th>
-                    <th className="pb-3 font-bold">Domain</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#e5e7f2]">
-                  {competitorsList.map((comp) => (
-                    <tr
-                      key={comp.name}
-                      className={comp.status === "Leader" ? "bg-[#f0f3ff] font-bold text-[#533afd]" : "text-[#42506a]"}
-                    >
-                      <td className="py-3 font-semibold">{comp.name}</td>
-                      <td className="py-3">{comp.reviews}</td>
-                      <td className="py-3">{comp.speed}</td>
-                      <td className="py-3">{comp.routes}</td>
-                      <td className="py-3">{comp.territory}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* The old asset panel is gone. It presented uploads that did not
-            reach generation, a "migrate hotlinks" action the media pipeline
-            already does at ingest, and a service-visual grid that listed the
-            business's phone number as a route. The Refine panel above is the
-            working version. */}
-
-        </TabPanel>
-
-        <TabPanel active={tab === "review"}>
-        {/* LIVE IFRAME PREVIEW INSPECTOR OR GENERATION PROMPT */}
-        {!artifact ? (
-          <div className="rounded-2xl border-2 border-dashed border-[#c7d0fb] bg-[#f0f3ff] p-12 text-center space-y-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm text-[#533afd] mx-auto border border-[#c7d0fb]">
-              <Sparkles className="h-7 w-7" />
-            </div>
-            <div className="space-y-1.5">
-              <h4 className="font-bold text-lg text-[#0d1738]">Ready to build their site</h4>
-              <p className="mx-auto max-w-lg text-sm leading-relaxed text-[#42506a]">
-                We have read their site and filled in their name, services and area. Open the <strong className="text-[#533afd]">Build</strong> step, check those details look right, then press Generate. The finished page appears here.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-2xl border border-[#dfe3ef] bg-white shadow-[0_18px_50px_rgba(24,35,72,0.08)]">
-            <div className="flex flex-col gap-4 border-b border-[#e5e7f2] bg-white px-5 py-4 xl:flex-row xl:items-center xl:justify-between">
-              <div className="flex items-start gap-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f0f3ff] text-[#533afd]">
-                  <Eye className="h-4 w-4" />
-                </span>
-                <div className="min-w-0">
-                  <h3 className="text-sm font-bold text-[#0d1738]">Generated website preview</h3>
-                  <p className="mt-0.5 text-xs text-[#667085]">Review the real responsive page before approval.</p>
+            <TabPanel active={tab === "review"}>
+              {!artifact ? (
+                <div className="rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50/30 p-12 text-center space-y-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm text-[#533afd] mx-auto border border-indigo-100">
+                    <Sparkles className="h-7 w-7" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <h4 className="font-bold text-lg text-slate-900">Ready to build their site</h4>
+                    <p className="mx-auto max-w-lg text-xs leading-relaxed text-slate-600">
+                      We have read their site and extracted their brand details. Open the <strong className="text-[#533afd]">Build</strong> step to verify the brief and press Generate.
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-2.5">
-                {/* Behind a toggle: capturing a section for the social studio
-                    is an occasional job, and at the top level it competed with
-                    the controls used on every visit. */}
-                <details className="group relative">
-                  <summary className="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-bold text-slate-600 transition hover:border-indigo-300 hover:text-indigo-700">
-                    <Camera className="h-3 w-3" /> Capture
-                  </summary>
-                  <div className="absolute right-0 z-20 mt-1 flex w-44 flex-col gap-1 rounded-lg border border-slate-200 bg-white p-1 shadow-lg">
+              ) : (
+                <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm">
+                  <div className="flex flex-col gap-3 border-b border-slate-100 bg-white px-5 py-4 xl:flex-row xl:items-center xl:justify-between">
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-[#533afd]">
+                        <Eye className="h-4 w-4" />
+                      </span>
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-bold text-slate-900">Generated website preview</h3>
+                        <p className="mt-0.5 text-xs text-slate-500">Review the real responsive page before approval.</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <details className="group relative">
+                        <summary className="flex cursor-pointer list-none items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700 shadow-2xs">
+                          <Camera className="h-3 w-3" /> Capture
+                        </summary>
+                        <div className="absolute right-0 z-20 mt-1 flex w-44 flex-col gap-1 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
+                          <button
+                            type="button"
+                            disabled={Boolean(capturingSlot)}
+                            onClick={() => captureIframeSection("hero")}
+                            className="rounded-lg px-2 py-1.5 text-left text-xs font-bold text-slate-700 transition hover:bg-indigo-50 hover:text-indigo-700 disabled:opacity-60"
+                          >
+                            {capturingSlot === "hero" ? "Capturing hero…" : "Capture hero"}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={Boolean(capturingSlot)}
+                            onClick={() => captureIframeSection("about")}
+                            className="rounded-lg px-2 py-1.5 text-left text-xs font-bold text-slate-700 transition hover:bg-indigo-50 hover:text-indigo-700 disabled:opacity-60"
+                          >
+                            {capturingSlot === "about" ? "Capturing about…" : "Capture about"}
+                          </button>
+                        </div>
+                      </details>
+
+                      {capturedSuccess && (
+                        <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
+                          {capturedSuccess}
+                        </span>
+                      )}
+
+                      <select
+                        value={previewPath}
+                        onChange={(e) => setPreviewPath(e.target.value)}
+                        aria-label="Preview page"
+                        className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-[#533afd] shadow-2xs"
+                      >
+                        <option value="">Homepage</option>
+                        {generatedPages.about && <option value="/about">About Us</option>}
+                        {generatedPages.contact && <option value="/contact">Contact</option>}
+                        {generatedPages.faq && <option value="/faq">FAQ</option>}
+                        {previewServices.map((s) => (
+                          <option key={s.slug} value={`/services/${s.slug}`}>
+                            Service: {s.h2}
+                          </option>
+                        ))}
+                        {previewAreas.map((area) => (
+                          <option key={area.slug} value={`/areas/${area.slug}`}>
+                            Area: {area.label}
+                          </option>
+                        ))}
+                      </select>
+
+                      <div className="flex h-9 items-center rounded-xl border border-slate-200 bg-slate-50 p-1" aria-label="Preview viewport">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewViewport("desktop")}
+                          aria-pressed={previewViewport === "desktop"}
+                          className={`flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-xs font-bold transition ${previewViewport === "desktop" ? "bg-white text-[#533afd] shadow-2xs" : "text-slate-500 hover:text-slate-800"}`}
+                        >
+                          <Monitor className="h-3.5 w-3.5" /> Desktop
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPreviewViewport("mobile")}
+                          aria-pressed={previewViewport === "mobile"}
+                          className={`flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-xs font-bold transition ${previewViewport === "mobile" ? "bg-white text-[#533afd] shadow-2xs" : "text-slate-500 hover:text-slate-800"}`}
+                        >
+                          <Smartphone className="h-3.5 w-3.5" /> Mobile
+                        </button>
+                      </div>
+
+                      <a
+                        href={previewUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-[#533afd] hover:bg-indigo-50/50 shadow-2xs"
+                      >
+                        Open tab <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="border-b border-slate-100 px-5 py-2.5">
+                    <ShowcaseApprovalControl
+                      leadId={lead.id}
+                      initialApproved={lead.showcase_approved}
+                      initialLabel={lead.showcase_label}
+                      hasImages={Boolean(lead.showcase_before_url && lead.showcase_after_url)}
+                      compact
+                    />
+                  </div>
+
+                  <div className="overflow-auto bg-slate-100 p-3 sm:p-6">
+                    <div className={`mx-auto overflow-hidden border border-slate-300 bg-white shadow-xl transition-[width] duration-300 ${previewViewport === "mobile" ? "w-[390px] max-w-full rounded-[28px]" : "w-full min-w-[1024px] rounded-2xl"}`}>
+                      <div className="flex h-9 items-center gap-1.5 border-b border-slate-200 bg-slate-50 px-3" aria-hidden>
+                        <span className="h-2.5 w-2.5 rounded-full bg-[#ff6b6b]" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-[#ffd166]" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-[#5dd39e]" />
+                        <span className="mx-auto rounded-md border border-slate-200 bg-white px-4 py-0.5 text-[10px] text-slate-400 font-mono">
+                          {previewViewport === "mobile" ? "390 × 844" : "Responsive desktop"}
+                        </span>
+                      </div>
+                      <iframe
+                        key={`${previewPath}-${previewViewport}-${reloadKey}`}
+                        src={previewUrl}
+                        className={previewViewport === "mobile" ? "h-[844px] w-full" : "h-[820px] w-full"}
+                        title={`${businessName} ${previewViewport} preview`}
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <ApprovalGate lead={lead} artifact={artifact} onChanged={() => setReloadKey((k) => k + 1)} />
+            </TabPanel>
+
+            <TabPanel active={tab === "send"}>
+              {/* STEP 5: AUTOMATED OUTREACH & BREVO DELIVERY */}
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-sm space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-200 text-xs font-black text-indigo-700">
+                      5
+                    </span>
+                    <h3 className="text-base font-bold text-slate-900">Outreach &amp; Sequence Delivery</h3>
+                  </div>
+
+                  <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1 border border-slate-200">
                     <button
                       type="button"
-                      disabled={Boolean(capturingSlot)}
-                      onClick={() => captureIframeSection("hero")}
-                      className="rounded px-2 py-1.5 text-left text-xs font-bold text-slate-700 transition hover:bg-indigo-50 hover:text-indigo-700 disabled:opacity-60"
+                      onClick={() => handleSwitchMode("inbound")}
+                      className={`rounded-lg px-3 py-1 text-xs font-bold transition ${
+                        outreachMode === "inbound"
+                          ? "bg-white text-[#533afd] shadow-2xs"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
                     >
-                      {capturingSlot === "hero" ? "Capturing hero…" : "Capture hero"}
+                      🎯 Inbound Lead (Requested)
                     </button>
                     <button
                       type="button"
-                      disabled={Boolean(capturingSlot)}
-                      onClick={() => captureIframeSection("about")}
-                      className="rounded px-2 py-1.5 text-left text-xs font-bold text-slate-700 transition hover:bg-indigo-50 hover:text-indigo-700 disabled:opacity-60"
+                      onClick={() => handleSwitchMode("cold")}
+                      className={`rounded-lg px-3 py-1 text-xs font-bold transition ${
+                        outreachMode === "cold"
+                          ? "bg-[#533afd] text-white shadow-2xs"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
                     >
-                      {capturingSlot === "about" ? "Capturing about…" : "Capture about"}
+                      ⚡ Cold Outreach (Gift)
                     </button>
                   </div>
-                </details>
-
-                {capturedSuccess && (
-                  <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg animate-fade-in">
-                    {capturedSuccess}
-                  </span>
-                )}
-
-                <select
-                  value={previewPath}
-                  onChange={(e) => setPreviewPath(e.target.value)}
-                  aria-label="Preview page"
-                  className="h-9 rounded-lg border border-[#dfe3ef] bg-white px-3 text-xs font-semibold text-[#26324b] outline-none focus:border-[#533afd]"
-                >
-                  <option value="">Homepage</option>
-                  {generatedPages.about && <option value="/about">About Us</option>}
-                  {generatedPages.contact && <option value="/contact">Contact</option>}
-                  {generatedPages.faq && <option value="/faq">FAQ</option>}
-                  {previewServices.map((s) => (
-                    <option key={s.slug} value={`/services/${s.slug}`}>
-                      Service: {s.h2}
-                    </option>
-                  ))}
-                  {previewAreas.map((area) => (
-                    <option key={area.slug} value={`/areas/${area.slug}`}>
-                      Area: {area.label}
-                    </option>
-                  ))}
-                </select>
-                <div className="flex h-9 items-center rounded-lg border border-[#dfe3ef] bg-[#f7f8fc] p-1" aria-label="Preview viewport">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewViewport("desktop")}
-                    aria-pressed={previewViewport === "desktop"}
-                    className={`flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs font-bold transition ${previewViewport === "desktop" ? "bg-white text-[#533afd] shadow-sm" : "text-[#667085] hover:text-[#26324b]"}`}
-                  >
-                    <Monitor className="h-3.5 w-3.5" /> Desktop
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPreviewViewport("mobile")}
-                    aria-pressed={previewViewport === "mobile"}
-                    className={`flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs font-bold transition ${previewViewport === "mobile" ? "bg-white text-[#533afd] shadow-sm" : "text-[#667085] hover:text-[#26324b]"}`}
-                  >
-                    <Smartphone className="h-3.5 w-3.5" /> Mobile
-                  </button>
                 </div>
-                <a
-                  href={previewUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-bold text-[#533afd] hover:bg-[#f0f3ff]"
-                >
-                  Open in new tab <ExternalLink className="h-3.5 w-3.5" />
-                </a>
-              </div>
-            </div>
 
-            <div className="border-b border-[#e5e7f2] px-5 py-2.5">
-              <ShowcaseApprovalControl
+                {/* Sequence Step Selector */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-extrabold uppercase tracking-wider text-slate-600">
+                      {outreachMode === "inbound" ? "Inbound Requested Delivery Sequence:" : "Cold Outreach Anti-Spam Sequence:"}
+                    </span>
+                    <span className="text-[11px] font-medium text-slate-500">
+                      {outreachMode === "inbound" ? "Warm follow-up on requested site" : "Born-to-help gift & curiosity loop"}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                    <button
+                      type="button"
+                      onClick={() => selectOutreachSequenceStep(1)}
+                      className={`rounded-xl border p-3.5 text-left transition ${
+                        activeOutreachStep === 1
+                          ? "border-[#533afd] bg-indigo-50/60 ring-2 ring-[#533afd]/20 shadow-2xs"
+                          : "border-slate-200 bg-white hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="block text-xs font-bold text-slate-900">
+                        {outreachMode === "inbound" ? "1. Initial Delivery" : "1. Value Drop Gift"}
+                      </span>
+                      <span className="text-[11px] text-slate-500 font-medium mt-0.5 block">
+                        {outreachMode === "inbound" ? "Your requested 48h rebuild is ready" : "Rebuilt concept & speed audit (no charge)"}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => selectOutreachSequenceStep(2)}
+                      className={`rounded-xl border p-3.5 text-left transition ${
+                        activeOutreachStep === 2
+                          ? "border-[#533afd] bg-indigo-50/60 ring-2 ring-[#533afd]/20 shadow-2xs"
+                          : "border-slate-200 bg-white hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="block text-xs font-bold text-slate-900">2. 48h Follow-up Bump</span>
+                      <span className="text-[11px] text-slate-500 font-medium mt-0.5 block">
+                        {outreachMode === "inbound" ? "Checking in on requested concept" : "Quick 2-sentence check on layout"}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => selectOutreachSequenceStep(3)}
+                      className={`rounded-xl border p-3.5 text-left transition ${
+                        activeOutreachStep === 3
+                          ? "border-[#533afd] bg-indigo-50/60 ring-2 ring-[#533afd]/20 shadow-2xs"
+                          : "border-slate-200 bg-white hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="block text-xs font-bold text-slate-900">3. Final Notice</span>
+                      <span className="text-[11px] text-slate-500 font-medium mt-0.5 block">
+                        {outreachMode === "inbound" ? "Final check before staging archive" : "Free files transfer & zero-obligation wrap"}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-4 rounded-2xl border border-indigo-200/80 bg-indigo-50/40 p-5">
+                  <div className="flex flex-col gap-2 border-b border-indigo-200/60 pb-3 text-xs sm:flex-row sm:items-center sm:justify-between">
+                    <span className="font-semibold text-slate-800">
+                      <strong>Recipient:</strong> {email}
+                    </span>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(portalUrl);
+                          setCopiedPortalLink(true);
+                          setTimeout(() => setCopiedPortalLink(false), 2000);
+                        }}
+                        className="inline-flex items-center gap-1 font-bold text-[#533afd] hover:underline"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                        {copiedPortalLink ? "Proposal Link Copied! ✓" : "Copy Proposal Link"}
+                      </button>
+                      <span className="text-indigo-200">·</span>
+                      <a
+                        href={`/s/${lead.slug}?view=preview`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 font-bold text-[#533afd] hover:underline"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" /> View Live Website Directly
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <span className="mb-1 block text-xs font-bold text-slate-900">Subject</span>
+                      <Input
+                        value={emailSubject}
+                        onChange={(e) => setEmailSubject(e.target.value)}
+                        className="h-9 bg-white text-xs rounded-xl border-slate-200 font-medium"
+                      />
+                    </div>
+
+                    <div>
+                      <span className="mb-1 block text-xs font-bold text-slate-900">Email Content</span>
+                      <Textarea
+                        rows={3}
+                        value={emailBody}
+                        onChange={(e) => setEmailBody(e.target.value)}
+                        className="resize-none bg-white text-xs rounded-xl border-slate-200 font-sans leading-relaxed"
+                      />
+                    </div>
+                  </div>
+
+                  {currentLeadStatus === "lost" ? (
+                    <div className="rounded-xl border border-rose-300 bg-rose-50 p-3 text-xs font-semibold text-rose-800 flex items-center justify-between">
+                      <span>🚫 Outreach is blocked because lead is marked as Not Interested.</span>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateLeadStatus("qa_approved")}
+                        className="underline hover:text-rose-950"
+                      >
+                        Re-enable Outreach
+                      </button>
+                    </div>
+                  ) : currentLeadStatus === "paid" || currentLeadStatus === "live" ? (
+                    <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-xs font-semibold text-emerald-800 flex items-center justify-between">
+                      <span>🏆 Client has purchased. Automated outreach sequence finished.</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-xs text-slate-500">
+                        Sending Step {activeOutreachStep} will update status to{" "}
+                        <strong>{activeOutreachStep === 1 ? "Delivered" : "Contacted"}</strong>.
+                      </span>
+                      <button
+                        onClick={handleSendBrevoEmail}
+                        disabled={sendingEmail}
+                        className="rounded-xl bg-[#533afd] hover:bg-[#432ec4] px-5 py-2 text-xs font-bold text-white shadow-sm shadow-indigo-500/20 transition disabled:opacity-50"
+                      >
+                        {sendingEmail ? "Sending via Brevo..." : emailSent ? "Sent ✓" : `Send Step ${activeOutreachStep} via Brevo`}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </TabPanel>
+
+            <TabPanel active={tab === "close"}>
+              <LeadValuePanel leadId={lead.id} value={aiLeadValue} />
+
+              <PricingManager
                 leadId={lead.id}
-                initialApproved={lead.showcase_approved}
-                initialLabel={lead.showcase_label}
-                hasImages={Boolean(lead.showcase_before_url && lead.showcase_after_url)}
-                compact
+                currentPricing={pricing}
+                businessName={businessName}
+                pageCount={services.length}
+                leadValue={aiLeadValue}
               />
-            </div>
-            <div className="overflow-auto bg-[#eef1f7] p-3 sm:p-6">
-              <div className={`mx-auto overflow-hidden border border-[#cfd5e3] bg-white shadow-[0_24px_70px_rgba(24,35,72,0.16)] transition-[width] duration-300 ${previewViewport === "mobile" ? "w-[390px] max-w-full rounded-[28px]" : "w-full min-w-[1024px] rounded-xl"}`}>
-                <div className="flex h-9 items-center gap-1.5 border-b border-[#e5e7f2] bg-[#f8f9fc] px-3" aria-hidden>
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#ff6b6b]" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#ffd166]" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#5dd39e]" />
-                  <span className="mx-auto rounded-md border border-[#e2e6ef] bg-white px-4 py-1 text-[10px] text-[#98a2b3]">
-                    {previewViewport === "mobile" ? "390 × 844" : "Responsive desktop"}
-                  </span>
+
+              <HandoverPanel
+                leadId={lead.id}
+                businessName={businessName}
+                hasSite={!!artifact?.bespoke_homepage_html}
+                existingRepoUrl={(artifact?.extracted_assets as any)?.github_repo_url ?? null}
+              />
+
+              {/* FINAL STEP: CLOSE & STRIPE CHECKOUT DISPATCH */}
+              <div className="rounded-2xl bg-slate-900 p-7 text-white shadow-md flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-lg bg-[#533afd] px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">
+                      FINAL STEP
+                    </span>
+                    <span className="text-xs text-white/70">Payment & Go-Live SLA</span>
+                  </div>
+                  <h3 className="mt-2 text-xl font-bold">
+                    Collect {priceDisplay} &amp; Launch {lead.custom_domain || lead.source_url}
+                  </h3>
+                  <p className="text-xs text-white/70 mt-1 leading-relaxed">
+                    Client receives 100% standalone Next.js code + DNS CNAME setup with a 2-4 week launch timeline after payment, content approval, and domain access.
+                  </p>
                 </div>
-                <iframe
-                  key={`${previewPath}-${previewViewport}-${reloadKey}`}
-                  src={previewUrl}
-                  className={previewViewport === "mobile" ? "h-[844px] w-full" : "h-[820px] w-full"}
-                  title={`${businessName} ${previewViewport} preview`}
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* The gate itself. Both this and the domain picker were built and
-            unreachable — mounted only inside a tabs layout nothing renders —
-            so no lead could ever be approved and no portal could unlock. */}
-        <ApprovalGate lead={lead} artifact={artifact} onChanged={() => setReloadKey((k) => k + 1)} />
-
-        </TabPanel>
-
-        <TabPanel active={tab === "send"}>
-        {/* LINEAR STEP 5: AUTOMATED BREVO DELIVERY & LIVE PROPOSAL LINK */}
-        <div className="rounded-2xl border border-[#e5e7f2] bg-white p-7 shadow-sm space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-[#e5e7f2] pb-4">
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f0f3ff] text-xs font-bold text-[#533afd]">
-                5
-              </span>
-              <h3 className="text-base font-bold text-[#0d1738]">Outreach &amp; Sequence Delivery</h3>
-            </div>
-
-            {/* Inbound vs Cold Outreach Mode Switcher */}
-            <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1 border border-slate-200">
-              <button
-                type="button"
-                onClick={() => handleSwitchMode("inbound")}
-                className={`rounded-md px-3 py-1 text-xs font-bold transition ${
-                  outreachMode === "inbound"
-                    ? "bg-white text-[#533afd] shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                🎯 Inbound Ad Lead (Requested)
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSwitchMode("cold")}
-                className={`rounded-md px-3 py-1 text-xs font-bold transition ${
-                  outreachMode === "cold"
-                    ? "bg-[#533afd] text-white shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                ⚡ Cold Outreach (Value Drop Gift)
-              </button>
-            </div>
-          </div>
-
-          {/* Sequence Step Selector */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
-                {outreachMode === "inbound" ? "Inbound Requested Delivery Sequence:" : "Cold Outreach Anti-Spam Sequence:"}
-              </span>
-              <span className="text-[11px] font-medium text-slate-500">
-                {outreachMode === "inbound" ? "Warm follow-up on requested site" : "Born-to-help gift & curiosity loop"}
-              </span>
-            </div>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <button
-                type="button"
-                onClick={() => selectOutreachSequenceStep(1)}
-                className={`rounded-xl border p-3 text-left transition ${
-                  activeOutreachStep === 1
-                    ? "border-[#533afd] bg-[#f0f3ff] ring-2 ring-[#533afd]/20"
-                    : "border-slate-200 bg-white hover:bg-slate-50"
-                }`}
-              >
-                <span className="block text-xs font-bold text-[#0d1738]">
-                  {outreachMode === "inbound" ? "1. Initial Delivery" : "1. Value Drop Gift"}
-                </span>
-                <span className="text-[11px] text-slate-500">
-                  {outreachMode === "inbound" ? "Your requested 48h rebuild is ready" : "Rebuilt concept & speed audit (no charge)"}
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => selectOutreachSequenceStep(2)}
-                className={`rounded-xl border p-3 text-left transition ${
-                  activeOutreachStep === 2
-                    ? "border-[#533afd] bg-[#f0f3ff] ring-2 ring-[#533afd]/20"
-                    : "border-slate-200 bg-white hover:bg-slate-50"
-                }`}
-              >
-                <span className="block text-xs font-bold text-[#0d1738]">2. 48h Follow-up Bump</span>
-                <span className="text-[11px] text-slate-500">
-                  {outreachMode === "inbound" ? "Checking in on requested concept" : "Quick 2-sentence check on layout"}
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => selectOutreachSequenceStep(3)}
-                className={`rounded-xl border p-3 text-left transition ${
-                  activeOutreachStep === 3
-                    ? "border-[#533afd] bg-[#f0f3ff] ring-2 ring-[#533afd]/20"
-                    : "border-slate-200 bg-white hover:bg-slate-50"
-                }`}
-              >
-                <span className="block text-xs font-bold text-[#0d1738]">3. Final Notice</span>
-                <span className="text-[11px] text-slate-500">
-                  {outreachMode === "inbound" ? "Final check before staging archive" : "Free files transfer & zero-obligation wrap"}
-                </span>
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-4 rounded-xl border border-[#c7d0fb] bg-[#f0f3ff] p-5">
-            <div className="flex flex-col gap-2 border-b border-[#c7d0fb] pb-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-              <span>
-                <strong>Goes to:</strong> {email}
-              </span>
-              <div className="flex flex-wrap items-center gap-3">
                 <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(portalUrl);
-                    setCopiedPortalLink(true);
-                    setTimeout(() => setCopiedPortalLink(false), 2000);
-                  }}
-                  className="inline-flex items-center gap-1 font-bold text-[#533afd] hover:underline"
+                  onClick={handleGenerateStripeCheckout}
+                  disabled={generatingStripe}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#533afd] hover:bg-[#432ec4] px-6 py-3.5 text-xs font-bold text-white shadow-lg shadow-indigo-500/30 transition shrink-0"
                 >
-                  <Copy className="h-3.5 w-3.5" />
-                  {copiedPortalLink ? "Proposal Link Copied! ✓" : "Copy Proposal Link"}
-                </button>
-                <span className="text-[#c7d0fb]">·</span>
-                <a
-                  href={`/s/${lead.slug}?view=preview`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 font-semibold text-[#533afd] hover:underline"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" /> View Live Website Directly
-                </a>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <span className="mb-1 block text-sm font-semibold text-[#0d1738]">Subject</span>
-                <Input
-                  value={emailSubject}
-                  onChange={(e) => setEmailSubject(e.target.value)}
-                  className="h-9 bg-white text-sm"
-                />
-              </div>
-
-              <div>
-                <span className="mb-1 block text-sm font-semibold text-[#0d1738]">Email Content</span>
-                <Textarea
-                  rows={3}
-                  value={emailBody}
-                  onChange={(e) => setEmailBody(e.target.value)}
-                  className="resize-none bg-white text-sm"
-                />
-              </div>
-            </div>
-
-            {currentLeadStatus === "lost" ? (
-              <div className="rounded-lg border border-rose-300 bg-rose-50 p-3 text-xs font-semibold text-rose-800 flex items-center justify-between">
-                <span>🚫 Outreach is blocked because lead is marked as Not Interested.</span>
-                <button
-                  type="button"
-                  onClick={() => handleUpdateLeadStatus("qa_approved")}
-                  className="underline hover:text-rose-950"
-                >
-                  Re-enable Outreach
+                  <CreditCard className="h-4 w-4" /> Send {priceDisplay} Payment Link
                 </button>
               </div>
-            ) : currentLeadStatus === "paid" || currentLeadStatus === "live" ? (
-              <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-3 text-xs font-semibold text-emerald-800 flex items-center justify-between">
-                <span>🏆 Client has purchased. Automated outreach sequence finished.</span>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-xs text-slate-500">
-                  Sending Step {activeOutreachStep} will update lead status to{" "}
-                  <strong>{activeOutreachStep === 1 ? "Delivered" : "Contacted"}</strong>.
-                </span>
-                <button
-                  onClick={handleSendBrevoEmail}
-                  disabled={sendingEmail}
-                  className="rounded-md bg-[#533afd] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#432bd9] disabled:opacity-50"
-                >
-                  {sendingEmail ? "Sending via Brevo..." : emailSent ? "Sent ✓" : `Send Step ${activeOutreachStep} via Brevo`}
-                </button>
-              </div>
-            )}
+            </TabPanel>
           </div>
-        </div>
-
-        </TabPanel>
-
-        <TabPanel active={tab === "close"}>
-        {/* What they can pay, before the panel that asks what to charge. */}
-        <LeadValuePanel leadId={lead.id} value={aiLeadValue} />
-
-        {/* LINEAR STEP 6: DYNAMIC PRICING MANAGER */}
-        <PricingManager
-          leadId={lead.id}
-          currentPricing={pricing}
-          businessName={businessName}
-          pageCount={services.length}
-          leadValue={aiLeadValue}
-        />
-
-        <HandoverPanel
-          leadId={lead.id}
-          businessName={businessName}
-          hasSite={!!artifact?.bespoke_homepage_html}
-          existingRepoUrl={(artifact?.extracted_assets as any)?.github_repo_url ?? null}
-        />
-
-        {/* FINAL STEP: CLOSE & STRIPE CHECKOUT DISPATCH */}
-        <div className="rounded-2xl bg-[#0d1738] p-7 text-white shadow-md flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="rounded bg-[#533afd] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
-                FINAL STEP
-              </span>
-              <span className="text-xs text-white/70">Payment & Go-Live SLA</span>
-            </div>
-            <h3 className="mt-2 text-xl font-bold">
-              Collect {priceDisplay} & Launch {lead.custom_domain || lead.source_url}
-            </h3>
-            <p className="text-xs text-white/70 mt-1 leading-relaxed">
-              Client receives 100% standalone Next.js code + DNS CNAME setup with a 2-4 week launch timeline after payment, content approval, and domain access.
-            </p>
-          </div>
-
-          <button
-            onClick={handleGenerateStripeCheckout}
-            disabled={generatingStripe}
-            className="inline-flex items-center gap-2 rounded-md bg-[#533afd] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-[#432bd9] shrink-0"
-          >
-            <CreditCard className="h-4 w-4" /> Send {priceDisplay} Payment Link
-          </button>
-        </div>
-        </TabPanel>
-        </div>
         </div>
       </div>
     </div>

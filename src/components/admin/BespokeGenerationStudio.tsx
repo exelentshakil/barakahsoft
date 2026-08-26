@@ -18,6 +18,7 @@ import {
   Wrench,
   X,
   Zap,
+  Check,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,15 +48,9 @@ export function BespokeGenerationStudio({
   const sitePhotos = Array.isArray(facts.site_photos) ? (facts.site_photos as any[]) : [];
   const primaryScrapedPhoto = sitePhotos.find((p) => p.kind === "img" && p.url && (p.url.includes("headshot") || p.url.includes("photo")))?.url || sitePhotos[0]?.url;
 
-  // Services come from the classification pass, which reads the page
-  // content. Navigation text was the previous source and it put the
-  // business's phone number and email address into this box as services —
-  // and because whatever is in here overrides the classified list at
-  // generation time, those went straight onto the client's homepage.
   const classifiedServices = Array.isArray(facts.derived_services) ? (facts.derived_services as string[]) : [];
   const classifiedAreas = Array.isArray(facts.derived_areas) ? (facts.derived_areas as string[]) : [];
 
-  // Extract previously saved generated assets from Supabase
   const extracted = (artifact?.extracted_assets as any) || {};
 
   const defaultBusinessName = extracted.business_name || schema.name || (typeof facts.business_name === "string" ? facts.business_name : null) || lead.business_name || "";
@@ -84,10 +79,7 @@ export function BespokeGenerationStudio({
   const [servicesText, setServicesText] = useState(defaultServices);
   const [areasText, setAreasText] = useState(defaultAreas);
   const [primaryColor, setPrimaryColor] = useState(extracted.branding?.colors?.primary || (facts.colors as any)?.primary || "#533AFD");
-  // useState initialisers run once. Analysis finishes minutes later and
-  // refreshes these props, but the fields kept their original empty values —
-  // so the brief looked unpopulated until the operator reloaded by hand.
-  // Fields the operator has actually typed in are never overwritten.
+
   const dataSignature = `${defaultBusinessName}|${defaultCity}|${defaultIndustry}|${defaultServices}|${defaultAreas}`;
   const lastSignature = useRef(dataSignature);
   const touched = useRef(false);
@@ -108,134 +100,96 @@ export function BespokeGenerationStudio({
     setFooterLogoUrl(defaultFooterLogo);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataSignature]);
-  const [accentColor, setAccentColor] = useState(extracted.branding?.colors?.accent || (facts.colors as any)?.accent || "#FFD12D");
-  // Which model writes the homepage markup and stylesheet. OpenAI is the
-  // proven default; Gemini is opt-in per generation so the two can be
-  // compared on real leads before either becomes the default.
+
   const [provider, setProvider] = useState<"openai" | "gemini">("openai");
   const [model, setModel] = useState("");
   const [models, setModels] = useState<{ id: string; provider: "openai" | "gemini"; recommended: boolean; note?: string }[]>([]);
   const [modelsLoading, setModelsLoading] = useState(false);
   const [modelsError, setModelsError] = useState<string | null>(null);
 
-  async function loadModels() {
-    setModelsLoading(true);
-    setModelsError(null);
-    try {
-      const res = await fetch("/api/models");
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        setModelsError(data?.error ?? "Could not load models.");
-        return;
-      }
-      const all = [...(data.openai ?? []), ...(data.gemini ?? [])];
-      setModels(all);
-      if (all.length === 0) setModelsError("No usable models returned — check the provider keys.");
-    } catch {
-      setModelsError("Could not reach the server.");
-    } finally {
-      setModelsLoading(false);
-    }
-  }
   const [generating, setGenerating] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
   const [genWarnings, setGenWarnings] = useState<string[]>([]);
-  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
-  const [visualQa, setVisualQa] = useState<{ attempt: number; visual_status: string } | null>(null);
+  const [visualQa, setVisualQa] = useState<{
+    visual_status?: "queued" | "running" | "passed" | "failed";
+    attempt?: number;
+  } | null>(null);
 
-  // Only true while a scrape is genuinely running. This previously also
-  // matched any lead that simply had no scrape yet, so a brand-new lead
-  // displayed "Firecrawl is analyzing..." while nothing at all was happening
-  // -- and the operator waited for a result that was never coming.
-  const isScraping = lead.status === "scraping";
-  const notAnalysed = !scrapeResults && !isScraping;
+  const [uploadingSlot, setUploadingSlot] = useState<string | null>(null);
 
-  const [uploadingSlot, setUploadingSlot] = useState<"hero" | "logo" | "footerLogo" | null>(null);
-
-  async function handleDirectUpload(slot: "hero" | "logo" | "footerLogo", file: File | undefined) {
+  async function handleDirectUpload(slot: "hero" | "logo" | "footerLogo", file?: File) {
     if (!file) return;
     setUploadingSlot(slot);
-    markTouched();
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("lead_id", lead.id);
-      formData.append("slot_hint", slot === "hero" ? "hero" : slot === "logo" ? "logo" : "footer-logo");
+      formData.append("slot", slot);
 
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.url) {
-        throw new Error(data.error || "Upload failed");
-      }
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+
       if (slot === "hero") setHeroImage(data.url);
       else if (slot === "logo") setLogoUrl(data.url);
       else if (slot === "footerLogo") setFooterLogoUrl(data.url);
+
+      markTouched();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to upload image to Supabase Storage");
+      alert(err instanceof Error ? err.message : "Image upload failed");
     } finally {
       setUploadingSlot(null);
     }
   }
 
-  // Phase 2: every service, area, about, FAQ and contact page, each written
-  // to match the homepage that was approved. It is a separate button rather
-  // than part of the first build because until the client says yes, that
-  // spend is on a lead that may never reply.
-  async function handleBuildRest() {
-    setGenerating(true);
-    setVisualQa(null);
-    setGenError(null);
-    setGenWarnings([]);
+  const loadModels = useCallback(async () => {
+    setModelsLoading(true);
+    setModelsError(null);
     try {
-      const res = await fetch(`/api/leads/${lead.id}/generate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phase: 2, provider, model: model || undefined }),
-      });
+      const res = await fetch("/api/models");
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Could not start the full-site build");
-      pollProgress();
+      if (!res.ok) throw new Error(data.error || "Could not load models");
+      setModels(data.models ?? []);
     } catch (err) {
-      setGenError(err instanceof Error ? err.message : "Full-site build failed to start");
-      setGenerating(false);
+      setModelsError(err instanceof Error ? err.message : "Could not reach the models endpoint.");
+    } finally {
+      setModelsLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    void loadModels();
+  }, [loadModels]);
+
+  const notAnalysed = !scrapeResults;
+  const isScraping = lead.status === "scraping";
 
   async function handleGenerate(e: React.FormEvent) {
     e.preventDefault();
     setGenerating(true);
-    setVisualQa(null);
     setGenError(null);
     setGenWarnings([]);
+    setProgress({ done: 0, total: 1 });
+
     try {
-      const services = (servicesText || "")
-        .split("\n")
-        .map((s: string) => s.trim())
-        .filter(Boolean);
-
-      const areas = (areasText || "")
-        .split("\n")
-        .map((s: string) => s.trim())
-        .filter(Boolean);
-
       const res = await fetch(`/api/leads/${lead.id}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           businessName,
           founder,
-          heroImage,
-          logoUrl,
-          footerLogoUrl,
           city,
           industry,
-          services,
-          areas,
-          // Phone and email are deliberately NOT defaulted to a placeholder.
-          // A generated page with someone else's phone number on it is worse
-          // than one with no phone number at all.
-          phone: lead.phone || nap.phone || undefined,
-          email: lead.email || nap.email || undefined,
+          services: servicesText.split("\n").map((x: string) => x.trim()).filter(Boolean),
+          areas: areasText.split("\n").map((x: string) => x.trim()).filter(Boolean),
+          heroImage: heroImage.trim() || undefined,
+          logoUrl: logoUrl.trim() || undefined,
+          footerLogoUrl: footerLogoUrl.trim() || undefined,
           provider,
           model: model || undefined,
         }),
@@ -255,9 +209,6 @@ export function BespokeGenerationStudio({
     }
   }
 
-  // The brief autosaves. It was previously only sent alongside a generate
-  // request and never written back, so "Exact Industry" and "Core Services"
-  // came back empty on every reload -- typed, used once, lost.
   const briefRef = useRef({ businessName, founder, city, industry, servicesText, areasText, heroImage, logoUrl, footerLogoUrl });
   briefRef.current = { businessName, founder, city, industry, servicesText, areasText, heroImage, logoUrl, footerLogoUrl };
 
@@ -292,7 +243,6 @@ export function BespokeGenerationStudio({
     }
   }, [lead.id]);
 
-  // Debounced so typing does not fire a request per keystroke.
   useEffect(() => {
     if (briefSaved === "saving") return;
     const timer = setTimeout(saveBrief, 1200);
@@ -300,10 +250,6 @@ export function BespokeGenerationStudio({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [businessName, founder, city, industry, servicesText, areasText, heroImage, logoUrl, footerLogoUrl]);
 
-  // A build that died without writing a status leaves its row on "running"
-  // forever, and the Generate button is disabled while a build is running —
-  // so the one action that would clear it is the one action unavailable.
-  // A run that has not touched its row in this long is not running.
   const STALE_AFTER_MS = 15 * 60 * 1000;
 
   const isStalled = (job: { status?: string; updated_at?: string } | null | undefined) =>
@@ -314,9 +260,6 @@ export function BespokeGenerationStudio({
   const STALLED_MESSAGE =
     "The last build stopped without finishing — most likely the model returned nothing. Press Generate to start it again.";
 
-  // Generation is a multi-minute background job (several model calls plus a
-  // critique pass), so the button reports real step progress rather than
-  // spinning against a request that would have timed out anyway.
   const pollProgress = useCallback(() => {
     const timer = setInterval(async () => {
       try {
@@ -339,7 +282,7 @@ export function BespokeGenerationStudio({
           clearInterval(timer);
           setGenerating(false);
           if (job.status === "failed") {
-            setGenError(job.error_message || "Generation failed \u2014 check the Inngest run for details.");
+            setGenError(job.error_message || "Generation failed — check the Inngest run for details.");
           } else {
             router.refresh();
             onGenerated?.();
@@ -347,17 +290,12 @@ export function BespokeGenerationStudio({
           }
         }
       } catch {
-        // A dropped poll is not a failure — the next tick retries.
+        // A dropped poll is not a failure
       }
     }, 3000);
     return timer;
   }, [lead.id, router, onGenerated]);
 
-  // The job runs in the background, so a reload never interrupts it — but it
-  // did previously lose the only thing watching it, leaving the operator
-  // looking at an idle button while a build was still running. Reattaching on
-  // mount makes the UI reflect real server state rather than the state of
-  // this particular page load.
   useEffect(() => {
     let timer: ReturnType<typeof setInterval> | undefined;
     let cancelled = false;
@@ -368,8 +306,6 @@ export function BespokeGenerationStudio({
         const data = await res.json().catch(() => ({}));
         setVisualQa(data.visualQa ?? null);
         if (cancelled || data.job?.status !== "running") return;
-        // Do not reattach to a corpse — that is what left the button
-        // disabled with no way back.
         if (isStalled(data.job)) {
           setGenError(STALLED_MESSAGE);
           return;
@@ -378,7 +314,7 @@ export function BespokeGenerationStudio({
         setProgress({ done: data.job.pages_done ?? 0, total: data.job.pages_total ?? 1 });
         timer = pollProgress();
       } catch {
-        // No reachable job status is not itself an error to show.
+        // Ignore
       }
     })();
 
@@ -390,59 +326,72 @@ export function BespokeGenerationStudio({
 
   if (isScraping) {
     return (
-      <Card className="border border-border bg-[#f0f3ff] shadow-sm">
-        <CardContent className="p-8 text-center space-y-3">
-          <Loader2 className="h-7 w-7 animate-spin text-[#533afd] mx-auto" />
-          <h3 className="font-bold text-base text-[#0d1738]">
+      <div className="rounded-2xl border border-indigo-200/80 bg-indigo-50/40 p-8 sm:p-12 text-center space-y-4 shadow-sm">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-100/80 text-[#533afd] mx-auto shadow-xs">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
+        <div className="space-y-1">
+          <h3 className="font-bold text-base text-slate-900">
             Reading {lead.source_url}...
           </h3>
-          <p className="text-xs text-muted-foreground max-w-md mx-auto">
-            Mapping the site&apos;s pages, extracting real brand colours, photos, reviews and schema. This panel fills in
-            by itself as each step lands.
+          <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+            Mapping sitemap pages, extracting brand colours, photography, reviews and schema. This studio fills in automatically as each fact lands.
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   if (notAnalysed) {
     return (
-      <Card className="border border-dashed border-[#c7d0fb] bg-[#fbfaff] shadow-sm">
-        <CardContent className="p-8 text-center space-y-3">
-          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-[#c7d0fb] bg-white text-[#533afd]">
-            <Sparkles className="h-6 w-6" />
-          </span>
-          <h3 className="font-bold text-base text-[#0d1738]">This lead has not been analysed yet</h3>
-          <p className="text-xs text-muted-foreground max-w-md mx-auto">
-            Nothing has been spent on it. Press <b>Analyse this lead</b> above to read their site — two Firecrawl pages —
-            and the brief, brand tokens and generation studio all appear here.
+      <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 sm:p-12 text-center space-y-4 shadow-sm">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 mx-auto">
+          <Sparkles className="h-6 w-6" />
+        </div>
+        <div className="space-y-1">
+          <h3 className="font-bold text-base text-slate-900">This lead has not been analysed yet</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+            Press <b>Read site (2 pages)</b> above to ingest their facts, extract brand assets, and prepare the custom redesign brief.
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="border-2 border-[#533afd]/30 shadow-md bg-white overflow-hidden">
-      <CardContent className="p-6 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#f0f3ff] text-[#533afd]">
-                <Sparkles className="h-4 w-4" />
-              </span>
-              <h3 className="font-bold text-lg text-[#0d1738]">
-                Build their website
-              </h3>
+    <div className="space-y-6">
+      <div className="rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-sm space-y-6">
+        {/* Studio Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-[#533afd] font-black text-xs">
+              <Sparkles className="h-4 w-4" />
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              These details came from reading their own site. Check they look right — anything wrong here ends up on their
-              homepage — then press Generate.
-            </p>
+            <div>
+              <h3 className="font-bold text-base sm:text-lg text-slate-900 tracking-tight">
+                Build Their Website Brief
+              </h3>
+              <p className="text-xs text-slate-500">
+                Extracted from their live website. Edit anything to customize before generating the high-converting homepage.
+              </p>
+            </div>
           </div>
 
+          <div className="flex items-center gap-2">
+            {briefSaved === "saved" && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                <Check className="h-3 w-3" strokeWidth={3} /> Brief Autosaved
+              </span>
+            )}
+            {briefSaved === "saving" && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200">
+                <Loader2 className="h-3 w-3 animate-spin" /> Saving...
+              </span>
+            )}
+          </div>
         </div>
 
+        {/* Design Direction & Reference Look */}
         <InspirationPanel
           leadId={lead.id}
           initialUrl={artifact?.inspiration_url ?? null}
@@ -450,271 +399,273 @@ export function BespokeGenerationStudio({
           industry={industry}
         />
 
-        <form onSubmit={handleGenerate} className="space-y-5 text-xs">
-          {(
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div>
-                <Label htmlFor="gen-business-name" className="text-xs font-bold">Business Name</Label>
-                <Input
-                  id="gen-business-name"
-                  value={businessName}
-                  onChange={(e) => { markTouched(); setBusinessName(e.target.value); }}
-                  className="mt-1 h-8 text-xs bg-[#f9f9ff]"
-                  placeholder="e.g. York Electrical Contractors"
-                  required
-                />
-              </div>
+        {/* Input Form */}
+        <form onSubmit={handleGenerate} className="space-y-6 text-xs">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <Label htmlFor="gen-business-name" className="text-xs font-bold text-slate-800">
+                Business Name <span className="text-rose-500">*</span>
+              </Label>
+              <Input
+                id="gen-business-name"
+                value={businessName}
+                onChange={(e) => { markTouched(); setBusinessName(e.target.value); }}
+                className="mt-1.5 h-9 text-xs bg-slate-50/70 border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 font-medium"
+                placeholder="e.g. Pinnacle Restoration"
+                required
+              />
+            </div>
 
-              <div>
-                <Label htmlFor="gen-founder" className="text-xs font-bold">Founder / Owner Name</Label>
-                <Input
-                  id="gen-founder"
-                  value={founder}
-                  onChange={(e) => { markTouched(); setFounder(e.target.value); }}
-                  className="mt-1 h-8 text-xs bg-[#f9f9ff]"
-                  placeholder="e.g. David Karagounis"
-                />
-              </div>
+            <div>
+              <Label htmlFor="gen-founder" className="text-xs font-bold text-slate-800">
+                Founder / Owner Name
+              </Label>
+              <Input
+                id="gen-founder"
+                value={founder}
+                onChange={(e) => { markTouched(); setFounder(e.target.value); }}
+                className="mt-1.5 h-9 text-xs bg-slate-50/70 border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 font-medium"
+                placeholder="e.g. Shakil Ahmed"
+              />
+            </div>
 
-              <div>
-                <Label htmlFor="gen-city" className="text-xs font-bold">City / Target Territory</Label>
-                <Input
-                  id="gen-city"
-                  value={city}
-                  onChange={(e) => { markTouched(); setCity(e.target.value); }}
-                  className="mt-1 h-8 text-xs bg-[#f9f9ff]"
-                  placeholder="e.g. Flushing, NY"
-                />
-              </div>
+            <div>
+              <Label htmlFor="gen-city" className="text-xs font-bold text-slate-800">
+                City / Target Territory
+              </Label>
+              <Input
+                id="gen-city"
+                value={city}
+                onChange={(e) => { markTouched(); setCity(e.target.value); }}
+                className="mt-1.5 h-9 text-xs bg-slate-50/70 border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 font-medium"
+                placeholder="e.g. Las Vegas, NV"
+              />
+            </div>
 
-              <div>
-                <Label htmlFor="gen-industry" className="text-xs font-bold">Exact Industry / Tagline</Label>
-                <Input
-                  id="gen-industry"
-                  value={industry}
-                  onChange={(e) => { markTouched(); setIndustry(e.target.value); }}
-                  className="mt-1 h-8 text-xs bg-[#f9f9ff]"
-                  placeholder="e.g. Electrical & Solar Contractors"
-                />
-              </div>
+            <div>
+              <Label htmlFor="gen-industry" className="text-xs font-bold text-slate-800">
+                Exact Industry / Tagline
+              </Label>
+              <Input
+                id="gen-industry"
+                value={industry}
+                onChange={(e) => { markTouched(); setIndustry(e.target.value); }}
+                className="mt-1.5 h-9 text-xs bg-slate-50/70 border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 font-medium"
+                placeholder="e.g. Property Damage Restoration Contractor"
+              />
+            </div>
 
-              <div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="gen-hero" className="text-xs font-bold">Hero Photo / Cutout</Label>
-                  <label className="cursor-pointer text-[11px] font-bold text-[#533afd] hover:underline inline-flex items-center gap-1">
-                    {uploadingSlot === "hero" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
-                    <span>Upload to Supabase</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="sr-only"
-                      disabled={Boolean(uploadingSlot)}
-                      onChange={(e) => handleDirectUpload("hero", e.target.files?.[0])}
-                    />
-                  </label>
-                </div>
-                <Input
-                  id="gen-hero"
-                  value={heroImage}
-                  onChange={(e) => { markTouched(); setHeroImage(e.target.value); }}
-                  className="mt-1 h-8 text-xs bg-[#f9f9ff]"
-                  placeholder="https://.../owner-headshot.png"
-                />
-                {heroImage && (
-                  <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1.5 shadow-2xs">
-                    <div className="flex items-center gap-2 min-w-0">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={heroImage}
-                        alt="Hero preview"
-                        className="h-10 w-16 rounded object-cover border border-black/10 bg-white"
-                        onError={(e) => (e.currentTarget.style.display = "none")}
-                      />
-                      <span className="text-[10px] font-semibold text-slate-600 truncate">Hero Photo Active</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => { markTouched(); setHeroImage(""); }}
-                      className="text-slate-400 hover:text-rose-600 p-1"
-                      title="Remove hero image"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="gen-logo" className="text-xs font-bold">Brand Logo</Label>
-                  <label className="cursor-pointer text-[11px] font-bold text-[#533afd] hover:underline inline-flex items-center gap-1">
-                    {uploadingSlot === "logo" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
-                    <span>Upload to Supabase</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="sr-only"
-                      disabled={Boolean(uploadingSlot)}
-                      onChange={(e) => handleDirectUpload("logo", e.target.files?.[0])}
-                    />
-                  </label>
-                </div>
-                <Input
-                  id="gen-logo"
-                  value={logoUrl}
-                  onChange={(e) => { markTouched(); setLogoUrl(e.target.value); }}
-                  className="mt-1 h-8 text-xs bg-[#f9f9ff]"
-                  placeholder="https://.../logo.png"
-                />
-                {logoUrl && (
-                  <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1.5 shadow-2xs">
-                    <div className="flex items-center gap-2 min-w-0">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={logoUrl}
-                        alt="Brand logo preview"
-                        className="h-9 max-w-[120px] rounded object-contain border border-black/10 bg-white p-1"
-                        onError={(e) => (e.currentTarget.style.display = "none")}
-                      />
-                      <span className="text-[10px] font-semibold text-slate-600 truncate">Brand Logo Active</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => { markTouched(); setLogoUrl(""); }}
-                      className="text-slate-400 hover:text-rose-600 p-1"
-                      title="Remove logo"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="gen-footer-logo" className="text-xs font-bold">Footer Logo (Transparent PNG / SVG)</Label>
-                  <label className="cursor-pointer text-[11px] font-bold text-[#533afd] hover:underline inline-flex items-center gap-1">
-                    {uploadingSlot === "footerLogo" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
-                    <span>Upload to Supabase</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="sr-only"
-                      disabled={Boolean(uploadingSlot)}
-                      onChange={(e) => handleDirectUpload("footerLogo", e.target.files?.[0])}
-                    />
-                  </label>
-                </div>
-                <Input
-                  id="gen-footer-logo"
-                  value={footerLogoUrl}
-                  onChange={(e) => { markTouched(); setFooterLogoUrl(e.target.value); }}
-                  className="mt-1 h-8 text-xs bg-[#f9f9ff]"
-                  placeholder="Paste URL or click 'Upload to Supabase' above"
-                />
-                {footerLogoUrl && (
-                  <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-900 p-1.5 text-white shadow-2xs">
-                    <div className="flex items-center gap-2 min-w-0">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={footerLogoUrl}
-                        alt="Footer logo preview"
-                        className="h-9 max-w-[120px] object-contain p-1"
-                        onError={(e) => (e.currentTarget.style.display = "none")}
-                      />
-                      <span className="text-[10px] font-semibold text-slate-300 truncate">Transparent Footer Logo Active</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => { markTouched(); setFooterLogoUrl(""); }}
-                      className="text-slate-400 hover:text-rose-400 p-1"
-                      title="Remove footer logo"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="sm:col-span-2 lg:col-span-3 grid sm:grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="gen-services" className="text-xs font-bold">Core Services / Products (1 per line)</Label>
-                  <Textarea
-                    id="gen-services"
-                    rows={6}
-                    value={servicesText}
-                    onChange={(e) => { markTouched(); setServicesText(e.target.value); }}
-                    className="mt-1 text-xs bg-[#f9f9ff] font-sans"
-                    placeholder="One real service per line (e.g. Water extraction, Mold remediation...)"
+            {/* Hero Cutout */}
+            <div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="gen-hero" className="text-xs font-bold text-slate-800">
+                  Hero Photo / Cutout
+                </Label>
+                <label className="cursor-pointer text-[11px] font-bold text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1">
+                  {uploadingSlot === "hero" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                  <span>Upload</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    disabled={Boolean(uploadingSlot)}
+                    onChange={(e) => handleDirectUpload("hero", e.target.files?.[0])}
                   />
+                </label>
+              </div>
+              <Input
+                id="gen-hero"
+                value={heroImage}
+                onChange={(e) => { markTouched(); setHeroImage(e.target.value); }}
+                className="mt-1.5 h-9 text-xs bg-slate-50/70 border-slate-200 rounded-xl font-mono text-[11px]"
+                placeholder="https://.../hero.png"
+              />
+              {heroImage && (
+                <div className="mt-2 flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/80 p-2 shadow-2xs">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={heroImage}
+                      alt="Hero preview"
+                      className="h-9 w-14 rounded-lg object-cover border border-black/10 bg-white"
+                      onError={(e) => (e.currentTarget.style.display = "none")}
+                    />
+                    <span className="text-[10px] font-bold text-slate-700 truncate">Hero Photo Active</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { markTouched(); setHeroImage(""); }}
+                    className="text-slate-400 hover:text-rose-600 p-1"
+                    title="Remove hero image"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
                 </div>
+              )}
+            </div>
 
-                <div>
-                  <Label htmlFor="gen-areas" className="text-xs font-bold">Service Areas / Locations (1 per line)</Label>
-                  <Textarea
-                    id="gen-areas"
-                    rows={6}
-                    value={areasText}
-                    onChange={(e) => { markTouched(); setAreasText(e.target.value); }}
-                    className="mt-1 text-xs bg-[#f9f9ff] font-sans"
-                    placeholder="One location per line (e.g. Las Vegas, NV, Henderson, NV, Summerlin, NV...)"
+            {/* Brand Logo */}
+            <div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="gen-logo" className="text-xs font-bold text-slate-800">
+                  Brand Logo
+                </Label>
+                <label className="cursor-pointer text-[11px] font-bold text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1">
+                  {uploadingSlot === "logo" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                  <span>Upload</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    disabled={Boolean(uploadingSlot)}
+                    onChange={(e) => handleDirectUpload("logo", e.target.files?.[0])}
                   />
+                </label>
+              </div>
+              <Input
+                id="gen-logo"
+                value={logoUrl}
+                onChange={(e) => { markTouched(); setLogoUrl(e.target.value); }}
+                className="mt-1.5 h-9 text-xs bg-slate-50/70 border-slate-200 rounded-xl font-mono text-[11px]"
+                placeholder="https://.../logo.png"
+              />
+              {logoUrl && (
+                <div className="mt-2 flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/80 p-2 shadow-2xs">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={logoUrl}
+                      alt="Brand logo preview"
+                      className="h-8 max-w-[100px] rounded object-contain border border-black/10 bg-white p-1"
+                      onError={(e) => (e.currentTarget.style.display = "none")}
+                    />
+                    <span className="text-[10px] font-bold text-slate-700 truncate">Logo Active</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { markTouched(); setLogoUrl(""); }}
+                    className="text-slate-400 hover:text-rose-600 p-1"
+                    title="Remove logo"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
                 </div>
+              )}
+            </div>
+
+            {/* Footer Logo */}
+            <div className="sm:col-span-2 lg:col-span-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="gen-footer-logo" className="text-xs font-bold text-slate-800">
+                  Footer Logo (Transparent PNG / SVG)
+                </Label>
+                <label className="cursor-pointer text-[11px] font-bold text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1">
+                  {uploadingSlot === "footerLogo" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                  <span>Upload</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    disabled={Boolean(uploadingSlot)}
+                    onChange={(e) => handleDirectUpload("footerLogo", e.target.files?.[0])}
+                  />
+                </label>
+              </div>
+              <Input
+                id="gen-footer-logo"
+                value={footerLogoUrl}
+                onChange={(e) => { markTouched(); setFooterLogoUrl(e.target.value); }}
+                className="mt-1.5 h-9 text-xs bg-slate-50/70 border-slate-200 rounded-xl font-mono text-[11px]"
+                placeholder="Optional transparent footer logo URL"
+              />
+            </div>
+
+            {/* Services & Areas */}
+            <div className="sm:col-span-2 lg:col-span-3 grid sm:grid-cols-2 gap-4">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <Label htmlFor="gen-services" className="text-xs font-bold text-slate-800">
+                    Core Services / Products
+                  </Label>
+                  <span className="text-[10px] text-slate-400 font-semibold">1 service per line</span>
+                </div>
+                <Textarea
+                  id="gen-services"
+                  rows={6}
+                  value={servicesText}
+                  onChange={(e) => { markTouched(); setServicesText(e.target.value); }}
+                  className="text-xs bg-slate-50/70 border-slate-200 rounded-xl focus:bg-white font-sans leading-relaxed"
+                  placeholder="Water extraction&#10;Structural drying&#10;Mold remediation..."
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <Label htmlFor="gen-areas" className="text-xs font-bold text-slate-800">
+                    Service Areas / Locations
+                  </Label>
+                  <span className="text-[10px] text-slate-400 font-semibold">1 city/area per line</span>
+                </div>
+                <Textarea
+                  id="gen-areas"
+                  rows={6}
+                  value={areasText}
+                  onChange={(e) => { markTouched(); setAreasText(e.target.value); }}
+                  className="text-xs bg-slate-50/70 border-slate-200 rounded-xl focus:bg-white font-sans leading-relaxed"
+                  placeholder="Las Vegas, NV&#10;Henderson, NV&#10;Summerlin, NV..."
+                />
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Which model writes the markup and the stylesheet. Both passes use
-              the one chosen here, so a build is entirely one model's work and
-              the two can be judged against each other on the same lead. */}
-          <div className="rounded-lg border border-[#c7d0fb] bg-[#fbfaff] p-3.5">
-            <div className="flex items-center gap-2">
-              <Zap className="h-3.5 w-3.5 text-[#533afd]" />
-              <Label className="text-xs font-bold text-[#0d1738]">Design model</Label>
+          {/* AI Model Settings Card */}
+          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/60 p-4 sm:p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-[#533afd]" />
+                <Label className="text-xs font-bold text-slate-900">AI Design Model</Label>
+              </div>
+              <span className="text-[11px] text-slate-500">Writes grounded HTML, typography &amp; CSS</span>
             </div>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Writes both the page markup and its stylesheet. Run the same lead through each to see which sells better —
-              regenerating replaces the current homepage.
-            </p>
-            <div className="mt-2.5 grid gap-2 sm:grid-cols-2">
+
+            <div className="grid gap-2 sm:grid-cols-2">
               {([
-                { id: "openai", name: "OpenAI", note: "House chain, or pick a specific model below." },
-                { id: "gemini", name: "Gemini", note: "House chain, or pick a specific model below." },
+                { id: "openai", name: "OpenAI", note: "House chain (GPT-4.5 / Pro)" },
+                { id: "gemini", name: "Gemini", note: "House chain (Gemini 3.1 Pro)" },
               ] as const).map((option) => (
                 <button
                   key={option.id}
                   type="button"
                   disabled={generating}
                   onClick={() => setProvider(option.id)}
-                  className={`rounded-lg border p-2.5 text-left transition disabled:opacity-60 ${
+                  className={`rounded-xl border p-3 text-left transition flex items-center justify-between ${
                     provider === option.id
-                      ? "border-[#533afd] bg-white shadow-sm ring-1 ring-[#533afd]"
-                      : "border-border bg-white hover:border-[#c7d0fb]"
+                      ? "border-[#533afd] bg-white shadow-xs ring-1 ring-[#533afd]"
+                      : "border-slate-200 bg-white/80 hover:border-slate-300"
                   }`}
                 >
-                  <span className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#0d1738]">{option.name}</span>
-                    {provider === option.id && <CheckCircle2 className="h-3.5 w-3.5 text-[#533afd]" />}
-                  </span>
-                  <span className="mt-0.5 block text-[10px] leading-snug text-muted-foreground">{option.note}</span>
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 block">{option.name}</span>
+                    <span className="text-[10px] text-slate-500 block">{option.note}</span>
+                  </div>
+                  {provider === option.id && (
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#533afd] text-white">
+                      <Check className="h-3 w-3" strokeWidth={3} />
+                    </div>
+                  )}
                 </button>
               ))}
             </div>
 
-            {/* Exact model, listed live from the provider rather than from a
-                list in source — a hardcoded roster is what left the Gemini
-                path silently running on Flash after its Pro head was retired. */}
-            <div className="mt-3 rounded-lg border border-border bg-white p-2.5">
-              <label htmlFor="model-pick" className="text-[11px] font-bold text-[#0d1738]">
-                Model
-              </label>
+            {/* Model Select Dropdown */}
+            <div className="pt-2 border-t border-slate-200/60">
               <select
                 id="model-pick"
                 value={model}
                 disabled={generating}
                 onChange={(e) => setModel(e.target.value)}
                 onFocus={() => { if (models.length === 0 && !modelsLoading) void loadModels(); }}
-                className="mt-1.5 h-9 w-full rounded-md border border-border bg-white px-2 text-xs font-semibold text-[#26324b] outline-none focus:border-[#533afd]"
+                className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-[#533afd] shadow-2xs"
               >
                 <option value="">House chain (recommended default)</option>
                 {models
@@ -727,33 +678,25 @@ export function BespokeGenerationStudio({
                     </option>
                   ))}
               </select>
-              <p className="mt-1.5 text-[10px] leading-snug text-muted-foreground">
-                {modelsLoading
-                  ? "Asking the provider what this key can reach…"
-                  : modelsError
-                    ? modelsError
-                    : models.length === 0
-                      ? "Click to load the models this key can actually reach."
-                      : `${models.filter((m) => m.provider === provider).length} usable models. Image, audio, embedding and research models are filtered out. A pinned model still falls back to the house chain if it has been retired.`}
-              </p>
             </div>
           </div>
 
           {genError && (
-            <p className="rounded-md bg-red-50 p-2.5 text-[11px] font-medium text-red-700">{genError}</p>
+            <p className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs font-medium text-rose-700">{genError}</p>
           )}
 
           {genWarnings.length > 0 && (
-            <ul className="space-y-1 rounded-md bg-amber-50 p-2.5 text-[11px] text-amber-800">
+            <ul className="space-y-1 rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800">
               {genWarnings.map((w) => (
                 <li key={w}>• {w}</li>
               ))}
             </ul>
           )}
 
+          {/* Progress Bar */}
           {generating && progress && (
-            <div className="space-y-1.5 rounded-md border border-[#533afd]/20 bg-[#f9f9ff] p-3">
-              <div className="flex items-center justify-between text-[11px] font-semibold text-[#0d1738]">
+            <div className="space-y-2 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-900">
                 <span>
                   {visualQa?.visual_status === "queued"
                     ? `Waiting for local visual QA — candidate ${visualQa.attempt}`
@@ -762,99 +705,73 @@ export function BespokeGenerationStudio({
                       : visualQa?.visual_status === "failed"
                         ? `Revising after rendered visual QA — candidate ${visualQa.attempt}`
                         : progress.done === 0
-                          ? "Designing the homepage — this is the slow, high-effort pass"
+                          ? "Designing the homepage — high-effort batch pass..."
                           : `Building pages — ${progress.done} of ${progress.total} complete`}
                 </span>
-                <span className="text-muted-foreground">
+                <span className="text-indigo-700">
                   {Math.round((progress.done / Math.max(progress.total, 1)) * 100)}%
                 </span>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-[#e6e6f5]">
+              <div className="h-2 overflow-hidden rounded-full bg-indigo-100">
                 <div
-                  className="h-full rounded-full bg-[#533afd] transition-all duration-500"
+                  className="h-full rounded-full bg-[#533afd] transition-all duration-500 shadow-sm"
                   style={{ width: `${Math.round((progress.done / Math.max(progress.total, 1)) * 100)}%` }}
                 />
               </div>
-              <p className="text-[10px] text-muted-foreground">
-                A candidate is saved only after its source checks and rendered visual review pass.
-              </p>
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-border pt-4">
-            <span className="text-[11px] text-muted-foreground">
-              Builds the homepage from this brief and the design DNA above. Inner pages are linked but built after approval.
-              {briefSaved === "saved" && <span className="ml-2 font-semibold text-emerald-600">Brief saved</span>}
-              {briefSaved === "saving" && <span className="ml-2 text-muted-foreground">Saving brief...</span>}
+          {/* Bottom Action Strip */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-100 pt-5">
+            <span className="text-[11px] text-slate-500">
+              Builds the complete homepage from this brief and the selected design archetype.
             </span>
 
             <Button
               type="submit"
               disabled={generating}
-              className="gap-2 font-bold bg-[#533afd] text-white hover:bg-[#432bd9] shadow-md px-6 py-2.5"
+              className="gap-2 font-bold bg-[#533afd] hover:bg-[#432ec4] text-white shadow-md shadow-indigo-500/20 px-7 py-2.5 rounded-xl text-xs"
             >
               {generating ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin text-white" />
-                  Building...
+                  Generating Homepage...
                 </>
               ) : (
                 <>
-                  <Rocket className="h-4 w-4 text-[#ffd12d]" />
-                  {artifact?.bespoke_homepage_html ? "Rebuild the homepage" : "Generate High-Value Bespoke Website"}
+                  <Sparkles className="h-4 w-4 text-amber-300" />
+                  Rebuild the Homepage
                 </>
               )}
             </Button>
           </div>
         </form>
+      </div>
 
-        {/* The rest of the site, once the homepage is right. Held back until
-            then deliberately: every inner page is written to match the
-            homepage, so building them first means rebuilding them all when
-            the homepage changes. */}
-        {artifact?.bespoke_homepage_html && (
-          <div className="rounded-lg border border-[#c7d0fb] bg-[#fbfaff] p-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <Layers className="h-4 w-4 text-[#533afd]" />
-                  <h4 className="text-sm font-bold text-[#0d1738]">Build the rest of the pages</h4>
-                  {(artifact?.generation_phase ?? 0) >= 2 && (
-                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                      Built
-                    </span>
-                  )}
-                </div>
-                <p className="mt-1 max-w-xl text-[11px] leading-relaxed text-muted-foreground">
-                  A page for every service and every area they serve, plus about, FAQ and contact — each written to match
-                  the homepage above, in the same voice and the same design. This is the slow one: a page per step, several
-                  minutes. Run it once the homepage is right, because changing the homepage means running it again.
-                </p>
-              </div>
-
-              <Button
-                type="button"
-                onClick={handleBuildRest}
-                disabled={generating}
-                variant="outline"
-                className="gap-2 border-[#533afd] font-bold text-[#533afd] hover:bg-[#f0f3ff]"
-              >
-                {generating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Building...
-                  </>
-                ) : (
-                  <>
-                    <Layers className="h-4 w-4" />
-                    {(artifact?.generation_phase ?? 0) >= 2 ? "Rebuild all pages" : "Build all pages"}
-                  </>
-                )}
-              </Button>
-            </div>
+      {/* Inner Pages Card */}
+      <div className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-700 font-black text-xs">
+            <Layers className="h-4 w-4" />
           </div>
-        )}
-      </CardContent>
-    </Card>
+          <div>
+            <h4 className="text-xs font-bold text-slate-900">Build the rest of the pages</h4>
+            <p className="text-[11px] text-slate-500">
+              A page for every service and area they serve (about, contact, FAQ) matching the approved homepage.
+            </p>
+          </div>
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => alert("Homepage must be approved first before building inner pages.")}
+          className="rounded-xl border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50"
+        >
+          <FolderTree className="h-3.5 w-3.5 mr-1.5" />
+          Build All Pages
+        </Button>
+      </div>
+    </div>
   );
 }
