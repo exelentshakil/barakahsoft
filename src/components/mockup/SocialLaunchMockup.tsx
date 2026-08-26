@@ -531,75 +531,144 @@ export function SocialLaunchMockup({
     );
   };
 
-  {/* Realistic Sculpted Dark Stone/Rock Pedestal Vector Component */}
-  const renderRockPedestal = () => (
-    <div className="absolute -bottom-8 sm:-bottom-12 left-1/2 -translate-x-1/2 w-[112%] max-w-[540px] pointer-events-none z-0">
-      <svg
-        viewBox="0 0 600 240"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-auto drop-shadow-[0_35px_50px_rgba(0,0,0,0.85)]"
+  {/* Integrated 3D MacBook Pro Resting Directly on Realistic Mountain Slate / Volcanic Rock Pedestal */}
+  const renderRockPedestalShowcase = (
+    customScreenRef = screenRef,
+    customScale = screenScale,
+    containerClass = "w-[94%] max-w-[520px]"
+  ) => (
+    <div className={`relative flex flex-col items-center justify-center ${containerClass} mx-auto perspective-[1600px]`}>
+      {/* 1. 3D MacBook Pro */}
+      <div
+        className="relative z-20 w-full transition-transform duration-500"
+        style={{
+          transform: "rotateY(-12deg) rotateX(10deg) rotateZ(1.5deg)",
+          transformStyle: "preserve-3d",
+        }}
       >
-        <defs>
-          <linearGradient id="rockTop" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#374151" />
-            <stop offset="45%" stopColor="#1f2937" />
-            <stop offset="100%" stopColor="#111827" />
-          </linearGradient>
-          <linearGradient id="rockFront" x1="50%" y1="0%" x2="50%" y2="100%">
-            <stop offset="0%" stopColor="#1f2937" />
-            <stop offset="40%" stopColor="#111827" />
-            <stop offset="100%" stopColor="#030712" />
-          </linearGradient>
-          <linearGradient id="rockHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
-            <stop offset="50%" stopColor="rgba(255,255,255,0.1)" />
-            <stop offset="100%" stopColor="rgba(255,255,255,0.3)" />
-          </linearGradient>
-        </defs>
+        {/* Screen Bezel & Glass Lid */}
+        <div className="relative rounded-t-2xl bg-[#0b0f17] p-2.5 sm:p-3 pb-4 sm:pb-5 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] border border-white/25 ring-1 ring-black/90">
+          {/* Top Center Camera Notch */}
+          <div className="absolute top-1 left-1/2 -translate-x-1/2 h-1.5 w-12 bg-black rounded-b-md z-20 flex items-center justify-center">
+            <span className="h-0.5 w-0.5 rounded-full bg-[#334155]" />
+          </div>
 
-        {/* 1. Base Dark Rock Formation Body */}
-        <polygon
-          points="40,90 95,65 180,60 310,55 450,60 525,70 575,100 550,180 490,225 320,240 160,230 65,195 25,140"
-          fill="#0a0e17"
-        />
+          {/* Screen Display Inner Frame */}
+          <div
+            ref={customScreenRef}
+            className="relative aspect-[16/10] w-full rounded-lg bg-[#0e1626] overflow-hidden shadow-inner border border-black/90 flex flex-col"
+          >
+            {renderScreenContent(customScale)}
+          </div>
+        </div>
 
-        {/* 2. Top Flat Pedestal Facet Plateau (Under Laptop Base) */}
-        <polygon
-          points="55,92 110,68 220,58 350,56 460,62 535,74 560,98 480,128 360,138 210,134 115,122 55,92"
-          fill="url(#rockTop)"
-          stroke="#4b5563"
-          strokeWidth="1.2"
-        />
+        {/* Aluminum Laptop Base / Deck (Silver MacBook Pro) */}
+        <div
+          className="relative h-4 sm:h-5 w-[106%] -left-[3%] rounded-b-2xl bg-gradient-to-b from-[#f1f5f9] via-[#cbd5e1] to-[#94a3b8] shadow-2xl border-t border-white/95 flex items-center justify-between px-3 z-30"
+          style={{
+            transform: "rotateX(52deg) translateZ(-4px)",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.6), 0 2px 4px rgba(255,255,255,0.8) inset",
+          }}
+        >
+          <div className="flex items-center gap-1 opacity-70">
+            <span className="h-1 w-1.5 rounded-xs bg-slate-600" />
+            <span className="h-0.5 w-1 rounded-xs bg-slate-600" />
+          </div>
+          <div className="h-1 w-16 sm:w-28 bg-[#64748b] rounded-full mx-auto" />
+          <div className="flex items-center gap-1 opacity-70">
+            <span className="h-0.5 w-1 rounded-xs bg-slate-600" />
+          </div>
+        </div>
+      </div>
 
-        {/* Top Rim Specular Light Edge */}
-        <path
-          d="M 55,92 L 110,68 L 220,58 L 350,56 L 460,62 L 535,74 L 560,98"
-          stroke="url(#rockHighlight)"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-        />
+      {/* 2. Massive Rugged Mountain Stone / Slate Rock Pedestal — Directly Underneath Laptop Base */}
+      <div className="relative z-10 -mt-6 sm:-mt-8 w-[128%] max-w-[680px] pointer-events-none">
+        {/* Soft Ambient Contact Shadow Under Laptop */}
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-[85%] h-8 bg-black/90 blur-lg rounded-full" />
 
-        {/* 3. Front Craggy Facets & Crevices */}
-        <polygon points="55,92 115,122 105,175 45,150 25,140" fill="#131924" stroke="#1f2937" strokeWidth="0.8" />
-        <polygon points="115,122 210,134 195,190 105,175" fill="#18202d" stroke="#252f3f" strokeWidth="0.8" />
-        <polygon points="210,134 360,138 345,210 195,190" fill="#0f1520" stroke="#1c2433" strokeWidth="0.8" />
-        <polygon points="360,138 480,128 470,195 345,210" fill="#161e2b" stroke="#243042" strokeWidth="0.8" />
-        <polygon points="480,128 560,98 575,135 530,190 470,195" fill="#111722" stroke="#1d2737" strokeWidth="0.8" />
+        <svg
+          viewBox="0 0 700 240"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-full h-auto drop-shadow-[0_45px_70px_rgba(0,0,0,0.9)]"
+        >
+          <defs>
+            <linearGradient id="plateauGlow" x1="20%" y1="0%" x2="80%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="35%" stopColor="#334155" />
+              <stop offset="70%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-        {/* Secondary Lower Stone Cliffs */}
-        <polygon points="195,190 345,210 320,240 160,230" fill="#090d14" />
-        <polygon points="345,210 470,195 490,225 320,240" fill="#06090f" />
+            <linearGradient id="facetHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.6)" />
+              <stop offset="40%" stopColor="rgba(255,255,255,0.2)" />
+              <stop offset="75%" stopColor="rgba(255,255,255,0.45)" />
+              <stop offset="100%" stopColor="rgba(255,255,255,0.1)" />
+            </linearGradient>
 
-        {/* Deep Crevice Shadows */}
-        <path d="M 210,134 L 195,190 L 215,225" stroke="#000000" strokeWidth="2.5" strokeLinecap="round" opacity="0.9" />
-        <path d="M 360,138 L 345,210 L 330,238" stroke="#000000" strokeWidth="3" strokeLinecap="round" opacity="0.9" />
-        <path d="M 480,128 L 470,195" stroke="#000000" strokeWidth="2" strokeLinecap="round" opacity="0.85" />
-        <path d="M 115,122 L 105,175" stroke="#000000" strokeWidth="2" strokeLinecap="round" opacity="0.85" />
+            <linearGradient id="cliffDark" x1="50%" y1="0%" x2="50%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="40%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
 
-        {/* Ambient Laptop Contact Shadow on Stone */}
-        <ellipse cx="300" cy="98" rx="220" ry="28" fill="#000000" opacity="0.75" />
-      </svg>
+            <linearGradient id="mistFade" x1="50%" y1="0%" x2="50%" y2="100%">
+              <stop offset="0%" stopColor="transparent" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+          </defs>
+
+          {/* 1. Main Volumetric Rock Mass Base */}
+          <polygon
+            points="35,75 90,45 220,38 380,35 520,40 610,55 665,85 640,165 570,215 370,238 180,230 75,190 25,130"
+            fill="#030712"
+          />
+
+          {/* 2. Stepped Left & Right Natural Rock Slabs */}
+          <polygon points="25,130 75,190 180,230 110,235 30,170" fill="#080d1a" />
+          <polygon points="570,215 640,165 675,140 655,195 560,235" fill="#050a14" />
+
+          {/* 3. Sculpted Plateau Surface (Top Flat Stone Table) */}
+          <polygon
+            points="45,78 105,48 235,40 375,38 510,44 595,58 645,86 560,118 420,128 260,125 130,110 45,78"
+            fill="url(#plateauGlow)"
+            stroke="#64748b"
+            strokeWidth="1.2"
+          />
+
+          {/* Sharp Specular Chiseled Rim Highlights */}
+          <path
+            d="M 45,78 L 105,48 L 235,40 L 375,38 L 510,44 L 595,58 L 645,86"
+            stroke="url(#facetHighlight)"
+            strokeWidth="2.8"
+            strokeLinecap="round"
+          />
+
+          {/* 4. Chiseled Front Facet Formations with Deep Shading */}
+          <polygon points="45,78 130,110 115,165 55,140 25,130" fill="#1e293b" stroke="#334155" strokeWidth="0.8" />
+          <polygon points="130,110 260,125 240,185 115,165" fill="#172554" stroke="#1e293b" strokeWidth="0.8" />
+          <polygon points="260,125 420,128 400,205 240,185" fill="#0f172a" stroke="#1e293b" strokeWidth="0.8" />
+          <polygon points="420,128 560,118 545,190 400,205" fill="#1e293b" stroke="#334155" strokeWidth="0.8" />
+          <polygon points="560,118 645,86 660,125 615,180 545,190" fill="#0f172a" stroke="#1e293b" strokeWidth="0.8" />
+
+          {/* Secondary Lower Stratified Rock Steps */}
+          <polygon points="240,185 400,205 370,238 180,230" fill="#090e1a" stroke="#1e293b" strokeWidth="0.6" />
+          <polygon points="400,205 545,190 570,215 370,238" fill="#060a14" stroke="#1e293b" strokeWidth="0.6" />
+
+          {/* Deep Crevice Crease Shadows */}
+          <path d="M 260,125 L 240,185 L 255,225" stroke="#000000" strokeWidth="3" strokeLinecap="round" opacity="0.95" />
+          <path d="M 420,128 L 400,205 L 385,235" stroke="#000000" strokeWidth="3.5" strokeLinecap="round" opacity="0.95" />
+          <path d="M 560,118 L 545,190" stroke="#000000" strokeWidth="2.5" strokeLinecap="round" opacity="0.9" />
+          <path d="M 130,110 L 115,165" stroke="#000000" strokeWidth="2.5" strokeLinecap="round" opacity="0.9" />
+
+          {/* Base Atmospheric Ground Mist */}
+          <rect x="0" y="160" width="700" height="80" fill="url(#mistFade)" opacity="0.85" />
+
+          {/* Rich Contact Shadow directly under Laptop */}
+          <ellipse cx="350" cy="85" rx="270" ry="32" fill="#000000" opacity="0.8" />
+        </svg>
+      </div>
     </div>
   );
 
@@ -978,12 +1047,7 @@ export function SocialLaunchMockup({
           />
 
           {stageMode === "rock" ? (
-            <>
-              {/* Rugged Dark Stone / Rock Pedestal Base */}
-              {renderRockPedestal()}
-              {/* 3D MacBook Pro Resting on Rock */}
-              {render3DMacBook()}
-            </>
+            renderRockPedestalShowcase(screenRef, screenScale, "w-[94%] max-w-[490px]")
           ) : (
             <>
               {/* Soft Ground Contact Shadow */}
@@ -1042,12 +1106,9 @@ export function SocialLaunchMockup({
           </div>
 
           {/* 3D Stage in Landscape */}
-          <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1800px] mt-4">
+          <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1800px] mt-2">
             {stageMode === "rock" ? (
-              <>
-                {renderRockPedestal()}
-                {render3DMacBook(landscapeScreenRef, 0.45)}
-              </>
+              renderRockPedestalShowcase(landscapeScreenRef, 0.45, "w-[680px]")
             ) : (
               <>
                 {renderFloatingAboutCard()}
@@ -1097,10 +1158,7 @@ export function SocialLaunchMockup({
           {/* 3D Stage */}
           <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1600px]">
             {stageMode === "rock" ? (
-              <>
-                {renderRockPedestal()}
-                {render3DMacBook()}
-              </>
+              renderRockPedestalShowcase(screenRef, screenScale, "w-[96%] max-w-[480px]")
             ) : (
               <>
                 {renderFloatingAboutCard()}
