@@ -176,7 +176,13 @@ function filterStyle(style: string): string {
 export function sanitizeBespokeHtml(rawHtml: string): string {
   const options = baseOptions();
 
-  return sanitizeHtml(rawHtml, {
+  // Strip redundant leading dashes, em-dashes, and hyphens from section eyebrows, badges, and subheadings
+  const unPrefixed = rawHtml.replace(
+    /(<(?:span|p|h[1-6]|div)[^>]*class=["'][^"']*(?:eyebrow|subtitle|label|tag|badge|kicker|pill)[^"']*["'][^>]*>)s*(?:[—–-]|&mdash;|&ndash;|&#8212;|&#8211;)s*/gi,
+    "$1"
+  );
+
+  return sanitizeHtml(unPrefixed, {
     ...options,
     // header/footer/nav are legal INSIDE the generated body — a page may have
     // a section header — because the site's real chrome is rendered around

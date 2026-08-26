@@ -152,7 +152,7 @@ Every hero section must look like a high-end $20,000 bespoke agency build with c
 
 DESKTOP SILHOUETTE (2-Column Balanced Grid, 55% / 45%):
 1. LEFT COLUMN — The Value Stack & Immediate Conversion Anchor:
-   - Eyebrow Tag: A sleek uppercase label preceded by a subtle brand accent line (e.g., "— PROPERTY DAMAGE RESTORATION IN LAS VEGAS").
+   - Eyebrow Tag: A sleek uppercase label or badge (e.g., "PROPERTY DAMAGE RESTORATION IN LAS VEGAS"). NEVER prefix eyebrows, subheadings, or badges with a literal dash or em-dash (never write "— "). Any accent mark is styled purely with CSS.
    - Massive Typographic Headline: Bold, commanding font-display face (clamp(2.5rem, 4vw, 3.75rem)) directly addressing the urgent customer problem (e.g., "Help for water, fire, mold and property damage in Las Vegas").
    - Outcome-Driven Subhead: 1-2 readable sentences connecting real services to relief and peace of mind.
    - Immediate Direct Call CTA: Click-to-call phone link (<a href="tel:..." class="site-cta site-cta--primary">Call (XXX) XXX-XXXX</a>) paired with a 24/7 live dispatch status badge / pulse indicator ("24/7 Emergency Dispatch · Avg 45 Min Response").
@@ -175,7 +175,7 @@ The About section (id="about") is the ultimate credibility builder where a visit
 1. TIER 1 — Top Story & Authentic Profile Split:
    - LEFT: Substantial real photograph of the founder, team, or on-site work vehicle inside a rounded-2xl container with a documentary caption rail along the bottom (e.g., "Property damage restoration calls for careful coordination from the first conversation onward.").
    - RIGHT:
-     * Numbered Section Eyebrow (e.g., "— 05 ABOUT").
+     * Section Eyebrow: A clean uppercase badge or numbered tag (e.g., "ABOUT OUR COMPANY" or "05 / ABOUT"). NEVER prefix with a literal dash or em-dash (never write "— ").
      * Authoritative Customer-Relevant Headline (e.g., "A real name behind the restoration work" or "Built on Craftsmanship & Local Values").
      * 2 concise, compelling paragraphs establishing who does the work, their standards, and why local homeowners trust them in their properties.
      * "Licensed and Insured" Trust Box: A clean badge card with a 4px solid brand-colored left border.

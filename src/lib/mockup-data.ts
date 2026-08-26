@@ -34,11 +34,20 @@ export function extractMockupData({
   const businessName = lead.business_name || (facts?.business_name as string) || payload?.businessName || lead.slug;
   const city = (facts?.town as string) || (facts?.city as string) || "";
   const trade = lead.industry || (facts?.industry as string) || payload?.services?.[0]?.h2 || "Home services";
+
+  // Prioritize compiled design tokens from the bespoke website
+  const tokenVars = ((artifact?.design_tokens as { vars?: Record<string, string> })?.vars) || {};
+  const primaryToken = tokenVars["--bs-primary"];
+  const accentToken = tokenVars["--bs-accent"];
+  const onPrimaryToken = tokenVars["--bs-on-primary"];
+  const invertSurfaceToken = tokenVars["--bs-invert-surface"];
+
   const brandColorHex =
+    primaryToken ||
     (facts?.brand_color_hex as string) ||
     (extracted?.brand_color_hex as string) ||
     payload?.brandColorHsl ||
-    "#1b4d3e";
+    "#FFD974";
 
   const rating = (facts?.rating as number) || (payload?.proof?.rating as number) || null;
   const reviewCount = (facts?.review_count as number) || (payload?.proof?.reviewCount as number) || null;
@@ -52,7 +61,7 @@ export function extractMockupData({
     lead.phone ||
     null;
 
-  // 1. Extract Copy & Imagery Directly from the Homepage's About Section
+  // 1. Extract Copy & Imagery Directly from the Homepage About Section
   let extractedAboutEyebrow: string | null = null;
   let extractedAboutHeadline: string | null = null;
   let extractedAboutBody: string | null = null;
@@ -74,12 +83,16 @@ export function extractMockupData({
     if (aboutSectionMatch) {
       const aboutContent = aboutSectionMatch[1];
 
-      // Extract About eyebrow
+      // Extract About eyebrow (strip any leading dashes or em-dashes)
       const eyebrowMatch =
         aboutContent.match(/<span[^>]*(?:class=["'][^"']*(?:eyebrow|subtitle|label|tag)[^"']*["'])[^>]*>([\s\S]*?)<\/span>/i) ||
         aboutContent.match(/<p[^>]*(?:class=["'][^"']*(?:eyebrow|subtitle|label|tag)[^"']*["'])[^>]*>([\s\S]*?)<\/p>/i);
       if (eyebrowMatch) {
-        const cleanE = eyebrowMatch[1].replace(/<[^>]+>/g, "").trim();
+        const cleanE = eyebrowMatch[1]
+          .replace(/<[^>]+>/g, "")
+          .replace(/^[—–-]\s*/, "")
+          .replace(/^&mdash;\s*/i, "")
+          .trim();
         if (cleanE) extractedAboutEyebrow = cleanE;
       }
 
@@ -90,7 +103,7 @@ export function extractMockupData({
         if (cleanH) extractedAboutHeadline = cleanH;
       }
 
-      // Extract all paragraphs and select the substantial narrative body text (skip short tags/subtitles < 30 chars)
+      // Extract all paragraphs and select the substantial narrative body text
       const pMatches = Array.from(aboutContent.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi));
       const validParagraphs = pMatches
         .map((m) => m[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim())
@@ -104,7 +117,7 @@ export function extractMockupData({
     }
   }
 
-  // Also check artifact's bespoke_sections if available
+  // Also check artifact bespoke_sections if available
   if ((!extractedAboutHeadline || !extractedAboutBody) && Array.isArray(artifact?.bespoke_sections)) {
     const aboutSec = artifact.bespoke_sections.find((s) => s.id === "about" || s.kind === "about");
     if (aboutSec?.html) {
@@ -155,13 +168,16 @@ export function extractMockupData({
   const headlineMode: MockupHeadlineMode =
     savedMockup.headlineMode || (isPaid ? "launched" : "proposed");
 
-  const themeId = savedMockup.themeId || "olive";
+  const themeId = savedMockup.themeId || "brand";
 
   return {
     businessName,
     city,
     trade,
     brandColor: brandColorHex,
+    accentColor: accentToken || null,
+    onPrimaryColor: onPrimaryToken || null,
+    invertSurface: invertSurfaceToken || null,
     logoUrl: (extracted?.logo_url as string) || (facts?.logo_url as string) || payload?.logoUrl || null,
     rating,
     reviewCount,

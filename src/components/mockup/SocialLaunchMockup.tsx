@@ -26,6 +26,9 @@ export interface MockupData {
   city?: string | null;
   trade?: string | null;
   brandColor?: string | null;
+  accentColor?: string | null;
+  onPrimaryColor?: string | null;
+  invertSurface?: string | null;
   logoUrl?: string | null;
   rating?: number | null;
   reviewCount?: number | null;
@@ -90,6 +93,16 @@ export const HEADLINE_OPTIONS: { id: MockupHeadlineMode; line1: string; line2: s
 
 export const BG_THEMES = [
   {
+    id: "brand",
+    name: "Brand Studio (Default)",
+    gradient: "from-[#0b0f19] via-[#111827] to-[#1f2937]",
+    bgStart: "#0b0f19",
+    bgMid: "#111827",
+    bgEnd: "#1f2937",
+    watermarkColor: "rgba(255, 255, 255, 0.07)",
+    ribbonBg: "#FFD974",
+  },
+  {
     id: "midnight",
     name: "Midnight Navy",
     gradient: "from-[#0a1128] via-[#001f54] to-[#034078]",
@@ -100,14 +113,14 @@ export const BG_THEMES = [
     ribbonBg: "#001f54",
   },
   {
-    id: "sky",
-    name: "Azure Sky",
-    gradient: "from-[#6fa6cb] via-[#94bedc] to-[#c7dfef]",
-    bgStart: "#6fa6cb",
-    bgMid: "#94bedc",
-    bgEnd: "#c7dfef",
-    watermarkColor: "rgba(30, 64, 95, 0.14)",
-    ribbonBg: "#2b4c6f",
+    id: "charcoal",
+    name: "Studio Charcoal",
+    gradient: "from-[#1e2229] via-[#14171d] to-[#0b0d10]",
+    bgStart: "#1e2229",
+    bgMid: "#14171d",
+    bgEnd: "#0b0d10",
+    watermarkColor: "rgba(255, 255, 255, 0.08)",
+    ribbonBg: "#1e2229",
   },
   {
     id: "emerald",
@@ -131,33 +144,13 @@ export const BG_THEMES = [
   },
   {
     id: "sunset",
-    name: "Sunset Titanium",
+    name: "Sunset Amber",
     gradient: "from-[#7c2d12] via-[#431407] to-[#1c1917]",
     bgStart: "#7c2d12",
     bgMid: "#431407",
     bgEnd: "#1c1917",
     watermarkColor: "rgba(255, 255, 255, 0.08)",
     ribbonBg: "#7c2d12",
-  },
-  {
-    id: "charcoal",
-    name: "Studio Charcoal",
-    gradient: "from-[#1e2229] via-[#14171d] to-[#0b0d10]",
-    bgStart: "#1e2229",
-    bgMid: "#14171d",
-    bgEnd: "#0b0d10",
-    watermarkColor: "rgba(255, 255, 255, 0.08)",
-    ribbonBg: "#1e2229",
-  },
-  {
-    id: "olive",
-    name: "Sage Olive",
-    gradient: "from-[#364634] via-[#243023] to-[#182217]",
-    bgStart: "#364634",
-    bgMid: "#243023",
-    bgEnd: "#182217",
-    watermarkColor: "rgba(255, 255, 255, 0.08)",
-    ribbonBg: "#364634",
   },
   {
     id: "cobalt",
@@ -169,7 +162,32 @@ export const BG_THEMES = [
     watermarkColor: "rgba(255, 255, 255, 0.08)",
     ribbonBg: "#1e40af",
   },
+  {
+    id: "sky",
+    name: "Azure Sky",
+    gradient: "from-[#6fa6cb] via-[#94bedc] to-[#c7dfef]",
+    bgStart: "#6fa6cb",
+    bgMid: "#94bedc",
+    bgEnd: "#c7dfef",
+    watermarkColor: "rgba(30, 64, 95, 0.14)",
+    ribbonBg: "#2b4c6f",
+  },
 ];
+
+// Helper: Calculate WCAG luminance contrast text color (dark vs light)
+function getContrastColor(hexColor?: string | null, fallbackDark = "#1e242d", fallbackLight = "#ffffff"): string {
+  if (!hexColor) return fallbackDark;
+  let hex = hexColor.replace("#", "").trim();
+  if (hex.length === 3) {
+    hex = hex.split("").map((c) => c + c).join("");
+  }
+  if (hex.length !== 6) return fallbackDark;
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  return yiq >= 150 ? fallbackDark : fallbackLight;
+}
 
 // Helper: Convert remote image to base64 proxy for reliable html-to-image export
 async function urlToBase64(url: string | null | undefined): Promise<string | null> {
@@ -217,7 +235,7 @@ export function SocialLaunchMockup({
   onThemeChange?: (themeId: string) => void;
   onHeadlineModeChange?: (mode: MockupHeadlineMode) => void;
 }) {
-  const [themeId, setThemeId] = useState(data.themeId || "sky");
+  const [themeId, setThemeId] = useState(data.themeId || "brand");
   const [headlineMode, setHeadlineMode] = useState<MockupHeadlineMode>(data.headlineMode || "launched");
   const [downloading, setDownloading] = useState<string | null>(null);
 
@@ -256,23 +274,29 @@ export function SocialLaunchMockup({
   }, [data.headlineMode]);
 
   const theme = BG_THEMES.find((t) => t.id === themeId) || BG_THEMES[0];
-  const primaryColor = data.brandColor || theme.ribbonBg;
+
+  // Core brand color tokens directly synchronized with the bespoke website
+  const primaryColor = data.brandColor || "#FFD974";
+  const onPrimaryColor = data.onPrimaryColor || getContrastColor(primaryColor, "#1e242d", "#ffffff");
+  const isLightPrimary = onPrimaryColor !== "#ffffff";
+  const accentColor = data.accentColor || primaryColor;
+  const invertSurface = data.invertSurface || "#0b0f19";
 
   const businessShortName = data.businessName || "Your Business";
   const city = data.city || "New York";
   const trade = data.trade || "Contractor";
   const heroHeading =
     data.heroHeadline || `PREMIER ${trade.toUpperCase()} IN ${city.toUpperCase()}`;
-  const aboutEyebrow =
-    data.aboutEyebrow || `BUILT ON CRAFTSMANSHIP & VALUES`;
+  const rawEyebrow = data.aboutEyebrow || `ABOUT OUR TEAM IN ${city.toUpperCase()}`;
+  const aboutEyebrow = rawEyebrow.replace(/^[—–-]\s*/, "").replace(/^&mdash;\s*/i, "").trim();
   const aboutHeading =
     data.aboutHeadline || `About Our Local ${trade} Company In ${city}`;
   const aboutBody =
     data.aboutBody ||
     `${businessShortName} provides expert ${trade.toLowerCase()} and dependable performance across ${city}. Our team delivers personalized service and craftsmanship from start to finish.`;
-  const ratingText = data.rating ? `${data.rating}★` : null;
-  const reviewsCountText = data.reviewCount ? String(data.reviewCount) : null;
-  const yearsExp = data.yearsExperience ? `${data.yearsExperience}+` : null;
+  const ratingText = data.rating ? `${data.rating}★` : "5.0★";
+  const reviewsCountText = data.reviewCount ? String(data.reviewCount) : "100+";
+  const yearsExp = data.yearsExperience ? `${data.yearsExperience}+` : "15+";
 
   const activeHeadline = HEADLINE_OPTIONS.find((h) => h.id === headlineMode) || HEADLINE_OPTIONS[0];
 
@@ -411,7 +435,14 @@ export function SocialLaunchMockup({
         <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-transparent" />
 
         <div className="relative z-10 space-y-1 max-w-[80%]">
-          <span className="inline-block rounded bg-emerald-500/30 px-1.5 py-0.5 text-[5px] sm:text-[6.5px] font-extrabold tracking-wider uppercase text-emerald-300 border border-emerald-400/30">
+          <span
+            className="inline-block rounded px-1.5 py-0.5 text-[5px] sm:text-[6.5px] font-extrabold tracking-wider uppercase border"
+            style={{
+              backgroundColor: isLightPrimary ? "rgba(255,255,255,0.15)" : `${primaryColor}30`,
+              borderColor: primaryColor,
+              color: isLightPrimary ? primaryColor : "#ffffff",
+            }}
+          >
             SERVING {city.toUpperCase()}
           </span>
           <h3 className="text-[8px] sm:text-[10px] font-black leading-tight line-clamp-2 uppercase text-white drop-shadow">
@@ -419,12 +450,12 @@ export function SocialLaunchMockup({
           </h3>
           <div className="flex items-center gap-1.5 pt-0.5">
             <span
-              className="rounded px-2 py-0.5 text-[5.5px] sm:text-[7px] font-bold text-white shadow"
-              style={{ backgroundColor: primaryColor }}
+              className="rounded px-2 py-0.5 text-[5.5px] sm:text-[7px] font-extrabold shadow"
+              style={{ backgroundColor: primaryColor, color: onPrimaryColor }}
             >
               GET A FREE QUOTE →
             </span>
-            <span className="text-[5.5px] sm:text-[6.5px] text-amber-400 font-bold">
+            <span className="text-[5.5px] sm:text-[6.5px] font-bold text-amber-400">
               {ratingText ? `${ratingText} customer rating` : businessShortName}
             </span>
           </div>
@@ -439,7 +470,10 @@ export function SocialLaunchMockup({
               {trade.toUpperCase()} EXPERTS WITH 5-STAR REPUTATION
             </span>
           </div>
-          <span className="rounded bg-[#0d1738] px-1.5 py-0.5 text-[4.5px] sm:text-[5.5px] font-bold text-white">
+          <span
+            className="rounded px-1.5 py-0.5 text-[4.5px] sm:text-[5.5px] font-bold"
+            style={{ backgroundColor: invertSurface, color: "#ffffff" }}
+          >
             READ REVIEWS
           </span>
         </div>
@@ -452,10 +486,18 @@ export function SocialLaunchMockup({
       ref={stageRef}
       className="relative z-10 w-full flex-1 flex items-center justify-center mt-2 perspective-[1600px]"
     >
-      {/* Soft Ground Contact Shadow Under Laptop */}
-      <div className="absolute bottom-2 sm:bottom-4 left-4 sm:left-8 right-4 sm:right-8 h-12 sm:h-16 bg-slate-950/55 blur-2xl rounded-full transform scale-x-115 -rotate-2" />
+      {/* Subtle Studio Spotlight Ambient Halo Behind Laptop */}
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] sm:w-[400px] h-[220px] rounded-full blur-3xl pointer-events-none opacity-25"
+        style={{
+          background: `radial-gradient(circle, ${primaryColor} 0%, transparent 70%)`,
+        }}
+      />
 
-      {/* 1. FLOATING ABOUT / PREVIEW CARD LAYERED ELEGANTLY BEHIND THE MACBOOK */}
+      {/* Soft Ground Contact Shadow Under Laptop */}
+      <div className="absolute bottom-2 sm:bottom-4 left-4 sm:left-8 right-4 sm:right-8 h-12 sm:h-16 bg-slate-950/60 blur-2xl rounded-full transform scale-x-115 -rotate-2" />
+
+      {/* 1. FLOATING ABOUT / PREVIEW CARD LAYERED BEHIND THE MACBOOK (Unobscured Foreground Screen) */}
       <div
         className="absolute -right-1 sm:-right-3 top-[-24px] sm:top-[-34px] w-[80%] max-w-[375px] rounded-2xl bg-white shadow-2xl border border-slate-200/90 overflow-hidden transition-transform duration-500 z-0"
         style={{
@@ -472,7 +514,10 @@ export function SocialLaunchMockup({
           </div>
           {/* Dynamic Island Pill with Live Pulse Dot */}
           <div className="h-3.5 sm:h-4 px-2 sm:px-2.5 rounded-full bg-black border border-white/20 shadow-inner flex items-center gap-1.5">
-            <span className="h-1 w-1 rounded-full bg-emerald-400 animate-pulse" />
+            <span
+              className="h-1.5 w-1.5 rounded-full animate-pulse shadow-sm"
+              style={{ backgroundColor: primaryColor }}
+            />
             <span className="text-[5px] sm:text-[6px] font-extrabold tracking-wider uppercase text-white truncate max-w-[170px]">
               {businessShortName} · Verified Redesign
             </span>
@@ -492,115 +537,130 @@ export function SocialLaunchMockup({
           />
         ) : (
           <>
-        {/* 3-Tier Layered Masterpiece About Card (Matching Social Launch Studio 3D Posters) */}
-        <div className="p-3 sm:p-3.5 bg-white grid grid-cols-12 gap-2.5 items-start">
-          {/* Left: Framed Photo of Founder / Team / Fleet with Bottom Name Badge Bar */}
-          <div className="col-span-5 relative rounded-xl overflow-hidden shadow-md border border-slate-200 aspect-[4/4.8] bg-slate-900 flex flex-col justify-end">
-            {data.aboutImageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={data.aboutImageUrl}
-                alt={data.founderName || `${businessShortName} team`}
-                crossOrigin="anonymous"
-                className="absolute inset-0 h-full w-full object-cover object-center"
-              />
-            ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 flex flex-col items-center justify-center p-2 text-center">
-                <span className="text-white text-[8px] font-black tracking-wider uppercase opacity-80">{businessShortName}</span>
-                <span className="text-emerald-400 text-[6px] font-bold uppercase mt-0.5">Team &amp; Operations</span>
-              </div>
-            )}
-            {/* Bottom Founder & Leadership Name Badge Bar */}
-            <div className="relative z-10 bg-slate-900/90 backdrop-blur-xs p-1.5 text-white flex items-center gap-1.5 border-t border-white/20">
-              {data.logoUrl && (
-                <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-white p-0.5 shrink-0 overflow-hidden flex items-center justify-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={data.logoUrl} alt="Logo" className="h-full w-full object-contain" />
+            {/* 3-Tier Layered Masterpiece About Card Synchronized to Website Colors */}
+            <div className="p-3 sm:p-3.5 bg-white grid grid-cols-12 gap-2.5 items-start">
+              {/* Left: Framed Photo of Founder / Team / Fleet with Bottom Name Badge Bar */}
+              <div className="col-span-5 relative rounded-xl overflow-hidden shadow-md border border-slate-200 aspect-[4/4.8] bg-slate-900 flex flex-col justify-end">
+                {data.aboutImageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={data.aboutImageUrl}
+                    alt={data.founderName || `${businessShortName} team`}
+                    crossOrigin="anonymous"
+                    className="absolute inset-0 h-full w-full object-cover object-center"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 flex flex-col items-center justify-center p-2 text-center">
+                    <span className="text-white text-[8px] font-black tracking-wider uppercase opacity-80">{businessShortName}</span>
+                    <span className="text-[6px] font-bold uppercase mt-0.5" style={{ color: primaryColor }}>
+                      Team &amp; Operations
+                    </span>
+                  </div>
+                )}
+                {/* Bottom Founder & Leadership Name Badge Bar */}
+                <div className="relative z-10 bg-slate-900/90 backdrop-blur-xs p-1.5 text-white flex items-center gap-1.5 border-t border-white/20">
+                  {data.logoUrl && (
+                    <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-white p-0.5 shrink-0 overflow-hidden flex items-center justify-center">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={data.logoUrl} alt="Logo" className="h-full w-full object-contain" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <span className="block text-[6px] sm:text-[7.5px] font-black truncate leading-tight">
+                      {data.founderName || "Local Leadership"}
+                    </span>
+                    <span className="block text-[4px] sm:text-[5px] font-medium text-slate-300 truncate">
+                      {data.founderTitle || `Owner of ${businessShortName}`}
+                    </span>
+                  </div>
                 </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <span className="block text-[6px] sm:text-[7.5px] font-black truncate leading-tight">
-                  {data.founderName || "Local Leadership"}
+              </div>
+
+              {/* Right: Story Eyebrow, Authoritative Title & Narrative */}
+              <div className="col-span-7 space-y-1">
+                <div className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-1.5 py-0.5 border border-slate-200/80">
+                  <span className="text-[4.5px] sm:text-[5.5px] font-extrabold uppercase tracking-wider text-slate-800">
+                    {aboutEyebrow}
+                  </span>
+                </div>
+                <h4 className="text-[8.5px] sm:text-[10.5px] font-black leading-tight text-slate-900 line-clamp-2">
+                  {aboutHeading}
+                </h4>
+                <p className="text-[5px] sm:text-[6px] text-slate-600 font-normal line-clamp-3 leading-relaxed">
+                  {aboutBody}
+                </p>
+                <div className="pt-0.5 flex items-center gap-1.5">
+                  <span
+                    className="inline-block rounded px-2 py-0.5 text-[4.5px] sm:text-[5.5px] font-extrabold shadow-xs"
+                    style={{ backgroundColor: primaryColor, color: onPrimaryColor }}
+                  >
+                    GET A FREE QUOTE →
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* ROW 2: FULL-WIDTH SOLID METRIC RIBBON BAND (4 STATS MATCHING WEBSITE BRAND COLOR) */}
+            <div
+              className="px-2 py-1.5 grid grid-cols-4 gap-0.5 text-center shadow-inner"
+              style={{
+                backgroundColor: primaryColor,
+                color: onPrimaryColor,
+                borderTop: isLightPrimary ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.2)",
+                borderBottom: isLightPrimary ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.2)",
+              }}
+            >
+              <div>
+                <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
+                  {yearsExp}
                 </span>
-                <span className="block text-[4px] sm:text-[5px] font-medium text-slate-300 truncate">
-                  {data.founderTitle || `Owner of ${businessShortName}`}
+                <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
+                  Experience
+                </span>
+              </div>
+              <div>
+                <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
+                  {reviewsCountText}
+                </span>
+                <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
+                  Completed
+                </span>
+              </div>
+              <div>
+                <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
+                  {ratingText}
+                </span>
+                <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
+                  Avg Rating
+                </span>
+              </div>
+              <div>
+                <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
+                  100%
+                </span>
+                <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
+                  Guaranteed
                 </span>
               </div>
             </div>
-          </div>
 
-          {/* Right: Story Eyebrow, Authoritative Title & Narrative */}
-          <div className="col-span-7 space-y-1">
-            <div className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-1.5 py-0.5 border border-slate-200/80">
-              <span className="text-[4.5px] sm:text-[5.5px] font-extrabold uppercase tracking-wider text-slate-700">
-                {aboutEyebrow}
-              </span>
-            </div>
-            <h4 className="text-[8.5px] sm:text-[10.5px] font-black leading-tight text-slate-900 line-clamp-2">
-              {aboutHeading}
-            </h4>
-            <p className="text-[5px] sm:text-[6px] text-slate-600 font-normal line-clamp-3 leading-relaxed">
-              {aboutBody}
-            </p>
-            <div className="pt-0.5 flex items-center gap-1.5">
+            {/* ROW 3: SECONDARY SERVICE / CRAFTSMANSHIP SNIPPET */}
+            <div className="p-2 sm:p-2.5 bg-[#fafafc] flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1 space-y-0.5">
+                <h5 className="text-[6px] sm:text-[7.5px] font-black text-slate-900 leading-tight truncate">
+                  Professional Residential &amp; Commercial {trade} Services
+                </h5>
+                <p className="text-[4px] sm:text-[5px] text-slate-500 truncate">
+                  Dependable performance, direct insurance billing, and licensed experts across {city}.
+                </p>
+              </div>
               <span
-                className="inline-block rounded px-2 py-0.5 text-[4.5px] sm:text-[5.5px] font-bold text-white shadow-xs"
-                style={{ backgroundColor: primaryColor }}
+                className="shrink-0 rounded px-2 py-0.5 text-[4.5px] sm:text-[5.5px] font-extrabold shadow-xs"
+                style={{ backgroundColor: primaryColor, color: onPrimaryColor }}
               >
                 GET A FREE QUOTE →
               </span>
             </div>
-          </div>
-        </div>
-
-        {/* ROW 2: FULL-WIDTH SOLID METRIC RIBBON BAND (4 STATS) */}
-        <div
-          className="px-2 py-1.5 text-white grid grid-cols-4 gap-0.5 text-center border-y border-white/20 shadow-inner"
-          style={{ backgroundColor: primaryColor }}
-        >
-          <div>
-            <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight">{yearsExp || "15+"}</span>
-            <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold text-white/85 tracking-wider">
-              Experience
-            </span>
-          </div>
-          <div>
-            <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight">{reviewsCountText || "1,200+"}</span>
-            <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold text-white/85 tracking-wider">
-              Completed
-            </span>
-          </div>
-          <div>
-            <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight">{ratingText || "4.9★"}</span>
-            <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold text-white/85 tracking-wider">
-              Avg Rating
-            </span>
-          </div>
-          <div>
-            <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight">100%</span>
-            <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold text-white/85 tracking-wider">
-              Guaranteed
-            </span>
-          </div>
-        </div>
-
-        {/* ROW 3: SECONDARY SERVICE / CRAFTSMANSHIP SNIPPET */}
-        <div className="p-2 sm:p-2.5 bg-[#fafafc] flex items-center justify-between gap-2">
-          <div className="min-w-0 flex-1 space-y-0.5">
-            <h5 className="text-[6px] sm:text-[7.5px] font-black text-slate-900 leading-tight truncate">
-              Professional Residential &amp; Commercial {trade} Services
-            </h5>
-            <p className="text-[4px] sm:text-[5px] text-slate-500 truncate">
-              Dependable performance, direct insurance billing, and licensed experts across {city}.
-            </p>
-          </div>
-          <span
-            className="shrink-0 rounded px-2 py-0.5 text-[4.5px] sm:text-[5.5px] font-bold text-white shadow-xs"
-            style={{ backgroundColor: primaryColor }}
-          >
-            GET A FREE QUOTE →
-          </span>
-        </div>
           </>
         )}
       </div>
@@ -657,7 +717,7 @@ export function SocialLaunchMockup({
 
   return (
     <div className={`flex flex-col items-center space-y-4 ${className}`}>
-      {/* 3D Mockup Stage (4:5 Aspect Ratio matching reference image exactly) */}
+      {/* 3D Mockup Stage (4:5 Aspect Ratio matching reference poster composition) */}
       <div
         ref={mockupRef}
         className={`relative w-full max-w-[560px] aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-b ${theme.gradient} select-none border border-white/20 flex flex-col justify-between p-6 sm:p-8`}
@@ -739,8 +799,8 @@ export function SocialLaunchMockup({
               <p className="text-[10px] text-slate-500 font-medium">Bespoke High-Converting Redesign Concept</p>
             </div>
             <span
-              className="rounded-lg px-3 py-1.5 text-[10px] font-bold text-white shadow-xs"
-              style={{ backgroundColor: primaryColor }}
+              className="rounded-lg px-3 py-1.5 text-[10px] font-extrabold shadow-xs"
+              style={{ backgroundColor: primaryColor, color: onPrimaryColor }}
             >
               TAP TO VIEW →
             </span>

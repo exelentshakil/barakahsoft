@@ -132,6 +132,7 @@ ${JSON.stringify(batch, null, 2)}
 - Primary CTAs have enough inline space for the full label, never wrap word-by-word, and never share a narrow stats-grid column.
 - If this batch contains FAQ, use the reviewed accordion data attributes from the interaction contract.
 - No adjacent section may copy the same skeleton. Follow the planned archetypes and colour cadence, but leave all visual styling to the stylesheet pass.
+- NEVER prepend dashes or em-dashes ("— ") to section eyebrows, badges, or subheadings. Always output clean text (e.g. "ASSESSING THE DAMAGE" or "WHY CHOOSE PINNACLE", never "— ASSESSING THE DAMAGE").
 
 ═══ DESIGN DIRECTION ═══
 Mood: ${dna.mood}; rhythm: ${dna.layout.sectionRhythm}; hero: ${dna.layout.heroTreatment}; services: ${dna.layout.serviceLayout}; proof: ${dna.layout.proofStyle}
@@ -171,7 +172,7 @@ ${
     ? `- For this e-commerce business, feature high-impact product collection CTAs: <a href="#products" class="site-cta site-cta--primary">${brief.intent.primaryLabel}</a> paired with <a href="#about" class="site-cta site-cta--secondary">Learn More</a>.`
     : `- For this service/appointment/contractor business, build a balanced 2-column hero strictly above the fold:
   * LEFT COLUMN (55%):
-    - Eyebrow tag (e.g. "— 24/7 EMERGENCY RESTORATION IN ${brief.city.toUpperCase()}")
+    - Eyebrow tag (e.g. "24/7 EMERGENCY RESTORATION IN ${brief.city.toUpperCase()}") — NEVER prefix with dashes or em-dashes ("— ")
     - Massive bold headline addressing the customer's urgent problem (clamp(2.5rem, 4vw, 3.75rem))
     - Outcome-driven subheadline connecting service to peace of mind
     - Direct click-to-call button: <a href="tel:${brief.phone ? brief.phone.replace(/[^\d+]/g, "") : ""}" class="site-cta site-cta--primary">Call ${brief.phone || "(XXX) XXX-XXXX"}</a>
