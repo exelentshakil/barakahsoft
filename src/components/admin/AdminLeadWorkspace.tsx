@@ -265,7 +265,8 @@ export function AdminLeadWorkspace({
 
 We finished the 48-hour homepage redesign and speed audit you requested for ${businessName}.
 
-Your live concept is ready to review below.
+Your live concept is ready to review below:
+${portalUrl}
 
 Cheers,
 Shaq`,
@@ -276,6 +277,8 @@ Shaq`,
           body: `Hi ${contactName},
 
 Just checking in to see if you had a moment to review the homepage concept we built for ${businessName}?
+
+${portalUrl}
 
 Happy to make any tweaks, just let me know.
 
@@ -290,6 +293,8 @@ Shaq`,
 Following up one last time on the custom website files for ${businessName} before we archive the staging preview.
 
 Are you open to taking a quick look?
+
+${portalUrl}
 
 Cheers,
 Shaq`,
@@ -304,7 +309,8 @@ Shaq`,
 We analysed ${businessName} and noticed a few mobile speed bottlenecks costing you local customer calls.
 We went ahead and rebuilt a clean, high-speed homepage concept for ${businessName} (no charge).
 
-Your concept is ready to review below.
+Your concept is ready to review below:
+${portalUrl}
 
 Cheers,
 Shaq`,
@@ -315,6 +321,8 @@ Shaq`,
           body: `Hi ${contactName},
 
 Just checking in to see if you had a moment to review the homepage concept we built for ${businessName}?
+
+${portalUrl}
 
 Happy to make any tweaks, just let me know.
 
@@ -329,6 +337,8 @@ Shaq`,
 Following up one last time on the custom website files for ${businessName} before we archive the staging preview.
 
 Are you open to taking a quick look?
+
+${portalUrl}
 
 Cheers,
 Shaq`,
