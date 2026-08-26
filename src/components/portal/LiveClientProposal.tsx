@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { SitePayload } from "@/components/site-shell/types";
 import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 import { ProposalHeader } from "@/components/portal/sections/ProposalHeader";
@@ -39,6 +39,16 @@ export function LiveClientProposal({
   artifact,
   isOperator = false,
 }: LiveClientProposalProps) {
+  useEffect(() => {
+    if (!isOperator) {
+      fetch(`/api/s/${lead.slug}/events`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event: "proposal_view", path: window.location.pathname }),
+      }).catch(() => {});
+    }
+  }, [isOperator, lead.slug]);
+
   const [showCheckout, setShowCheckout] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
