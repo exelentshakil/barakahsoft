@@ -414,9 +414,9 @@ export function SocialLaunchMockup({
   {/* Background Subtle Watermark & Circle Emblem */}
   const renderBackgroundWatermark = () => (
     <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0 flex items-center justify-center">
-      {/* Ghost Watermark Business Name in Lower Left */}
+      {/* Ghost Watermark Business Name in Lower Background */}
       <span
-        className="absolute -bottom-4 left-6 text-6xl sm:text-7xl lg:text-8xl font-black uppercase tracking-tighter opacity-[0.07] select-none"
+        className="absolute bottom-2 sm:bottom-4 left-6 text-6xl sm:text-7xl lg:text-8xl font-black uppercase tracking-tighter opacity-[0.08] select-none"
         style={{
           color: theme.isDark ? "#ffffff" : "#0d1738",
           fontFamily: "system-ui, -apple-system, sans-serif",
@@ -526,12 +526,12 @@ export function SocialLaunchMockup({
     );
   };
 
-  {/* 3-Tier Layered 3D Floating Feature Blurb Card (Layered BEHIND the MacBook, extending to top-right) */}
+  {/* 3-Tier Layered 3D Floating Feature Blurb Card (Layered BEHIND the MacBook, lifted high to top-right) */}
   const renderFloatingAboutCard = () => (
     <div
-      className="absolute -right-1 sm:-right-3 top-0 sm:top-1 w-[82%] max-w-[385px] rounded-2xl bg-white shadow-2xl border border-slate-200/90 overflow-hidden transition-transform duration-500 z-0 select-none pointer-events-none"
+      className="absolute -right-2 sm:-right-4 -top-8 sm:-top-12 w-[86%] max-w-[405px] rounded-2xl bg-white shadow-2xl border border-slate-200/90 overflow-hidden transition-transform duration-500 z-0 select-none pointer-events-none"
       style={{
-        transform: "rotateY(-10deg) rotateX(6deg) rotateZ(-2deg) translateZ(-38px)",
+        transform: "rotateY(-10deg) rotateX(6deg) rotateZ(-2.5deg) translateZ(-42px)",
         boxShadow: "0 35px 85px -15px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255,255,255,0.35)",
       }}
     >
@@ -558,148 +558,165 @@ export function SocialLaunchMockup({
         </div>
       </div>
 
-      {/* 3-Tier Layered Masterpiece About Card Synchronized to Website Colors */}
-      <div className="p-3 sm:p-3.5 bg-white grid grid-cols-12 gap-2.5 items-start">
-        {/* Left: Framed Photo of Founder / Team / Fleet with Bottom Name Badge Bar */}
-        <div className="col-span-5 relative rounded-xl overflow-hidden shadow-md border border-slate-200 aspect-[4/4.8] bg-slate-900 flex flex-col justify-end">
-          {data.aboutImageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={data.aboutImageUrl}
-              alt={data.founderName || `${businessShortName} team`}
-              crossOrigin="anonymous"
-              className="absolute inset-0 h-full w-full object-cover object-center"
-            />
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 flex flex-col items-center justify-center p-2 text-center">
-              <span className="text-white text-[8px] font-black tracking-wider uppercase opacity-80">{businessShortName}</span>
-              <span className="text-[6px] font-bold uppercase mt-0.5" style={{ color: primaryColor }}>
-                Team &amp; Operations
-              </span>
-            </div>
-          )}
-          {/* Bottom Founder & Leadership Name Badge Bar */}
-          <div className="relative z-10 bg-slate-900/90 backdrop-blur-xs p-1.5 text-white flex items-center gap-1.5 border-t border-white/20">
-            {data.logoUrl && (
-              <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-white p-0.5 shrink-0 overflow-hidden flex items-center justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={data.logoUrl} alt="Logo" className="h-full w-full object-contain" />
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <span className="block text-[6px] sm:text-[7.5px] font-black truncate leading-tight">
-                {data.founderName || "Local Leadership"}
-              </span>
-              <span className="block text-[4px] sm:text-[5px] font-medium text-slate-300 truncate">
-                {data.founderTitle || `Owner of ${businessShortName}`}
-              </span>
-            </div>
-          </div>
+      {/* When an uploaded About capture screenshot is present, render it with crisp fidelity */}
+      {data.aboutCaptureUrl ? (
+        <div className="relative w-full aspect-[16/11] bg-slate-950 overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={data.aboutCaptureUrl}
+            alt={`${businessShortName} About Section Snapshot`}
+            crossOrigin="anonymous"
+            className="w-full h-full object-cover object-top"
+          />
+          {/* Subtle Glass Glare */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/15 pointer-events-none" />
         </div>
+      ) : (
+        <>
+          {/* 3-Tier Layered Masterpiece About Card Synchronized to Website Colors */}
+          <div className="p-3 sm:p-3.5 bg-white grid grid-cols-12 gap-2.5 items-start">
+            {/* Left: Framed Photo of Founder / Team / Fleet with Bottom Name Badge Bar */}
+            <div className="col-span-5 relative rounded-xl overflow-hidden shadow-md border border-slate-200 aspect-[4/4.8] bg-slate-900 flex flex-col justify-end">
+              {data.aboutImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={data.aboutImageUrl}
+                  alt={data.founderName || `${businessShortName} team`}
+                  crossOrigin="anonymous"
+                  className="absolute inset-0 h-full w-full object-cover object-center"
+                />
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 flex flex-col items-center justify-center p-2 text-center">
+                  <span className="text-white text-[8px] font-black tracking-wider uppercase opacity-80">{businessShortName}</span>
+                  <span className="text-[6px] font-bold uppercase mt-0.5" style={{ color: primaryColor }}>
+                    Team &amp; Operations
+                  </span>
+                </div>
+              )}
+              {/* Bottom Founder & Leadership Name Badge Bar */}
+              <div className="relative z-10 bg-slate-900/90 backdrop-blur-xs p-1.5 text-white flex items-center gap-1.5 border-t border-white/20">
+                {data.logoUrl && (
+                  <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-white p-0.5 shrink-0 overflow-hidden flex items-center justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={data.logoUrl} alt="Logo" className="h-full w-full object-contain" />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <span className="block text-[6px] sm:text-[7.5px] font-black truncate leading-tight">
+                    {data.founderName || "Local Leadership"}
+                  </span>
+                  <span className="block text-[4px] sm:text-[5px] font-medium text-slate-300 truncate">
+                    {data.founderTitle || `Owner of ${businessShortName}`}
+                  </span>
+                </div>
+              </div>
+            </div>
 
-        {/* Right: Story Eyebrow, Authoritative Title & Narrative */}
-        <div className="col-span-7 space-y-1">
-          <div className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-1.5 py-0.5 border border-slate-200/80">
-            <span className="text-[4.5px] sm:text-[5.5px] font-extrabold uppercase tracking-wider text-slate-800">
-              {aboutEyebrow}
-            </span>
+            {/* Right: Story Eyebrow, Authoritative Title & Narrative */}
+            <div className="col-span-7 space-y-1">
+              <div className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-1.5 py-0.5 border border-slate-200/80">
+                <span className="text-[4.5px] sm:text-[5.5px] font-extrabold uppercase tracking-wider text-slate-800">
+                  {aboutEyebrow}
+                </span>
+              </div>
+              <h4 className="text-[8.5px] sm:text-[10.5px] font-black leading-tight text-slate-900 line-clamp-2">
+                {aboutHeading}
+              </h4>
+              <p className="text-[5px] sm:text-[6px] text-slate-600 font-normal line-clamp-3 leading-relaxed">
+                {aboutBody}
+              </p>
+              <div className="pt-0.5 flex items-center gap-1.5">
+                <span
+                  className="inline-block rounded px-2 py-0.5 text-[4.5px] sm:text-[5.5px] font-extrabold shadow-xs"
+                  style={{ backgroundColor: primaryColor, color: onPrimaryColor }}
+                >
+                  GET A FREE QUOTE →
+                </span>
+              </div>
+            </div>
           </div>
-          <h4 className="text-[8.5px] sm:text-[10.5px] font-black leading-tight text-slate-900 line-clamp-2">
-            {aboutHeading}
-          </h4>
-          <p className="text-[5px] sm:text-[6px] text-slate-600 font-normal line-clamp-3 leading-relaxed">
-            {aboutBody}
-          </p>
-          <div className="pt-0.5 flex items-center gap-1.5">
+
+          {/* ROW 2: FULL-WIDTH SOLID METRIC RIBBON BAND (4 STATS MATCHING WEBSITE BRAND COLOR) */}
+          <div
+            className="px-2 py-1.5 grid grid-cols-4 gap-0.5 text-center shadow-inner"
+            style={{
+              backgroundColor: primaryColor,
+              color: onPrimaryColor,
+              borderTop: isLightPrimary ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.2)",
+              borderBottom: isLightPrimary ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.2)",
+            }}
+          >
+            <div>
+              <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
+                {yearsExp}
+              </span>
+              <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
+                Experience
+              </span>
+            </div>
+            <div>
+              <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
+                {reviewsCountText}
+              </span>
+              <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
+                Completed
+              </span>
+            </div>
+            <div>
+              <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
+                {ratingText}
+              </span>
+              <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
+                Avg Rating
+              </span>
+            </div>
+            <div>
+              <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
+                100%
+              </span>
+              <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
+                Guaranteed
+              </span>
+            </div>
+          </div>
+
+          {/* ROW 3: SECONDARY SERVICE / CRAFTSMANSHIP SNIPPET */}
+          <div className="p-2 sm:p-2.5 bg-[#fafafc] flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1 space-y-0.5">
+              <h5 className="text-[6px] sm:text-[7.5px] font-black text-slate-900 leading-tight truncate">
+                Professional Residential &amp; Commercial {trade} Services
+              </h5>
+              <p className="text-[4px] sm:text-[5px] text-slate-500 truncate">
+                Dependable performance, direct insurance billing, and licensed experts across {city}.
+              </p>
+            </div>
             <span
-              className="inline-block rounded px-2 py-0.5 text-[4.5px] sm:text-[5.5px] font-extrabold shadow-xs"
+              className="shrink-0 rounded px-2 py-0.5 text-[4.5px] sm:text-[5.5px] font-extrabold shadow-xs"
               style={{ backgroundColor: primaryColor, color: onPrimaryColor }}
             >
               GET A FREE QUOTE →
             </span>
           </div>
-        </div>
-      </div>
-
-      {/* ROW 2: FULL-WIDTH SOLID METRIC RIBBON BAND (4 STATS MATCHING WEBSITE BRAND COLOR) */}
-      <div
-        className="px-2 py-1.5 grid grid-cols-4 gap-0.5 text-center shadow-inner"
-        style={{
-          backgroundColor: primaryColor,
-          color: onPrimaryColor,
-          borderTop: isLightPrimary ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.2)",
-          borderBottom: isLightPrimary ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.2)",
-        }}
-      >
-        <div>
-          <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
-            {yearsExp}
-          </span>
-          <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
-            Experience
-          </span>
-        </div>
-        <div>
-          <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
-            {reviewsCountText}
-          </span>
-          <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
-            Completed
-          </span>
-        </div>
-        <div>
-          <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
-            {ratingText}
-          </span>
-          <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
-            Avg Rating
-          </span>
-        </div>
-        <div>
-          <span className="block text-[7.5px] sm:text-[9.5px] font-black tracking-tight" style={{ color: onPrimaryColor }}>
-            100%
-          </span>
-          <span className="block text-[3.5px] sm:text-[4px] uppercase font-bold tracking-wider opacity-85" style={{ color: onPrimaryColor }}>
-            Guaranteed
-          </span>
-        </div>
-      </div>
-
-      {/* ROW 3: SECONDARY SERVICE / CRAFTSMANSHIP SNIPPET */}
-      <div className="p-2 sm:p-2.5 bg-[#fafafc] flex items-center justify-between gap-2">
-        <div className="min-w-0 flex-1 space-y-0.5">
-          <h5 className="text-[6px] sm:text-[7.5px] font-black text-slate-900 leading-tight truncate">
-            Professional Residential &amp; Commercial {trade} Services
-          </h5>
-          <p className="text-[4px] sm:text-[5px] text-slate-500 truncate">
-            Dependable performance, direct insurance billing, and licensed experts across {city}.
-          </p>
-        </div>
-        <span
-          className="shrink-0 rounded px-2 py-0.5 text-[4.5px] sm:text-[5.5px] font-extrabold shadow-xs"
-          style={{ backgroundColor: primaryColor, color: onPrimaryColor }}
-        >
-          GET A FREE QUOTE →
-        </span>
-      </div>
+        </>
+      )}
     </div>
   );
 
-  {/* Integrated 3D MacBook Pro Resting Directly on Realistic Mountain Slate / Volcanic Rock Pedestal */}
+  {/* Integrated 3D MacBook Pro Resting on Organic Sculpted Slate Rock Pedestal */}
   const renderRockPedestalShowcase = (
     customScreenRef = screenRef,
     customScale = screenScale,
     containerClass = "w-[94%] max-w-[490px]"
   ) => (
     <div className={`relative flex flex-col items-center justify-center ${containerClass} mx-auto perspective-[1600px]`}>
-      {/* 0. Layered Floating About Card Hovering BEHIND MacBook (Top-Right) */}
+      {/* 0. Layered Floating About Card Hovering BEHIND MacBook (Lifted to Top-Right) */}
       {renderFloatingAboutCard()}
 
-      {/* 1. 3D MacBook Pro */}
+      {/* 1. 3D MacBook Pro in Foreground */}
       <div
         className="relative z-20 w-full transition-transform duration-500"
         style={{
-          transform: "rotateY(-12deg) rotateX(10deg) rotateZ(1.5deg)",
+          transform: "rotateY(-12deg) rotateX(10deg) rotateZ(1.5deg) translateY(6px)",
           transformStyle: "preserve-3d",
         }}
       >
@@ -738,76 +755,84 @@ export function SocialLaunchMockup({
         </div>
       </div>
 
-      {/* 2. Massive Rugged Mountain Stone / Slate Rock Pedestal — Directly Underneath Laptop Base */}
-      <div className="relative z-10 -mt-6 sm:-mt-8 w-[128%] max-w-[680px] pointer-events-none">
-        {/* Soft Ambient Contact Shadow Under Laptop */}
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-[85%] h-8 bg-black/90 blur-lg rounded-full" />
+      {/* 2. Sculpted Organic Mountain Slate Pedestal — Clean Bezels, Natural Ground Shadows */}
+      <div className="relative z-10 -mt-3 sm:-mt-4 w-[116%] max-w-[620px] pointer-events-none">
+        {/* Soft Ambient Contact Shadow Underneath Laptop Deck */}
+        <div className="absolute top-1 left-1/2 -translate-x-1/2 w-[86%] h-5 bg-black/75 blur-md rounded-full" />
 
         <svg
-          viewBox="0 0 700 240"
+          viewBox="0 0 680 180"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-auto drop-shadow-[0_45px_70px_rgba(0,0,0,0.9)]"
+          className="w-full h-auto drop-shadow-[0_30px_50px_rgba(0,0,0,0.65)]"
         >
           <defs>
-            <linearGradient id="plateauGlow" x1="20%" y1="0%" x2="80%" y2="100%">
-              <stop offset="0%" stopColor="#475569" />
+            {/* Slate Top Plateau Gradient */}
+            <linearGradient id="rockPlateau" x1="0%" y1="0%" x2="100%" y2="80%">
+              <stop offset="0%" stopColor="#4a5568" />
               <stop offset="35%" stopColor="#334155" />
               <stop offset="70%" stopColor="#1e293b" />
               <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
 
-            <linearGradient id="facetHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="rgba(255,255,255,0.6)" />
-              <stop offset="40%" stopColor="rgba(255,255,255,0.2)" />
-              <stop offset="75%" stopColor="rgba(255,255,255,0.45)" />
-              <stop offset="100%" stopColor="rgba(255,255,255,0.1)" />
+            {/* Rim Highlight */}
+            <linearGradient id="rockRim" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.7)" />
+              <stop offset="30%" stopColor="rgba(255,255,255,0.3)" />
+              <stop offset="70%" stopColor="rgba(255,255,255,0.6)" />
+              <stop offset="100%" stopColor="rgba(255,255,255,0.15)" />
             </linearGradient>
 
-            <linearGradient id="cliffDark" x1="50%" y1="0%" x2="50%" y2="100%">
+            {/* Main Chiseled Front Face */}
+            <linearGradient id="faceCenter" x1="40%" y1="0%" x2="50%" y2="100%">
+              <stop offset="0%" stopColor="#243044" />
+              <stop offset="60%" stopColor="#141c2c" />
+              <stop offset="100%" stopColor="#090d16" />
+            </linearGradient>
+
+            {/* Left Chiseled Shadow Facet */}
+            <linearGradient id="faceLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Right Chiseled Shadow Facet */}
+            <linearGradient id="faceRight" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#1e293b" />
-              <stop offset="40%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#020617" />
-            </linearGradient>
-
-            <linearGradient id="mistFade" x1="50%" y1="0%" x2="50%" y2="100%">
-              <stop offset="0%" stopColor="transparent" />
-              <stop offset="100%" stopColor="#020617" />
+              <stop offset="100%" stopColor="#050811" />
             </linearGradient>
           </defs>
 
-          {/* Rugged Mountain Slate Plateau & Cliff Edges */}
+          {/* Under Base Contact Soft Blur */}
+          <ellipse cx="340" cy="155" rx="260" ry="22" fill="#000000" opacity="0.5" filter="blur(8px)" />
+
+          {/* Pedestal Bottom Base Facets */}
           <polygon
-            points="140,82 245,68 470,68 580,82 660,118 640,165 520,230 200,230 70,165 45,118"
-            fill="url(#cliffDark)"
-            stroke="#334155"
-            strokeWidth="1.5"
+            points="60,65 140,140 540,140 620,65 570,38 110,38"
+            fill="url(#faceCenter)"
           />
 
+          {/* Left Chiseled Slope */}
+          <polygon points="60,65 140,140 250,148 220,68 110,38" fill="url(#faceLeft)" opacity="0.9" />
+
+          {/* Center Main Chiseled Facet */}
+          <polygon points="220,68 250,148 440,148 460,68" fill="url(#faceCenter)" />
+
+          {/* Right Chiseled Slope */}
+          <polygon points="460,68 440,148 540,140 620,65 570,38" fill="url(#faceRight)" opacity="0.95" />
+
+          {/* Top Rock Plateau (Clean Beveled Rim) */}
           <polygon
-            points="140,82 245,68 470,68 580,82 650,112 560,132 150,132 55,112"
-            fill="url(#plateauGlow)"
-            stroke="url(#facetHighlight)"
-            strokeWidth="2.5"
+            points="110,38 240,24 440,24 570,38 620,65 530,76 150,76 60,65"
+            fill="url(#rockPlateau)"
+            stroke="url(#rockRim)"
+            strokeWidth="1.75"
           />
 
-          <polygon points="55,112 150,132 120,175 70,165" fill="#1e293b" opacity="0.9" />
-          <polygon points="150,132 260,135 240,195 120,175" fill="#0f172a" opacity="0.95" />
-          <polygon points="260,135 420,136 400,215 240,195" fill="#1e293b" opacity="0.85" />
-          <polygon points="420,136 560,132 540,195 400,215" fill="#0f172a" opacity="0.95" />
-          <polygon points="560,132 650,112 640,165 540,195" fill="#1e293b" opacity="0.9" />
-
-          {/* Deep Slate Rock Crevasses & Ridges */}
-          <path d="M 260,125 L 240,185 L 255,225" stroke="#000000" strokeWidth="3" strokeLinecap="round" opacity="0.95" />
-          <path d="M 420,128 L 400,205 L 385,235" stroke="#000000" strokeWidth="3.5" strokeLinecap="round" opacity="0.95" />
-          <path d="M 560,118 L 545,190" stroke="#000000" strokeWidth="2.5" strokeLinecap="round" opacity="0.9" />
-          <path d="M 130,110 L 115,165" stroke="#000000" strokeWidth="2.5" strokeLinecap="round" opacity="0.9" />
-
-          {/* Base Atmospheric Ground Mist */}
-          <rect x="0" y="160" width="700" height="80" fill="url(#mistFade)" opacity="0.85" />
-
-          {/* Rich Contact Shadow directly under Laptop */}
-          <ellipse cx="350" cy="85" rx="270" ry="32" fill="#000000" opacity="0.8" />
+          {/* Subtle Chiseled Ridge Lines */}
+          <path d="M 220,68 L 250,148" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M 460,68 L 440,148" stroke="rgba(0,0,0,0.5)" strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M 330,75 L 345,145" stroke="rgba(0,0,0,0.4)" strokeWidth="1.2" strokeLinecap="round" />
         </svg>
       </div>
     </div>
