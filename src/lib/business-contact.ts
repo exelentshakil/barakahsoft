@@ -39,6 +39,9 @@ function plausiblePhone(candidate: string): boolean {
   const digits = trimmed.replace(/\D/g, "");
   // Seven is the shortest real local number; fifteen is the E.164 maximum.
   // A nineteen-digit pixel id fails both ends.
+  // A 13-15 digit unbroken number is almost always a pixel ID or tracking token.
+  // Standard US numbers are 10-11 digits. International are usually 11-12.
+  if (digits.length > 12 && !candidate.includes('+')) return false;
   return digits.length >= 7 && digits.length <= 15;
 }
 
@@ -46,7 +49,7 @@ function plausiblePhone(candidate: string): boolean {
 function sanitizeEmail(candidate: string | null | undefined): string | null {
   if (!candidate) return null;
   const strVal = typeof candidate === 'string' ? candidate : String(candidate);
-  const match = strVal.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  const match = strVal.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|org|net|co|io|us|uk|ca|au|biz|info|tv|app|dev|me|site|tech|agency|studio|services|construction|plumbing|roofing)/i);
   return match ? match[0].toLowerCase() : null;
 }
 
@@ -63,25 +66,21 @@ function localBusinessSchema(facts: Record<string, unknown>): Record<string, unk
 
 export function resolveBusinessContact(
   scrapeResults: Pick<ScrapeResults, "facts" | "places_raw"> | null | undefined,
-  fallback: { phone?: string | null; email?: string | null } = {}
+  fallback: { phone?: string | null; email?: string | null } = {},
+  options: { forceFallback?: boolean } = {}
 ): BusinessContact {
   const facts = (scrapeResults?.facts ?? {}) as Record<string, unknown>;
   const places = (scrapeResults?.places_raw ?? {}) as Record<string, unknown>;
   const schema = localBusinessSchema(facts);
   const nap = (facts.nap as { phones?: string[]; emails?: string[]; address?: string } | undefined) ?? {};
 
-  const phone =
-    str(places.phone) ??
-    str(schema.telephone) ??
-    nap.phones?.find(plausiblePhone) ??
-    str(fallback.phone) ??
-    null;
+  const phone = options.forceFallback
+    ? str(fallback.phone) ?? str(places.phone) ?? str(schema.telephone) ?? nap.phones?.find(plausiblePhone) ?? null
+    : str(places.phone) ?? str(schema.telephone) ?? nap.phones?.find(plausiblePhone) ?? str(fallback.phone) ?? null;
 
-  const email =
-    sanitizeEmail(str(schema.email)) ??
-    sanitizeEmail(nap.emails?.find((candidate) => candidate.includes("@"))) ??
-    sanitizeEmail(str(fallback.email)) ??
-    null;
+  const email = options.forceFallback
+    ? sanitizeEmail(str(fallback.email)) ?? sanitizeEmail(str(schema.email)) ?? sanitizeEmail(nap.emails?.find((candidate) => candidate.includes("@"))) ?? null
+    : sanitizeEmail(str(schema.email)) ?? sanitizeEmail(nap.emails?.find((candidate) => candidate.includes("@"))) ?? sanitizeEmail(str(fallback.email)) ?? null;
 
   return {
     phone,

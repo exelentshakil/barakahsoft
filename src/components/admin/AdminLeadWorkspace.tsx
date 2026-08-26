@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { displayPhone } from "@/lib/phone";
+import { resolveBusinessContact } from "@/lib/business-contact";
 import {
   AlertCircle,
   ArrowLeft,
@@ -177,10 +178,9 @@ export function AdminLeadWorkspace({
       }
     })();
   const facts = (scrapeResults?.facts ?? {}) as Record<string, unknown>;
-  const nap = (facts.nap as { address?: string; phone?: string; phones?: string[]; email?: string; emails?: string[] } | undefined) || {};
-  const rawPhone = nap.phones?.find((p) => /\d{7,}/.test(p.replace(/\D/g, ""))) || nap.phone || lead.phone;
-  const phone = displayPhone(rawPhone) || "No phone on file";
-  const email = nap.emails?.[0] || nap.email || lead.email || "No email on file";
+  const contact = resolveBusinessContact(scrapeResults, { phone: lead.phone, email: lead.email }, { forceFallback: lead.source === "outreach" || lead.source === "manual" });
+  const phone = displayPhone(contact.phone) || "No phone on file";
+  const email = contact.email || "No email on file";
   const portalUrl = `https://portal.barakahsoft.com/s/${lead.slug}`;
   
   const previewUrl = `/s/${lead.slug}${previewPath}?view=preview`;
@@ -193,7 +193,8 @@ export function AdminLeadWorkspace({
 
   const rating = typeof facts.rating === "number" ? facts.rating : null;
   const reviewCount = typeof facts.review_count === "number" ? facts.review_count : 0;
-  const city = typeof nap.address === "string" ? nap.address.split(",")[0] : typeof facts.town === "string" ? facts.town : null;
+  const nap = (facts.nap as { address?: string } | undefined) ?? {};
+    const city = typeof nap.address === "string" ? nap.address.split(",")[0] : typeof facts.town === "string" ? facts.town : null;
 
   const scrapedCompetitors = (facts.competitors as Array<{ name: string; user_ratings_total?: number; rating?: number; website?: string }>) || [];
   const competitorsList = scrapedCompetitors.length > 0

@@ -13,6 +13,12 @@ import { sequenceFor, isDue, type SequenceTrack } from "@/lib/outreach/sequence"
 
 const ICONS = [Gift, Bell, DoorClosed];
 
+function sanitizeEmail(candidate: string | null | undefined): string | null {
+  if (!candidate) return null;
+  const match = String(candidate).match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|org|net|co|io|us|uk|ca|au|biz|info|tv|app|dev|me|site|tech|agency|studio|services|construction|plumbing|roofing)/i);
+  return match ? match[0].toLowerCase() : null;
+}
+
 export function OutreachSequencePanel({
   leads,
   track = "outreach",
@@ -136,8 +142,9 @@ export function OutreachSequencePanel({
             <p className="px-3 py-3 text-xs italic text-slate-400">Nobody is waiting on this touch.</p>
           ) : (
             inStage.map((lead) => {
-              const ready = Boolean(lead.email) && isDue(lead, track);
-              const why = !lead.email ? "no email on file" : !isDue(lead, track) ? "not due yet" : null;
+              const cleanEmail = sanitizeEmail(lead.email);
+              const ready = Boolean(cleanEmail) && isDue(lead, track);
+              const why = !cleanEmail ? "no email on file" : !isDue(lead, track) ? "not due yet" : null;
               return (
                 <label
                   key={lead.id}
@@ -155,7 +162,7 @@ export function OutreachSequencePanel({
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-bold text-[#0d1738]">{lead.business_name || lead.source_url}</span>
-                    <span className="block truncate text-[10px] text-slate-500">{lead.email || lead.source_url}</span>
+                    <span className="block truncate text-[10px] text-slate-500">{cleanEmail || lead.source_url}</span>
                   </span>
                   {why && <span className="shrink-0 text-[10px] font-semibold text-amber-600">{why}</span>}
                 </label>

@@ -123,7 +123,7 @@ export function renderShell(
   // Same resolver as the brief. These were two chains that could disagree,
   // and a page printing one number in the body and another in the footer is
   // worse than a page printing none.
-  const contact = resolveBusinessContact(scrapeResults, { phone: lead.phone, email: lead.email });
+  const contact = resolveBusinessContact(scrapeResults, { phone: lead.phone, email: lead.email }, { forceFallback: lead.source === "outreach" || lead.source === "manual" });
   const phone = displayPhone(contact.phone);
   const intent = conversionIntentFor(lead.industry, Boolean(phone));
 

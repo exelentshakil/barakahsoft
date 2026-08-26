@@ -120,7 +120,7 @@ export function buildSiteBrief(
   const pages = (facts.pages as PageInventory[] | undefined) ?? [];
   const nap = (facts.nap as { phones?: string[]; emails?: string[] } | undefined) ?? {};
 
-  const contact = resolveBusinessContact(scrapeResults, { phone: lead.phone, email: lead.email });
+  const contact = resolveBusinessContact(scrapeResults, { phone: lead.phone, email: lead.email }, { forceFallback: lead.source === "outreach" || lead.source === "manual" });
 
   const services = overrides.services?.filter(Boolean).length
     ? overrides.services.filter(Boolean)

@@ -43,6 +43,12 @@ function portalOrigin(): string {
   return (process.env.NEXT_PUBLIC_PORTAL_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
 }
 
+function sanitizeEmail(candidate: string | null | undefined): string | null {
+  if (!candidate) return null;
+  const match = String(candidate).match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|org|net|co|io|us|uk|ca|au|biz|info|tv|app|dev|me|site|tech|agency|studio|services|construction|plumbing|roofing)/i);
+  return match ? match[0].toLowerCase() : null;
+}
+
 export async function POST(req: Request) {
   if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Operator access required" }, { status: 403 });
@@ -107,7 +113,7 @@ export async function POST(req: Request) {
     let delivered = false;
     try {
       delivered = await sendEmail({
-        to: lead.email,
+        to: sanitizeEmail(lead.email) || lead.email,
         subject: stage.subject(ctx),
         html: asHtml(stage.body(ctx)),
       });
