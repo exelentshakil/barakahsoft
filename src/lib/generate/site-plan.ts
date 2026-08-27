@@ -44,7 +44,7 @@ export const SitePlanSchema = z.object({
   painCoverage: z.array(PainCoverageSchema).max(12).default([]),
   rejectedSections: z.array(z.string().min(3).max(160)).max(8).default([]),
   services: z.array(z.object({ name: z.string().min(1).max(120), blurb: z.string().max(320) })).max(12).default([]),
-  sections: z.array(PlannedSectionSchema).min(7).max(20),
+  sections: z.array(PlannedSectionSchema).min(10).max(20),
 });
 
 export type SitePlan = z.infer<typeof SitePlanSchema>;
@@ -87,6 +87,16 @@ function fallbackPlan(brief: SiteBrief, media: MediaPlan): SitePlan {
       mediaSlot: media.some((item) => item.slot === "service-0") ? "service-0" : null,
     },
     {
+      id: "cta-mid",
+      kind: "cta",
+      label: "Get started",
+      visitorProblem: "Make it easy to take action immediately after seeing services.",
+      purpose: `Offer a clear ${brief.intent.primaryLabel} path before scrolling further.`,
+      archetype: "contained conversion band",
+      evidence: [],
+      mediaSlot: null,
+    },
+    {
       id: "decision-guide",
       kind: "problem",
       label: "Customer decision guide",
@@ -115,6 +125,26 @@ function fallbackPlan(brief: SiteBrief, media: MediaPlan): SitePlan {
       archetype: "owner or team editorial profile with integrated evidence",
       evidence: [brief.founder, brief.licensedInsured ? "Licensed and insured claim" : null].filter((value): value is string => Boolean(value)),
       mediaSlot: media.some((item) => item.slot === "about") ? "about" : null,
+    },
+    {
+      id: "process",
+      kind: "process",
+      label: "How it works",
+      visitorProblem: "Remove the anxiety of not knowing what happens after contacting the business.",
+      purpose: "Outline the simple steps from enquiry to finished result.",
+      archetype: "numbered process timeline",
+      evidence: ["Contact us", "We do the work", "Done"],
+      mediaSlot: null,
+    },
+    {
+      id: "problem-summary",
+      kind: "problem",
+      label: "Common issues",
+      visitorProblem: "Address lingering doubts about specific situations.",
+      purpose: "Show deep understanding of common frustrations.",
+      archetype: "editorial text blocks",
+      evidence: [],
+      mediaSlot: null,
     },
   ];
 
@@ -244,7 +274,7 @@ PLAN RULES
 - Assigned strategic lens for this lead: ${assignedLens}
 - First diagnose why this business is losing enquiries, what buyers fear before hiring this trade, and which supplied facts can resolve those fears. Do not begin from a standard website section list.
 - Map every owner-reported problem verbatim to one or more section IDs in painCoverage. If a selected problem is not visibly answered, the plan is invalid.
-- Use 7-12 sections normally. Use up to 20 only when distinct evidence and buying problems justify them. Reject filler explicitly in rejectedSections.
+- Use 10-20 sections normally. Use up to 20 only when distinct evidence and buying problems justify them. Reject filler explicitly in rejectedSections.
 - Every section must solve one named visitor problem and have a conversion purpose grounded in the supplied facts. A section label is not a reason for a section.
 - Hero is first. Include services, about, FAQ and a substantial final contact/CTA section.
 - If real review text exists, reviews is mandatory and its archetype must be an accessible horizontal slider. If none exists, omit reviews.
@@ -297,7 +327,7 @@ Return strict JSON only:
   return { ...parsed.data, strategyLens: assignedLens, sections, services };
 }
 
-export function sectionBatches(sections: PlannedSection[], size = 2): PlannedSection[][] {
+export function sectionBatches(sections: PlannedSection[], size = 1): PlannedSection[][] {
   const batches: PlannedSection[][] = [];
   for (let index = 0; index < sections.length; index += size) batches.push(sections.slice(index, index + size));
   return batches;

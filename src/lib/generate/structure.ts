@@ -62,19 +62,46 @@ function parseSections(raw: string, batch: PlannedSection[]): GeneratedSection[]
   for (const section of batch) {
     const escaped = section.id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const match = cleaned.match(new RegExp(`<!--\\s*SECTION:${escaped}\\s*-->([\\s\\S]*?)<!--\\s*\\/SECTION:${escaped}\\s*-->`, "i"));
-    const html = match?.[1]?.trim();
+    let html = match?.[1]?.trim();
+
+    // Fallback if model omitted comments for a single-item batch
+    if (!html && batch.length === 1) {
+      const sectionMatch = cleaned.match(/<section\b[\s\S]*?<\/section>/i);
+      if (sectionMatch) {
+        html = sectionMatch[0].trim();
+      }
+    }
+
     const rootId = html?.match(/^<section\b[^>]*\bid=["']([^"']+)["']/i)?.[1];
     const classValue = html?.match(/^<section\b[^>]*\bclass=["']([^"']+)["']/i)?.[1] ?? "";
     const sectionClasses = classValue.split(/\s+/).filter((name) => name && name !== "site-section");
     const compositionClass = sectionClasses.find((name) => !name.startsWith("site-"));
-    if (
-      !html ||
-      rootId !== section.id ||
-      html.replace(/<[^>]+>/g, " ").trim().length < 80 ||
-      !compositionClass ||
-      compositionClass === "descriptive-section-class" ||
-      compositionClasses.has(compositionClass)
-    ) return null;
+
+    if (!html) {
+      console.warn(`[parseSections] Failed: No HTML found for section ${section.id}`);
+      return null;
+    }
+    if (rootId !== section.id) {
+      console.warn(`[parseSections] Failed: rootId '${rootId}' !== '${section.id}'`);
+      return null;
+    }
+    if (html.replace(/<[^>]+>/g, " ").trim().length < 80) {
+      console.warn(`[parseSections] Failed: HTML too short for section ${section.id}`);
+      return null;
+    }
+    if (!compositionClass) {
+      console.warn(`[parseSections] Failed: No composition class for section ${section.id}`);
+      return null;
+    }
+    if (compositionClass === "descriptive-section-class") {
+      console.warn(`[parseSections] Failed: Used literal 'descriptive-section-class' for section ${section.id}`);
+      return null;
+    }
+    if (compositionClasses.has(compositionClass)) {
+      console.warn(`[parseSections] Failed: Duplicate composition class '${compositionClass}' for section ${section.id}`);
+      return null;
+    }
+
     compositionClasses.add(compositionClass);
     generated.push({ id: section.id, kind: section.kind, label: section.label, html });
   }
