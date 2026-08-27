@@ -26,25 +26,25 @@ const PlannedSectionSchema = z.object({
   visitorProblem: z.string().min(8).max(240),
   purpose: z.string().min(8).max(300),
   archetype: z.string().min(3).max(120),
-  evidence: z.array(z.string().min(2).max(180)).max(6).default([]),
+  evidence: z.array(z.string().min(2).max(180)).max(12).default([]),
   mediaSlot: z.string().max(60).nullable().default(null),
 });
 
 const PainCoverageSchema = z.object({
   problem: z.string().min(8).max(300),
   response: z.string().min(8).max(300),
-  sectionIds: z.array(z.string().regex(/^[a-z][a-z0-9-]*$/)).min(1).max(5),
+  sectionIds: z.array(z.string().regex(/^[a-z][a-z0-9-]*$/)).min(1).max(10),
 });
 
 export const SitePlanSchema = z.object({
   diagnosis: z.string().min(20).max(1200),
-  strategyLens: z.string().min(10).max(300),
+  strategyLens: z.string().min(10).max(500),
   designNotes: z.string().min(20).max(1800),
-  recurringPrimitive: z.string().min(3).max(160),
+  recurringPrimitive: z.string().min(3).max(300),
   painCoverage: z.array(PainCoverageSchema).max(12).default([]),
-  rejectedSections: z.array(z.string().min(3).max(160)).max(8).default([]),
+  rejectedSections: z.array(z.string().min(3).max(300)).max(8).default([]),
   services: z.array(z.object({ name: z.string().min(1).max(120), blurb: z.string().max(320) })).max(12).default([]),
-  sections: z.array(PlannedSectionSchema).min(10).max(20),
+  sections: z.array(PlannedSectionSchema).min(8).max(25),
 });
 
 export type SitePlan = z.infer<typeof SitePlanSchema>;
@@ -275,7 +275,7 @@ PLAN RULES
 - Assigned strategic lens for this lead: ${assignedLens}
 - First diagnose why this business is losing enquiries, what buyers fear before hiring this trade, and which supplied facts can resolve those fears. Do not begin from a standard website section list.
 - Map every owner-reported problem verbatim to one or more section IDs in painCoverage. If a selected problem is not visibly answered, the plan is invalid.
-- Use 10-20 sections normally. Use up to 20 only when distinct evidence and buying problems justify them. Reject filler explicitly in rejectedSections.
+- You MUST generate a MINIMUM of 10 sections. Do not generate fewer than 10 sections. Break up content logically to ensure a comprehensive, high-value 10+ section page. Use up to 20 sections when distinct evidence and buying problems justify them. Reject filler explicitly in rejectedSections.
 - Every section must solve one named visitor problem and have a conversion purpose grounded in the supplied facts. A section label is not a reason for a section.
 - Hero is first. Include services, about, FAQ and a substantial final contact/CTA section.
 - If real review text exists, reviews is mandatory and its archetype must be an accessible horizontal slider. If none exists, omit reviews.

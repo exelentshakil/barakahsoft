@@ -171,6 +171,13 @@ Make the primary call to action unmissable. It should be the most visually
 prominent thing on the first screen after the headline. Give it presence:
 generous padding, real weight, a considered hover.
 
+PREMIUM FINISHING TOUCHES (Mandatory for "$20,000 Agency" feel):
+- Do not leave empty voids. Use soft, ambient background light glows (backdrop-filter or ultra-low opacity gradients between 2% and 5%) to give sections depth.
+- Embed subtle, minimalist SVG geometric lines or abstract wave accents behind the text blurbs to serve as high-end visual anchors.
+- Every image and major section must feature a clean, premium content blurb.
+- Structure text with a clear visual hierarchy: a tiny, uppercase, bold category label over a powerful short headline, followed by a crisp 2-sentence description.
+- Use premium typography pairs (e.g., an elegant, sharp serif for headers and a high-readability geometric sans-serif for blurbs).
+
 THE LEAD FORM, if the markup contains [data-lead-form]
 This is the conversion mechanism and it must look like the most valuable thing
 on the page — not a bare stack of browser-default inputs. On desktop, any callback/contact
