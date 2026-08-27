@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { ExternalLink, Monitor, Smartphone, Sparkles, Globe } from "lucide-react";
 import { BeforeAfterSlider } from "@/components/shared/BeforeAfterSlider";
-import { ShowcaseApprovalControl } from "@/components/portal/sections/ShowcaseApprovalControl";
 
 interface ProposalWebsitePreviewProps {
   businessName: string;
@@ -107,15 +106,6 @@ export function ProposalWebsitePreview({
             className="border border-[#dfe3ef] shadow-sm"
           />
         </div>
-      )}
-
-      {isOperator && leadId && (
-        <ShowcaseApprovalControl
-          leadId={leadId}
-          initialApproved={showcaseApproved}
-          initialLabel={showcaseLabel ?? null}
-          hasImages={hasComparison}
-        />
       )}
 
       {/* Frame Container */}

@@ -1,4 +1,4 @@
-import { CheckCircle2, ExternalLink, MessageCircle } from "lucide-react";
+import { CheckCircle2, ExternalLink, MessageCircle, MousePointerClick, Rocket } from "lucide-react";
 import { SocialLaunchMockup, type MockupData } from "@/components/mockup/SocialLaunchMockup";
 
 interface ProposalHeroProps {
@@ -98,19 +98,64 @@ export function ProposalHero({
           </div>
 
           {/* Stepper */}
-          <div className="border-t border-[#e5e7f2] pt-8 max-w-2xl">
-            <div className="grid grid-cols-3 gap-4 text-center text-xs">
-              <div className="rounded-xl bg-[#f0f3ff] p-4 border border-[#e5e7f2]">
-                <span className="font-bold text-[#533afd]">Done ✓</span>
-                <p className="mt-1 text-[#0d1738] font-semibold text-sm">We rebuilt your homepage</p>
+          <div className="border-t border-[#e5e7f2] pt-10 mt-6 max-w-2xl">
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#777588] mb-8 flex items-center gap-3">
+              <span className="w-8 h-[1px] bg-[#e5e7f2]"></span>
+              Your Path to Launch
+              <span className="flex-1 h-[1px] bg-[#e5e7f2]"></span>
+            </h3>
+
+            <div className="relative">
+              {/* Continuous Progress Bar Background */}
+              <div className="absolute top-5 left-[16.666%] right-[16.666%] h-1.5 bg-[#eef0f6] rounded-full overflow-hidden">
+                 {/* Animated dashed overlay for inactive part */}
+                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgdHJhbnNmb3JtPSJyb3RhdGUoNDUpIj48cmVjdCB3aWR0aD0iMjAiIGhlaWdodD0iMSIgZmlsbD0icmdiYSgwLCAwLCAwLCAwLjA1KSIvPjwvZz48L3N2Zz4=')] bg-[length:10px_10px]" />
               </div>
-              <div className="rounded-xl border-2 border-[#533afd] bg-white p-4 shadow-sm flex flex-col justify-center">
-                <span className={`font-bold ${isPaid ? "text-[#0b8f5b]" : "text-[#533afd]"}`}>{isPaid ? "Done ✓" : "You are here"}</span>
-                <p className="mt-1 text-[#0d1738] font-semibold text-sm">{isPaid ? "You said yes" : "Have a look at it"}</p>
+
+              {/* Active Progress Bar */}
+              <div
+                className="absolute top-5 left-[16.666%] h-1.5 bg-gradient-to-r from-[#533afd] to-[#806bff] rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(83,58,253,0.5)] z-0"
+                style={{ width: isPaid ? "66.666%" : "33.333%" }}
+              >
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgdHJhbnNmb3JtPSJyb3RhdGUoNDUpIj48cmVjdCB3aWR0aD0iMjAiIGhlaWdodD0iMSIgZmlsbD0icmdiYSgyNTUsIDI1NSwgMjU1LCAwLjIpIi8+PC9nPjwvc3ZnPg==')] bg-[length:10px_10px] animate-[slide_1s_linear_infinite]" />
               </div>
-              <div className={`rounded-xl p-4 border flex flex-col justify-center ${isPaid ? "border-2 border-[#0b8f5b] bg-[#eaf8f0] text-[#0b8f5b]" : "border-[#e5e7f2] bg-[#f9f9ff] text-[#777588]"}`}>
-                <span className="font-bold">{isPaid ? "In progress" : "If you want it"}</span>
-                <p className="mt-1 font-semibold text-sm">{isPaid ? "Live within 2-4 weeks" : "Live within 2-4 weeks"}</p>
+
+              <div className="grid grid-cols-3 gap-3 relative z-10">
+                {/* Step 1 */}
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#533afd] to-[#432bd9] text-white flex items-center justify-center shadow-[0_0_20px_rgba(83,58,253,0.4)] ring-4 ring-[#f9f9ff] mb-4">
+                    <CheckCircle2 className="w-5 h-5" />
+                  </div>
+                  <div className="bg-[#f8f9fc] rounded-xl p-4 w-full border border-[#e5e7f2] shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-[#533afd] opacity-20" />
+                    <span className="font-extrabold text-[#533afd] text-[11px] uppercase tracking-wider">Done ✓</span>
+                    <p className="mt-1.5 text-[#0d1738] font-bold text-[13px] leading-snug">We rebuilt your<br/>homepage</p>
+                  </div>
+                </div>
+
+                {/* Step 2 */}
+                <div className="flex flex-col items-center text-center">
+                  <div className={`w-11 h-11 rounded-full flex items-center justify-center ring-4 ring-[#f9f9ff] mb-4 transition-all duration-500 ${isPaid ? 'bg-gradient-to-br from-[#533afd] to-[#432bd9] text-white shadow-[0_0_20px_rgba(83,58,253,0.4)]' : 'bg-white border-[3px] border-[#533afd] text-[#533afd] shadow-xl scale-110'}`}>
+                    {isPaid ? <CheckCircle2 className="w-5 h-5" /> : <MousePointerClick className="w-5 h-5" />}
+                  </div>
+                  <div className={`rounded-xl p-4 w-full border transition-all duration-500 shadow-md relative overflow-hidden ${isPaid ? 'bg-[#f8f9fc] border-[#e5e7f2]' : 'bg-white border-[#533afd] ring-1 ring-[#533afd]/10 scale-105'}`}>
+                    {(!isPaid) && <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#533afd] to-[#806bff]" />}
+                    <span className={`font-extrabold text-[11px] uppercase tracking-wider ${isPaid ? 'text-[#533afd]' : 'text-[#533afd]'}`}>{isPaid ? 'Done ✓' : 'You are here'}</span>
+                    <p className="mt-1.5 text-[#0d1738] font-bold text-[13px] leading-snug">{isPaid ? 'You said yes' : 'Have a look at it'}</p>
+                  </div>
+                </div>
+
+                {/* Step 3 */}
+                <div className="flex flex-col items-center text-center">
+                  <div className={`w-11 h-11 rounded-full flex items-center justify-center ring-4 ring-[#f9f9ff] mb-4 transition-all duration-500 ${isPaid ? 'bg-white border-[3px] border-[#0b8f5b] text-[#0b8f5b] shadow-xl scale-110' : 'bg-white border-[2px] border-[#e5e7f2] text-[#a1a1aa]'}`}>
+                    <Rocket className="w-5 h-5" />
+                  </div>
+                  <div className={`rounded-xl p-4 w-full border transition-all duration-500 shadow-sm relative overflow-hidden ${isPaid ? 'bg-white border-[#0b8f5b] ring-1 ring-[#0b8f5b]/10 scale-105 shadow-md' : 'bg-[#f8f9fc] border-[#e5e7f2]'}`}>
+                    {isPaid && <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#0b8f5b] to-[#12b375]" />}
+                    <span className={`font-extrabold text-[11px] uppercase tracking-wider ${isPaid ? 'text-[#0b8f5b]' : 'text-[#8b97a8]'}`}>{isPaid ? 'In progress' : 'If you want it'}</span>
+                    <p className={`mt-1.5 font-bold text-[13px] leading-snug ${isPaid ? 'text-[#0d1738]' : 'text-[#8b97a8]'}`}>Live within<br/>2-4 weeks</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
