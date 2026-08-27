@@ -216,8 +216,8 @@ export function BespokeGenerationStudio({
     }
   }
 
-  const briefRef = useRef({ businessName, founder, city, industry, servicesText, areasText, heroImage, logoUrl, footerLogoUrl });
-  briefRef.current = { businessName, founder, city, industry, servicesText, areasText, heroImage, logoUrl, footerLogoUrl };
+  const briefRef = useRef({ businessName, founder, city, industry, aboutContent, servicesText, areasText, heroImage, logoUrl, footerLogoUrl });
+  briefRef.current = { businessName, founder, city, industry, aboutContent, servicesText, areasText, heroImage, logoUrl, footerLogoUrl };
 
   const [briefSaved, setBriefSaved] = useState<"idle" | "saving" | "saved">("idle");
 
@@ -240,6 +240,7 @@ export function BespokeGenerationStudio({
           heroImage: b.heroImage,
           logoUrl: b.logoUrl,
           footerLogoUrl: b.footerLogoUrl,
+          aboutContent: b.aboutContent.trim() || undefined,
           services: b.servicesText.split("\n").map((x: string) => x.trim()).filter(Boolean),
           areas: b.areasText.split("\n").map((x: string) => x.trim()).filter(Boolean),
         }),
@@ -255,7 +256,7 @@ export function BespokeGenerationStudio({
     const timer = setTimeout(saveBrief, 1200);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [businessName, founder, city, industry, servicesText, areasText, heroImage, logoUrl, footerLogoUrl]);
+  }, [businessName, founder, city, industry, aboutContent, servicesText, areasText, heroImage, logoUrl, footerLogoUrl]);
 
   const STALE_AFTER_MS = 15 * 60 * 1000;
 

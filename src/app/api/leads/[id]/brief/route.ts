@@ -39,6 +39,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   assign("hero_cutout", typeof body.heroImage === "string" ? body.heroImage : undefined);
   assign("logo_url", typeof body.logoUrl === "string" ? body.logoUrl : undefined);
   assign("footer_logo_url", typeof body.footerLogoUrl === "string" ? body.footerLogoUrl : undefined);
+  assign("about_content", typeof body.aboutContent === "string" ? body.aboutContent : undefined);
   assign("services_list", Array.isArray(body.services) ? body.services.filter(Boolean) : undefined);
   assign("areas_list", Array.isArray(body.areas) ? body.areas.filter(Boolean) : undefined);
 
