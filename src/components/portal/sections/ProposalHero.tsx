@@ -118,7 +118,7 @@ export function ProposalHero({
 
         <div className="flex justify-center lg:justify-end">
           <SocialLaunchMockup
-            data={{ ...mockupData, stageMode: "rock", headlineMode: "launched" }}
+            data={{ ...mockupData, stageMode: "rock" }}
             showControls={false}
             className="w-full max-w-[480px] xl:max-w-[540px] transform hover:scale-[1.02] transition-transform duration-500"
           />
