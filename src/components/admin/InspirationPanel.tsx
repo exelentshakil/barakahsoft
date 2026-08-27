@@ -143,7 +143,7 @@ export function InspirationPanel({
               )}
             </h4>
             <p className="text-[11px] text-slate-500">
-              Only borrows layout, rhythm, geometry, and fonts — never client text or claims.
+              Provides the generative AI with premium visual layout, rhythm, geometry, and font pairings. Never borrows competitor text or claims.
             </p>
           </div>
         </div>
