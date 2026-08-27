@@ -177,7 +177,7 @@ ${JSON.stringify(batch, null, 2)}
 - Secondary actions use "site-cta site-cta--secondary" and remain visually subordinate.
 - Shared components keep shared classes across sections. Use descriptive block__element classes only for section-specific composition.
 - Keep generous whitespace and clear separation between content groups. Do not fill empty space with extra cards, badges or copy.
-- EVERY service card/section and areas list must include an accompanying image mapped from the `AVAILABLE IMAGES` list to make them look premium and expensive.
+- EVERY service card/section and areas list must include an accompanying image mapped from the AVAILABLE IMAGES list to make them look premium and expensive.
 - Each service in the services menu must use a distinct, semantic icon (no repeated generic checkmarks/circles).
 
 - The About section must visibly balance authentic imagery or brand treatment, ${brief.founder ? `owner identity (${brief.founder}, supported role: owner)` : "business identity"}, concise story and supported trust evidence. Use a real owner portrait as a balanced profile image when supplied; otherwise use honest project/team imagery without implying it depicts the owner. Preserve the image's natural proportions with an intentional square, 4:5 or editorial crop, never a stretched fixed-height box. Do not invent a logo, title, years of experience or metric.
