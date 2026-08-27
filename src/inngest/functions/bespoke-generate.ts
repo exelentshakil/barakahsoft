@@ -11,7 +11,7 @@ import { generateSitePlan, sectionBatches } from "@/lib/generate/site-plan";
 import { generateStylesheet } from "@/lib/generate/stylesheet";
 import { renderServiceMap, injectServiceMap } from "@/lib/generate/service-map";
 import { critiqueHomepage, type PremiumCritique } from "@/lib/generate/critique";
-import type { GenerationProvider } from "@/lib/generate/model";
+import { callBestModel, type GenerationProvider } from "@/lib/generate/model";
 import { DEFAULT_DESIGN_DNA, DesignDnaSchema, type DesignDna } from "@/lib/design-dna";
 import { compileDesignTokens } from "@/lib/design-tokens";
 import { ingestRealPhotos, buildSlots, planMedia, type MediaPlan } from "@/lib/media/plan-media";
@@ -20,6 +20,7 @@ import { writeLivePage, HOME_KEY } from "@/lib/page-versions";
 import { sanitizeBespokeHtml } from "@/lib/sanitize-generated-html";
 import { verifyHomepage } from "@/lib/audit/quality-gate";
 import { setUsageContext } from "@/lib/cost/record-usage";
+import { parseJsonResponse } from "@/lib/parse-json-response";
 import { visualQaEnabled, type GenerationCandidate, type VisualQaReport } from "@/lib/visual-qa";
 import { slugifyText } from "@/lib/slug";
 import type { FunnelPageSection, Lead, ScrapeResults, Artifact } from "@/types/database";
@@ -40,7 +41,7 @@ import type { FunnelPageSection, Lead, ScrapeResults, Artifact } from "@/types/d
 // this runs in a request.
 
 const MAX_SERVICE_PAGES = 8;
-const MAX_AREAS = 12;
+const MAX_AREAS = 8;
 
 // step.run's return type is Jsonify<T>, which will not unify with a plain
 // generic helper signature. These helpers only ever need "run something and
@@ -115,9 +116,50 @@ export const bespokeGenerate = inngest.createFunction(
     });
 
     const brief = buildSiteBrief(loaded.lead, loaded.scrapeResults, overrides ?? {});
+
+    // Pad services to exactly 8 and areas to exactly 8 (if they have fewer) so the mega menu
+    // looks perfectly balanced, using an LLM to invent highly relevant inter-related items.
+    const padded = await step.run("pad-brief-lists", async () => {
+      let paddedServices = brief.services.slice(0, MAX_SERVICE_PAGES);
+      let paddedAreas = brief.areas.slice(0, MAX_AREAS);
+
+      if (paddedServices.length > 0 && paddedServices.length < MAX_SERVICE_PAGES) {
+        const prompt = `We have a local business in the ${brief.industry} industry.
+They currently offer these services: ${paddedServices.join(", ")}.
+We need exactly ${MAX_SERVICE_PAGES} services for their website navigation to look balanced.
+Creatively invent highly relevant, inter-related realistic services that a business like this would also offer, to pad the list to exactly ${MAX_SERVICE_PAGES} items.
+Return valid JSON only in this format: {"services": ["Service 1", "Service 2", ...]}`;
+
+        const raw = await callBestModel(prompt, { maxTokens: 400, temperature: 0.7, model }, provider);
+        const parsed = raw ? parseJsonResponse(raw) : null;
+        if (parsed && Array.isArray(parsed.services) && parsed.services.length === MAX_SERVICE_PAGES) {
+          paddedServices = parsed.services;
+        }
+      }
+
+      if (paddedAreas.length > 0 && paddedAreas.length < MAX_AREAS) {
+        const prompt = `We have a local business in ${brief.city}.
+They currently serve these areas: ${paddedAreas.join(", ")}.
+We need exactly ${MAX_AREAS} service areas/locations for their website navigation to look balanced.
+Invent highly relevant, nearby realistic towns, cities, or neighborhoods to pad the list to exactly ${MAX_AREAS} items.
+Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
+
+        const raw = await callBestModel(prompt, { maxTokens: 400, temperature: 0.7, model }, provider);
+        const parsed = raw ? parseJsonResponse(raw) : null;
+        if (parsed && Array.isArray(parsed.areas) && parsed.areas.length === MAX_AREAS) {
+          paddedAreas = parsed.areas;
+        }
+      }
+
+      return { services: paddedServices, areas: paddedAreas };
+    });
+
+    brief.services = padded.services;
+    brief.areas = padded.areas;
+
     const dna = resolveDna(loaded.artifact);
-    const services = brief.services.slice(0, MAX_SERVICE_PAGES);
-    const areas = brief.areas.slice(0, MAX_AREAS);
+    const services = brief.services;
+    const areas = brief.areas;
 
     // Phase 1 knows about no routes but the homepage. Anything the
     // generator links is rewritten to an on-page anchor, so during the

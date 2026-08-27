@@ -60,7 +60,7 @@ export function BespokeGenerationStudio({
   const defaultHero = extracted.hero_cutout || primaryScrapedPhoto || "";
   const defaultCity = extracted.city || (schema.address?.addressLocality ? `${schema.address.addressLocality}, ${schema.address.addressRegion || ""}`.trim() : typeof facts.town === "string" ? facts.town : "");
   const defaultIndustry = extracted.industry || lead.industry || (typeof facts.industry === "string" ? facts.industry : "");
-  const defaultAboutContent = extracted.about_content || "";
+  const defaultAboutContent = extracted.about_content || (typeof facts.about_content === "string" ? facts.about_content : "") || "";
 
   const defaultServices = Array.isArray(extracted.services_list) && extracted.services_list.length > 0
     ? extracted.services_list.join("\n")

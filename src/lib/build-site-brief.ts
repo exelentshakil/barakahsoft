@@ -162,7 +162,7 @@ export function buildSiteBrief(
     founder: overrides.founder?.trim() || lead.contact_name || null,
     phone: displayPhone(overrides.phone?.trim() || contact.phone),
     email: overrides.email?.trim() || contact.email,
-    aboutContent: overrides.aboutContent?.trim() || null,
+    aboutContent: overrides.aboutContent?.trim() || (typeof facts.about_content === "string" ? facts.about_content : null),
     services,
     areas,
     rating,

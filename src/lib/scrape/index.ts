@@ -86,6 +86,20 @@ export async function scrapeBusiness(
   const logoUrl = fcBranding.logo || fcBranding.images?.logo || logoColor.logoUrl || null;
   const brandFontFamily = fcBranding.typography?.fontFamilies?.primary || fcBranding.fonts?.[0]?.family || font.googleFontFamily || null;
 
+  let aboutContent = "";
+  if (crawled.length > 0) {
+    const aboutPage = crawled.find(p => /\/(about|about-us|who-we-are|our-story)\/?$/i.test(p.url));
+    if (aboutPage) aboutContent = aboutPage.markdown || "";
+  }
+
+  if (!aboutContent && siteUrls.length > 0) {
+    const aboutUrl = siteUrls.find(u => /\/(about|about-us|who-we-are|our-story)\/?$/i.test(u));
+    if (aboutUrl) {
+      const aboutData = await scrapeWithFirecrawl(aboutUrl);
+      if (aboutData) aboutContent = aboutData.markdown || "";
+    }
+  }
+
   const facts = {
     business_name: places?.name ?? siteName ?? businessNameHint ?? null,
     source_url: sourceUrl,
@@ -136,6 +150,7 @@ export async function scrapeBusiness(
     gbp_photo_urls: gbpPhotoUrls,
     pagespeed: { mobile: pagespeed.mobile, desktop: pagespeed.desktop },
     markdown: firecrawlData?.markdown || "",
+    about_content: aboutContent,
   };
 
   const admin = createAdminClient();
