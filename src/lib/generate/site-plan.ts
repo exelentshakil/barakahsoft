@@ -285,6 +285,8 @@ PLAN RULES
 - No two adjacent sections use the same archetype. Plan quiet/focal/reset cadence instead of alternating coloured rectangles.
 - Do not reuse a memorised sequence. After the hero, order sections according to this lead's strategic lens, strongest evidence and reported problems.
 - Select media only by the supplied slot and subject. A slot may be used once.
+- Verified Customer badges MUST NOT overflow their containers or truncate awkwardly; use compact SVG icons and small text that perfectly fits beside review author names.
+
 - The primary action wording and treatment are identical everywhere.
 - IDs are lowercase slugs. Navigation IDs must be exactly services, about, reviews, faq and contact where those sections exist.
 

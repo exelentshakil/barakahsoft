@@ -177,6 +177,9 @@ ${JSON.stringify(batch, null, 2)}
 - Secondary actions use "site-cta site-cta--secondary" and remain visually subordinate.
 - Shared components keep shared classes across sections. Use descriptive block__element classes only for section-specific composition.
 - Keep generous whitespace and clear separation between content groups. Do not fill empty space with extra cards, badges or copy.
+- EVERY service card/section and areas list must include an accompanying image mapped from the `AVAILABLE IMAGES` list to make them look premium and expensive.
+- Each service in the services menu must use a distinct, semantic icon (no repeated generic checkmarks/circles).
+
 - The About section must visibly balance authentic imagery or brand treatment, ${brief.founder ? `owner identity (${brief.founder}, supported role: owner)` : "business identity"}, concise story and supported trust evidence. Use a real owner portrait as a balanced profile image when supplied; otherwise use honest project/team imagery without implying it depicts the owner. Preserve the image's natural proportions with an intentional square, 4:5 or editorial crop, never a stretched fixed-height box. Do not invent a logo, title, years of experience or metric.
 - Credentials such as “licensed and insured” are a compact reassurance line or badge near the action. Never place that long phrase in an equal-width numeric metric cell beside a rating and review count.
 - If this batch contains reviews, make it unmistakably testimonial content: build one accessible slider whose section has data-review-slider, a header with section title and sleek circular arrow icon buttons:
@@ -235,7 +238,7 @@ ${
     - Outcome-driven subheadline connecting service to peace of mind
     - Direct click-to-call button: <a href="tel:${brief.phone ? brief.phone.replace(/[^\d+]/g, "") : ""}" class="site-cta site-cta--primary">Call ${brief.phone || "(XXX) XXX-XXXX"}</a>
     - 24/7 live dispatch status badge with pulse indicator ("24/7 Live Dispatch · Fast Response")
-    - Verified Google rating trust strip (${brief.rating ? brief.rating + " stars (" + brief.reviewCount + " reviews)" : "5.0 Star Rated"} · Licensed & Insured)
+    - Verified Google rating trust strip: strongly visible trust badges with contrasting typography (e.g. 5 Stars (88 Reviews) and Licensed & Insured) that never fade into the hero background.
   * RIGHT COLUMN (45%):
     - Elevated Lead Machine Card (<div class="hero-lead-card">) containing [data-lead-form]
     - Form fields:
