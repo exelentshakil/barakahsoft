@@ -200,7 +200,7 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
               
               <div className="p-4 flex flex-col justify-between flex-1 bg-gradient-to-b from-white to-slate-50 relative z-10">
                 <div className="space-y-1.5">
-                  {!cardImage && (
+                  {false && (
                     <div className="flex items-center justify-between mb-3">
                       <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.08em] text-emerald-700">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
