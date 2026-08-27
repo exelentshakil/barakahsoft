@@ -2,7 +2,8 @@
 
 import { useCallback, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useEffect } from "react";
 import { displayPhone } from "@/lib/phone";
 import { resolveBusinessContact } from "@/lib/business-contact";
 import {
@@ -152,6 +153,12 @@ export function AdminLeadWorkspace({
   proposalViews = [],
 }: AdminLeadWorkspaceProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const [pendingLeadId, setPendingLeadId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPendingLeadId(null);
+  }, [pathname, lead?.id]);
   const [emailSent, setEmailSent] = useState(Boolean(lead.delivered_at));
   const [viewsModalOpen, setViewsModalOpen] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
@@ -679,7 +686,7 @@ Shaq`,
   const outreachLeads = currentViewLeads.filter((item) => item.source === "outreach" || item.source === "manual");
 
   function renderLeadCard(item: Lead) {
-    const isSelected = item.id === lead.id;
+    const isSelected = item.id === (pendingLeadId || lead.id);
     const itemTrade = item.industry || (item.persona ? item.persona.replace(/-/g, " ") : "Business");
 
     const isPaid = item.status === "paid" || item.status === "live";
@@ -693,6 +700,7 @@ Shaq`,
       <Link
         key={item.id}
         href={`/admin/leads/${item.id}`}
+        onClick={() => setPendingLeadId(item.id)}
         title={`${item.business_name || item.slug} · ${itemTrade}`}
         className={`group flex items-center justify-between gap-2.5 rounded-xl px-3 py-2.5 transition border ${
           isSelected
@@ -954,6 +962,12 @@ Shaq`,
 
       {/* 2. RIGHT COLUMN: MASTER COMMAND STUDIO */}
       <div className="space-y-6">
+        {pendingLeadId && pendingLeadId !== lead.id ? (
+          <div className="flex h-[400px] w-full items-center justify-center rounded-2xl border border-transparent bg-white/40 shadow-sm backdrop-blur-sm">
+            <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+          </div>
+        ) : (
+          <>
         {/* Master Command Card */}
         <div className="min-w-0 space-y-4 rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm">
           {/* Header Row: Lead Identity & Actions */}
@@ -1839,6 +1853,8 @@ Shaq`,
             </TabPanel>
           </div>
         </div>
+        </>
+        )}
       </div>
     </div>
   );
