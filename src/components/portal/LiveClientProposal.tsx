@@ -170,6 +170,7 @@ export function LiveClientProposal({
           leadSlug={lead.slug}
           isPaid={isPaid}
           chatContext={chatContext}
+          mockupData={mockupData}
         />
 
         <ProposalAbout data={mockupData} />
@@ -266,6 +267,7 @@ export function LiveClientProposal({
           launchSteps={launchSteps}
           onOpenCheckout={() => setShowCheckout(true)}
           chatContext={chatContext}
+          
         />
 
         {showCheckout && (
