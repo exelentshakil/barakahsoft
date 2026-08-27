@@ -8,8 +8,9 @@ export function ProposalAbout({ data }: { data: MockupData }) {
   ].filter(Boolean) as string[];
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-[#c7d0fb] bg-white shadow-sm">
-      <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch">
+    <section className="overflow-hidden rounded-2xl border border-[#c7d0fb] bg-white shadow-sm relative">
+      <div className="absolute top-0 right-0 w-96 h-96 bg-[#533afd]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+      <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch relative z-10">
         <div className="relative min-h-[280px] bg-[#0d1738]">
           {data.aboutCaptureUrl ? (
             // eslint-disable-next-line @next/next/no-img-element

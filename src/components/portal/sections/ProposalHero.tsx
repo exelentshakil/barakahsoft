@@ -40,87 +40,91 @@ export function ProposalHero({
   const town = townFrom(address);
 
   return (
-    <section className="rounded-2xl border border-[#c7d0fb] bg-white p-8 sm:p-12 shadow-sm space-y-6">
-      <div className="flex items-center gap-2">
-        <span className="flex h-2.5 w-2.5 rounded-full bg-[#533afd] animate-pulse" />
-        <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
-          Your rebuilt homepage
-        </span>
-      </div>
+    <section className="rounded-2xl border border-[#c7d0fb] bg-white p-8 sm:p-12 shadow-sm space-y-6 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-96 h-96 bg-[#533afd]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#ffd12d]/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+      <div className="relative z-10 space-y-6">
+        <div className="flex items-center gap-2">
+          <span className="flex h-2.5 w-2.5 rounded-full bg-[#533afd] animate-pulse" />
+          <span className="text-xs font-bold uppercase tracking-wider text-[#533afd]">
+            Your rebuilt homepage
+          </span>
+        </div>
 
-      <h1 className="text-3xl font-bold tracking-tight text-[#0d1738] sm:text-5xl leading-tight">
-        {businessName}
-      </h1>
+        <h1 className="text-3xl font-bold tracking-tight text-[#0d1738] sm:text-5xl leading-tight">
+          {businessName}
+        </h1>
 
-      {/* The lead was won by a page that said "you already know it's not
-          good" and then handed to one that said "Digital X-Ray & Proposal
-          Ready". That voice change lands at the exact moment someone is
-          deciding whether to trust us, and it reads as the salesperson
-          arriving. Same plain voice throughout.
+        {/* The lead was won by a page that said "you already know it's not
+            good" and then handed to one that said "Digital X-Ray & Proposal
+            Ready". That voice change lands at the exact moment someone is
+            deciding whether to trust us, and it reads as the salesperson
+            arriving. Same plain voice throughout.
 
-          Written only from what is known: the previous copy asserted a
-          rating, a review count and a city unconditionally, so a business
-          with none of them was told about its "real proof" of undefined
-          reviews. */}
-      <p className="max-w-3xl text-base leading-relaxed text-[#42506a] sm:text-lg">
-        {rating && reviewCount ? (
-          <>
-            {reviewCount} people have rated you {rating} stars. That is better than most of the businesses
-            {town ? ` in ${town}` : " near you"} you are competing with — and almost none of it is on your website. You
-            are not losing work because of the work. You are losing it before anyone gets that far.
-          </>
-        ) : (
-          <>
-            We went through your site{town ? `, and how you show up around ${town}` : ""}, page by page. Everything
-            below is on your site today, so you can open it alongside this and check any of it.
-          </>
-        )}
-      </p>
+            Written only from what is known: the previous copy asserted a
+            rating, a review count and a city unconditionally, so a business
+            with none of them was told about its "real proof" of undefined
+            reviews. */}
+        <p className="max-w-3xl text-base leading-relaxed text-[#42506a] sm:text-lg">
+          {rating && reviewCount ? (
+            <>
+              {reviewCount} people have rated you {rating} stars. That is better than most of the businesses
+              {town ? ` in ${town}` : " near you"} you are competing with — and almost none of it is on your website. You
+              are not losing work because of the work. You are losing it before anyone gets that far.
+            </>
+          ) : (
+            <>
+              We went through your site{town ? `, and how you show up around ${town}` : ""}, page by page. Everything
+              below is on your site today, so you can open it alongside this and check any of it.
+            </>
+          )}
+        </p>
 
-      <div className="pt-2 flex flex-wrap gap-4">
-        <a
-          href={`/s/${leadSlug}?view=preview`}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-2 rounded-md bg-[#533afd] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#432bd9]"
-        >
-          See your new homepage <ExternalLink className="h-4 w-4" />
-        </a>
-        {isPaid ? (
-          <div className="inline-flex items-center gap-2 rounded-md bg-[#eaf8f0] px-6 py-3.5 text-sm font-semibold text-[#0b8f5b]">
-            <CheckCircle2 className="h-4 w-4" /> Payment received · launch workflow active
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => {
-              const crisp = (window as Window & { $crisp?: unknown[] }).$crisp;
-              crisp?.push(["set", "message:text", [chatContext]]);
-              crisp?.push(["do", "chat:open"]);
-            }}
-            className="inline-flex items-center gap-2 rounded-md bg-[#0b8f5b] px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#09744a]"
+        <div className="pt-2 flex flex-wrap gap-4">
+          <a
+            href={`/s/${leadSlug}?view=preview`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-md bg-[#533afd] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#432bd9]"
           >
-            Claim Your Launch Spot · 100% Risk-Free <MessageCircle className="h-4 w-4" />
-          </button>
-        )}
-      </div>
+            See your new homepage <ExternalLink className="h-4 w-4" />
+          </a>
+          {isPaid ? (
+            <div className="inline-flex items-center gap-2 rounded-md bg-[#eaf8f0] px-6 py-3.5 text-sm font-semibold text-[#0b8f5b]">
+              <CheckCircle2 className="h-4 w-4" /> Payment received · launch workflow active
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                const crisp = (window as Window & { $crisp?: unknown[] }).$crisp;
+                crisp?.push(["set", "message:text", [chatContext]]);
+                crisp?.push(["do", "chat:open"]);
+              }}
+              className="inline-flex items-center gap-2 rounded-md bg-[#0b8f5b] px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#09744a]"
+            >
+              Claim Your Launch Spot · 100% Risk-Free <MessageCircle className="h-4 w-4" />
+            </button>
+          )}
+        </div>
 
-      {/* Stepper */}
-      <div className="border-t border-[#e5e7f2] pt-8">
-        <div className="grid grid-cols-3 gap-4 text-center text-xs">
-          <div className="rounded-xl bg-[#f0f3ff] p-4 border border-[#e5e7f2]">
-            {/* Said the way the page that won this lead says things. "Website
-                X-Ray & Audit" is our word for it, not theirs. */}
-            <span className="font-bold text-[#533afd]">Done ✓</span>
-            <p className="mt-1 text-[#0d1738] font-semibold text-sm">We rebuilt your homepage</p>
-          </div>
-          <div className="rounded-xl border-2 border-[#533afd] bg-white p-4 shadow-sm">
-            <span className={`font-bold ${isPaid ? "text-[#0b8f5b]" : "text-[#533afd]"}`}>{isPaid ? "Done ✓" : "You are here"}</span>
-            <p className="mt-1 text-[#0d1738] font-semibold text-sm">{isPaid ? "You said yes" : "Have a look at it"}</p>
-          </div>
-          <div className={`rounded-xl p-4 border ${isPaid ? "border-2 border-[#0b8f5b] bg-[#eaf8f0] text-[#0b8f5b]" : "border-[#e5e7f2] bg-[#f9f9ff] text-[#777588]"}`}>
-            <span className="font-bold">{isPaid ? "In progress" : "If you want it"}</span>
-            <p className="mt-1 font-semibold text-sm">{isPaid ? "Live within 2-4 weeks" : "Live within 2-4 weeks"}</p>
+        {/* Stepper */}
+        <div className="border-t border-[#e5e7f2] pt-8">
+          <div className="grid grid-cols-3 gap-4 text-center text-xs">
+            <div className="rounded-xl bg-[#f0f3ff] p-4 border border-[#e5e7f2]">
+              {/* Said the way the page that won this lead says things. "Website
+                  X-Ray & Audit" is our word for it, not theirs. */}
+              <span className="font-bold text-[#533afd]">Done ✓</span>
+              <p className="mt-1 text-[#0d1738] font-semibold text-sm">We rebuilt your homepage</p>
+            </div>
+            <div className="rounded-xl border-2 border-[#533afd] bg-white p-4 shadow-sm">
+              <span className={`font-bold ${isPaid ? "text-[#0b8f5b]" : "text-[#533afd]"}`}>{isPaid ? "Done ✓" : "You are here"}</span>
+              <p className="mt-1 text-[#0d1738] font-semibold text-sm">{isPaid ? "You said yes" : "Have a look at it"}</p>
+            </div>
+            <div className={`rounded-xl p-4 border ${isPaid ? "border-2 border-[#0b8f5b] bg-[#eaf8f0] text-[#0b8f5b]" : "border-[#e5e7f2] bg-[#f9f9ff] text-[#777588]"}`}>
+              <span className="font-bold">{isPaid ? "In progress" : "If you want it"}</span>
+              <p className="mt-1 font-semibold text-sm">{isPaid ? "Live within 2-4 weeks" : "Live within 2-4 weeks"}</p>
+            </div>
           </div>
         </div>
       </div>
