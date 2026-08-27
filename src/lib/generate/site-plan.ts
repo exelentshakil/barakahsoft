@@ -256,6 +256,7 @@ BUSINESS FACTS
 - Real attributed review text: ${brief.reviews.length ? brief.reviews.map((review) => `${review.author}: ${review.text.slice(0, 220)}`).join(" | ") : "none"}
 - Licensed/insured claim: ${brief.licensedInsured ? "supported" : "not supplied"}
 - Owner-reported website problems: ${brief.painInstructions.join(" | ") || "none supplied"}
+${brief.aboutContent ? `- Existing About Content: ${brief.aboutContent.slice(0, 3000)}\n` : ""}
 - Current-site fact digest: ${brief.factsDigest.slice(0, 5000)}
 
 AVAILABLE MEDIA

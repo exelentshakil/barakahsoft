@@ -44,6 +44,9 @@ function factsBlock(brief: SiteBrief): string {
       ? `Real reviews — quote verbatim or not at all:\n${brief.reviews.map((review) => `  ${review.rating}/5 — "${review.text}" — ${review.author}`).join("\n")}`
       : "No review text available. Include no testimonials of any kind."
   );
+  if (brief.aboutContent) {
+    lines.push(`\nExisting About Content (Use this to ground the About section):\n${brief.aboutContent.slice(0, 3000)}`);
+  }
   lines.push(`\nScraped from their current site:\n${brief.factsDigest.slice(0, 5000)}`);
   return lines.join("\n");
 }

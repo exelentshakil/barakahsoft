@@ -30,6 +30,7 @@ export interface BriefOverrides {
   services?: string[];
   areas?: string[];
   heroImage?: string;
+  aboutContent?: string;
 }
 
 /**
@@ -161,6 +162,7 @@ export function buildSiteBrief(
     founder: overrides.founder?.trim() || lead.contact_name || null,
     phone: displayPhone(overrides.phone?.trim() || contact.phone),
     email: overrides.email?.trim() || contact.email,
+    aboutContent: overrides.aboutContent?.trim() || null,
     services,
     areas,
     rating,

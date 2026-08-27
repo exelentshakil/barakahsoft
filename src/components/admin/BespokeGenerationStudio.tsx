@@ -60,6 +60,7 @@ export function BespokeGenerationStudio({
   const defaultHero = extracted.hero_cutout || primaryScrapedPhoto || "";
   const defaultCity = extracted.city || (schema.address?.addressLocality ? `${schema.address.addressLocality}, ${schema.address.addressRegion || ""}`.trim() : typeof facts.town === "string" ? facts.town : "");
   const defaultIndustry = extracted.industry || lead.industry || (typeof facts.industry === "string" ? facts.industry : "");
+  const defaultAboutContent = extracted.about_content || "";
 
   const defaultServices = Array.isArray(extracted.services_list) && extracted.services_list.length > 0
     ? extracted.services_list.join("\n")
@@ -76,6 +77,7 @@ export function BespokeGenerationStudio({
   const [footerLogoUrl, setFooterLogoUrl] = useState(defaultFooterLogo);
   const [city, setCity] = useState(defaultCity);
   const [industry, setIndustry] = useState(defaultIndustry);
+  const [aboutContent, setAboutContent] = useState(defaultAboutContent);
   const [servicesText, setServicesText] = useState(defaultServices);
   const [areasText, setAreasText] = useState(defaultAreas);
   const [primaryColor, setPrimaryColor] = useState(extracted.branding?.colors?.primary || (facts.colors as any)?.primary || "#533AFD");
@@ -92,6 +94,7 @@ export function BespokeGenerationStudio({
     setBusinessName(defaultBusinessName);
     setCity(defaultCity);
     setIndustry(defaultIndustry);
+    setAboutContent(defaultAboutContent);
     setServicesText(defaultServices);
     setAreasText(defaultAreas);
     setFounder(defaultFounder);
@@ -188,6 +191,7 @@ export function BespokeGenerationStudio({
           founder,
           city,
           industry,
+          aboutContent: aboutContent.trim() || undefined,
           services: servicesText.split("\n").map((x: string) => x.trim()).filter(Boolean),
           areas: areasText.split("\n").map((x: string) => x.trim()).filter(Boolean),
           heroImage: heroImage.trim() || undefined,
@@ -583,14 +587,14 @@ export function BespokeGenerationStudio({
               />
             </div>
 
-            {/* Services & Areas */}
-            <div className="sm:col-span-2 lg:col-span-3 grid sm:grid-cols-2 gap-4">
+            {/* Services, Areas & About Content */}
+            <div className="sm:col-span-2 lg:col-span-3 grid sm:grid-cols-3 gap-4">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <Label htmlFor="gen-services" className="text-xs font-bold text-slate-800">
                     Core Services / Products
                   </Label>
-                  <span className="text-[10px] text-slate-400 font-semibold">1 service per line</span>
+                  <span className="text-[10px] text-slate-400 font-semibold">1 per line</span>
                 </div>
                 <Textarea
                   id="gen-services"
@@ -607,7 +611,7 @@ export function BespokeGenerationStudio({
                   <Label htmlFor="gen-areas" className="text-xs font-bold text-slate-800">
                     Service Areas / Locations
                   </Label>
-                  <span className="text-[10px] text-slate-400 font-semibold">1 city/area per line</span>
+                  <span className="text-[10px] text-slate-400 font-semibold">1 per line</span>
                 </div>
                 <Textarea
                   id="gen-areas"
@@ -616,6 +620,23 @@ export function BespokeGenerationStudio({
                   onChange={(e) => { markTouched(); setAreasText(e.target.value); }}
                   className="text-xs bg-slate-50/70 border-slate-200 rounded-xl focus:bg-white font-sans leading-relaxed"
                   placeholder="Las Vegas, NV&#10;Henderson, NV&#10;Summerlin, NV..."
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <Label htmlFor="gen-about-content" className="text-xs font-bold text-slate-800">
+                    About Page Content
+                  </Label>
+                  <span className="text-[10px] text-slate-400 font-semibold">Existing copy</span>
+                </div>
+                <Textarea
+                  id="gen-about-content"
+                  rows={6}
+                  value={aboutContent}
+                  onChange={(e) => { markTouched(); setAboutContent(e.target.value); }}
+                  className="text-xs bg-slate-50/70 border-slate-200 rounded-xl focus:bg-white font-sans leading-relaxed"
+                  placeholder="Paste existing about page content here to build a rich, grounded about section..."
                 />
               </div>
             </div>

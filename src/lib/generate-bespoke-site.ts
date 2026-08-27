@@ -25,6 +25,7 @@ export interface SiteBrief {
   founder: string | null;
   phone: string | null;
   email: string | null;
+  aboutContent: string | null;
   services: string[];
   areas: string[];
   rating: number | null;

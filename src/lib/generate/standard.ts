@@ -148,14 +148,16 @@ SECTION QUALITY. Every section needs a strong headline, a visual idea and a conv
 MOBILE IS A REDESIGN, NOT A COLLAPSE. Preserve hierarchy and colour rhythm at 360px. Reorder media before copy where it improves comprehension, remove decorative overlap, keep natural content height, and ensure no type, metric, form or image crop becomes cramped.`;
 
 export const MASTER_HERO_STANDARD = `═══ HERO SECTION — THE UNMISSABLE HIGH-CONVERTING MASTERPIECE ═══
-STRICT REQUIREMENT: The Hero section MUST use an image. Never generate a hero section without a high-quality real image representing the business. 
+STRICT REQUIREMENT: The Hero section MUST use an image. Never generate a hero section without a high-quality real image representing the business.
 Every hero section must look like a high-end $20,000 bespoke agency build with clear visual hierarchy, disciplined grid, and above-the-fold conversion power. NO CHEAP website design will be accepted:
+
+CRITICAL SCREENSHOT CONSTRAINT: The menu + hero section MUST NEVER overflow the above-the-fold viewport! Use extremely tight, disciplined vertical spacing and concise copy so the entire hero fits perfectly on one screen for marketing screenshots.
 
 DESKTOP SILHOUETTE (2-Column Balanced Grid, 55% / 45%):
 1. LEFT COLUMN — The Value Stack & Immediate Conversion Anchor:
    - Eyebrow Tag: A sleek uppercase label or badge (e.g., "PROPERTY DAMAGE RESTORATION IN LAS VEGAS"). NEVER prefix eyebrows, subheadings, or badges with a literal dash or em-dash (never write "— "). Any accent mark is styled purely with CSS.
-   - Massive Typographic Headline: Bold, commanding font-display face (clamp(2.5rem, 4vw, 3.75rem)) directly addressing the urgent customer problem (e.g., "Help for water, fire, mold and property damage in Las Vegas").
-   - Outcome-Driven Subhead: 1-2 readable sentences connecting real services to relief and peace of mind.
+   - Massive Typographic Headline: Bold, commanding font-display face (clamp(2.5rem, 4vw, 3.5rem)) directly addressing the urgent customer problem. Keep it to 1-2 lines maximum to prevent vertical overflow!
+   - Outcome-Driven Subhead: Exactly 1 readable sentence connecting real services to relief and peace of mind. DO NOT bloat with extra lines.
    - Immediate Direct Call CTA: Click-to-call phone link (<a href="tel:..." class="site-cta site-cta--primary">Call (XXX) XXX-XXXX</a>) paired with a 24/7 live dispatch status badge / pulse indicator ("24/7 Emergency Dispatch · Avg 45 Min Response").
    - Trust Proof Strip: Real Google review rating badge with ★★★★★ stars, verified review count, "Licensed & Insured" reassurance badge, and "Locally Owned" pill.
 
@@ -169,26 +171,23 @@ DESKTOP SILHOUETTE (2-Column Balanced Grid, 55% / 45%):
 
 NEVER output a bare text wall without photography, never center-align a generic brochure paragraph, and never leave the hero without immediate trust proof and action targets.`;
 
-export const MASTER_ABOUT_STANDARD = `═══ ABOUT / OUR STORY SECTION — THE 3-TIER LAYERED MASTERPIECE ═══
-STRICT REQUIREMENT: The About section MUST feature an ULTRA premium quality layout with a prominent left-side image. These sections are the main selling point and must use real images.
-The About section (id="about") is the ultimate credibility builder where a visitor decides whether to trust the people behind the business:
+export const MASTER_ABOUT_STANDARD = `═══ ABOUT / OUR STORY SECTION — THE COMPACT LAYERED MASTERPIECE ═══
+STRICT REQUIREMENT: The About section is the main selling point from marketing to actual sale. It MUST feature an ULTRA premium quality layout with a prominent left-side image.
+CRITICAL SCREENSHOT CONSTRAINT: The About section MUST NOT vertically overflow or become a massive wall of text. It must be exceptionally concise, high-impact, and visually tight so the hero + about sections can be cleanly screenshotted together for social media marketing. Use the provided existing About content to ground this section, but distill it into a sharp, flawless presentation!
 
-3-TIER LAYERED STRUCTURE:
+LAYERED STRUCTURE:
 1. TIER 1 — Top Story & Authentic Profile Split:
-   - LEFT: Substantial real photograph of the founder, team, or on-site work vehicle inside a rounded-2xl container with a documentary caption rail along the bottom (e.g., "Property damage restoration calls for careful coordination from the first conversation onward."). THIS IS MANDATORY.
-   - RIGHT:
-     * Section Eyebrow: A clean uppercase badge or numbered tag (e.g., "ABOUT OUR COMPANY" or "05 / ABOUT"). NEVER prefix with a literal dash or em-dash (never write "— ").
-     * Authoritative Customer-Relevant Headline (e.g., "A real name behind the restoration work" or "Built on Craftsmanship & Local Values").
-     * 2 concise, compelling paragraphs establishing who does the work, their standards, and why local homeowners trust them in their properties.
+   - LEFT (Image): Substantial real photograph of the founder, team, or on-site work vehicle inside a rounded-2xl container with a documentary caption rail along the bottom. THIS IS MANDATORY. Use object-fit: cover and a strict aspect-ratio (e.g., 4/3) to prevent vertical blowout.
+   - RIGHT (Content):
+     * Section Eyebrow: A clean uppercase badge or numbered tag. NEVER prefix with a literal dash or em-dash (never write "— ").
+     * Authoritative Customer-Relevant Headline.
+     * 1 to 2 ultra-concise, compelling paragraphs extracted and polished from the provided Existing About Content establishing who does the work, their standards, and why local homeowners trust them. DO NOT write long, sprawling paragraphs that overflow!
      * "Licensed and Insured" Trust Box: A clean badge card with a 4px solid brand-colored left border.
      * Primary & Secondary Action Group: High-contrast call button + "Request a callback" button.
 
-2. TIER 2 — Full-Width Solid Metric Ribbon Band:
+2. TIER 2 — Full-Width Solid Metric Ribbon Band (If space permits, otherwise merge into Tier 1):
    - A full-width contrast ribbon band (in brand primary or dark surface) spanning 3 to 4 bold verified statistics:
      [Years in Business / Decades of Experience] · [Jobs / Projects Completed] · [4.9★ Average Google Rating] · [100% Satisfaction / Guarantee].
-
-3. TIER 3 — Secondary Craftsmanship / Capability Snippet:
-   - A subtle horizontal card underneath reinforcing residential and commercial capabilities across all service territories.
 
 NEVER reduce the founder/team to a tiny circular avatar, never stretch copy across empty dead space, and never invent fake bios or unverified statistics.`;
 
