@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 
 // Server-side image proxy to convert any external image URL to base64 data URI
 // and bypass browser cross-origin CORS restrictions during high-res canvas exports.

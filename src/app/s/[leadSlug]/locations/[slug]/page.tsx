@@ -1,3 +1,4 @@
+export const runtime = "edge";
 import { redirect } from "next/navigation";
 
 // Legacy Cartesian service-area URLs are consolidated into the real service
