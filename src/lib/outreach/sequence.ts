@@ -57,20 +57,23 @@ export const OUTREACH_SEQUENCE: OutreachStage[] = [
     label: "Value Drop Gift",
     purpose: "Rebuilt concept and speed audit, no charge",
     dueAfterHours: 0,
-    subject: (ctx) => `I rebuilt your homepage, ${ctx.businessName} — free, have a look`,
+    subject: (ctx) => `${ctx.businessName} homepage rebuild (no charge)`,
     body: (ctx) =>
       [
         `Hi,`,
         ``,
-        `I rebuilt the ${ctx.businessName} homepage as a working page rather than a mockup. It is live here, nothing to sign up for:`,
+        `We analysed ${ctx.businessName} and noticed a few mobile speed bottlenecks costing you local customer calls.
+We went ahead and rebuilt a clean, high-speed homepage concept for ${ctx.businessName} (no charge).
+
+Your concept is ready to review below:`,
         ``,
         ctx.previewUrl,
         ``,
         ctx.headlineFinding
-          ? `I also ran a speed and local-search check while I was there. The one thing worth knowing: ${ctx.headlineFinding}`
-          : `I also ran a speed and local-search check on the current site, and I can send that over if it is useful.`,
+          ? `You will find a full breakdown of what is slowing down your current site and costing you local visibility inside the portal.`
+          : `You will find a full breakdown of what is slowing down your current site and costing you local visibility inside the portal.`,
         ``,
-        `It is yours either way — I would rather you have it than not. If it is not for you, ignore this and nothing else happens.`,
+        `It is yours to explore, no strings attached.`,
       ].join("\n") + footer(ctx),
   },
   {
@@ -124,20 +127,23 @@ export const INBOUND_SEQUENCE: OutreachStage[] = [
     label: "Initial Delivery",
     purpose: "Their requested 48h rebuild is ready",
     dueAfterHours: 0,
-    subject: (ctx) => `Your ${ctx.businessName} rebuild is ready`,
+    subject: (ctx) => `${ctx.businessName} homepage rebuild (no charge)`,
     body: (ctx) =>
       [
         `Hi,`,
         ``,
-        `The rebuild you asked for is done. It is a working page, not a mockup:`,
+        `We analysed ${ctx.businessName} and noticed a few mobile speed bottlenecks costing you local customer calls.
+We went ahead and rebuilt a clean, high-speed homepage concept for ${ctx.businessName} (no charge).
+
+Your concept is ready to review below:`,
         ``,
         ctx.previewUrl,
         ``,
         ctx.headlineFinding
-          ? `One thing worth flagging from the audit: ${ctx.headlineFinding}`
-          : `Have a click through it — every link, form and phone button works.`,
+          ? `You will find a full breakdown of what is slowing down your current site and costing you local visibility inside the portal.`
+          : `You will find a full breakdown of what is slowing down your current site and costing you local visibility inside the portal.`,
         ``,
-        `Tell me what you want changed and I will change it. It is yours to keep either way.`,
+        `It is yours to explore, no strings attached.`,
       ].join("\n") + footer(ctx, "inbound"),
   },
   {
