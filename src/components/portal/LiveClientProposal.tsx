@@ -188,30 +188,7 @@ export function LiveClientProposal({
           showcaseLabel={lead.showcase_label}
         />
 
-        {/* 3D Website Redesign Showcase Mockup */}
-        <section className="flex flex-col items-center space-y-6">
-          <div className="text-center max-w-xl space-y-1">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#533afd]">
-              High-Converting Modern Redesign
-            </span>
-            <h3 className="text-2xl sm:text-3xl font-bold text-[#0d1738]">
-              Your Brand, Elevated to Category Leader
-            </h3>
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              A bespoke, lightning-fast digital storefront engineered to convert local search visitors into qualified phone calls and bookings.
-            </p>
-          </div>
-
-          <div className="w-full flex justify-center py-2">
-            <SocialLaunchMockup
-              data={mockupData}
-              showControls={false}
-              className="w-full max-w-[620px]"
-            />
-          </div>
-        </section>
-
-        {/* Brand Identity & Visual DNA audit extracted from lead */}
+        {/* Brand Identity & Visual DNA audit (with integrated 3D mockup) */}
         <ReportBrandIdentity
           businessName={businessName}
           branding={(facts.branding as any) ?? null}
@@ -223,6 +200,13 @@ export function LiveClientProposal({
           areas={payload.areas.map((a) => a.h2)}
           painPoints={lead.pain_points}
           speedScore={report.audit?.speedScore ?? (typeof scrapeResults?.pagespeed_mobile?.score === "number" ? scrapeResults.pagespeed_mobile.score : null)}
+          mockupNode={
+            <SocialLaunchMockup
+              data={mockupData}
+              showControls={false}
+              className="w-full"
+            />
+          }
         />
 
         {/* Modules render only when there is measured data behind them AND
