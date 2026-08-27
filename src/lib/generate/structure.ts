@@ -72,6 +72,8 @@ function parseSections(raw: string, batch: PlannedSection[]): GeneratedSection[]
       const sectionMatch = cleaned.match(/<section\b[\s\S]*?<\/section>/i);
       if (sectionMatch) {
         html = sectionMatch[0].trim();
+      } else {
+        html = cleaned; // Try using the whole raw output if it doesn't even contain proper section tags
       }
     }
 
@@ -84,28 +86,51 @@ function parseSections(raw: string, batch: PlannedSection[]): GeneratedSection[]
       console.warn(`[parseSections] Failed: No HTML found for section ${section.id}`);
       return null;
     }
-    if (rootId !== section.id) {
+
+    // Loosen strict ID checking to prevent random model failures on Gemini
+    if (rootId !== section.id && batch.length !== 1) {
       console.warn(`[parseSections] Failed: rootId '${rootId}' !== '${section.id}'`);
       return null;
+    } else if (rootId !== section.id && batch.length === 1) {
+      console.warn(`[parseSections] Warning: Fixing mismatched rootId for single batch item from '${rootId}' to '${section.id}'`);
+      html = html.replace(/<section\b([^>]*)id=["'][^"']*["']/i, `<section$1id="${section.id}"`);
+      // If it lacked an id entirely, add it
+      if (!html.match(/<section\b[^>]*\bid=["']/i)) {
+        html = html.replace(/<section\b/i, `<section id="${section.id}"`);
+      }
     }
-    if (html.replace(/<[^>]+>/g, " ").trim().length < 80) {
+
+    if (html.replace(/<[^>]+>/g, " ").trim().length < 50) { // lowered from 80
       console.warn(`[parseSections] Failed: HTML too short for section ${section.id}`);
       return null;
     }
-    if (!compositionClass) {
+    let resolvedCompositionClass = compositionClass;
+
+    if (!compositionClass && batch.length !== 1) {
       console.warn(`[parseSections] Failed: No composition class for section ${section.id}`);
       return null;
+    } else if (!compositionClass && batch.length === 1) {
+      console.warn(`[parseSections] Warning: Auto-injecting missing composition class for single batch item`);
+      html = html.replace(/<section\b([^>]*)class=["']([^"']*)["']/i, `<section$1class="$2 site-${section.id}-generated"`);
+      // If it lacked a class entirely, add it
+      if (!html.match(/<section\b[^>]*\bclass=["']/i)) {
+        html = html.replace(/<section\b/i, `<section class="site-section site-${section.id}-generated"`);
+      }
+      resolvedCompositionClass = `site-${section.id}-generated`;
     }
-    if (compositionClass === "descriptive-section-class") {
+
+    if (resolvedCompositionClass === "descriptive-section-class") {
       console.warn(`[parseSections] Failed: Used literal 'descriptive-section-class' for section ${section.id}`);
       return null;
     }
-    if (compositionClasses.has(compositionClass)) {
-      console.warn(`[parseSections] Failed: Duplicate composition class '${compositionClass}' for section ${section.id}`);
+    if (resolvedCompositionClass && compositionClasses.has(resolvedCompositionClass)) {
+      console.warn(`[parseSections] Failed: Duplicate composition class '${resolvedCompositionClass}' for section ${section.id}`);
       return null;
     }
 
-    compositionClasses.add(compositionClass);
+    if (resolvedCompositionClass) {
+      compositionClasses.add(resolvedCompositionClass);
+    }
     generated.push({ id: section.id, kind: section.kind, label: section.label, html });
   }
   return generated;
