@@ -108,13 +108,38 @@ export function ProposalPricingSection({
                   type="button"
                   aria-pressed={selected}
                   onClick={() => onSelectOffer(offer.id)}
-                  className={`relative rounded-xl border p-4 text-left transition hover:-translate-y-0.5 hover:border-[#533afd] ${selected ? "border-[#533afd] bg-[#f0f3ff] shadow-sm ring-2 ring-[#533afd]/15" : "border-[#e5e7f2] bg-[#f9f9ff]"}`}
+                  className={`group relative flex flex-col rounded-2xl border p-6 text-left transition hover:-translate-y-1 hover:shadow-lg ${selected ? "border-[#533afd] bg-[#fcfcff] shadow-md ring-1 ring-[#533afd]" : "border-[#e5e7f2] bg-white hover:border-[#b4bbf2]"}`}
                 >
-                  {recommended && <span className="absolute -top-2.5 left-3 rounded-full bg-[#533afd] px-2.5 py-1 text-[10px] font-bold text-white">Recommended</span>}
-                  <h3 className="text-sm font-bold text-[#0d1738]">{offer.label}</h3>
-                  <p className="mt-2 text-xl font-black text-[#533afd]">${offer.setupPrice}{offer.monthlyPrice > 0 ? <span className="text-xs font-bold text-[#42506a]"> + ${offer.monthlyPrice}/mo</span> : <span className="text-xs font-bold text-[#42506a]"> one time</span>}</p>
-                  <p className="mt-2 text-xs leading-relaxed text-[#42506a]">{offer.description} Includes: {included.join("; ")}</p>
-                  <span className={`mt-3 inline-block text-[10px] font-bold ${selected ? "text-[#533afd]" : "text-[#777588]"}`}>{selected ? "Selected plan" : "Select this plan"}</span>
+                  {recommended && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#c0f282] px-3 py-1 text-[9px] font-black uppercase tracking-widest text-[#1e3b0e]">Recommended</span>}
+                  <h3 className="text-lg font-display font-medium text-[#0d1738]">{offer.label}</h3>
+                  <p className="mt-2 text-xs text-[#5b6270] leading-snug min-h-[36px]">{offer.description}</p>
+                  
+                  <div className="mt-4 mb-5 border-b border-[#e5e7f2] pb-5">
+                    <p className="text-4xl font-display font-medium text-[#0d1738]">
+                      ${offer.setupPrice}<span className="text-base font-normal text-[#5b6270]">{offer.monthlyPrice > 0 ? ` + ${offer.monthlyPrice}/mo` : ""}</span>
+                    </p>
+                  </div>
+                  
+                  <ul className="space-y-3 mb-6">
+                    {included.map((item, i) => {
+                      // Bold the first few words up to the first space or specific keywords for scanability if we want, or just leave as is.
+                      // For now, render cleanly like Wix
+                      return (
+                        <li key={i} className="flex items-start text-xs text-[#42506a] leading-tight">
+                          <svg className="w-3.5 h-3.5 mr-2.5 mt-0.5 text-[#533afd] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="flex-1">{item}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  
+                  <div className={`mt-auto pt-4 flex justify-center`}>
+                    <div className={`w-full text-center py-2.5 rounded-full text-xs font-bold transition ${selected ? "bg-[#533afd] text-white" : "bg-white border border-[#e5e7f2] text-[#0d1738] group-hover:border-[#533afd] group-hover:text-[#533afd]"}`}>
+                      {selected ? "Selected plan" : "Select this plan"}
+                    </div>
+                  </div>
                 </button>
               );
             })}
