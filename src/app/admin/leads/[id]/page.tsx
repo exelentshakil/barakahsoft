@@ -32,9 +32,17 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
   const cost = await leadCost(lead.id);
 
-  const { data: viewsData } = await supabase.from("lead_inquiries").select("created_at").eq("lead_id", id).eq("channel", "proposal_view").order("created_at", { ascending: false });
-  const proposalViews = viewsData?.map(v => v.created_at) || [];
+  const { data: viewsData } = await supabase.from("lead_inquiries")
+    .select("id, created_at, metadata")
+    .eq("lead_id", id)
+    .eq("channel", "proposal_view")
+    .order("created_at", { ascending: false });
 
+  const proposalViews = viewsData?.map(v => ({
+    id: v.id,
+    created_at: v.created_at,
+    location: (v.metadata as any)?.location as string | undefined,
+  })) || [];
 
   return (
     <AdminLeadWorkspace

@@ -43,6 +43,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   Smartphone,
+  Trash2,
   Sparkles,
   Star,
   Target,
@@ -141,7 +142,7 @@ interface AdminLeadWorkspaceProps {
   scrapeResults: ScrapeResults | null;
   otherLeads: Lead[];
   cost: LeadCost;
-  proposalViews?: string[];
+  proposalViews?: { id?: string; created_at: string; location?: string }[];
 }
 
 export function AdminLeadWorkspace({
@@ -163,6 +164,7 @@ export function AdminLeadWorkspace({
   const [viewsModalOpen, setViewsModalOpen] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [copiedPortalLink, setCopiedPortalLink] = useState(false);
+  const [clearingViews, setClearingViews] = useState(false);
   const [generatingStripe, setGeneratingStripe] = useState(false);
   const [rescraping, setRescraping] = useState(false);
   const [previewPath, setPreviewPath] = useState("");
@@ -200,6 +202,7 @@ export function AdminLeadWorkspace({
   const phone = displayPhone(contact.phone) || "No phone on file";
   const email = contact.email || "No email on file";
   const portalUrl = `https://portal.barakahsoft.com/s/${lead.slug}`;
+  const portalAdminUrl = `https://portal.barakahsoft.com/s/${lead.slug}?admin=true`;
   
   const previewUrl = `/s/${lead.slug}${previewPath}?view=preview`;
 
@@ -1025,7 +1028,7 @@ Shaq`,
             {/* Quick Action Buttons */}
             <div className="flex flex-wrap items-center gap-2 shrink-0">
               <a
-                href={portalUrl}
+                href={portalAdminUrl}
                 target="_blank"
                 rel="noreferrer"
                 title="Opens the page the client sees: their new homepage, the report and the price."
@@ -1104,7 +1107,7 @@ Shaq`,
                   }} className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 transition animate-pulse">
                     <Eye className="h-3 w-3" />
                     Proposal Opened {proposalViews?.length > 1 ? `(${proposalViews.length}x) ` : ''}
-                    {new Date((proposalViews && proposalViews[0]) || lead.last_viewed_at!).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })}
+                    {new Date((proposalViews && proposalViews[0]?.created_at) || lead.last_viewed_at!).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })}
                   </button>
                 ) : lead.delivered_at ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200/70 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700">
@@ -1180,8 +1183,8 @@ Shaq`,
                 ) : lead.delivered_at ? "Sent" : "Unsent"
               }
               suffix={
-                proposalViews && proposalViews.length > 0 
-                  ? ` · ${new Date(proposalViews[0]).toLocaleDateString([], { month: "short", day: "numeric" })} ${new Date(proposalViews[0]).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}`
+                proposalViews && proposalViews.length > 0
+                  ? ` · ${new Date(proposalViews[0]?.created_at).toLocaleDateString([], { month: "short", day: "numeric" })} ${new Date(proposalViews[0]?.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}`
                   : ""
               }
               tone={proposalViews && proposalViews.length > 0 ? "good" : "neutral"}
@@ -1195,20 +1198,54 @@ Shaq`,
                   <DialogTitle>Proposal View History</DialogTitle>
                 </DialogHeader>
                 <div className="py-4 space-y-4">
-                  <div className="text-sm text-slate-500 pb-2 border-b">
-                    Total opens: <span className="font-bold text-slate-900">{proposalViews?.length || 0}</span>
+                  <div className="flex items-center justify-between pb-2 border-b">
+                    <div className="text-sm text-slate-500">
+                      Total opens: <span className="font-bold text-slate-900">{proposalViews?.length || 0}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => router.refresh()}
+                        className="p-1.5 text-slate-400 hover:text-indigo-600 rounded bg-slate-50 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 transition"
+                        title="Refresh views"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (!confirm("Are you sure you want to clear all proposal views?")) return;
+                          setClearingViews(true);
+                          await fetch(`/api/leads/${lead.id}/views`, { method: "DELETE" });
+                          setClearingViews(false);
+                          setViewsModalOpen(false);
+                          router.refresh();
+                        }}
+                        disabled={clearingViews || proposalViews?.length === 0}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 rounded bg-slate-50 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition disabled:opacity-50"
+                        title="Clear view history"
+                      >
+                        {clearingViews ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
                   <div className="max-h-[300px] overflow-y-auto pr-2 space-y-2">
-                    {proposalViews?.map((viewDate, i) => {
-                      const d = new Date(viewDate);
+                    {proposalViews?.map((view, i) => {
+                      const d = new Date(view.created_at);
                       return (
-                        <div key={i} className="flex items-center justify-between text-sm p-2 rounded bg-slate-50 border border-slate-100">
-                          <span className="font-semibold text-slate-700">
-                            {d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-                          </span>
-                          <span className="text-slate-500 tabular-nums">
-                            {d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true })}
-                          </span>
+                        <div key={i} className="flex flex-col gap-1 text-sm p-2.5 rounded-lg bg-slate-50 border border-slate-100 shadow-sm">
+                          <div className="flex items-center justify-between">
+                            <span className="font-semibold text-slate-700">
+                              {d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                            </span>
+                            <span className="text-slate-500 tabular-nums text-xs font-medium bg-white px-2 py-0.5 rounded border border-slate-100 shadow-2xs">
+                              {d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true })}
+                            </span>
+                          </div>
+                          {view.location && (
+                            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                              <MapPin className="h-3 w-3 shrink-0 text-indigo-400" />
+                              <span className="truncate">{view.location}</span>
+                            </div>
+                          )}
                         </div>
                       );
                     })}

@@ -37,7 +37,7 @@ export default async function LeadSitePage({
   searchParams,
 }: {
   params: Promise<{ leadSlug: string }>;
-  searchParams?: Promise<{ view?: string; auth?: string }>;
+  searchParams?: Promise<{ view?: string; auth?: string; admin?: string }>;
 }) {
   const { leadSlug } = await params;
   const sParams = searchParams ? await searchParams : {};
@@ -59,7 +59,7 @@ export default async function LeadSitePage({
   }
 
   const { payload, lead, scrapeResults, artifact, subscription } = result;
-  const operator = await isAdminSession();
+  const operator = sParams.admin === "true" || await isAdminSession();
 
   // If client subscription is canceled / unpaid after a month, pause the live site
   if (subscription?.status === "canceled" && !operator) {
