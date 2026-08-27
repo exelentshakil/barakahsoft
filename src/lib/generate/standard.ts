@@ -128,6 +128,13 @@ Before writing HTML, decide the page silhouette from top to bottom. Give every s
 - FOCAL: one image-led, dark, primary-colour or typographic moment that resets attention.
 - RESOLUTION: the closing CTA visually answers the opening hero.
 
+PREMIUM FINISHING TOUCHES (The "$20,000 Agency Feel"):
+- Ambient Whitespace Filling: Do not leave large empty voids. Use soft, ambient background light glows (ultra-low opacity radial gradients between 2% and 5%) to give quiet sections subtle depth.
+- High-End Visual Anchors: Embed subtle, minimalist SVG geometric lines or abstract wave accents behind text blurbs to serve as premium visual anchors.
+- Layered Media: Intersect or frame photos intentionally. Overlap images slightly with adjoining layout blocks or stat cards to break rigid grid lines.
+- Content Hierarchy: Structure text with a clear visual hierarchy. Every major section MUST feature a tiny, uppercase, bold category label over a powerful short headline, followed by a crisp 1-2 sentence description.
+- Typography: Use premium typography pairs (e.g., an elegant, sharp serif for headers and a high-readability geometric sans-serif for blurbs).
+
 COLOUR CADENCE. Plan a sequence such as quiet → quiet → focal → reset → structural → focal → quiet. Do not mechanically alternate light/dark bands. Adjacent sections may share a ground when their composition changes, and a strong colour may carry a complete section when contrast is correct. The brand colour should recur as a controlled visual thread in rules, labels, metric bands, caption blocks or graphic shapes.
 
 VARIETY WITH UNITY. No two consecutive sections may use the same skeleton. Intentionally rotate among full-bleed image, editorial split, asymmetric bento, numbered rows, horizontal proof band, framed gallery, text-led manifesto, process diagram, location field and accordion. Keep one shared grid, radius language, type system and graphic primitive so variety never becomes fragmentation.
