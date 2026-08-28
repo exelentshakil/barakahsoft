@@ -64,7 +64,7 @@ This page was designed by someone who described their intent as:
 
 Your job is to make it look like an expensive agency built it. Not decorated — designed as one cohesive canvas. Execute the stated colour cadence, composition changes, recurring graphic primitive, confident spacing, real type scale and controlled contrast.
 
-═══ THE TOKENS — already defined on the page root. Use var() and never a literal colour ═══
+═══ THE TOKENS — already defined on the page root. Use var() and NEVER a literal colour. No #hex, no rgba(). The release check will fail if you use literal colours. ═══
 ${tokenList}
 
 ${COLOUR_STANDARD}
@@ -146,7 +146,7 @@ LAYOUT & MASTER SECTIONS
 - Every .site-cta has white-space: nowrap, flex-shrink: 0 and a minimum height of 44px. CTA groups wrap as whole buttons on narrow screens; individual labels never collapse into one word per line.
 - [data-review-track] is a horizontal overflow track with scroll-snap and touch scrolling.
 - ICON BADGES & FLOATING TRUST ELEMENTS:
-  * .site-icon-badge / .site-step-badge / .site-feature-icon: style as soothing vector badge containers (display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; border-radius: var(--bs-radius-md, 0.75rem); background: var(--bs-surface-alt); border: 1px solid var(--bs-border-color); color: var(--bs-primary-on-surface); flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.04);).
+  * .site-icon-badge / .site-step-badge / .site-feature-icon: style as soothing vector badge containers (display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; border-radius: var(--bs-radius-md, 0.75rem); background: var(--bs-surface-alt); border: 1px solid var(--bs-border-color); color: var(--bs-primary-on-surface); flex-shrink: 0; box-shadow: var(--bs-shadow-card);).
   * .site-floating-badge: position: absolute; border-radius: 9999px; background: var(--bs-surface); border: 2px solid var(--bs-primary); box-shadow: var(--bs-shadow-lift); text-align: center; z-index: 10;
   * strong: font-weight: 700; color: var(--bs-ink); (ensures bold lead keyword anchors pop out clearly for visual scanning). Review cards visibly prioritise rating, quote and attribution in that order; do not leave an unexplained empty rail beside quotes.
 
@@ -194,7 +194,7 @@ The application sets a data-state attribute on the form as it submits, so:
 - [data-lead-form][data-state="error"] — keep the fields visible so the visitor
   can retry, and show [data-lead-form-message] in a warning tone.
 - [data-lead-form-message] is empty until there is something to say, so give it
-  no height or spacing when it is empty (:empty).
+  no height or spacing when it is empty (:empty). When styling its filled state with a background like --bs-surface-alt, use its paired readable text color (e.g. --bs-ink). Never use a fill color like --bs-on-primary for text on a surface background.
 
 WHAT MAKES IT LOOK EXPENSIVE
 - Consistency. The same radius, the same shadow, the same spacing step throughout.

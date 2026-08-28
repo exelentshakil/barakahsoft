@@ -176,6 +176,7 @@ ${JSON.stringify(batch, null, 2)}
 - Every repetition of the primary action uses the exact text "${brief.intent.primaryLabel}" and classes "site-cta site-cta--primary". Do not invent another primary button class, colour or label.
 - Secondary actions use "site-cta site-cta--secondary" and remain visually subordinate.
 - Shared components keep shared classes across sections. Use descriptive block__element classes only for section-specific composition.
+- ABSOLUTELY NO LITERAL COLOURS IN HTML. Do not use inline styles with colours, and do not use arbitrary value utility classes (e.g. text-[#333]). Leave all colour decisions to the external stylesheet.
 - Keep generous whitespace and clear separation between content groups. Do not fill empty space with extra cards, badges or copy.
 - EVERY service card/section and areas list must include an accompanying image mapped from the AVAILABLE IMAGES list to make them look premium and expensive.
 - Each service in the services menu must use a distinct, semantic icon (no repeated generic checkmarks/circles).
