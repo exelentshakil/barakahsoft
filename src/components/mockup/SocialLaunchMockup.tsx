@@ -434,7 +434,7 @@ export function SocialLaunchMockup({
     </div>
   );
 
-  const renderScreenContent = (customScale = screenScale) => {
+  const renderScreenContent = (customScale = screenScale, isExport = false) => {
     if (data.heroCaptureUrl) {
       return (
         <div className="relative w-full h-full overflow-hidden bg-slate-950">
@@ -450,7 +450,7 @@ export function SocialLaunchMockup({
       );
     }
 
-    if (data.previewUrl) {
+    if (data.previewUrl && !isExport) {
       return (
         <div className="relative w-full h-full overflow-hidden bg-white">
           <iframe
@@ -543,7 +543,7 @@ export function SocialLaunchMockup({
       <div
         className={`absolute ${rightClass} ${topClass} ${widthClass} rounded-2xl bg-white shadow-2xl border border-slate-200/90 overflow-hidden transition-transform duration-500 z-0 select-none pointer-events-none`}
         style={{
-          transform: "rotateY(-8deg) rotateX(5deg) rotateZ(-1.5deg) translateZ(-42px)",
+          transform: "rotateY(-8deg) rotateX(5deg) rotateZ(-1.5deg)",
           boxShadow: "0 35px 85px -15px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255,255,255,0.35)",
         }}
       >
@@ -721,6 +721,7 @@ export function SocialLaunchMockup({
     customScreenRef = screenRef,
     customScale = screenScale,
     containerClass = "w-[92%] max-w-[465px]",
+    isExport = false,
     opts?: {
       cardTop?: string;
       cardRight?: string;
@@ -756,7 +757,7 @@ export function SocialLaunchMockup({
             ref={customScreenRef}
             className="relative aspect-[16/10] w-full rounded-lg bg-[#0e1626] overflow-hidden shadow-inner border border-black/90 flex flex-col"
           >
-            {renderScreenContent(customScale)}
+            {renderScreenContent(customScale, isExport)}
           </div>
         </div>
 
@@ -764,7 +765,7 @@ export function SocialLaunchMockup({
         <div
           className="relative h-4 sm:h-5 w-[106%] -left-[3%] rounded-b-2xl bg-gradient-to-b from-[#f1f5f9] via-[#cbd5e1] to-[#94a3b8] shadow-2xl border-t border-white/95 flex items-center justify-between px-3 z-30"
           style={{
-            transform: "rotateX(52deg) translateZ(-4px)",
+            transform: "rotateX(52deg)",
             boxShadow: "0 20px 40px rgba(0,0,0,0.6), 0 2px 4px rgba(255,255,255,0.8) inset",
           }}
         >
@@ -862,11 +863,11 @@ export function SocialLaunchMockup({
     </div>
   );
 
-  const render3DMacBook = (customScreenRef = screenRef, customScale = screenScale) => (
+  const render3DMacBook = (customScreenRef = screenRef, customScale = screenScale, isExport = false) => (
     <div
       className="relative z-20 w-[92%] max-w-[475px] transition-transform duration-500"
       style={{
-        transform: "rotateY(-16deg) rotateX(12deg) rotateZ(2deg) translateY(10px) translateZ(32px)",
+        transform: "rotateY(-16deg) rotateX(12deg) rotateZ(2deg) translateY(10px)",
         transformStyle: "preserve-3d",
       }}
     >
@@ -882,7 +883,7 @@ export function SocialLaunchMockup({
           ref={customScreenRef}
           className="relative aspect-[16/10] w-full rounded-lg bg-[#0e1626] overflow-hidden shadow-inner border border-black/90 flex flex-col"
         >
-          {renderScreenContent(customScale)}
+          {renderScreenContent(customScale, isExport)}
         </div>
       </div>
 
@@ -890,7 +891,7 @@ export function SocialLaunchMockup({
       <div
         className="relative h-4 sm:h-5 w-[108%] -left-[4%] rounded-b-2xl bg-gradient-to-b from-[#e8ecf2] via-[#ced3dc] to-[#a2a8b4] shadow-2xl border-t border-white/95 flex items-center justify-between px-3"
         style={{
-          transform: "rotateX(56deg) translateZ(-4px)",
+          transform: "rotateX(56deg)",
           boxShadow: "0 24px 50px rgba(0,0,0,0.55), 0 2px 4px rgba(255,255,255,0.7) inset",
         }}
       >
@@ -951,9 +952,9 @@ export function SocialLaunchMockup({
               textShadow: "0 2px 0 rgba(255,255,255,0.35), 0 6px 16px rgba(0, 0, 0, 0.75), 0 16px 36px rgba(0, 0, 0, 0.55)",
             }}
           >
-            <span className="block drop-shadow-md">{activeHeadline.line1}</span>
+            <span className="block">{activeHeadline.line1}</span>
             <span
-              className="block drop-shadow-md"
+              className="block"
               style={{
                 color: headlineMode === "launched" ? "#ffffff" : isLightPrimary ? primaryColor : "#ffffff",
                 textShadow:
@@ -981,7 +982,7 @@ export function SocialLaunchMockup({
           />
 
           {stageMode === "rock" ? (
-            renderRockPedestalShowcase('preview', screenRef, screenScale, "w-[92%] max-w-[465px]", {
+            renderRockPedestalShowcase('preview', screenRef, screenScale, "w-[92%] max-w-[465px]", false, {
               cardTop: "-top-12 sm:-top-16",
               cardRight: "-right-1 sm:-right-2",
               macTranslateY: "translateY(12px)",
@@ -1029,9 +1030,9 @@ export function SocialLaunchMockup({
                 textShadow: "0 3px 0 rgba(255,255,255,0.35), 0 8px 24px rgba(0, 0, 0, 0.75), 0 20px 48px rgba(0, 0, 0, 0.55)",
               }}
             >
-              <span className="block drop-shadow-md">{activeHeadline.line1}</span>
+              <span className="block">{activeHeadline.line1}</span>
               <span
-                className="block drop-shadow-md"
+                className="block"
                 style={{
                   color: headlineMode === "launched" ? "#ffffff" : isLightPrimary ? primaryColor : "#ffffff",
                   textShadow:
@@ -1048,7 +1049,7 @@ export function SocialLaunchMockup({
           {/* 3D Stage in Feed HQ */}
           <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1800px] mt-4 translate-y-12">
             {stageMode === "rock" ? (
-              renderRockPedestalShowcase('feed', feedScreenRef, 0.65, "w-[840px]", {
+              renderRockPedestalShowcase('feed', feedScreenRef, 0.65, "w-[840px]", true, {
                 cardTop: "-top-16",
                 cardRight: "-right-4",
                 macTranslateY: "translateY(16px)",
@@ -1057,7 +1058,7 @@ export function SocialLaunchMockup({
               <>
                 <div className="absolute bottom-4 left-12 right-12 h-24 bg-slate-950/70 blur-3xl rounded-full transform scale-x-115 -rotate-2" />
                 {renderFloatingAboutCard({ topOffset: "-top-16", rightOffset: "-right-4", widthClass: "w-[84%] max-w-[700px]" })}
-                {render3DMacBook(feedScreenRef, 0.65)}
+                {render3DMacBook(feedScreenRef, 0.65, true)}
               </>
             )}
           </div>
@@ -1108,7 +1109,7 @@ export function SocialLaunchMockup({
           {/* 3D Stage in Landscape - Perfectly scaled to 500px width so Mac and Card never touch the top headline */}
           <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1800px] mt-1">
             {stageMode === "rock" ? (
-              renderRockPedestalShowcase('landscape', landscapeScreenRef, 0.38, "w-[500px]", {
+              renderRockPedestalShowcase('landscape', landscapeScreenRef, 0.38, "w-[500px]", true, {
                 cardTop: "-top-8",
                 cardRight: "-right-2",
                 macTranslateY: "translateY(16px)",
@@ -1117,7 +1118,7 @@ export function SocialLaunchMockup({
               <>
                 <div className="absolute bottom-2 left-8 right-8 h-14 bg-slate-950/70 blur-2xl rounded-full transform scale-x-115 -rotate-2" />
                 {renderFloatingAboutCard({ topOffset: "-top-8", rightOffset: "-right-2", widthClass: "w-[80%] max-w-[360px]" })}
-                {render3DMacBook(landscapeScreenRef, 0.38)}
+                {render3DMacBook(landscapeScreenRef, 0.38, true)}
               </>
             )}
           </div>
@@ -1162,7 +1163,7 @@ export function SocialLaunchMockup({
           {/* 3D Stage */}
           <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1600px] mt-4 translate-y-12">
             {stageMode === "rock" ? (
-              renderRockPedestalShowcase('story', storyScreenRef, 0.45, "w-[92%] max-w-[460px]", {
+              renderRockPedestalShowcase('story', storyScreenRef, 0.45, "w-[92%] max-w-[460px]", true, {
                 cardTop: "-top-12",
                 cardRight: "-right-2",
                 macTranslateY: "translateY(12px)",
@@ -1170,7 +1171,7 @@ export function SocialLaunchMockup({
             ) : (
               <>
                 {renderFloatingAboutCard({ topOffset: "-top-12", rightOffset: "-right-2", widthClass: "w-[84%] max-w-[390px]" })}
-                {render3DMacBook(storyScreenRef, 0.45)}
+                {render3DMacBook(storyScreenRef, 0.45, true)}
               </>
             )}
           </div>
