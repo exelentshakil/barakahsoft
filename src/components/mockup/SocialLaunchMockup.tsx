@@ -538,6 +538,7 @@ export function SocialLaunchMockup({
     topOffset?: string;
     rightOffset?: string;
     widthClass?: string;
+    isExport?: boolean;
   }) => {
     const topClass = opts?.topOffset || "-top-12 sm:-top-16";
     const rightClass = opts?.rightOffset || "-right-1 sm:-right-2";
@@ -547,7 +548,7 @@ export function SocialLaunchMockup({
       <div
         className={`absolute ${rightClass} ${topClass} ${widthClass} rounded-2xl bg-white shadow-2xl border border-slate-200/90 overflow-hidden transition-transform duration-500 z-0 select-none pointer-events-none`}
         style={{
-          transform: "rotateY(-8deg) rotateX(5deg) rotateZ(-1.5deg) translateZ(-42px)",
+          transform: opts?.isExport ? "rotateY(-8deg) rotateX(5deg) rotateZ(-1.5deg)" : "rotateY(-8deg) rotateX(5deg) rotateZ(-1.5deg) translateZ(-42px)",
           boxShadow: "0 35px 85px -15px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255,255,255,0.35)",
         }}
       >
@@ -739,6 +740,7 @@ export function SocialLaunchMockup({
         topOffset: opts?.cardTop,
         rightOffset: opts?.cardRight,
         widthClass: opts?.widthClass,
+        isExport,
       })}
 
       {/* 1. 3D MacBook Pro in Foreground */}
@@ -769,7 +771,7 @@ export function SocialLaunchMockup({
         <div
           className="relative h-4 sm:h-5 w-[106%] -left-[3%] rounded-b-2xl bg-gradient-to-b from-[#f1f5f9] via-[#cbd5e1] to-[#94a3b8] shadow-2xl border-t border-white/95 flex items-center justify-between px-3 z-30"
           style={{
-            transform: "rotateX(52deg) translateZ(-4px)",
+            transform: isExport ? "rotateX(52deg)" : "rotateX(52deg) translateZ(-4px)",
             boxShadow: "0 20px 40px rgba(0,0,0,0.6), 0 2px 4px rgba(255,255,255,0.8) inset",
           }}
         >
@@ -871,7 +873,7 @@ export function SocialLaunchMockup({
     <div
       className="relative z-20 w-[92%] max-w-[475px] transition-transform duration-500"
       style={{
-        transform: "rotateY(-16deg) rotateX(12deg) rotateZ(2deg) translateY(10px) translateZ(32px)",
+        transform: isExport ? "rotateY(-16deg) rotateX(12deg) rotateZ(2deg) translateY(10px)" : "rotateY(-16deg) rotateX(12deg) rotateZ(2deg) translateY(10px) translateZ(32px)",
         transformStyle: "preserve-3d",
       }}
     >
@@ -895,7 +897,7 @@ export function SocialLaunchMockup({
       <div
         className="relative h-4 sm:h-5 w-[108%] -left-[4%] rounded-b-2xl bg-gradient-to-b from-[#e8ecf2] via-[#ced3dc] to-[#a2a8b4] shadow-2xl border-t border-white/95 flex items-center justify-between px-3"
         style={{
-          transform: "rotateX(56deg) translateZ(-4px)",
+          transform: isExport ? "rotateX(56deg)" : "rotateX(56deg) translateZ(-4px)",
           boxShadow: "0 24px 50px rgba(0,0,0,0.55), 0 2px 4px rgba(255,255,255,0.7) inset",
         }}
       >
@@ -1061,7 +1063,7 @@ export function SocialLaunchMockup({
             ) : (
               <>
                 <div className="absolute bottom-4 left-12 right-12 h-24 bg-slate-950/70 blur-3xl rounded-full transform scale-x-115 -rotate-2" />
-                {renderFloatingAboutCard({ topOffset: "-top-16", rightOffset: "-right-4", widthClass: "w-[84%] max-w-[700px]" })}
+                {renderFloatingAboutCard({ topOffset: "-top-16", rightOffset: "-right-4", widthClass: "w-[84%] max-w-[700px]", isExport: true })}
                 {render3DMacBook(feedScreenRef, 0.65, true)}
               </>
             )}
@@ -1121,7 +1123,7 @@ export function SocialLaunchMockup({
             ) : (
               <>
                 <div className="absolute bottom-2 left-8 right-8 h-14 bg-slate-950/70 blur-2xl rounded-full transform scale-x-115 -rotate-2" />
-                {renderFloatingAboutCard({ topOffset: "-top-8", rightOffset: "-right-2", widthClass: "w-[80%] max-w-[360px]" })}
+                {renderFloatingAboutCard({ topOffset: "-top-8", rightOffset: "-right-2", widthClass: "w-[80%] max-w-[360px]", isExport: true })}
                 {render3DMacBook(landscapeScreenRef, 0.38, true)}
               </>
             )}
@@ -1174,7 +1176,7 @@ export function SocialLaunchMockup({
               })
             ) : (
               <>
-                {renderFloatingAboutCard({ topOffset: "-top-12", rightOffset: "-right-2", widthClass: "w-[84%] max-w-[390px]" })}
+                {renderFloatingAboutCard({ topOffset: "-top-12", rightOffset: "-right-2", widthClass: "w-[84%] max-w-[390px]", isExport: true })}
                 {render3DMacBook(storyScreenRef, 0.45, true)}
               </>
             )}
