@@ -94,10 +94,6 @@ export function RedesignIntakeFlow() {
                <span>Free Lead-Machine Audit</span>
               <span>Step {step} of 2</span>
             </div>
-            <div className="mb-6 flex items-start gap-3 rounded-xl border border-[#c7d0fb] bg-[#f0f3ff] p-3 text-left">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#533afd] text-white"><Bot className="h-4 w-4" /></span>
-              <div className="text-xs leading-relaxed text-[#42506a]"><p className="font-bold text-[#0d1738]">BarakahSoft Lead Advisor</p><p>I&apos;ll use your answers to show where your current website is losing attention and where a better customer journey can create more calls.</p></div>
-            </div>
             {step === 1 ? (
               <form onSubmit={(event) => { event.preventDefault(); setStep(2); }}>
                 <DialogHeader>
@@ -106,13 +102,13 @@ export function RedesignIntakeFlow() {
                     Select everything that applies. We&apos;ll use this in the audit and redesign brief.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="mt-6 space-y-2 max-h-[30vh] overflow-y-auto pr-2">
+                <div className="mt-4 space-y-1.5 max-h-[40vh] overflow-y-auto pr-2">
                   {LEAD_PROBLEMS.map((problem) => (
                     <button
                       type="button"
                       key={problem}
                       onClick={() => toggle(problem)}
-                      className={`flex w-full items-center justify-between rounded-lg border p-4 text-left text-sm font-semibold transition ${
+                      className={`flex w-full items-center justify-between rounded-lg border p-3 text-left text-sm font-semibold transition ${
                         helpNeeded.includes(problem)
                           ? "border-[#533afd] bg-[#f0f3ff] text-[#0d1738]"
                           : "border-[#e5e7f2] bg-white text-[#42506a] hover:border-[#533afd]/50"
@@ -131,17 +127,7 @@ export function RedesignIntakeFlow() {
                     </button>
                   ))}
                 </div>
-                <div className="mt-4">
-                  <Label htmlFor="anything-else" className="text-xs font-bold text-[#0d1738]">Anything else? (optional)</Label>
-                  <Textarea
-                    id="anything-else"
-                    value={anythingElse}
-                    onChange={(event) => setAnythingElse(event.target.value)}
-                    placeholder="Tell us what is frustrating you about the current site."
-                    className="mt-1 border-[#e5e7f2] text-xs"
-                  />
-                </div>
-                <Button type="submit" className="mt-6 w-full rounded-md bg-[#533afd] py-3 text-sm font-bold text-white hover:bg-[#432bd9]">
+                <Button type="submit" className="mt-5 w-full rounded-md bg-[#533afd] py-3 text-sm font-bold text-white hover:bg-[#432bd9]">
                   Next: build my lead-machine plan <ArrowRight className="h-4 w-4" />
                 </Button>
               </form>
