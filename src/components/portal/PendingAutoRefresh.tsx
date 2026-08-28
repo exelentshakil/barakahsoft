@@ -18,7 +18,7 @@ export function PendingAutoRefresh({ intervalMs = 4000 }: { intervalMs?: number 
       }
     };
 
-    const timer = setInterval(refresh, intervalMs);
+    const timer = setTimeout(refresh, intervalMs);
 
     const onVisibilityChange = () => {
       if (!document.hidden) {
@@ -29,7 +29,7 @@ export function PendingAutoRefresh({ intervalMs = 4000 }: { intervalMs?: number 
     document.addEventListener("visibilitychange", onVisibilityChange);
 
     return () => {
-      clearInterval(timer);
+      clearTimeout(timer);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [router, intervalMs]);
