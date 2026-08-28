@@ -286,6 +286,7 @@ export function SocialLaunchMockup({
   const [headlineMode, setHeadlineMode] = useState<MockupHeadlineMode>(data.headlineMode || "launched");
   const [stageMode, setStageMode] = useState<MockupStageMode>(data.stageMode || "poster");
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const mockupRef = useRef<HTMLDivElement>(null);
   const landscapeRef = useRef<HTMLDivElement>(null);
@@ -373,21 +374,14 @@ export function SocialLaunchMockup({
     );
   }
 
-  async function downloadImage(format: "landscape" | "feed" | "story" | "transparent") {
-    setDownloading(format);
+  async function downloadImage() {
+    setDownloading("mockup");
+    setIsExporting(true);
     try {
-      let targetEl: HTMLElement | null = null;
+      // wait for React to re-render with isExporting=true to strip problematic 3D transforms for html-to-image
+      await new Promise(resolve => setTimeout(resolve, 100));
 
-      if (format === "landscape") {
-        targetEl = landscapeRef.current || mockupRef.current;
-      } else if (format === "feed") {
-        targetEl = feedRef.current || mockupRef.current;
-      } else if (format === "story") {
-        targetEl = storyRef.current;
-      } else if (format === "transparent") {
-        targetEl = transparentStageRef.current;
-      }
-
+      const targetEl = mockupRef.current;
       if (!targetEl) {
         throw new Error("Target export element not mounted.");
       }
@@ -396,8 +390,7 @@ export function SocialLaunchMockup({
 
       const dataUrl = await toPng(targetEl, {
         cacheBust: true,
-        pixelRatio: 2,
-        backgroundColor: format === "transparent" ? "transparent" : undefined,
+        pixelRatio: 3,
         filter: (node) => {
           if (node.tagName && node.tagName.toUpperCase() === "IFRAME") return false;
           return true;
@@ -405,7 +398,7 @@ export function SocialLaunchMockup({
       });
 
       const cleanName = businessShortName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      const filename = `${cleanName}-${format}-mockup.png`;
+      const filename = `${cleanName}-mockup-hq.png`;
 
       const link = document.createElement("a");
       link.download = filename;
@@ -414,6 +407,7 @@ export function SocialLaunchMockup({
     } catch (err) {
       console.error("Failed to download mockup:", err);
     } finally {
+      setIsExporting(false);
       setDownloading(null);
     }
   }
@@ -807,6 +801,15 @@ export function SocialLaunchMockup({
             </linearGradient>
 
             {/* Main Chiseled Front Face */}
+            {/* Rim Highlight */}
+            <linearGradient id={`rockRim-${idPrefix}`} x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.7)" />
+              <stop offset="30%" stopColor="rgba(255,255,255,0.3)" />
+              <stop offset="70%" stopColor="rgba(255,255,255,0.6)" />
+              <stop offset="100%" stopColor="rgba(255,255,255,0.15)" />
+            </linearGradient>
+
+            {/* Main Chiseled Front Face */}
             <linearGradient id={`faceCenter-${idPrefix}`} x1="40%" y1="0%" x2="50%" y2="100%">
               <stop offset="0%" stopColor="#243044" />
               <stop offset="60%" stopColor="#141c2c" />
@@ -848,7 +851,14 @@ export function SocialLaunchMockup({
           <polygon
             points="110,38 240,24 440,24 570,38 620,65 530,76 150,76 60,65"
             fill={`url(#rockPlateau-${idPrefix})`}
+            stroke={`url(#rockRim-${idPrefix})`}
+            strokeWidth="1.75"
           />
+
+          {/* Subtle Chiseled Ridge Lines */}
+          <path d="M 220,68 L 250,148" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M 460,68 L 440,148" stroke="rgba(0,0,0,0.5)" strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M 330,75 L 345,145" stroke="rgba(0,0,0,0.4)" strokeWidth="1.2" strokeLinecap="round" />
         </svg>
       </div>
     </div>
@@ -973,7 +983,7 @@ export function SocialLaunchMockup({
           />
 
           {stageMode === "rock" ? (
-            renderRockPedestalShowcase('preview', screenRef, screenScale, "w-[92%] max-w-[465px]", false, {
+            renderRockPedestalShowcase('preview', screenRef, screenScale, "w-[92%] max-w-[465px]", isExporting, {
               cardTop: "-top-12 sm:-top-16",
               cardRight: "-right-1 sm:-right-2",
               macTranslateY: "translateY(12px)",
@@ -983,197 +993,13 @@ export function SocialLaunchMockup({
               {/* Soft Ground Contact Shadow */}
               <div className="absolute bottom-1 sm:bottom-3 left-4 sm:left-8 right-4 sm:right-8 h-12 sm:h-16 bg-slate-950/70 blur-2xl rounded-full transform scale-x-115 -rotate-2" />
               {/* Layered Floating About Card Behind Laptop */}
-              {renderFloatingAboutCard({ topOffset: "-top-12 sm:-top-16", rightOffset: "-right-1 sm:-right-2" })}
+              {renderFloatingAboutCard({ topOffset: "-top-12 sm:-top-16", rightOffset: "-right-1 sm:-right-2", isExport: isExporting })}
               {/* 3D MacBook Pro in Foreground */}
-              {render3DMacBook()}
+              {render3DMacBook(screenRef, screenScale, isExporting)}
             </>
           )}
         </div>
       </div>
-      </div>
-
-      {/* Hidden 4:5 Feed HQ Container for Full-Bleed Social Feed Post Export (1080x1350) */}
-      <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden="true">
-        <div
-          ref={feedRef}
-          className={`w-[1080px] h-[1350px] bg-gradient-to-b ${theme.gradient} pt-12 pb-8 px-12 flex flex-col justify-between items-center relative overflow-hidden`}
-          style={{
-            borderRadius: "0px",
-          }}
-        >
-          {/* Background Watermark */}
-          {renderBackgroundWatermark()}
-
-          {/* Ambient Lighting */}
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[650px] rounded-full blur-3xl pointer-events-none opacity-40"
-            style={{
-              background: `radial-gradient(circle, ${activeSpotlight} 0%, transparent 70%)`,
-            }}
-          />
-
-          {/* Top Centered 2-Line Campaign Angle Typography */}
-          <div className="relative z-10 text-center pt-2 mb-2">
-            <h2
-              className="text-5xl font-black tracking-tight uppercase font-sans leading-[0.95] text-white"
-              style={{
-                letterSpacing: "0.03em",
-                textShadow: "0 3px 0 rgba(255,255,255,0.35), 0 8px 24px rgba(0, 0, 0, 0.75), 0 20px 48px rgba(0, 0, 0, 0.55)",
-              }}
-            >
-              <span className="block drop-shadow-md">{activeHeadline.line1}</span>
-              <span
-                className="block drop-shadow-md"
-                style={{
-                  color: headlineMode === "launched" ? "#ffffff" : isLightPrimary ? primaryColor : "#ffffff",
-                  textShadow:
-                    isLightPrimary && headlineMode !== "launched"
-                      ? `0 0 28px ${primaryColor}80, 0 8px 24px rgba(0, 0, 0, 0.75)`
-                      : undefined,
-                }}
-              >
-                {activeHeadline.line2}
-              </span>
-            </h2>
-          </div>
-
-          {/* 3D Stage in Feed HQ */}
-          <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1800px] mt-4 translate-y-12">
-            {stageMode === "rock" ? (
-              renderRockPedestalShowcase('feed', feedScreenRef, 0.65, "w-[840px]", true, {
-                cardTop: "-top-16",
-                cardRight: "-right-4",
-                macTranslateY: "translateY(16px)",
-              })
-            ) : (
-              <>
-                <div className="absolute bottom-4 left-12 right-12 h-24 bg-slate-950/70 blur-3xl rounded-full transform scale-x-115 -rotate-2" />
-                {renderFloatingAboutCard({ topOffset: "-top-16", rightOffset: "-right-4", widthClass: "w-[84%] max-w-[700px]", isExport: true })}
-                {render3DMacBook(feedScreenRef, 0.65, true)}
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Hidden 16:9 Landscape Container for Widescreen Presentation Export (1280x720) */}
-      <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden="true">
-        <div
-          ref={landscapeRef}
-          className={`w-[1280px] h-[720px] bg-gradient-to-b ${theme.gradient} pt-6 pb-4 px-8 flex flex-col justify-between items-center relative overflow-hidden`}
-          style={{
-            borderRadius: "0px",
-          }}
-        >
-          {/* Background Watermark */}
-          {renderBackgroundWatermark()}
-
-          {/* Ambient Lighting */}
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[480px] rounded-full blur-3xl pointer-events-none opacity-40"
-            style={{
-              background: `radial-gradient(circle, ${activeSpotlight} 0%, transparent 70%)`,
-            }}
-          />
-
-          {/* Centered Campaign Angle Headline in Landscape - Clean top placement with ample breathing room */}
-          <div className="text-center z-20 mt-1 mb-2 max-w-4xl">
-            <h2
-              className="text-3xl font-black tracking-tight uppercase font-sans leading-none text-white"
-              style={{
-                letterSpacing: "0.04em",
-                textShadow: "0 2px 0 rgba(255,255,255,0.35), 0 8px 24px rgba(0, 0, 0, 0.75)",
-              }}
-            >
-              <span className="inline-block text-white mr-3">{activeHeadline.line1}</span>
-              <span
-                className="inline-block"
-                style={{
-                  color: isLightPrimary ? primaryColor : "#ffffff",
-                }}
-              >
-                {activeHeadline.line2}
-              </span>
-            </h2>
-          </div>
-
-          {/* 3D Stage in Landscape - Perfectly scaled to 500px width so Mac and Card never touch the top headline */}
-          <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1800px] mt-1">
-            {stageMode === "rock" ? (
-              renderRockPedestalShowcase('landscape', landscapeScreenRef, 0.38, "w-[500px]", true, {
-                cardTop: "-top-8",
-                cardRight: "-right-2",
-                macTranslateY: "translateY(16px)",
-              })
-            ) : (
-              <>
-                <div className="absolute bottom-2 left-8 right-8 h-14 bg-slate-950/70 blur-2xl rounded-full transform scale-x-115 -rotate-2" />
-                {renderFloatingAboutCard({ topOffset: "-top-8", rightOffset: "-right-2", widthClass: "w-[80%] max-w-[360px]", isExport: true })}
-                {render3DMacBook(landscapeScreenRef, 0.38, true)}
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Hidden 9:16 Story Container for Story/Reel Export */}
-      <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden="true">
-        <div
-          ref={storyRef}
-          className={`w-[540px] h-[960px] bg-gradient-to-b ${theme.gradient} p-8 flex flex-col justify-between items-center relative overflow-hidden`}
-          style={{
-            borderRadius: "0px",
-          }}
-        >
-          {/* Background Watermark */}
-          {renderBackgroundWatermark()}
-
-          {/* Ambient Lighting */}
-          <div
-            className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[360px] rounded-full blur-3xl pointer-events-none opacity-35"
-            style={{
-              background: `radial-gradient(circle, ${activeSpotlight} 0%, transparent 70%)`,
-            }}
-          />
-
-          {/* Dynamic Top Header */}
-          <div className="relative z-20 w-full pt-8 text-center">
-            <h2
-              className="text-4xl font-black tracking-tight text-white uppercase font-sans leading-tight mt-4"
-              style={{
-                textShadow: "0 2px 0 rgba(255,255,255,0.35), 0 8px 24px rgba(0, 0, 0, 0.75)",
-              }}
-            >
-              <span className="block text-white">{activeHeadline.line1}</span>
-              <span className="block" style={{ color: isLightPrimary ? primaryColor : "#ffffff" }}>
-                {activeHeadline.line2}
-              </span>
-            </h2>
-          </div>
-
-          {/* 3D Stage */}
-          <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1600px] mt-4 translate-y-12">
-            {stageMode === "rock" ? (
-              renderRockPedestalShowcase('story', storyScreenRef, 0.45, "w-[92%] max-w-[460px]", true, {
-                cardTop: "-top-12",
-                cardRight: "-right-2",
-                macTranslateY: "translateY(12px)",
-              })
-            ) : (
-              <>
-                {renderFloatingAboutCard({ topOffset: "-top-12", rightOffset: "-right-2", widthClass: "w-[84%] max-w-[390px]", isExport: true })}
-                {render3DMacBook(storyScreenRef, 0.45, true)}
-              </>
-            )}
-          </div>
-
-          {/* Bottom Swipe Callout Card */}
-          <div className="relative z-10 w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 text-center mb-6">
-            <span className="block text-xs font-black uppercase text-white tracking-wider">
-              {businessShortName} · Tap to view live concept →
-            </span>
-          </div>
-        </div>
       </div>
 
       {/* Control Panel */}
@@ -1289,53 +1115,17 @@ export function SocialLaunchMockup({
           </div>
 
           {/* 4. Action Export Buttons */}
-          <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+          <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-end gap-2">
             <Button
               type="button"
-              variant="outline"
               size="sm"
               disabled={Boolean(downloading)}
-              onClick={() => downloadImage("transparent")}
-              className="gap-1.5 text-xs font-bold border-slate-200 text-slate-700 hover:bg-slate-50"
+              onClick={() => downloadImage()}
+              className="gap-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm px-6"
             >
-              <ImageIcon className="h-3.5 w-3.5 text-slate-500" />
-              {downloading === "transparent" ? "Exporting..." : "Transparent PNG"}
+              <Download className="h-3.5 w-3.5" />
+              {downloading ? "Exporting HQ..." : "Export HQ for Socials"}
             </Button>
-
-            <div className="flex items-center gap-1.5">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={Boolean(downloading)}
-                onClick={() => downloadImage("story")}
-                className="gap-1 text-xs font-bold border-slate-200 text-slate-700 hover:bg-slate-50"
-              >
-                <Download className="h-3.5 w-3.5 text-slate-500" />
-                {downloading === "story" ? "..." : "9:16 Story"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={Boolean(downloading)}
-                onClick={() => downloadImage("landscape")}
-                className="gap-1 text-xs font-bold border-slate-200 text-slate-700 hover:bg-slate-50"
-              >
-                <Download className="h-3.5 w-3.5 text-slate-500" />
-                {downloading === "landscape" ? "..." : "16:9 Landscape"}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                disabled={Boolean(downloading)}
-                onClick={() => downloadImage("feed")}
-                className="gap-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
-              >
-                <Download className="h-3.5 w-3.5" />
-                {downloading === "feed" ? "Exporting..." : "4:5 Feed HQ"}
-              </Button>
-            </div>
           </div>
         </div>
       )}
