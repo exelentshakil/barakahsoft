@@ -66,15 +66,7 @@ export function SocialMockupPanel({
     setSocialMotion(savedSocialMotion);
   }, [artifact]);
 
-  useEffect(() => {
-    if (!socialMotion || !["starting", "generating"].includes(socialMotion.status || "")) return;
-    const timer = setInterval(async () => {
-      const res = await fetch(`/api/leads/${lead.id}/social-motion`);
-      const result = await res.json().catch(() => ({}));
-      if (res.ok) setSocialMotion(result.motion);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [lead.id, socialMotion?.status]);
+
 
   async function saveMockupConfig(update: {
     themeId?: string;

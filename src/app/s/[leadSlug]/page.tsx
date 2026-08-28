@@ -6,7 +6,6 @@ import { PortalPending } from "@/components/portal/PortalPending";
 import { BespokeHomepage } from "@/components/site-shell/BespokeHomepage";
 import { NotBuiltYet } from "@/components/site-shell/NotBuiltYet";
 import { LiveClientProposal } from "@/components/portal/LiveClientProposal";
-import { PendingAutoRefresh } from "@/components/portal/PendingAutoRefresh";
 import { isAdminSession } from "@/lib/is-admin-session";
 import { OperatorSectionEditor } from "@/components/site-shell/OperatorSectionEditor";
 import { verifyPortalToken } from "@/lib/portal-token";
@@ -108,23 +107,11 @@ export default async function LeadSitePage({
           }
         : null;
 
-    const isBuilding = lead.status === "rendering" || artifact?.full_site_status === "building";
-
-    return (
+        return (
       <>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
         {faqSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
-        {isBuilding && <PendingAutoRefresh intervalMs={3000} />}
-        {isBuilding && (
-          <div className="sticky top-0 z-50 flex items-center justify-between bg-[#533afd] px-4 py-2 text-xs font-bold text-white shadow-md">
-            <div className="flex items-center gap-2">
-              <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Generating Website in Real-Time · Live section stream</span>
-            </div>
-            <span className="text-[11px] opacity-80">Auto-refreshing view</span>
-          </div>
-        )}
-        {payload.bespokeHomepageHtml ? (
+                {payload.bespokeHomepageHtml ? (
           <BespokeHomepage payload={{ ...payload, previewMode: true }} />
         ) : (
           <NotBuiltYet businessName={payload.businessName} />

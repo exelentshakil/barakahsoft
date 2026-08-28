@@ -209,7 +209,7 @@ export function BespokeGenerationStudio({
       }
 
       setGenWarnings(data.warnings ?? []);
-      pollProgress();
+      
     } catch (err) {
       setGenError(err instanceof Error ? err.message : "Generation failed");
       setGenerating(false);
@@ -268,70 +268,8 @@ export function BespokeGenerationStudio({
   const STALLED_MESSAGE =
     "The last build stopped without finishing — most likely the model returned nothing. Press Generate to start it again.";
 
-  const pollProgress = useCallback(() => {
-    const timer = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/leads/${lead.id}/generate`);
-        const data = await res.json().catch(() => ({}));
-        const job = data.job;
-        setVisualQa(data.visualQa ?? null);
-        if (!job) return;
-
-        setProgress({ done: job.pages_done ?? 0, total: job.pages_total ?? 1 });
-
-        if (isStalled(job)) {
-          clearInterval(timer);
-          setGenerating(false);
-          setGenError(STALLED_MESSAGE);
-          return;
-        }
-
-        if (job.status === "complete" || job.status === "failed") {
-          clearInterval(timer);
-          setGenerating(false);
-          if (job.status === "failed") {
-            setGenError(job.error_message || "Generation failed — check the Inngest run for details.");
-          } else {
-            router.refresh();
-            onGenerated?.();
-            window.location.reload();
-          }
-        }
-      } catch {
-        // A dropped poll is not a failure
-      }
-    }, 3000);
-    return timer;
-  }, [lead.id, router, onGenerated]);
-
-  useEffect(() => {
-    let timer: ReturnType<typeof setInterval> | undefined;
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const res = await fetch(`/api/leads/${lead.id}/generate`);
-        const data = await res.json().catch(() => ({}));
-        setVisualQa(data.visualQa ?? null);
-        if (cancelled || data.job?.status !== "running") return;
-        if (isStalled(data.job)) {
-          setGenError(STALLED_MESSAGE);
-          return;
-        }
-        setGenerating(true);
-        setProgress({ done: data.job.pages_done ?? 0, total: data.job.pages_total ?? 1 });
-        timer = pollProgress();
-      } catch {
-        // Ignore
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-      if (timer) clearInterval(timer);
-    };
-  }, [lead.id, pollProgress]);
-
+  
+  
   if (isScraping) {
     return (
       <div className="rounded-2xl border border-indigo-200/80 bg-indigo-50/40 p-8 sm:p-12 text-center space-y-4 shadow-sm">
@@ -807,7 +745,7 @@ export function BespokeGenerationStudio({
               });
               const data = await res.json();
               if (!res.ok) throw new Error(data.error || "Failed to start generation");
-              pollProgress();
+              
             } catch (err) {
               setGenError(err instanceof Error ? err.message : "Failed to start inner page generation");
               setGenerating(false);

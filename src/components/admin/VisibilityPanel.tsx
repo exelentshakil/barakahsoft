@@ -82,14 +82,7 @@ export function VisibilityPanel({ leadId, industry }: { leadId: string; industry
     load();
   }, [load]);
 
-  // The measurement is dozens of real searches, so it runs as a job and the
-  // panel watches for the result rather than holding a request open.
-  useEffect(() => {
-    if (!running) return;
-    const timer = setInterval(load, 5000);
-    return () => clearInterval(timer);
-  }, [running, load]);
-
+  
   async function run(cells: number) {
     setRunning(true);
     setError(null);
@@ -190,10 +183,19 @@ export function VisibilityPanel({ leadId, industry }: { leadId: string; industry
           </div>
         )}
 
-        {running && (
+                {running && (
           <div className="flex items-center gap-2 rounded-md border border-[#533afd]/20 bg-[#f9f9ff] p-3 text-xs text-[#0d1738]">
             <Loader2 className="h-4 w-4 animate-spin text-[#533afd]" />
             Searching each area. This takes a few minutes — you can leave this page.
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={load}
+              className="ml-auto h-7 px-2 text-[10px] uppercase tracking-wider bg-white"
+            >
+              Refresh Status
+            </Button>
           </div>
         )}
 

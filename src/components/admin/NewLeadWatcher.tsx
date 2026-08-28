@@ -71,9 +71,7 @@ export function NewLeadWatcher({ isEmpty = false }: { isEmpty?: boolean }) {
             router.refresh();
           }
         )
-        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "leads" }, () => {
-          if (arrivedRef.current === 0) router.refresh();
-        })
+        
     ).then((result) => {
       if (!result) return;
       if (cancelled) {

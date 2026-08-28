@@ -1,5 +1,4 @@
 import { CheckCircle2, Circle, Loader2 } from "lucide-react";
-import { PendingAutoRefresh } from "@/components/portal/PendingAutoRefresh";
 
 // Shown when a real lead's site is not ready yet.
 //
@@ -60,11 +59,9 @@ export function PortalPending({
           </ol>
         </div>
 
-        <PendingAutoRefresh />
+        
 
-        <p className="mt-4 text-center text-xs text-[#989db0]">
-          Keep this page open if you like — it updates on its own. It&apos;s yours to keep either way.
-        </p>
+        
       </div>
     </main>
   );
