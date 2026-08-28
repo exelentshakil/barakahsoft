@@ -47,7 +47,7 @@ export function UrlIntakeForm({
           placeholder="Paste your current website URL"
           value={url}
           onChange={(e) => onUrlChange(e.target.value)}
-          className="mt-1"
+          className="mt-1 text-base sm:text-sm"
         />
       </div>
       <div>
@@ -57,7 +57,7 @@ export function UrlIntakeForm({
           required
           value={persona}
           onChange={(e) => onPersonaChange(e.target.value as PersonaSlug)}
-          className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base sm:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           <option value="" disabled>
             Select your trade

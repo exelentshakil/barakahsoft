@@ -86,15 +86,15 @@ export function IntakeFlow({ ctaLabel }: { ctaLabel: string }) {
                 }
                 setStep(2);
               }} className="mt-5 space-y-4">
-                <div><Label htmlFor="intake-url">Current website URL</Label><Input id="intake-url" required type="text" placeholder="yourbusiness.com" value={url} onChange={(event) => setUrl(event.target.value)} className="mt-1" /></div>
-                <div><Label htmlFor="intake-persona">Your trade</Label><select id="intake-persona" required value={persona} onChange={(event) => setPersona(event.target.value as PersonaSlug)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"><option value="" disabled>Select your trade</option>{PERSONAS.map((item) => <option key={item.slug} value={item.slug}>{item.label}</option>)}</select></div>
+                <div><Label htmlFor="intake-url">Current website URL</Label><Input id="intake-url" required type="text" placeholder="yourbusiness.com" value={url} onChange={(event) => setUrl(event.target.value)} className="mt-1 text-base sm:text-sm" /></div>
+                <div><Label htmlFor="intake-persona">Your trade</Label><select id="intake-persona" required value={persona} onChange={(event) => setPersona(event.target.value as PersonaSlug)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base sm:text-sm"><option value="" disabled>Select your trade</option>{PERSONAS.map((item) => <option key={item.slug} value={item.slug}>{item.label}</option>)}</select></div>
                 <Button type="submit" className={BRAND_BUTTON}>Continue<ArrowRight className="h-4 w-4" /></Button>
               </form>
             ) : (
               <form onSubmit={submitLead} className="mt-5 space-y-4">
-                <div><Label htmlFor="intake-name">Name</Label><Input id="intake-name" required value={name} onChange={(event) => setName(event.target.value)} className="mt-1" /></div>
-                <div><Label htmlFor="intake-email">Email</Label><Input id="intake-email" required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1" /></div>
-                <div><Label htmlFor="intake-phone">Phone</Label><Input id="intake-phone" required type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} className="mt-1" /></div>
+                <div><Label htmlFor="intake-name">Name</Label><Input id="intake-name" required value={name} onChange={(event) => setName(event.target.value)} className="mt-1 text-base sm:text-sm" /></div>
+                <div><Label htmlFor="intake-email">Email</Label><Input id="intake-email" required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1 text-base sm:text-sm" /></div>
+                <div><Label htmlFor="intake-phone">Phone</Label><Input id="intake-phone" required type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} className="mt-1 text-base sm:text-sm" /></div>
                 <label className="flex items-start gap-2 text-xs text-muted-foreground"><Checkbox required checked={tcpaConsent} onChange={(event) => setTcpaConsent(event.target.checked)} className="mt-0.5" /><span>I agree to be contacted by call, text, or email about this service. Consent is not a condition of purchase.</span></label>
                 {error && <p className="text-sm text-danger">{error}</p>}
                 <Button type="submit" disabled={submitting} className={BRAND_BUTTON}>{submitting ? "Sending..." : "Send my qualification request"}</Button>

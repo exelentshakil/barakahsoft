@@ -44,15 +44,15 @@ export function LeadCaptureModal({
         >
           <div>
             <Label htmlFor="lead-name">Name</Label>
-            <Input id="lead-name" required value={name} onChange={(e) => setName(e.target.value)} className="mt-1" />
+            <Input id="lead-name" required value={name} onChange={(e) => setName(e.target.value)} className="mt-1 text-base sm:text-sm" />
           </div>
           <div>
             <Label htmlFor="lead-email">Email</Label>
-            <Input id="lead-email" required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1" />
+            <Input id="lead-email" required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 text-base sm:text-sm" />
           </div>
           <div>
             <Label htmlFor="lead-phone">Phone</Label>
-            <Input id="lead-phone" required type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="mt-1" />
+            <Input id="lead-phone" required type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="mt-1 text-base sm:text-sm" />
           </div>
           <label className="flex items-start gap-2 text-xs text-muted-foreground">
             <Checkbox

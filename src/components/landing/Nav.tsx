@@ -32,9 +32,13 @@ export function Nav() {
          <div className="hidden items-center gap-4 lg:flex">
            <a href="tel:+13075336678" className="text-sm font-semibold text-foreground transition hover:text-primary">+1 (307) 533-6678</a>
            <a href="mailto:hello@barakahsoft.com" className="text-sm text-muted-foreground transition hover:text-primary">hello@barakahsoft.com</a>
-           <Button asChild size="sm" className="rounded-lg bg-[#ffd12d] text-[#111] hover:bg-[#f5c400]"><a href="/#top">See My New Homepage (Free)</a></Button>
+           <Button asChild size="sm" className="rounded-lg bg-[#ffd12d] text-[#111] hover:bg-[#f5c400]">
+             <a href="/#top">See My New Homepage (Free)</a>
+           </Button>
          </div>
-           <Button asChild size="sm" className="rounded-lg bg-[#ffd12d] text-[#111] hover:bg-[#f5c400] lg:hidden"><a href="/#top">See My New Homepage (Free)</a></Button>
+         <Button asChild size="sm" className="rounded-lg bg-[#ffd12d] text-[#111] hover:bg-[#f5c400] lg:hidden">
+           <a href="/#top">Free Redesign</a>
+         </Button>
       </div>
     </header>
   );

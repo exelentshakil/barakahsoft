@@ -77,7 +77,7 @@ export function RedesignIntakeFlow() {
   return (
     <div className="w-full">
       <form onSubmit={begin} className="mx-auto mt-6 flex w-full max-w-2xl flex-col gap-3 rounded-xl border border-white/20 bg-white p-2 shadow-2xl sm:flex-row">
-        <Input required type="text" placeholder="Enter your current website address (e.g., mysite.com)" value={url} onChange={(event) => setUrl(event.target.value)} className="h-12 flex-1 border-0 bg-transparent text-xs text-[#1e212b] shadow-none focus-visible:ring-0" />
+        <Input required type="text" placeholder="Enter your current website address (e.g., mysite.com)" value={url} onChange={(event) => setUrl(event.target.value)} className="h-12 flex-1 border-0 bg-transparent text-base sm:text-sm text-[#1e212b] shadow-none focus-visible:ring-0" />
         <Button type="submit" className="h-12 rounded-lg bg-[#ffd12d] px-6 font-bold text-[#07284d] hover:bg-[#f5c400]">See My New Homepage (Free) <ArrowRight className="h-4 w-4" /></Button>
       </form>
       <div className="mt-3 flex flex-col items-center justify-center gap-1 sm:flex-row sm:gap-3">
@@ -142,15 +142,15 @@ export function RedesignIntakeFlow() {
                 <div className="mt-6 space-y-4">
                   <div>
                     <Label htmlFor="redesign-name" className="text-xs font-bold text-[#0d1738]">First name</Label>
-                    <Input id="redesign-name" required value={name} onChange={(event) => setName(event.target.value)} className="mt-1 border-[#e5e7f2]" />
+                    <Input id="redesign-name" required value={name} onChange={(event) => setName(event.target.value)} className="mt-1 border-[#e5e7f2] text-base sm:text-sm" />
                   </div>
                   <div>
                     <Label htmlFor="redesign-email" className="text-xs font-bold text-[#0d1738]">Email address</Label>
-                    <Input id="redesign-email" required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1 border-[#e5e7f2]" />
+                    <Input id="redesign-email" required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1 border-[#e5e7f2] text-base sm:text-sm" />
                   </div>
                   <div>
                     <Label htmlFor="redesign-phone" className="text-xs font-bold text-[#0d1738]">Phone number (for 1-tap call confirmation)</Label>
-                    <Input id="redesign-phone" type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} className="mt-1 border-[#e5e7f2]" />
+                    <Input id="redesign-phone" type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} className="mt-1 border-[#e5e7f2] text-base sm:text-sm" />
                   </div>
                   <label className="flex items-start gap-2 text-xs text-[#42506a]">
                     <Checkbox required checked={consent} onChange={(event) => setConsent(event.target.checked)} className="mt-0.5" />
