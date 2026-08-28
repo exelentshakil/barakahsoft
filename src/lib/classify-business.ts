@@ -73,13 +73,11 @@ city — the primary city or town they serve. Use the address if there is one. N
 
 isLocal — true if customers come from a geographic area around them, false for a business that serves clients anywhere.
 
-services — the things this business actually SELLS, in their own words, up to 8. Read the content, not the menu labels.
-  A service is a job a customer pays for: "Flat roof coating", "Emergency roof repair", "Panel upgrades".
-  NOT navigation labels ("About Us", "Careers", "Tool Reviews"), NOT article titles, NOT page names like
-  "Service Areas", and NOT anything with a menu arrow in it. If a menu item names a real service, keep it
-  and drop the decoration. Return an empty array rather than padding it with things that are not services.
+services — the things this business actually SELLS. We need exactly 8 items for UI balance. Read the content for their real services. If you find fewer than 8, infer and add highly related, standard services that make sense for this specific trade (e.g. if they do "Roof Replacement" and "Roof Repair", you can add "Emergency Roof Repair" or "Roof Maintenance"). Do NOT include navigation labels like "About Us" or "Contact".
 
-areas — real towns, cities or neighbourhoods they say they serve, up to 12. Empty if they do not name any.
+areas — real towns, cities or neighbourhoods they serve. We need exactly 8 items for UI balance. If they name fewer than 8, extrapolate by naming logical, nearby surrounding towns or cities in their region to bring the list to exactly 8.
+
+
 
 Return strict JSON only:
 {"businessName": "...", "industry": "...", "city": "...", "isLocal": true, "services": ["..."], "areas": ["..."]}`,
@@ -116,6 +114,6 @@ Return strict JSON only:
     city: str(parsed.city),
     isLocal: parsed.isLocal !== false,
     services: cleanList(parsed.services).slice(0, 8),
-    areas: cleanList(parsed.areas),
+    areas: cleanList(parsed.areas).slice(0, 8),
   };
 }
