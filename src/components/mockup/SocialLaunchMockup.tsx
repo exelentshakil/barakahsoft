@@ -806,14 +806,6 @@ export function SocialLaunchMockup({
               <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
 
-            {/* Rim Highlight */}
-            <linearGradient id={`rockRim-${idPrefix}`} x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="rgba(255,255,255,0.7)" />
-              <stop offset="30%" stopColor="rgba(255,255,255,0.3)" />
-              <stop offset="70%" stopColor="rgba(255,255,255,0.6)" />
-              <stop offset="100%" stopColor="rgba(255,255,255,0.15)" />
-            </linearGradient>
-
             {/* Main Chiseled Front Face */}
             <linearGradient id={`faceCenter-${idPrefix}`} x1="40%" y1="0%" x2="50%" y2="100%">
               <stop offset="0%" stopColor="#243044" />
@@ -852,18 +844,11 @@ export function SocialLaunchMockup({
           {/* Right Chiseled Slope */}
           <polygon points="460,68 440,148 540,140 620,65 570,38" fill={`url(#faceRight-${idPrefix})`} opacity="0.95" />
 
-          {/* Top Rock Plateau (Clean Beveled Rim) */}
+          {/* Top Rock Plateau */}
           <polygon
             points="110,38 240,24 440,24 570,38 620,65 530,76 150,76 60,65"
             fill={`url(#rockPlateau-${idPrefix})`}
-            stroke={`url(#rockRim-${idPrefix})`}
-            strokeWidth="1.75"
           />
-
-          {/* Subtle Chiseled Ridge Lines */}
-          <path d="M 220,68 L 250,148" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" strokeLinecap="round" />
-          <path d="M 460,68 L 440,148" stroke="rgba(0,0,0,0.5)" strokeWidth="1.5" strokeLinecap="round" />
-          <path d="M 330,75 L 345,145" stroke="rgba(0,0,0,0.4)" strokeWidth="1.2" strokeLinecap="round" />
         </svg>
       </div>
     </div>
