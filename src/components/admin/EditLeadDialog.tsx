@@ -12,8 +12,6 @@ export function EditLeadDialog({
   leadId,
   businessName,
   sourceUrl,
-  facebookPixelId,
-  googleSiteVerification,
   contactName,
   phone,
   email,
@@ -22,8 +20,6 @@ export function EditLeadDialog({
   leadId: string;
   businessName: string | null;
   sourceUrl: string;
-  facebookPixelId?: string | null;
-  googleSiteVerification?: string | null;
   contactName?: string | null;
   phone?: string | null;
   email?: string | null;
@@ -33,8 +29,6 @@ export function EditLeadDialog({
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(businessName ?? "");
   const [url, setUrl] = useState(sourceUrl);
-  const [pixelId, setPixelId] = useState(facebookPixelId ?? "");
-  const [gscToken, setGscToken] = useState(googleSiteVerification ?? "");
   const [contact, setContact] = useState(contactName ?? "");
   const [phoneValue, setPhoneValue] = useState(phone ?? "");
   const [emailValue, setEmailValue] = useState(email ?? "");
@@ -54,8 +48,6 @@ export function EditLeadDialog({
         body: JSON.stringify({
           business_name: name,
           source_url: url,
-          facebook_pixel_id: pixelId,
-          google_site_verification: gscToken,
           contact_name: contact,
           phone: phoneValue,
           email: emailValue,
@@ -168,32 +160,7 @@ export function EditLeadDialog({
             </ul>
           )}
 
-          <div>
-            <Label htmlFor="edit-pixel-id">Client's Facebook Pixel ID (optional)</Label>
-            <Input
-              id="edit-pixel-id"
-              placeholder="e.g. 123456789012345"
-              value={pixelId}
-              onChange={(e) => setPixelId(e.target.value)}
-              className="mt-1"
-            />
-            <p className="mt-1 text-xs text-muted-foreground">
-              For tracking on the client&apos;s own delivered site once they provide it — separate from our own ad tracking.
-            </p>
-          </div>
-          <div>
-            <Label htmlFor="edit-gsc-token">Google Search Console verification token (optional)</Label>
-            <Input
-              id="edit-gsc-token"
-              placeholder="e.g. abc123def456..."
-              value={gscToken}
-              onChange={(e) => setGscToken(e.target.value)}
-              className="mt-1"
-            />
-            <p className="mt-1 text-xs text-muted-foreground">
-              Paste the token from GSC&apos;s HTML tag verification method, once the lead&apos;s custom domain is live.
-            </p>
-          </div>
+
           {error && <p className="text-sm text-danger">{error}</p>}
           <Button type="submit" disabled={submitting} className="w-full">
             {submitting ? "Saving..." : "Save changes"}

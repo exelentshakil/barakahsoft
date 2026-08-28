@@ -1001,8 +1001,6 @@ Shaq`,
                     leadId={lead.id}
                     businessName={lead.business_name}
                     sourceUrl={lead.source_url}
-                    facebookPixelId={lead.facebook_pixel_id}
-                    googleSiteVerification={lead.google_site_verification}
                     contactName={lead.contact_name}
                     phone={lead.phone}
                     email={lead.email}

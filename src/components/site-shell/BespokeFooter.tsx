@@ -287,6 +287,7 @@ export function BespokeFooter({ payload, spec }: { payload: SitePayload; spec: C
                 </button>
                 <a href={siteHref(payload, "/terms")}>Terms of Service</a>
                 <a href={siteHref(payload, "/privacy")}>Privacy Policy</a>
+                <a href={siteHref(payload, "/sitemap.xml")} target="_blank" rel="noopener noreferrer">Sitemap</a>
               </div>
             </div>
           </div>
