@@ -838,23 +838,23 @@ export function SocialLaunchMockup({
           {/* Pedestal Bottom Base Facets */}
           <polygon
             points="60,65 140,140 540,140 620,65 570,38 110,38"
-            fill="url(#faceCenter-${idPrefix})"
+            fill={`url(#faceCenter-${idPrefix})`}
           />
 
           {/* Left Chiseled Slope */}
-          <polygon points="60,65 140,140 250,148 220,68 110,38" fill="url(#faceLeft-${idPrefix})" opacity="0.9" />
+          <polygon points="60,65 140,140 250,148 220,68 110,38" fill={`url(#faceLeft-${idPrefix})`} opacity="0.9" />
 
           {/* Center Main Chiseled Facet */}
-          <polygon points="220,68 250,148 440,148 460,68" fill="url(#faceCenter-${idPrefix})" />
+          <polygon points="220,68 250,148 440,148 460,68" fill={`url(#faceCenter-${idPrefix})`} />
 
           {/* Right Chiseled Slope */}
-          <polygon points="460,68 440,148 540,140 620,65 570,38" fill="url(#faceRight-${idPrefix})" opacity="0.95" />
+          <polygon points="460,68 440,148 540,140 620,65 570,38" fill={`url(#faceRight-${idPrefix})`} opacity="0.95" />
 
           {/* Top Rock Plateau (Clean Beveled Rim) */}
           <polygon
             points="110,38 240,24 440,24 570,38 620,65 530,76 150,76 60,65"
-            fill="url(#rockPlateau-${idPrefix})"
-            stroke="url(#rockRim-${idPrefix})"
+            fill={`url(#rockPlateau-${idPrefix})`}
+            stroke={`url(#rockRim-${idPrefix})`}
             strokeWidth="1.75"
           />
 
