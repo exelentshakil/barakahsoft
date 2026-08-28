@@ -52,21 +52,34 @@ export function renderShell(
     ...((facts.derived_areas as string[] | undefined) ?? []),
     ...extractServiceAreas((facts.pages as PageInventory[]) ?? []),
   ])).slice(0, 12);
-  const areas: ResolvedSection[] = realAreaNames.map((name) => ({
-    slug: slugifyText(name),
-    kind: "area",
-    h2: name,
-    body_content: "",
-    media_asset_ids: [],
-    cta: null,
-    imageUrl: null,
-    imageUrls: [],
-  }));
+  const availableImagesForAreas = mediaAssets.filter(m => m.slot_hint !== 'hero' && m.slot_hint !== 'logo').map(m => m.public_url);
+  let areaImageIndex = 0;
+
+  const areas: ResolvedSection[] = realAreaNames.map((name) => {
+    const assignedImageUrl = availableImagesForAreas.length > 0 ? availableImagesForAreas[areaImageIndex % availableImagesForAreas.length] : null;
+    if (availableImagesForAreas.length > 0) areaImageIndex++;
+
+    return {
+      slug: slugifyText(name),
+      kind: "area",
+      h2: name,
+      body_content: "",
+      media_asset_ids: [],
+      cta: null,
+      imageUrl: assignedImageUrl,
+      imageUrls: assignedImageUrl ? [assignedImageUrl] : [],
+    };
+  });
+
   const generatedAreaSlugs = Object.keys(artifact.bespoke_pages ?? {})
     .filter((key) => key.startsWith("areas/") && artifact.bespoke_pages[key]?.trim())
     .map((key) => key.slice("areas/".length));
   for (const slug of generatedAreaSlugs) {
     if (areas.some((area) => area.slug === slug)) continue;
+
+    const assignedImageUrl = availableImagesForAreas.length > 0 ? availableImagesForAreas[areaImageIndex % availableImagesForAreas.length] : null;
+    if (availableImagesForAreas.length > 0) areaImageIndex++;
+
     areas.push({
       slug,
       kind: "area",
@@ -74,8 +87,8 @@ export function renderShell(
       body_content: "",
       media_asset_ids: [],
       cta: null,
-      imageUrl: null,
-      imageUrls: [],
+      imageUrl: assignedImageUrl,
+      imageUrls: assignedImageUrl ? [assignedImageUrl] : [],
     });
   }
   const hasGeneratedPage = (key: string) => artifact.inner_pages_built && Boolean(artifact.bespoke_pages?.[key]?.trim());

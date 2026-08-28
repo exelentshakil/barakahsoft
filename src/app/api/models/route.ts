@@ -13,7 +13,7 @@ export interface ModelOption {
 const NOT_FOR_DESIGN =
   /embedding|embed-|moderation|whisper|tts|audio|realtime|transcribe|image|dall-e|imagen|veo|lyria|nano-banana|robotics|computer-use|guard|rerank|aqa|live-|translate|codex|search|deep-research/i;
 
-const SMALL_TIER = /(^|[-.])(mini|lite|nano|flash)([-.]|$)/i;
+const SMALL_TIER = /(^|[-.])(mini|lite|nano|flash|8b|70b)([-.]|$)/i;
 
 function isFlagship(id: string): boolean {
   return /(^|[-.])(pro|opus|flagship)([-.]|$)/i.test(id) && !SMALL_TIER.test(id);
@@ -22,14 +22,10 @@ function isFlagship(id: string): boolean {
 const CURATED_OPENAI: ModelOption[] = [
   { id: "gpt-4.5-preview", provider: "openai", recommended: true, note: "Flagship — premier design & CSS reasoning" },
   { id: "gpt-4o", provider: "openai", recommended: true, note: "Fast & high-fidelity multimodal" },
-  { id: "o3-mini", provider: "openai", recommended: false, note: "High reasoning tier" },
-  { id: "gpt-4o-mini", provider: "openai", recommended: false, note: "Lightweight fast tier" },
 ];
 
 const CURATED_GEMINI: ModelOption[] = [
   { id: "gemini-2.5-pro", provider: "gemini", recommended: true, note: "Flagship Pro — supreme HTML & design" },
-  { id: "gemini-2.5-flash", provider: "gemini", recommended: true, note: "High speed multimodal" },
-  { id: "gemini-2.0-flash", provider: "gemini", recommended: false, note: "Fast balanced tier" },
 ];
 
 async function listGemini(): Promise<ModelOption[]> {

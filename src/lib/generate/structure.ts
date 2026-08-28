@@ -206,6 +206,12 @@ Only use media slots assigned to this batch's plan entries. Every image needs wi
 ${knownPaths.join("\n")}
 Anything else becomes an on-page anchor. ${brief.phone ? `Phone links use tel:${brief.phone.replace(/[^\d+]/g, "")}.` : ""}
 
+═══ STRICT LAYOUT & COMPOSITIONAL RULES ═══
+1. AVOID IMBALANCED SPLITS: Never place a single image side-by-side with a vertical list of more than 3 items. If a section has 4 or more items (e.g., 6 services, 8 warning signs, 5 areas), YOU MUST use a top-to-bottom layout: Center the Section Title and Description at the top, and place the items in a responsive grid below it (e.g. grid-cols-1 md:grid-cols-3 or md:grid-cols-4).
+2. MEGA MENU / NAVIGATION PROMOS: If generating a dropdown or mega-menu for navigation (like Services), it must include a featured promotional card (e.g., a "Get a Free Estimate" block with an image or accent background) next to the links. Do not just list text.
+3. PREMIUM OVERLAPS: Ensure the design breathes with generous padding (e.g., py-24). To replicate a premium agency look, use negative margins to overlap elements where appropriate (e.g., pull a Trust Badges card up to overlap the bottom border of the Hero section).
+4. SERVICE CARDS MUST USE IMAGES: Every service and service area card MUST use an image. Do not use generic icons if images are mapped to that section. Each card must have a top image (h-48 object-cover), a title, and a clear call-to-action button or link.
+
 ${MASTER_HERO_STANDARD}
 
 ${MASTER_ABOUT_STANDARD}
