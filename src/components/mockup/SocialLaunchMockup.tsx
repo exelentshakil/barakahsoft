@@ -295,6 +295,7 @@ export function SocialLaunchMockup({
   const landscapeScreenRef = useRef<HTMLDivElement>(null);
   const feedRef = useRef<HTMLDivElement>(null);
   const feedScreenRef = useRef<HTMLDivElement>(null);
+  const storyScreenRef = useRef<HTMLDivElement>(null);
 
   const [screenScale, setScreenScale] = useState(0.35);
 
@@ -716,6 +717,7 @@ export function SocialLaunchMockup({
 
   {/* Integrated 3D MacBook Pro Resting on Organic Sculpted Slate Rock Pedestal */}
   const renderRockPedestalShowcase = (
+    idPrefix = 'default',
     customScreenRef = screenRef,
     customScale = screenScale,
     containerClass = "w-[92%] max-w-[465px]",
@@ -790,7 +792,7 @@ export function SocialLaunchMockup({
         >
           <defs>
             {/* Slate Top Plateau Gradient */}
-            <linearGradient id="rockPlateau" x1="0%" y1="0%" x2="100%" y2="80%">
+            <linearGradient id={`rockPlateau-${idPrefix}`} x1="0%" y1="0%" x2="100%" y2="80%">
               <stop offset="0%" stopColor="#4a5568" />
               <stop offset="35%" stopColor="#334155" />
               <stop offset="70%" stopColor="#1e293b" />
@@ -798,7 +800,7 @@ export function SocialLaunchMockup({
             </linearGradient>
 
             {/* Rim Highlight */}
-            <linearGradient id="rockRim" x1="0%" y1="0%" x2="100%" y2="0%">
+            <linearGradient id={`rockRim-${idPrefix}`} x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="rgba(255,255,255,0.7)" />
               <stop offset="30%" stopColor="rgba(255,255,255,0.3)" />
               <stop offset="70%" stopColor="rgba(255,255,255,0.6)" />
@@ -806,20 +808,20 @@ export function SocialLaunchMockup({
             </linearGradient>
 
             {/* Main Chiseled Front Face */}
-            <linearGradient id="faceCenter" x1="40%" y1="0%" x2="50%" y2="100%">
+            <linearGradient id={`faceCenter-${idPrefix}`} x1="40%" y1="0%" x2="50%" y2="100%">
               <stop offset="0%" stopColor="#243044" />
               <stop offset="60%" stopColor="#141c2c" />
               <stop offset="100%" stopColor="#090d16" />
             </linearGradient>
 
             {/* Left Chiseled Shadow Facet */}
-            <linearGradient id="faceLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id={`faceLeft-${idPrefix}`} x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#334155" />
               <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
 
             {/* Right Chiseled Shadow Facet */}
-            <linearGradient id="faceRight" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id={`faceRight-${idPrefix}`} x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#1e293b" />
               <stop offset="100%" stopColor="#050811" />
             </linearGradient>
@@ -831,23 +833,23 @@ export function SocialLaunchMockup({
           {/* Pedestal Bottom Base Facets */}
           <polygon
             points="60,65 140,140 540,140 620,65 570,38 110,38"
-            fill="url(#faceCenter)"
+            fill="url(#faceCenter-${idPrefix})"
           />
 
           {/* Left Chiseled Slope */}
-          <polygon points="60,65 140,140 250,148 220,68 110,38" fill="url(#faceLeft)" opacity="0.9" />
+          <polygon points="60,65 140,140 250,148 220,68 110,38" fill="url(#faceLeft-${idPrefix})" opacity="0.9" />
 
           {/* Center Main Chiseled Facet */}
-          <polygon points="220,68 250,148 440,148 460,68" fill="url(#faceCenter)" />
+          <polygon points="220,68 250,148 440,148 460,68" fill="url(#faceCenter-${idPrefix})" />
 
           {/* Right Chiseled Slope */}
-          <polygon points="460,68 440,148 540,140 620,65 570,38" fill="url(#faceRight)" opacity="0.95" />
+          <polygon points="460,68 440,148 540,140 620,65 570,38" fill="url(#faceRight-${idPrefix})" opacity="0.95" />
 
           {/* Top Rock Plateau (Clean Beveled Rim) */}
           <polygon
             points="110,38 240,24 440,24 570,38 620,65 530,76 150,76 60,65"
-            fill="url(#rockPlateau)"
-            stroke="url(#rockRim)"
+            fill="url(#rockPlateau-${idPrefix})"
+            stroke="url(#rockRim-${idPrefix})"
             strokeWidth="1.75"
           />
 
@@ -939,6 +941,7 @@ export function SocialLaunchMockup({
           }}
         />
 
+        <div ref={transparentStageRef} className="w-full flex-1 flex flex-col items-center justify-between">
         {/* Top Centered 2-Line Bold Campaign Angle Typography */}
         <div className="relative z-10 text-center pt-1 sm:pt-2">
           <h2
@@ -966,7 +969,7 @@ export function SocialLaunchMockup({
 
         {/* 3D Composition Stage */}
         <div
-          ref={transparentStageRef}
+          
           className="relative z-10 w-full flex-1 flex items-center justify-center mt-4 sm:mt-6 perspective-[1600px] translate-y-6 sm:translate-y-8"
         >
           {/* Dynamic 3D Studio Spotlight Glow Behind Laptop */}
@@ -978,7 +981,7 @@ export function SocialLaunchMockup({
           />
 
           {stageMode === "rock" ? (
-            renderRockPedestalShowcase(screenRef, screenScale, "w-[92%] max-w-[465px]", {
+            renderRockPedestalShowcase('preview', screenRef, screenScale, "w-[92%] max-w-[465px]", {
               cardTop: "-top-12 sm:-top-16",
               cardRight: "-right-1 sm:-right-2",
               macTranslateY: "translateY(12px)",
@@ -994,6 +997,7 @@ export function SocialLaunchMockup({
             </>
           )}
         </div>
+      </div>
       </div>
 
       {/* Hidden 4:5 Feed HQ Container for Full-Bleed Social Feed Post Export (1080x1350) */}
@@ -1044,7 +1048,7 @@ export function SocialLaunchMockup({
           {/* 3D Stage in Feed HQ */}
           <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1800px] mt-4 translate-y-12">
             {stageMode === "rock" ? (
-              renderRockPedestalShowcase(feedScreenRef, 0.65, "w-[840px]", {
+              renderRockPedestalShowcase('feed', feedScreenRef, 0.65, "w-[840px]", {
                 cardTop: "-top-16",
                 cardRight: "-right-4",
                 macTranslateY: "translateY(16px)",
@@ -1104,7 +1108,7 @@ export function SocialLaunchMockup({
           {/* 3D Stage in Landscape - Perfectly scaled to 500px width so Mac and Card never touch the top headline */}
           <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1800px] mt-1">
             {stageMode === "rock" ? (
-              renderRockPedestalShowcase(landscapeScreenRef, 0.38, "w-[500px]", {
+              renderRockPedestalShowcase('landscape', landscapeScreenRef, 0.38, "w-[500px]", {
                 cardTop: "-top-8",
                 cardRight: "-right-2",
                 macTranslateY: "translateY(16px)",
@@ -1158,7 +1162,7 @@ export function SocialLaunchMockup({
           {/* 3D Stage */}
           <div className="relative z-10 w-full flex-1 flex items-center justify-center perspective-[1600px] mt-4 translate-y-12">
             {stageMode === "rock" ? (
-              renderRockPedestalShowcase(screenRef, screenScale, "w-[92%] max-w-[460px]", {
+              renderRockPedestalShowcase('story', storyScreenRef, 0.45, "w-[92%] max-w-[460px]", {
                 cardTop: "-top-12",
                 cardRight: "-right-2",
                 macTranslateY: "translateY(12px)",
@@ -1166,7 +1170,7 @@ export function SocialLaunchMockup({
             ) : (
               <>
                 {renderFloatingAboutCard({ topOffset: "-top-12", rightOffset: "-right-2", widthClass: "w-[84%] max-w-[390px]" })}
-                {render3DMacBook()}
+                {render3DMacBook(storyScreenRef, 0.45)}
               </>
             )}
           </div>
