@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { LEAD_PROBLEMS } from "@/lib/lead-problems";
 import { trackPixelEvent } from "@/lib/meta-pixel";
+import { isValidUrl } from "@/lib/validate-url";
 
 export function RedesignIntakeFlow() {
   const [url, setUrl] = useState("");
@@ -28,7 +29,10 @@ export function RedesignIntakeFlow() {
 
   function begin(event: React.FormEvent) {
     event.preventDefault();
-    if (!url.trim()) return;
+    if (!isValidUrl(url)) {
+      alert("Please enter a valid website address (e.g. yourdomain.com)");
+      return;
+    }
     setOpen(true);
     setStep(1);
   }
@@ -73,7 +77,7 @@ export function RedesignIntakeFlow() {
   return (
     <div className="w-full">
       <form onSubmit={begin} className="mx-auto mt-8 flex w-full max-w-2xl flex-col gap-3 rounded-xl border border-white/20 bg-white p-2 shadow-2xl sm:flex-row">
-        <Input required type="url" placeholder="Enter your current website address (e.g., mysite.com)" value={url} onChange={(event) => setUrl(event.target.value)} className="h-12 flex-1 border-0 bg-transparent text-xs text-[#1e212b] shadow-none focus-visible:ring-0" />
+        <Input required type="text" placeholder="Enter your current website address (e.g., mysite.com)" value={url} onChange={(event) => setUrl(event.target.value)} className="h-12 flex-1 border-0 bg-transparent text-xs text-[#1e212b] shadow-none focus-visible:ring-0" />
         <Button type="submit" className="h-12 rounded-lg bg-[#ffd12d] px-6 font-bold text-[#07284d] hover:bg-[#f5c400]">See My New Homepage (Free) <ArrowRight className="h-4 w-4" /></Button>
       </form>
       <p className="mt-3 w-full text-center text-xs text-[#7890a5]">🔒 We only look at your public website — no passwords or credit cards needed.</p>

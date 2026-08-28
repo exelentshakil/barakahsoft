@@ -42,7 +42,7 @@ export function UrlIntakeForm({
         <Input
           id="site-url"
           required
-          type="url"
+          type="text"
           inputMode="url"
           placeholder="Paste your current website URL"
           value={url}

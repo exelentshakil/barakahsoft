@@ -1,11 +1,9 @@
-import { PendingAutoRefresh } from "@/components/portal/PendingAutoRefresh";
 import { Sparkles, Loader2 } from "lucide-react";
 
 // Shown when a lead's site has been requested but not generated yet.
 export function NotBuiltYet({ businessName }: { businessName: string }) {
   return (
     <main className="flex min-h-[70vh] items-center justify-center px-6 py-24 bg-[#f9f9ff]">
-      <PendingAutoRefresh intervalMs={3000} />
       <div className="max-w-md text-center space-y-4 rounded-2xl border border-[#c7d0fb] bg-white p-8 sm:p-10 shadow-sm">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f0f3ff] text-[#533afd] border border-[#c7d0fb]">
           <Loader2 className="h-7 w-7 animate-spin text-[#533afd]" />

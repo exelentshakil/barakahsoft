@@ -5,7 +5,6 @@ import type { SitePayload } from "@/components/site-shell/types";
 import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 import { ProposalHeader } from "@/components/portal/sections/ProposalHeader";
 import { ProposalProcessingSkeleton } from "@/components/portal/sections/ProposalProcessingSkeleton";
-import { PendingAutoRefresh } from "@/components/portal/PendingAutoRefresh";
 import { ProposalHero } from "@/components/portal/sections/ProposalHero";
 import { ReportAudit } from "@/components/portal/sections/ReportAudit";
 import { ReportVisibility } from "@/components/portal/sections/ReportVisibility";
@@ -157,7 +156,6 @@ export function LiveClientProposal({
       {!isApproved && !isPaid && (
         <>
           <ProposalProcessingSkeleton businessName={businessName} />
-          <PendingAutoRefresh intervalMs={4000} />
         </>
       )}
 

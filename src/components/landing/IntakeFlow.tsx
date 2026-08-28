@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PERSONAS, type PersonaSlug } from "@/lib/personas";
 import { trackPixelEvent } from "@/lib/meta-pixel";
+import { isValidUrl } from "@/lib/validate-url";
 
 const BRAND_BUTTON = "w-full rounded-lg bg-[#ffd12d] text-[#111] hover:bg-[#f5c400]";
 
@@ -77,8 +78,15 @@ export function IntakeFlow({ ctaLabel }: { ctaLabel: string }) {
               <DialogDescription>{step === 1 ? "Two quick details. No sales call is required to see if the offer fits." : "We will review your business and contact you with the next step."}</DialogDescription>
             </DialogHeader>
             {step === 1 ? (
-              <form onSubmit={(event) => { event.preventDefault(); setStep(2); }} className="mt-5 space-y-4">
-                <div><Label htmlFor="intake-url">Current website URL</Label><Input id="intake-url" required type="url" placeholder="https://yourbusiness.com" value={url} onChange={(event) => setUrl(event.target.value)} className="mt-1" /></div>
+              <form onSubmit={(event) => {
+                event.preventDefault();
+                if (!isValidUrl(url)) {
+                  alert("Please enter a valid website address (e.g. yourdomain.com)");
+                  return;
+                }
+                setStep(2);
+              }} className="mt-5 space-y-4">
+                <div><Label htmlFor="intake-url">Current website URL</Label><Input id="intake-url" required type="text" placeholder="yourbusiness.com" value={url} onChange={(event) => setUrl(event.target.value)} className="mt-1" /></div>
                 <div><Label htmlFor="intake-persona">Your trade</Label><select id="intake-persona" required value={persona} onChange={(event) => setPersona(event.target.value as PersonaSlug)} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"><option value="" disabled>Select your trade</option>{PERSONAS.map((item) => <option key={item.slug} value={item.slug}>{item.label}</option>)}</select></div>
                 <Button type="submit" className={BRAND_BUTTON}>Continue<ArrowRight className="h-4 w-4" /></Button>
               </form>
