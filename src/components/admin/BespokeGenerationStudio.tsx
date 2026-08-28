@@ -790,11 +790,42 @@ export function BespokeGenerationStudio({
         <Button
           type="button"
           variant="outline"
-          onClick={() => alert("Homepage must be approved first before building inner pages.")}
+          onClick={async () => {
+            if (!artifact?.bespoke_homepage_html) {
+              alert("Homepage must be generated first before building inner pages.");
+              return;
+            }
+            if (generating) return;
+            setGenerating(true);
+            setGenError(null);
+            
+            try {
+              const res = await fetch(`/api/leads/${lead.id}/generate`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ phase: 2 }),
+              });
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.error || "Failed to start generation");
+              pollProgress();
+            } catch (err) {
+              setGenError(err instanceof Error ? err.message : "Failed to start inner page generation");
+              setGenerating(false);
+            }
+          }}
           className="rounded-xl border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50"
         >
-          <FolderTree className="h-3.5 w-3.5 mr-1.5" />
-          Build All Pages
+          {generating ? (
+            <>
+              <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <FolderTree className="h-3.5 w-3.5 mr-1.5" />
+              Build All Pages
+            </>
+          )}
         </Button>
       </div>
     </div>
