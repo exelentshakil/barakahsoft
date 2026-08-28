@@ -70,7 +70,7 @@ export function LandingIndustries() {
                       }}
                     >
                       <div className={`flex h-8 w-8 items-center justify-center rounded-full ${ind.bg} ${ind.color}`}>
-                        <ind.icon className="h-4 w-4" />
+                        <ind.icon className="h-4 w-4 animate-[spin_12s_linear_infinite]" />
                       </div>
                       <span className="text-center text-[9px] font-bold leading-tight text-[#07284d] px-2">{ind.label}</span>
                     </div>

@@ -239,7 +239,7 @@ export function LeadEngineLanding() {
       <Nav />
 
       {/* 2. HERO SECTION (High-Tech SaaS Grid & Ambient Sparkles) */}
-      <section id="top" className="relative overflow-hidden border-b border-[#d9e8f4] bg-gradient-to-b from-[#f0f6fc] via-[#f8fbfe] to-white pt-12 pb-16 lg:pt-24 lg:pb-32">
+      <section id="top" className="relative overflow-hidden border-b border-[#d9e8f4] bg-gradient-to-b from-[#f0f6fc] via-[#f8fbfe] to-white pt-8 pb-12 lg:pt-16 lg:pb-24">
         {/* SaaS Background Grid Pattern */}
         <div
           className="pointer-events-none absolute inset-0 opacity-60 [background-image:linear-gradient(to_right,rgba(12,104,200,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(12,104,200,0.06)_1px,transparent_1px)] [background-size:40px_40px] [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000_70%,transparent_100%)]"
@@ -255,7 +255,7 @@ export function LeadEngineLanding() {
         <div className="pointer-events-none absolute right-[15%] top-40 hidden h-2 w-2 rounded-full bg-[#0c68c8] shadow-[0_0_0_8px_rgba(12,104,200,0.15)] lg:block" />
         <div className="pointer-events-none absolute bottom-16 left-[20%] hidden h-2 w-2 rounded-full bg-[#07284d] shadow-[0_0_0_6px_rgba(7,40,77,0.12)] lg:block" />
 
-        <div className="relative mx-auto max-w-4xl px-6 text-center space-y-4 lg:space-y-6">
+        <div className="relative mx-auto max-w-4xl px-6 text-center space-y-3 lg:space-y-6">
           {/* Highlighted FREE Pill with Glow Ring */}
           <div className="inline-flex items-center gap-2 rounded-full border border-[#ffd12d] bg-[#fff7c7] px-4 py-1.5 lg:px-5 lg:py-2 text-[10px] lg:text-xs font-black uppercase tracking-[0.16em] text-[#07284d] shadow-[0_4px_20px_rgba(255,209,45,0.25)]">
             <Sparkles className="h-3 w-3 lg:h-4 lg:w-4 text-[#07284d]" />
