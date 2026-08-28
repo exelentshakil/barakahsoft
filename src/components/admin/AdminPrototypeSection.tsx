@@ -51,12 +51,12 @@ const SECTION_CONTENT = {
     ],
   },
   domains: {
-    title: "Domains & Build Exports",
+    title: "Domains & GitHub Repos",
     eyebrow: "Handoff",
-    intro: "Connect customer-owned domains and download isolated website source exports.",
+    intro: "Connect customer-owned domains and create private GitHub repositories.",
     items: [
       { name: "yorkelectrical.com", location: "DNS CNAME verification", trade: "Production", status: "Pending DNS", est: "Vercel / AWS" },
-      { name: "summit-hvac-v1.zip", location: "Clean standalone website source", trade: "Export", status: "Built", est: "Ready" },
+      { name: "github.com/barakahsoft/summit-hvac", location: "Private repository", trade: "GitHub", status: "Pushed", est: "Ready" },
       { name: "brightlineplumbing.com", location: "SSL & DNS active", trade: "Live", status: "Active", est: "Connected" },
     ],
   },

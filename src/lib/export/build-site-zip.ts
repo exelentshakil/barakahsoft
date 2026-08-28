@@ -166,10 +166,8 @@ function footerHtml(payload: SitePayload): string {
 /**
  * The site as a file tree.
  *
- * Both handover routes read this — the zip download and the push to a
- * GitHub repository — so a client who takes the repo and a client who takes
- * the folder receive byte-identical sites. Building the two separately is
- * how they drift.
+ * Both handover mechanisms use this — so pushing to a
+ * GitHub repository guarantees the client receives the byte-identical site.
  */
 async function buildSiteTree(lead: Lead, payload: SitePayload): Promise<JSZip> {
   const zip = new JSZip();
@@ -1229,11 +1227,6 @@ export default function Page() {
 }
 
 /** The site as a downloadable folder. */
-export async function buildSiteZip(lead: Lead, payload: SitePayload): Promise<Buffer> {
-  const zip = await buildSiteTree(lead, payload);
-  return Buffer.from(await zip.generateAsync({ type: "nodebuffer" }));
-}
-
 export interface SiteFile {
   path: string;
   content: string;

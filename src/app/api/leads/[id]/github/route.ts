@@ -8,8 +8,8 @@ import type { Lead } from "@/types/database";
 
 // Hand the site over as a repository the client can host anywhere.
 //
-// Same files as the zip download — see buildSiteFiles — so whichever way a
-// client takes delivery they get the same site.
+// See buildSiteFiles — when a client asks for their source code,
+// they get exactly what they paid for: a clean Next.js app.
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: leadId } = await params;
   if (!(await isAdminSession())) return NextResponse.json({ error: "Not authorised" }, { status: 401 });

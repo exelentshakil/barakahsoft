@@ -1,20 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, Check, Download, GitBranch, Loader2, ExternalLink } from "lucide-react";
+import { AlertTriangle, Check, GitBranch, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 // Handing the finished site to the client.
 //
-// Three ways, because they answer different objections rather than
+// Two ways, because they answer different objections rather than
 // competing. We host it, which closes fastest and asks nothing of the
 // client. Or they take the repository, which is the answer to "am I locked
-// in?" without making them do the technical part. Or they take the folder,
-// for the ones with their own developer or their own server.
-//
-// The export route existed for a long time with nothing linking to it, so
-// the only way to reach the deliverable was to know the URL.
+// in?" without making them do the technical part.
 
 export function HandoverPanel({
   leadId,
@@ -59,7 +55,7 @@ export function HandoverPanel({
           </p>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3">
           <div className="rounded-xl border border-border p-4">
             <div className="flex items-center gap-2">
               <GitBranch className="h-4 w-4 text-[#0d1738]" />
@@ -113,23 +109,6 @@ export function HandoverPanel({
                 )}
               </Button>
             )}
-          </div>
-
-          <div className="rounded-xl border border-border p-4">
-            <div className="flex items-center gap-2">
-              <Download className="h-4 w-4 text-[#0d1738]" />
-              <h4 className="text-sm font-bold text-[#0d1738]">Download the folder</h4>
-            </div>
-            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
-              The same site as a zip, for a client with their own developer or their own server. It includes a README and
-              an example environment file explaining every key it needs.
-            </p>
-            <a
-              href={`/api/leads/${leadId}/export`}
-              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-md border border-[#533afd] px-4 py-2 text-sm font-bold text-[#533afd] transition hover:bg-[#f0f3ff]"
-            >
-              <Download className="h-4 w-4" /> Download the site
-            </a>
           </div>
         </div>
 

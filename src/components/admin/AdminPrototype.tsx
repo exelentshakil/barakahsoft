@@ -548,10 +548,10 @@ export function AdminPrototype() {
                   <h3 className="font-bold text-base text-[#0d1738]">Visual Asset Engine & Hero Studio</h3>
                 </div>
                 <button
-                  onClick={() => alert("Standalone Next.js Project (.zip) generated for " + selectedLead.company + "!\n\n✓ Isolated Next 15 package\n✓ Tailored schema & Tailwind\n✓ Ready to 1-click import into Vercel Free Tier or AWS.")}
+                  onClick={() => alert("GitHub Repository created for " + selectedLead.company + "!\n\n✓ Isolated Next 15 package\n✓ Tailored schema & Tailwind\n✓ Ready to 1-click import into Vercel Free Tier or AWS.")}
                   className="inline-flex items-center gap-1.5 rounded-md bg-[#07284d] px-3.5 py-1.5 text-xs font-bold text-white hover:bg-[#0c68c8]"
                 >
-                  <FileCode2 className="h-3.5 w-3.5 text-[#ffd12d]" /> Export Next.js Zip
+                  <FileCode2 className="h-3.5 w-3.5 text-[#ffd12d]" /> Create GitHub Repo
                 </button>
               </div>
 
@@ -664,7 +664,7 @@ export function AdminPrototype() {
                 </div>
                 <h3 className="mt-2 text-xl font-bold">Collect $797 & Launch yorkelectrical.com</h3>
                 <p className="text-xs text-white/70 mt-1 leading-relaxed">
-                  Client receives 100% standalone Next.js code + DNS CNAME setup with 48h SLA.
+                  Client receives private GitHub repository + DNS CNAME setup with 48h SLA.
                 </p>
               </div>
 
