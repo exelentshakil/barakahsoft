@@ -84,7 +84,7 @@ export function RedesignIntakeFlow() {
       <p className="mt-3 w-full text-center text-xs text-[#7890a5]">Free · No credit card · Yours to keep</p>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="overflow-hidden border border-[#e5e7f2] p-0 shadow-2xl sm:max-w-lg bg-white">
+        <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden border border-[#e5e7f2] p-0 shadow-2xl sm:max-w-lg bg-white">
           <div className="h-1 bg-[#533afd]" />
           <div className="p-6 sm:p-8">
             <div className="mb-6 flex items-center justify-between text-xs font-bold text-[#533afd]">
@@ -103,7 +103,7 @@ export function RedesignIntakeFlow() {
                     Select everything that applies. We&apos;ll use this in the audit and redesign brief.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="mt-6 space-y-2">
+                <div className="mt-6 space-y-2 max-h-[30vh] overflow-y-auto pr-2">
                   {LEAD_PROBLEMS.map((problem) => (
                     <button
                       type="button"
