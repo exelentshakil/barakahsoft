@@ -20,7 +20,7 @@ export function Nav() {
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
         <a href="/" className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={LOGO_URL} alt="BarakahSoft" className="h-7 w-auto" />
+          <img src={LOGO_URL} alt="BarakahSoft" className="h-6 sm:h-7 w-auto object-contain" />
         </a>
          <nav className="hidden items-center gap-8 text-sm font-medium text-muted-foreground md:flex">
            {LINKS.map((link) => (

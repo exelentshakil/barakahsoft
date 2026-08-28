@@ -239,7 +239,7 @@ export function LeadEngineLanding() {
       <Nav />
 
       {/* 2. HERO SECTION (High-Tech SaaS Grid & Ambient Sparkles) */}
-      <section id="top" className="relative overflow-hidden border-b border-[#d9e8f4] bg-gradient-to-b from-[#f0f6fc] via-[#f8fbfe] to-white pt-16 pb-20 lg:pt-24 lg:pb-32">
+      <section id="top" className="relative overflow-hidden border-b border-[#d9e8f4] bg-gradient-to-b from-[#f0f6fc] via-[#f8fbfe] to-white pt-12 pb-16 lg:pt-24 lg:pb-32">
         {/* SaaS Background Grid Pattern */}
         <div
           className="pointer-events-none absolute inset-0 opacity-60 [background-image:linear-gradient(to_right,rgba(12,104,200,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(12,104,200,0.06)_1px,transparent_1px)] [background-size:40px_40px] [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000_70%,transparent_100%)]"
@@ -249,26 +249,27 @@ export function LeadEngineLanding() {
         {/* Ambient Sparkles & Glowing Orbs */}
         <div className="pointer-events-none absolute -right-24 -top-32 h-[34rem] w-[34rem] rounded-full bg-[#dff0ff] blur-3xl opacity-80" />
         <div className="pointer-events-none absolute -left-24 top-48 h-[32rem] w-[32rem] rounded-full bg-[#fff5c0]/60 blur-3xl opacity-70" />
-        
+
         {/* Floating Sparkle Micro-Accents */}
         <div className="pointer-events-none absolute left-[12%] top-28 hidden h-2.5 w-2.5 rounded-full bg-[#ffd12d] shadow-[0_0_0_8px_rgba(255,209,45,0.18)] lg:block animate-pulse" />
         <div className="pointer-events-none absolute right-[15%] top-40 hidden h-2 w-2 rounded-full bg-[#0c68c8] shadow-[0_0_0_8px_rgba(12,104,200,0.15)] lg:block" />
         <div className="pointer-events-none absolute bottom-16 left-[20%] hidden h-2 w-2 rounded-full bg-[#07284d] shadow-[0_0_0_6px_rgba(7,40,77,0.12)] lg:block" />
 
-        <div className="relative mx-auto max-w-4xl px-6 text-center space-y-6">
+        <div className="relative mx-auto max-w-4xl px-6 text-center space-y-4 lg:space-y-6">
           {/* Highlighted FREE Pill with Glow Ring */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#ffd12d] bg-[#fff7c7] px-5 py-2 text-xs font-black uppercase tracking-[0.16em] text-[#07284d] shadow-[0_4px_20px_rgba(255,209,45,0.25)]">
-            <Sparkles className="h-4 w-4 text-[#07284d]" />
-            Free 48-Hour Homepage Redesign & AI Audit
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#ffd12d] bg-[#fff7c7] px-4 py-1.5 lg:px-5 lg:py-2 text-[10px] lg:text-xs font-black uppercase tracking-[0.16em] text-[#07284d] shadow-[0_4px_20px_rgba(255,209,45,0.25)]">
+            <Sparkles className="h-3 w-3 lg:h-4 lg:w-4 text-[#07284d]" />
+            <span className="hidden sm:inline">Free 48-Hour Homepage Redesign & AI Audit</span>
+            <span className="sm:hidden">Free 48-Hour Redesign & Audit</span>
           </div>
 
-          <h1 className="font-sans text-5xl font-extrabold tracking-[-0.045em] text-[#07284d] sm:text-6xl lg:text-7xl leading-[1.04]">
+          <h1 className="font-sans text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-[-0.045em] text-[#07284d] leading-[1.04]">
             GET YOUR HOMEPAGE <br />
             REDESIGNED <span className="bg-gradient-to-r from-[#0c68c8] via-[#07284d] to-[#0c68c8] bg-clip-text text-transparent underline decoration-[#ffd12d] decoration-4 underline-offset-8">FOR FREE</span>
           </h1>
 
-          <p className="mx-auto max-w-2xl text-base leading-relaxed text-[#5c7186] sm:text-lg">
-            See exactly how your homepage could look. We&apos;ll create a custom concept around your real business and deliver it in 48 hours — with AI chat, lead capture, and callback features built in from day one. Free, no strings attached.
+          <p className="mx-auto max-w-2xl text-sm leading-relaxed text-[#5c7186] sm:text-base lg:text-lg">
+            See exactly how your homepage could look. We&apos;ll build a custom concept around your real business and deliver it in 48 hours — fully equipped with AI chat and lead capture. Free, no strings attached.
           </p>
 
           <div className="pt-3">
