@@ -47,7 +47,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         
               {/* Meta Pixel Code */}
         <Script id="meta-pixel" strategy="afterInteractive">
-          {`try {
+          {`(function() {
+  try {
   var h = window.location.hostname.toLowerCase();
   var p = window.location.pathname;
   if (p.indexOf("/admin") === 0 || p.indexOf("/client-portal") === 0 || p.indexOf("/visual-qa") === 0 || p.indexOf("/api") === 0 || p.indexOf("/auth") === 0 || p.indexOf("/login") === 0) {
@@ -69,7 +70,8 @@ t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
 fbq('init', '1777973306713413');
-fbq('track', 'PageView');`}
+fbq('track', 'PageView');
+})();`}
         </Script>
       </head>
       <body className="min-h-screen bg-white font-sans text-slate-900 antialiased">
