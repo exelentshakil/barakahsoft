@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, ChevronDown, MapPin, Menu, Phone, Sparkles, X, ShieldCheck, Star } from "lucide-react";
+import { ArrowRight, ChevronDown, MapPin, Menu, Phone, Sparkles, X, ShieldCheck, Star, Wrench, Zap, Home, Droplets, PenTool, Activity, Sun, Wind, Thermometer, Leaf, Settings, Shield, PlusCircle, CheckCircle, Navigation } from "lucide-react";
+
+const SERVICE_ICONS = [ShieldCheck, Wrench, Zap, Home, Droplets, PenTool, Activity, Sun, Wind, Thermometer, Leaf, Settings, Shield, PlusCircle, CheckCircle, Navigation];
 import { useQuoteModal } from "@/components/site-shell/QuoteModalProvider";
 import type { ChromeSpec } from "@/lib/chrome-spec";
 import { homepageAnchor, siteHref, type SiteNavItem, type SitePayload } from "@/components/site-shell/types";
@@ -72,10 +74,28 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
     label: string,
     items: SiteNavItem[]
   ) => {
-    // Dynamic image assignment based on menu type
-    const cardImage = kind === "services"
-      ? (payload.heroImageUrl || payload.services?.find(s => s.imageUrl)?.imageUrl || payload.proof?.imageUrl)
-      : (payload.areas?.find(a => a.imageUrl)?.imageUrl || payload.services?.find(s => s.imageUrl)?.imageUrl || payload.heroImageUrl || payload.proof?.imageUrl);
+    
+    const allImages = [
+      payload.heroImageUrl,
+      ...(payload.services?.map(s => s.imageUrl) || []),
+      ...(payload.services?.flatMap(s => s.imageUrls || []) || []),
+      ...(payload.areas?.map(a => a.imageUrl) || []),
+      ...(payload.areas?.flatMap(a => a.imageUrls || []) || []),
+      payload.proof?.imageUrl,
+      payload.trustStrip?.imageUrl,
+      ...(payload.trustStrip?.imageUrls || []),
+      payload.expertise?.imageUrl,
+      ...(payload.expertise?.imageUrls || []),
+      payload.process?.imageUrl,
+      ...(payload.process?.imageUrls || []),
+      payload.ctaBanner?.imageUrl,
+      ...(payload.ctaBanner?.imageUrls || []),
+    ].filter(Boolean) as string[];
+
+    const cardImage = allImages.length > 0 
+      ? (kind === "services" ? allImages[0] : (allImages.length > 1 ? allImages[1] : allImages[0])) 
+      : null;
+
       
     return (
     <div
@@ -103,7 +123,7 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
                 </span>
               </div>
               <div className={`bs-nav-mega-cols ${items.length > 3 ? "bs-nav-mega-cols-2" : "bs-nav-mega-cols-1"}`}>
-                {items.map((item) => {
+                {items.map((item, idx) => {
                   const matchedItem = kind === "services"
                     ? payload.services.find(
                         (s) => s.slug === item.slug || s.h2?.toLowerCase() === item.label?.toLowerCase()
@@ -128,7 +148,10 @@ export function BespokeNav({ payload, spec }: { payload: SitePayload; spec: Chro
                         />
                       ) : kind === "services" ? (
                         <div className="h-10 w-10 rounded-lg bg-[var(--bs-surface-alt,#f8fafc)] border border-[var(--bs-border-color,#e2e8f0)] flex items-center justify-center shrink-0 text-[var(--bs-primary-on-surface)] group-hover:bg-[var(--bs-primary)] group-hover:text-[var(--bs-on-primary)] transition-all">
-                          <ShieldCheck className="h-5 w-5" />
+                          {(() => {
+                            const Icon = SERVICE_ICONS[idx % SERVICE_ICONS.length];
+                            return <Icon className="h-5 w-5" />;
+                          })()}
                         </div>
                       ) : (
                         <div className="h-9 w-9 rounded-full bg-[var(--bs-surface-alt,#f8fafc)] border border-[var(--bs-border-color,#e2e8f0)] flex items-center justify-center shrink-0 text-[var(--bs-primary-on-surface)] group-hover:bg-[var(--bs-primary)] group-hover:text-[var(--bs-on-primary)] transition-all">
