@@ -68,7 +68,6 @@ import { CompetitorPanel } from "@/components/admin/CompetitorPanel";
 import { ApprovalGate } from "@/components/admin/ApprovalGate";
 import { useLeadLive } from "@/hooks/use-lead-live";
 import { PricingManager } from "@/components/admin/PricingManager";
-import { HandoverPanel } from "@/components/admin/HandoverPanel";
 import { LeadValuePanel, type LeadValueData } from "@/components/admin/LeadValuePanel";
 import { EditLeadDialog } from "@/components/admin/EditLeadDialog";
 import { DeleteLeadButton } from "@/components/admin/DeleteLeadButton";
@@ -1853,12 +1852,6 @@ Shaq`,
                 leadValue={aiLeadValue}
               />
 
-              <HandoverPanel
-                leadId={lead.id}
-                businessName={businessName}
-                hasSite={!!artifact?.bespoke_homepage_html}
-                existingRepoUrl={(artifact?.extracted_assets as any)?.github_repo_url ?? null}
-              />
 
               {/* FINAL STEP: CLOSE & STRIPE CHECKOUT DISPATCH */}
               <div className="rounded-2xl bg-slate-900 p-7 text-white shadow-md flex flex-col justify-between gap-5 sm:flex-row sm:items-center">

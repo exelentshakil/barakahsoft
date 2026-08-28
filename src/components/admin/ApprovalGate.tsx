@@ -5,7 +5,6 @@ import { CheckCircle2, Loader2, ShieldCheck, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { DomainManager } from "@/components/admin/DomainManager";
 import type { Artifact, Lead } from "@/types/database";
 
 // The approval gate, and the domain the site will live on.
@@ -157,7 +156,6 @@ export function ApprovalGate({
         )}
 
         <div className="border-t border-border pt-4">
-          <DomainManager lead={lead} />
         </div>
       </CardContent>
     </Card>
