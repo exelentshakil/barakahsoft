@@ -1,23 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Bot, Check, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { LEAD_PROBLEMS } from "@/lib/lead-problems";
 import { trackPixelEvent } from "@/lib/meta-pixel";
 import { isValidUrl } from "@/lib/validate-url";
 
 export function RedesignIntakeFlow() {
   const [url, setUrl] = useState("");
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState<1 | 2>(1);
-  const [helpNeeded, setHelpNeeded] = useState<string[]>([]);
-  const [anythingElse, setAnythingElse] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -34,11 +29,6 @@ export function RedesignIntakeFlow() {
       return;
     }
     setOpen(true);
-    setStep(1);
-  }
-
-  function toggle(problem: string) {
-    setHelpNeeded((current) => current.includes(problem) ? current.filter((item) => item !== problem) : [...current, problem]);
   }
 
   async function submit(event: React.FormEvent) {
@@ -50,7 +40,7 @@ export function RedesignIntakeFlow() {
       const response = await fetch("/api/intake", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source_url: url, source: "home", help_needed: helpNeeded, anything_else: anythingElse, name, email, phone, tcpa_consent: consent, event_id: eventId }),
+        body: JSON.stringify({ source_url: url, source: "home", help_needed: [], anything_else: "", name, email, phone, tcpa_consent: consent, event_id: eventId }),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -87,87 +77,44 @@ export function RedesignIntakeFlow() {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden border border-[#e5e7f2] p-0 shadow-2xl sm:max-w-lg bg-white">
+        <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden border border-[#e5e7f2] p-0 shadow-2xl sm:max-w-md bg-white">
           <div className="h-1 bg-[#533afd]" />
           <div className="p-6 sm:p-8">
             <div className="mb-6 flex items-center justify-between text-xs font-bold text-[#533afd]">
                <span>Free Lead-Machine Audit</span>
-              <span>Step {step} of 2</span>
             </div>
-            {step === 1 ? (
-              <form onSubmit={(event) => { event.preventDefault(); setStep(2); }}>
-                <DialogHeader>
-                  <DialogTitle className="text-xl font-bold text-[#0d1738]">Let&apos;s diagnose your lead flow</DialogTitle>
-                  <DialogDescription className="text-xs text-[#777588]">
-                    Select everything that applies. We&apos;ll use this in the audit and redesign brief.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="mt-4 space-y-1.5 max-h-[40vh] overflow-y-auto pr-2">
-                  {LEAD_PROBLEMS.map((problem) => (
-                    <button
-                      type="button"
-                      key={problem}
-                      onClick={() => toggle(problem)}
-                      className={`flex w-full items-center justify-between rounded-lg border p-3 text-left text-sm font-semibold transition ${
-                        helpNeeded.includes(problem)
-                          ? "border-[#533afd] bg-[#f0f3ff] text-[#0d1738]"
-                          : "border-[#e5e7f2] bg-white text-[#42506a] hover:border-[#533afd]/50"
-                      }`}
-                    >
-                      <span>{problem}</span>
-                      <span
-                        className={`flex h-5 w-5 items-center justify-center rounded-full border ${
-                          helpNeeded.includes(problem)
-                            ? "border-[#533afd] bg-[#533afd] text-white"
-                            : "border-[#c8c4da]"
-                        }`}
-                      >
-                        {helpNeeded.includes(problem) && <Check className="h-3 w-3" />}
-                      </span>
-                    </button>
-                  ))}
+            <form onSubmit={submit}>
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold text-[#0d1738]">Where should we send your private plan?</DialogTitle>
+                <DialogDescription className="text-xs text-[#777588]">
+                  We&apos;ll build a custom concept for {url.replace(/^https?:\/\//i, '').split('/')[0]} and email it to you in 48 hours.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="mt-6 space-y-4">
+                <div>
+                  <Label htmlFor="redesign-name" className="text-xs font-bold text-[#0d1738]">First name</Label>
+                  <Input id="redesign-name" required value={name} onChange={(event) => setName(event.target.value)} className="mt-1 border-[#e5e7f2] text-base sm:text-sm" />
                 </div>
-                <Button type="submit" className="mt-5 w-full rounded-md bg-[#533afd] py-3 text-sm font-bold text-white hover:bg-[#432bd9]">
-                  Next: build my lead-machine plan <ArrowRight className="h-4 w-4" />
+                <div>
+                  <Label htmlFor="redesign-email" className="text-xs font-bold text-[#0d1738]">Email address</Label>
+                  <Input id="redesign-email" required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1 border-[#e5e7f2] text-base sm:text-sm" />
+                </div>
+                <div>
+                  <Label htmlFor="redesign-phone" className="text-xs font-bold text-[#0d1738]">Phone number (for 1-tap call confirmation)</Label>
+                  <Input id="redesign-phone" type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} className="mt-1 border-[#e5e7f2] text-base sm:text-sm" />
+                </div>
+                <label className="flex items-start gap-2 text-xs text-[#42506a]">
+                  <Checkbox required checked={consent} onChange={(event) => setConsent(event.target.checked)} className="mt-0.5" />
+                  <span>I agree to be contacted by email, call, or text about this redesign. Consent is not a condition of purchase.</span>
+                </label>
+                {error && <p className="text-sm text-[#ba1a1a]">{error}</p>}
+              </div>
+              <div className="mt-6 flex flex-col gap-3">
+                <Button type="submit" disabled={submitting} className="w-full rounded-md bg-[#533afd] px-6 py-4 text-sm font-bold text-white hover:bg-[#432bd9]">
+                   {submitting ? "Mapping Your Lead Flow..." : "Start My Free Audit"} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
-              </form>
-            ) : (
-              <form onSubmit={submit}>
-                <DialogHeader>
-                  <DialogTitle className="text-xl font-bold text-[#0d1738]">Where should we send your private plan?</DialogTitle>
-                  <DialogDescription className="text-xs text-[#777588]">
-                    We&apos;ll use these details to deliver the concept and follow up about your request.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="mt-6 space-y-4">
-                  <div>
-                    <Label htmlFor="redesign-name" className="text-xs font-bold text-[#0d1738]">First name</Label>
-                    <Input id="redesign-name" required value={name} onChange={(event) => setName(event.target.value)} className="mt-1 border-[#e5e7f2] text-base sm:text-sm" />
-                  </div>
-                  <div>
-                    <Label htmlFor="redesign-email" className="text-xs font-bold text-[#0d1738]">Email address</Label>
-                    <Input id="redesign-email" required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1 border-[#e5e7f2] text-base sm:text-sm" />
-                  </div>
-                  <div>
-                    <Label htmlFor="redesign-phone" className="text-xs font-bold text-[#0d1738]">Phone number (for 1-tap call confirmation)</Label>
-                    <Input id="redesign-phone" type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} className="mt-1 border-[#e5e7f2] text-base sm:text-sm" />
-                  </div>
-                  <label className="flex items-start gap-2 text-xs text-[#42506a]">
-                    <Checkbox required checked={consent} onChange={(event) => setConsent(event.target.checked)} className="mt-0.5" />
-                    <span>I agree to be contacted by email, call, or text about this redesign. Consent is not a condition of purchase.</span>
-                  </label>
-                  {error && <p className="text-sm text-[#ba1a1a]">{error}</p>}
-                </div>
-                <div className="mt-6 flex items-center justify-between gap-3">
-                  <button type="button" onClick={() => setStep(1)} className="text-xs font-semibold text-[#777588] hover:text-[#0d1738]">
-                    ← Back
-                  </button>
-                  <Button type="submit" disabled={submitting} className="rounded-md bg-[#533afd] px-6 py-2.5 text-xs font-bold text-white hover:bg-[#432bd9]">
-                     {submitting ? "Mapping Your Lead Flow..." : "Start My Free Audit"}
-                  </Button>
-                </div>
-              </form>
-            )}
+              </div>
+            </form>
           </div>
         </DialogContent>
       </Dialog>
