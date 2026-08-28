@@ -1,3 +1,4 @@
+export const runtime = "edge";
 import { LeadEngineLanding } from "@/components/landing/LeadEngineLanding";
 
 // The Design Quality Bar reads approved showcases from the database, so a
