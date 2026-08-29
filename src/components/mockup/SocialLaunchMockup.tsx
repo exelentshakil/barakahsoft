@@ -440,7 +440,12 @@ export function SocialLaunchMockup({
           <img
             src={data.heroCaptureUrl}
             alt="Hero Section Screenshot"
-            className="w-full h-auto object-cover object-top min-h-full"
+            className="w-full h-auto object-cover object-top min-h-full origin-top"
+            style={{ 
+              imageRendering: "high-quality" as any, 
+              transform: "translateZ(0)", 
+              backfaceVisibility: "hidden"
+            }}
           />
           {/* Glass Glare Reflection Line */}
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none z-10" />
@@ -577,7 +582,12 @@ export function SocialLaunchMockup({
             src={data.aboutCaptureUrl}
             alt={`${businessShortName} About Section Snapshot`}
             crossOrigin="anonymous"
-            className="w-full h-auto object-cover object-top min-h-full"
+            className="w-full h-auto object-cover object-top min-h-full origin-top"
+            style={{ 
+              imageRendering: "high-quality" as any, 
+              transform: "translateZ(0)", 
+              backfaceVisibility: "hidden"
+            }}
           />
           {/* Subtle Glass Glare */}
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/15 pointer-events-none" />
