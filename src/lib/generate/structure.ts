@@ -213,6 +213,11 @@ Anything else becomes an on-page anchor. ${brief.phone ? `Phone links use tel:${
 3. PREMIUM OVERLAPS: Ensure the design breathes with generous padding (e.g., py-24). To replicate a premium agency look, use negative margins to overlap elements where appropriate (e.g., pull a Trust Badges card up to overlap the bottom border of the Hero section).
 4. SERVICE CARDS MUST USE IMAGES: Every service and service area card MUST use an image. Do not use generic icons if images are mapped to that section. Each card must have a top image (h-48 object-cover), a title, and a clear call-to-action button or link.
 
+5. HERO EXCELLENCE: The Hero section is the highest-value part of the page. It MUST use a massive, premium layout (e.g. min-height: 90vh). The background image MUST cover the entire area with a dark overlay, and the main call-to-action button MUST use the exact classes 'site-cta site-cta--primary'.
+6. ABOUT SECTION ELEGANCE: The About section must look like an editorial magazine. NEVER stack text directly under an image. Use a strict 2-column layout (grid-cols-1 lg:grid-cols-2) where the image spans the full height of the column on one side, and the text breathes with massive padding on the other.
+7. CTA BUTTONS: Every single primary button on the page MUST use the exact classes 'site-cta site-cta--primary'. Do not invent custom button classes.
+
+
 ${MASTER_HERO_STANDARD}
 
 ${MASTER_ABOUT_STANDARD}

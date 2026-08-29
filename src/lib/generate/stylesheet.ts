@@ -217,6 +217,11 @@ STRICT DESIGN GUARDRAILS (YOU MUST FOLLOW THESE):
 2. Buttons: Buttons must have perfect visual balance. Always use flexbox for buttons: display: inline-flex; align-items: center; justify-content: center;. Apply padding explicitly (e.g., padding: 12px 24px;). Set line-height: 1 or line-height: normal to prevent the text from clipping or sitting too low inside the button.
 3. Hero Overlays: Whenever a section has a background image (like a Hero), you MUST apply a dark or light overlay to ensure text contrast. The parent must be position: relative. The overlay must be position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 1;. The text container must have position: relative; z-index: 10;.
 4. Grid/Flexbox Balance: When building asymmetric layouts (like 1 large image on the left, 4 smaller cards on the right), the columns MUST balance perfectly. Use CSS Grid (grid-template-columns: 1fr 1fr) or Flexbox (align-items: stretch). If an image is in a flex column, it must have height: 100%; object-fit: cover; so it perfectly matches the height of the adjacent column.
+
+5. VARIABLE RULES (CRITICAL): NEVER use 'color: var(--bs-primary)' for text or links. '--bs-primary' is a background fill color. For text that matches the brand color, you MUST use 'color: var(--bs-primary-on-surface)'.
+6. HERO HEIGHT: The #hero section MUST have 'min-height: clamp(80vh, 800px, 100vh); display: flex; align-items: center;' to ensure it looks massive and breathtaking above the fold.
+7. ABOUT SECTION: The .about section MUST use 'display: grid; align-items: stretch;' on desktop so the image perfectly matches the height of the text column.
+
 `,
       model,
     },
