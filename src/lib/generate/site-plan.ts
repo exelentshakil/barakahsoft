@@ -125,6 +125,7 @@ export async function generateSitePlan(
   model?: string
 ): Promise<SitePlan> {
   return fallbackPlan(brief, media);
+}
 /* 
   const assignedLens = strategyLensFor(brief);
   const prompt = `Act as a three-person commercial review: a marketing director, an experienced ${brief.industry} operator, and a local-search strategist. Diagnose and plan this homepage before any HTML is written. The owner should feel that the page understands their commercial problems better than they have articulated them.
