@@ -330,7 +330,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
           
         return html;
       } catch (err) {
-        throw new Error("Failed to generate with Gemini: " + err instanceof Error ? err.message : String(err));
+        throw new Error("Failed to generate with Gemini: " + (err instanceof Error ? err.message : String(err)));
       }
     });
 
