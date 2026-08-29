@@ -801,14 +801,6 @@ export function SocialLaunchMockup({
             </linearGradient>
 
             {/* Main Chiseled Front Face */}
-            {/* Rim Highlight */}
-            <linearGradient id={`rockRim-${idPrefix}`} x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="rgba(255,255,255,0.7)" />
-              <stop offset="30%" stopColor="rgba(255,255,255,0.3)" />
-              <stop offset="70%" stopColor="rgba(255,255,255,0.6)" />
-              <stop offset="100%" stopColor="rgba(255,255,255,0.15)" />
-            </linearGradient>
-
             {/* Main Chiseled Front Face */}
             <linearGradient id={`faceCenter-${idPrefix}`} x1="40%" y1="0%" x2="50%" y2="100%">
               <stop offset="0%" stopColor="#243044" />
@@ -851,14 +843,7 @@ export function SocialLaunchMockup({
           <polygon
             points="110,38 240,24 440,24 570,38 620,65 530,76 150,76 60,65"
             fill={`url(#rockPlateau-${idPrefix})`}
-            stroke={`url(#rockRim-${idPrefix})`}
-            strokeWidth="1.75"
           />
-
-          {/* Subtle Chiseled Ridge Lines */}
-          <path d="M 220,68 L 250,148" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" strokeLinecap="round" />
-          <path d="M 460,68 L 440,148" stroke="rgba(0,0,0,0.5)" strokeWidth="1.5" strokeLinecap="round" />
-          <path d="M 330,75 L 345,145" stroke="rgba(0,0,0,0.4)" strokeWidth="1.2" strokeLinecap="round" />
         </svg>
       </div>
     </div>
@@ -984,7 +969,7 @@ export function SocialLaunchMockup({
 
           {stageMode === "rock" ? (
             renderRockPedestalShowcase('preview', screenRef, screenScale, "w-[92%] max-w-[465px]", isExporting, {
-              cardTop: "-top-12 sm:-top-16",
+              cardTop: "-top-16 sm:-top-20",
               cardRight: "-right-1 sm:-right-2",
               macTranslateY: "translateY(12px)",
             })
