@@ -715,75 +715,7 @@ export function SocialLaunchMockup({
   };
 
   {/* Integrated 3D MacBook Pro Resting on Organic Sculpted Slate Rock Pedestal */}
-  const renderRockPedestalShowcase = (
-    idPrefix = 'default',
-    customScreenRef = screenRef,
-    customScale = screenScale,
-    containerClass = "w-[92%] max-w-[465px]",
-    isExport = false,
-    opts?: {
-      cardTop?: string;
-      cardRight?: string;
-      widthClass?: string;
-      macTranslateY?: string;
-    }
-  ) => (
-    <div className={`relative flex flex-col items-center justify-center ${containerClass} mx-auto perspective-[1600px]`}>
-      {/* 0. Layered Floating About Card Hovering BEHIND MacBook */}
-      {renderFloatingAboutCard({
-        topOffset: opts?.cardTop || "-top-16 sm:-top-20",
-        rightOffset: opts?.cardRight || "-right-1 sm:-right-2",
-        widthClass: opts?.widthClass,
-        isExport,
-      })}
-
-      {/* 1. 3D MacBook Pro in Foreground */}
-      {render3DMacBook(customScreenRef, customScale, isExport)}
-
-      {/* 2. Sculpted Organic Mountain Slate Pedestal */}
-      <div className="absolute z-10 top-[60%] sm:top-[65%] w-[125%] max-w-[620px] pointer-events-none" style={{ left: '50%', transform: 'translateX(-50%)' }}>
-        <svg
-          viewBox="0 0 680 180"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-auto drop-shadow-[0_30px_50px_rgba(0,0,0,0.65)]"
-        >
-          <defs>
-            <linearGradient id={`rockPlateau-${idPrefix}`} x1="0%" y1="0%" x2="100%" y2="80%">
-              <stop offset="0%" stopColor="#4a5568" />
-              <stop offset="35%" stopColor="#334155" />
-              <stop offset="70%" stopColor="#1e293b" />
-              <stop offset="100%" stopColor="#0f172a" />
-            </linearGradient>
-
-            <linearGradient id={`faceCenter-${idPrefix}`} x1="40%" y1="0%" x2="50%" y2="100%">
-              <stop offset="0%" stopColor="#243044" />
-              <stop offset="60%" stopColor="#141c2c" />
-              <stop offset="100%" stopColor="#090d16" />
-            </linearGradient>
-
-            <linearGradient id={`faceLeft-${idPrefix}`} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#334155" />
-              <stop offset="100%" stopColor="#0f172a" />
-            </linearGradient>
-
-            <linearGradient id={`faceRight-${idPrefix}`} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#1e293b" />
-              <stop offset="100%" stopColor="#050811" />
-            </linearGradient>
-          </defs>
-
-          <ellipse cx="340" cy="155" rx="260" ry="22" fill="#000000" opacity="0.5" filter="blur(8px)" />
-
-          <polygon points="60,65 140,140 540,140 620,65 570,38 110,38" fill={`url(#faceCenter-${idPrefix})`} />
-          <polygon points="60,65 140,140 250,148 220,68 110,38" fill={`url(#faceLeft-${idPrefix})`} opacity="0.9" />
-          <polygon points="220,68 250,148 440,148 460,68" fill={`url(#faceCenter-${idPrefix})`} />
-          <polygon points="460,68 440,148 540,140 620,65 570,38" fill={`url(#faceRight-${idPrefix})`} opacity="0.95" />
-          <polygon points="110,38 240,24 440,24 570,38 620,65 530,76 150,76 60,65" fill={`url(#rockPlateau-${idPrefix})`} />
-        </svg>
-      </div>
-    </div>
-  );
+  
 
   const render3DMacBook = (customScreenRef = screenRef, customScale = screenScale, isExport = false) => (
     <div
@@ -903,14 +835,7 @@ export function SocialLaunchMockup({
             }}
           />
 
-          {stageMode === "rock" ? (
-            renderRockPedestalShowcase('preview', screenRef, screenScale, "w-[92%] max-w-[465px]", isExporting, {
-              cardTop: "-top-28 sm:-top-36",
-              cardRight: "-right-1 sm:-right-2",
-              macTranslateY: "translateY(12px)",
-            })
-          ) : (
-            <>
+          <>
               {/* Soft Ground Contact Shadow */}
               <div className="absolute bottom-1 sm:bottom-3 left-4 sm:left-8 right-4 sm:right-8 h-12 sm:h-16 bg-slate-950/70 blur-2xl rounded-full transform scale-x-115 -rotate-2" />
               {/* Layered Floating About Card Behind Laptop */}
@@ -918,7 +843,6 @@ export function SocialLaunchMockup({
               {/* 3D MacBook Pro in Foreground */}
               {render3DMacBook(screenRef, screenScale, isExporting)}
             </>
-          )}
         </div>
       </div>
       </div>
@@ -926,50 +850,6 @@ export function SocialLaunchMockup({
       {/* Control Panel */}
       {showControls && (
         <div className="w-full max-w-[560px] bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-3.5">
-          {/* 1. Stage Mode Switcher (Rock Pedestal vs Clean Studio) */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-900 flex items-center justify-between">
-              <span className="flex items-center gap-1.5">
-                <Layout className="h-3.5 w-3.5 text-indigo-600" /> 3D Stage Composition
-              </span>
-              <span className="text-[10px] text-slate-500 font-normal">
-                {stageMode === "rock" ? "Rugged Mountain Slate Pedestal" : "Studio 3D Poster (Clean Ground)"}
-              </span>
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setStageMode("rock");
-                  onStageModeChange?.("rock");
-                }}
-                className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition ${
-                  stageMode === "rock"
-                    ? "border-indigo-600 bg-indigo-50 text-indigo-700 shadow-xs"
-                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                }`}
-              >
-                <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
-                Rock Pedestal Showcase
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setStageMode("poster");
-                  onStageModeChange?.("poster");
-                }}
-                className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition ${
-                  stageMode === "poster"
-                    ? "border-indigo-600 bg-indigo-50 text-indigo-700 shadow-xs"
-                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                }`}
-              >
-                <Layers className="h-3.5 w-3.5 text-indigo-600" />
-                Studio 3D Poster
-              </button>
-            </div>
-          </div>
-
           {/* 2. Headline Hook Mode */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-900 flex items-center justify-between">
