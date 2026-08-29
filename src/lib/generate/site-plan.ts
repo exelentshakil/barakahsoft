@@ -77,148 +77,29 @@ function fallbackPlan(brief: SiteBrief, media: MediaPlan): SitePlan {
       mediaSlot: media.some((item) => item.slot === "hero") ? "hero" : null,
     },
     {
-      id: "services",
-      kind: "services",
-      label: "Services",
-      visitorProblem: "Help visitors identify whether the business handles their specific job.",
-      purpose: "Connect every real service to the practical problem it resolves.",
-      archetype: "editorial service index with one featured work image",
-      evidence: brief.services,
-      mediaSlot: media.some((item) => item.slot === "service-0") ? "service-0" : null,
-    },
-    {
-      id: "cta-mid",
-      kind: "cta",
-      label: "Get started",
-      visitorProblem: "Make it easy to take action immediately after seeing services.",
-      purpose: `Offer a clear ${brief.intent.primaryLabel} path before scrolling further.`,
-      archetype: "contained conversion band",
-      evidence: [],
-      mediaSlot: null,
-    },
-    {
-      id: "decision-guide",
-      kind: "problem",
-      label: "Customer decision guide",
-      visitorProblem: `Help a ${brief.industry} buyer recognise the practical signs that determine the right next step.`,
-      purpose: "Turn genuine pre-hire uncertainty into useful, fact-grounded guidance rather than a generic company process.",
-      archetype: "editorial diagnostic guide with question-led rows",
-      evidence: [],
-      mediaSlot: null,
-    },
-    {
-      id: "proof",
-      kind: "proof",
-      label: "Why choose this business",
-      visitorProblem: "Distinguish real evidence from generic claims made by competitors.",
-      purpose: "Place only supported proof beside the decision it validates.",
-      archetype: "asymmetric proof band with one strong visual anchor",
-      evidence: [brief.rating && brief.reviewCount ? `${brief.rating} from ${brief.reviewCount} reviews` : null, brief.licensedInsured ? "Licensed and insured claim" : null].filter((value): value is string => Boolean(value)),
-      mediaSlot: media.some((item) => item.slot === "proof") ? "proof" : null,
-    },
-    {
       id: "about",
       kind: "about",
-      label: "About",
-      visitorProblem: "Show who is behind the work and why inviting them in is credible.",
-      purpose: "Balance a concise company story, authentic imagery and supported trust evidence.",
+      label: "About the business",
+      visitorProblem: "Establish trust in the people behind the business, not just a list of services.",
+      purpose: "Connect the owner's approach to the safety and quality of the final result.",
       archetype: "owner or team editorial profile with integrated evidence",
       evidence: [brief.founder, brief.licensedInsured ? "Licensed and insured claim" : null].filter((value): value is string => Boolean(value)),
       mediaSlot: media.some((item) => item.slot === "about") ? "about" : null,
     },
-    {
-      id: "process",
-      kind: "process",
-      label: "How it works",
-      visitorProblem: "Remove the anxiety of not knowing what happens after contacting the business.",
-      purpose: "Outline the simple steps from enquiry to finished result.",
-      archetype: "numbered process timeline",
-      evidence: ["Contact us", "We do the work", "Done"],
-      mediaSlot: null,
-    },
-    {
-      id: "problem-summary",
-      kind: "problem",
-      label: "Common issues",
-      visitorProblem: "Address lingering doubts about specific situations.",
-      purpose: "Show deep understanding of common frustrations.",
-      archetype: "editorial text blocks",
-      evidence: [],
-      mediaSlot: null,
-    },
   ];
-
-  if (brief.reviews.length > 0) {
-    sections.push({
-      id: "reviews",
-      kind: "reviews",
-      label: "Customer reviews",
-      visitorProblem: "Provide credible reassurance from people who have already hired the business.",
-      purpose: "Present real attributed review text in an agency-grade equal-height horizontal slider.",
-      archetype: "agency-grade equal-height review slider with 5-star ratings and customer attributions",
-      // Not truncated. The plan's evidence is copied into the page almost
-      // verbatim, so a review clipped here ships as "due to a wat" — which
-      // reads as a broken site rather than a real customer. Long reviews are
-      // trimmed at a sentence boundary instead of mid-word.
-      evidence: brief.reviews.map((review) => `${review.author}: ${trimToSentence(review.text, 320)}`),
-      mediaSlot: null,
-    });
-  }
-
-  if (brief.areas.length > 0) {
-    sections.push({
-      id: "areas",
-      kind: "areas",
-      label: "Service areas",
-      visitorProblem: "Confirm that the visitor's location is covered.",
-      purpose: "Make real service locations easy to scan and show off service territory coverage with a live map.",
-      archetype: "2-column territory dispatch layout with location badges and live Google Map embed",
-      evidence: brief.areas,
-      mediaSlot: null,
-    });
-  }
-
-  sections.push(
-    {
-      id: "faq",
-      kind: "faq",
-      label: "Frequently asked questions",
-      visitorProblem: "Answer high-intent questions without inventing policy, pricing or timing.",
-      purpose: "Resolve remaining factual objections before the visitor contacts the business.",
-      archetype: "two-column introduction and accessible accordion",
-      evidence: [],
-      mediaSlot: null,
-    },
-    {
-      id: "contact",
-      kind: "contact",
-      label: "Contact",
-      visitorProblem: "Make the final action obvious without scrolling back.",
-      purpose: `Resolve the page with the same ${brief.intent.primaryLabel} action and real contact details.`,
-      archetype: "substantial closing split with contact proof",
-      evidence: [brief.phone, brief.email].filter((value): value is string => Boolean(value)),
-      mediaSlot: null,
-    }
-  );
 
   return {
     diagnosis: `Visitors need to recognise the right ${brief.industry} service in ${brief.city}, trust the people doing it and understand how to start without friction.`,
     strategyLens: strategyLensFor(brief),
     designNotes: `Build one spacious visual argument with varied section silhouettes, controlled colour cadence and a consistent action treatment. Keep customer outcomes and real evidence close together. Make the About composition substantial rather than a small portrait beside a wall of copy.`,
     recurringPrimitive: "a restrained brand-colour rule and numbered marker",
-    painCoverage: brief.painInstructions.map((problem) => ({
-      problem,
-      response: "Answer this concern visibly through the page argument and repeat the relevant action at its decision point.",
-      sectionIds: problem.toLowerCase().includes("search") && sections.some((section) => section.id === "areas")
-        ? ["areas", "faq"]
-        : ["hero", "contact"],
-    })),
-    rejectedSections: ["Generic feature grids with no buying question", "Unsupported metrics or company-history filler"],
+    painCoverage: [],
+    rejectedSections: [],
     services: brief.services.slice(0, 12).map((name) => ({ name, blurb: `${name} for customers in ${brief.city}.` })),
     sections,
   };
 }
-
+// 
 /**
  * Shorten to a whole sentence, never mid-word.
  *
@@ -243,6 +124,8 @@ export async function generateSitePlan(
   provider: GenerationProvider = "openai",
   model?: string
 ): Promise<SitePlan> {
+  return fallbackPlan(brief, media);
+/* 
   const assignedLens = strategyLensFor(brief);
   const prompt = `Act as a three-person commercial review: a marketing director, an experienced ${brief.industry} operator, and a local-search strategist. Diagnose and plan this homepage before any HTML is written. The owner should feel that the page understands their commercial problems better than they have articulated them.
 
@@ -330,6 +213,7 @@ Return strict JSON only:
   return { ...parsed.data, strategyLens: assignedLens, sections, services };
 }
 
+*/
 export function sectionBatches(sections: PlannedSection[], size = 1): PlannedSection[][] {
   const batches: PlannedSection[][] = [];
   for (let index = 0; index < sections.length; index += size) batches.push(sections.slice(index, index + size));
