@@ -731,60 +731,17 @@ export function SocialLaunchMockup({
     <div className={`relative flex flex-col items-center justify-center ${containerClass} mx-auto perspective-[1600px]`}>
       {/* 0. Layered Floating About Card Hovering BEHIND MacBook */}
       {renderFloatingAboutCard({
-        topOffset: opts?.cardTop,
-        rightOffset: opts?.cardRight,
+        topOffset: opts?.cardTop || "-top-16 sm:-top-20",
+        rightOffset: opts?.cardRight || "-right-1 sm:-right-2",
         widthClass: opts?.widthClass,
         isExport,
       })}
 
       {/* 1. 3D MacBook Pro in Foreground */}
-      <div
-        className="relative z-20 w-full transition-transform duration-500"
-        style={{
-          transform: `rotateY(-12deg) rotateX(10deg) rotateZ(1.5deg) ${opts?.macTranslateY || "translateY(12px)"}`,
-          transformStyle: "preserve-3d",
-        }}
-      >
-        {/* Screen Bezel & Glass Lid */}
-        <div className="relative rounded-t-2xl bg-[#0b0f17] p-2.5 sm:p-3 pb-4 sm:pb-5 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] border border-white/25 ring-1 ring-black/90">
-          {/* Top Center Camera Notch */}
-          <div className="absolute top-1 left-1/2 -translate-x-1/2 h-1.5 w-12 bg-black rounded-b-md z-20 flex items-center justify-center">
-            <span className="h-0.5 w-0.5 rounded-full bg-[#334155]" />
-          </div>
+      {render3DMacBook(customScreenRef, customScale, isExport)}
 
-          {/* Screen Display Inner Frame */}
-          <div
-            ref={customScreenRef}
-            className="relative aspect-[16/10] w-full rounded-lg bg-[#0e1626] overflow-hidden shadow-inner border border-black/90 flex flex-col"
-          >
-            {renderScreenContent(customScale, isExport)}
-          </div>
-        </div>
-
-        {/* Aluminum Laptop Base / Deck (Silver MacBook Pro) */}
-        <div
-          className="relative h-4 sm:h-5 w-[106%] -left-[3%] rounded-b-2xl bg-gradient-to-b from-[#f1f5f9] via-[#cbd5e1] to-[#94a3b8] shadow-2xl border-t border-white/95 flex items-center justify-between px-3 z-30"
-          style={{
-            transform: isExport ? "rotateX(52deg)" : "rotateX(52deg) translateZ(-4px)",
-            boxShadow: "0 20px 40px rgba(0,0,0,0.6), 0 2px 4px rgba(255,255,255,0.8) inset",
-          }}
-        >
-          <div className="flex items-center gap-1 opacity-70">
-            <span className="h-1 w-1.5 rounded-xs bg-slate-600" />
-            <span className="h-0.5 w-1 rounded-xs bg-slate-600" />
-          </div>
-          <div className="h-1 w-16 sm:w-28 bg-[#64748b] rounded-full mx-auto" />
-          <div className="flex items-center gap-1 opacity-70">
-            <span className="h-0.5 w-1 rounded-xs bg-slate-600" />
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Sculpted Organic Mountain Slate Pedestal — Clean Bezels, Natural Ground Shadows */}
-      <div className="relative z-10 -mt-3 sm:-mt-4 w-[116%] max-w-[620px] pointer-events-none">
-        {/* Soft Ambient Contact Shadow Underneath Laptop Deck */}
-        <div className="absolute top-1 left-1/2 -translate-x-1/2 w-[86%] h-5 bg-black/75 blur-md rounded-full" />
-
+      {/* 2. Sculpted Organic Mountain Slate Pedestal */}
+      <div className="absolute z-10 top-[60%] sm:top-[65%] w-[125%] max-w-[620px] pointer-events-none" style={{ left: '50%', transform: 'translateX(-50%)' }}>
         <svg
           viewBox="0 0 680 180"
           fill="none"
@@ -792,7 +749,6 @@ export function SocialLaunchMockup({
           className="w-full h-auto drop-shadow-[0_30px_50px_rgba(0,0,0,0.65)]"
         >
           <defs>
-            {/* Slate Top Plateau Gradient */}
             <linearGradient id={`rockPlateau-${idPrefix}`} x1="0%" y1="0%" x2="100%" y2="80%">
               <stop offset="0%" stopColor="#4a5568" />
               <stop offset="35%" stopColor="#334155" />
@@ -800,50 +756,30 @@ export function SocialLaunchMockup({
               <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
 
-            {/* Main Chiseled Front Face */}
-            {/* Main Chiseled Front Face */}
             <linearGradient id={`faceCenter-${idPrefix}`} x1="40%" y1="0%" x2="50%" y2="100%">
               <stop offset="0%" stopColor="#243044" />
               <stop offset="60%" stopColor="#141c2c" />
               <stop offset="100%" stopColor="#090d16" />
             </linearGradient>
 
-            {/* Left Chiseled Shadow Facet */}
             <linearGradient id={`faceLeft-${idPrefix}`} x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#334155" />
               <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
 
-            {/* Right Chiseled Shadow Facet */}
             <linearGradient id={`faceRight-${idPrefix}`} x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#1e293b" />
               <stop offset="100%" stopColor="#050811" />
             </linearGradient>
           </defs>
 
-          {/* Under Base Contact Soft Blur */}
           <ellipse cx="340" cy="155" rx="260" ry="22" fill="#000000" opacity="0.5" filter="blur(8px)" />
 
-          {/* Pedestal Bottom Base Facets */}
-          <polygon
-            points="60,65 140,140 540,140 620,65 570,38 110,38"
-            fill={`url(#faceCenter-${idPrefix})`}
-          />
-
-          {/* Left Chiseled Slope */}
+          <polygon points="60,65 140,140 540,140 620,65 570,38 110,38" fill={`url(#faceCenter-${idPrefix})`} />
           <polygon points="60,65 140,140 250,148 220,68 110,38" fill={`url(#faceLeft-${idPrefix})`} opacity="0.9" />
-
-          {/* Center Main Chiseled Facet */}
           <polygon points="220,68 250,148 440,148 460,68" fill={`url(#faceCenter-${idPrefix})`} />
-
-          {/* Right Chiseled Slope */}
           <polygon points="460,68 440,148 540,140 620,65 570,38" fill={`url(#faceRight-${idPrefix})`} opacity="0.95" />
-
-          {/* Top Rock Plateau */}
-          <polygon
-            points="110,38 240,24 440,24 570,38 620,65 530,76 150,76 60,65"
-            fill={`url(#rockPlateau-${idPrefix})`}
-          />
+          <polygon points="110,38 240,24 440,24 570,38 620,65 530,76 150,76 60,65" fill={`url(#rockPlateau-${idPrefix})`} />
         </svg>
       </div>
     </div>
