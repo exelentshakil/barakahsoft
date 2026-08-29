@@ -167,10 +167,19 @@ MANDATORY HERO DOM STRUCTURE (You MUST use this layout logic):
      * SOCIAL TRUST BADGES: Include visual Google (G) and Facebook (f) or Yelp indicators with Yellow Stars (text-yellow-400) directly under the text.
    - RIGHT (Form - 40% width):
      * THE ARROW FORM: A white card (bg-white rounded-md shadow-2xl).
-     * FORM HEADER: A bold colored block at the top of the form with a down-pointing CSS arrow to guide the eye. Example: 
-       <div class="bg-[var(--bs-primary)] text-white p-4 relative text-center font-bold">
-         GET YOUR FREE QUOTE TODAY
+          * FORM HEADER VARIATIONS: You MUST vary the form header layout based on the lead's tone. Do not just use one line. Use one of these two structures:
+       Option A (Bold Title + Subtext):
+       <div class="bg-[var(--bs-primary)] text-white p-5 relative text-center rounded-t-md">
+         <h3 class="font-bold text-xl uppercase tracking-wide leading-tight">GET IN TOUCH WITH US</h3>
+         <p class="text-sm opacity-90 mt-1">Get Your Free Estimate Today</p>
          <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[12px] border-t-[var(--bs-primary)]"></div>
+       </div>
+       
+       Option B (Massive 2-Line Hook):
+       <div class="bg-[var(--bs-primary)] text-white p-6 relative text-center rounded-t-md">
+         <h3 class="font-extrabold text-2xl uppercase tracking-wider leading-none">YOUR ELITE PAINTING<br/>JOURNEY STARTS HERE</h3>
+         <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[12px] border-t-[var(--bs-primary)]"></div>
+       </div>
        </div>
      * FORM BODY: Inputs for Name, Phone, Email, Service Dropdown, and a MASSIVE gradient CTA button.
 
