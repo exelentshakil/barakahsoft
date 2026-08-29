@@ -1,0 +1,31 @@
+The `bespokeHtml` property is defined but NEVER used in `SocialLaunchMockup.tsx`.
+So the text in the laptop screen MUST be coming from `previewUrl` (the iframe).
+But wait! `html-to-image` CANNOT render cross-origin iframes.
+And if it's same-origin (e.g. `/api/preview/123`), `html-to-image` CAN render it!
+Because it accesses `iframe.contentDocument` and clones it!
+BUT it struggles with external resources inside the iframe.
+Why is the iframe shown in the bottom image, but the van image (`heroCaptureUrl`) is shown in the top image?
+If `data.heroCaptureUrl` is set, `renderScreenContent` returns the `<img>` and NEVER returns the `<iframe>`.
+Is it possible the user took the screenshot of the bottom image BEFORE they uploaded the van image, or that the van image failed to load in the exported version?
+Or maybe the bottom image is actually from the `landscape` or `story` export which uses a DIFFERENT reference (`landscapeRef`, `storyRef`) and maybe those refs don't have `data.heroCaptureUrl`? No, `data` is a prop to the whole component.
+
+Wait, look at the facebook pixel text: `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1777`
+This text literally shows up on the screen in the exported image.
+This means the `iframe` was rendered by `html-to-image`.
+But if `heroCaptureUrl` is set, the `iframe` is NOT in the DOM.
+This PROVES that at the time the export was taken, `heroCaptureUrl` was NULL.
+Ah! The user uploaded the image AFTER?
+No, the user's issue is:
+"export buttons are not exporting exactly how it is lookin gon preview for both : 3D Stage Composition (Rock Pedestal Showcase vs Studio 3D Poster) and Campaign Angle (NEW WEBSITE vs REDESIGN)"
+
+Okay, let's address the user's exact words:
+"export buttons are not exporting exactly how it is looking on preview for both: 3D Stage Composition (Rock Pedestal Showcase vs Studio 3D Poster) and Campaign Angle (NEW WEBSITE vs REDESIGN)"
+
+If the user changes the Stage Mode to "Rock Pedestal Showcase", the live preview updates.
+But when they click Export (Transparent PNG, 16:9 Landscape, etc.), the exported image DOES NOT have the Rock Pedestal.
+If the user changes the Campaign Angle to "REDESIGN CONCEPT", the live preview updates.
+But when they click Export, the exported image DOES NOT have "REDESIGN CONCEPT" (or has the wrong one).
+
+Why would this happen?
+Because the hidden export containers (`landscapeRef`, `feedRef`, `storyRef`) DO NOT use the state variables `stageMode` and `headlineMode` correctly?
+Let's check if they use `stageMode` and `headlineMode`!

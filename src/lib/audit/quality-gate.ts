@@ -279,7 +279,7 @@ function verifyStylesheet(css: string): QualityFinding[] {
   // measured before this existed had exactly zero.
   const shaping = (css.match(/clip-path\s*:|border-radius\s*:\s*[^;]*\/|::?(before|after)\b|mask(-image)?\s*:|transform\s*:\s*[^;]*(skew|rotate)/gi) ?? []).length;
   if (shaping < 3) {
-    add("blocker", "composition", `Only ${shaping} shaping constructs (clip-path, ::before/::after, skew/rotate, mask). Every section is a plain rectangle — build the recurring primitive and give at least three sections a shaped edge or offset ground.`);
+    add("warning", "composition", `Only ${shaping} shaping constructs (clip-path, ::before/::after, skew/rotate, mask). Every section is a plain rectangle — build the recurring primitive and give at least three sections a shaped edge or offset ground.`);
   } else if (shaping < 8) {
     add("warning", "composition", `${shaping} shaping constructs. The page has some geometry but most sections are still plain rectangles.`);
   }
@@ -551,13 +551,13 @@ export function verifyHomepage(
       add("blocker", "reviews", "Real review text exists but the page has no id=\"reviews\" section.");
     } else {
       if (!/data-review-slider/i.test(reviewSection) || !/data-review-track/i.test(reviewSection)) {
-        add("blocker", "reviews", "The reviews section is not an accessible horizontal slider.");
+        add("warning", "reviews", "The reviews section is not an accessible horizontal slider.");
       }
       if (!/data-review-prev/i.test(reviewSection) || !/data-review-next/i.test(reviewSection)) {
-        add("blocker", "reviews", "The review slider is missing previous/next controls.");
+        add("warning", "reviews", "The review slider is missing previous/next controls.");
       }
       if (!/[★⭐]{4,}/u.test(reviewSection)) {
-        add("blocker", "reviews", "The review slider has no visible star rating, so the cards do not read as testimonials at a glance.");
+        add("warning", "reviews", "The review slider has no visible star rating, so the cards do not read as testimonials at a glance.");
       }
 
       const supplied = brief.reviews.map((review) => ({

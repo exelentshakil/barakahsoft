@@ -221,6 +221,7 @@ STRICT DESIGN GUARDRAILS (YOU MUST FOLLOW THESE):
 5. VARIABLE RULES (CRITICAL): NEVER use 'color: var(--bs-primary)' for text or links. '--bs-primary' is a background fill color. For text that matches the brand color, you MUST use 'color: var(--bs-primary-on-surface)'.
 6. HERO HEIGHT: The #hero section MUST have 'min-height: clamp(80vh, 800px, 100vh); display: flex; align-items: center;' to ensure it looks massive and breathtaking above the fold.
 7. ABOUT SECTION: The .about section MUST use 'display: grid; align-items: stretch;' on desktop so the image perfectly matches the height of the text column.
+8. SHAPING CONSTRUCTS (CRITICAL): You MUST include at least 3 shaping constructs in your CSS (e.g., clip-path, ::before/::after, transform: skew/rotate, or mask). Do not just build plain rectangles. Use them to create diagonal seams, crop frames, or decorative layers that give the page depth.
 
 `,
       model,
