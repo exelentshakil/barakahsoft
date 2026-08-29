@@ -90,13 +90,13 @@ export const bespokeGenerate = inngest.createFunction(
   },
   { event: "bespoke/generate.requested" },
   async ({ event, step }) => {
-    const { lead_id, overrides, phase, provider, model } = event.data as {
+    const { lead_id, overrides, phase } = event.data as {
       lead_id: string;
       overrides: BriefOverrides;
       phase: 1 | 2;
-      provider?: GenerationProvider;
-      model?: string;
     };
+    const provider = "openai";
+    const model = undefined;
     const admin = createAdminClient();
 
     // Every model call this run makes is billed to this lead. Generation is

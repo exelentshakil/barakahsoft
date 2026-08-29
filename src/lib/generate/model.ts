@@ -9,19 +9,48 @@ interface BestModelCallOptions {
   temperature?: number;
   /**
    * An operator's explicit choice, tried before the house chain.
-   *
-   * It is prepended rather than used alone so a model that has since been
-   * retired degrades to the next option instead of failing the build — the
-   * exact failure mode that left the Gemini path silently on Flash.
    */
   model?: string;
 }
 
-// The one call where output quality IS the product routes through here, so
-// structure.ts and stylesheet.ts don't each hardcode which provider that
-// means. OpenAI is the proven default; Gemini is opt-in per generation
-// while it's being evaluated against real leads side by side.
-export async function callBestModel(
+// ------------------------------------------------------------------
+// 1. FAST MODEL (The "Wireframer")
+// Used for heavy lifting where structure/HTML is needed but not deep CSS reasoning.
+// Prevents timeouts on massive outputs.
+// ------------------------------------------------------------------
+export async function callFastModel(
+  prompt: string,
+  options: BestModelCallOptions,
+  provider: GenerationProvider = "openai"
+): Promise<string | null> {
+  const pinned = options.model?.trim();
+
+  if (provider === "gemini") {
+    // Force flash chain for wireframing
+    const flashChain = ["gemini-1.5-flash", "gemini-2.5-flash", "gemini-flash-latest"];
+    const chain = pinned ? [pinned, ...flashChain.filter((m) => m !== pinned)] : flashChain;
+    return callGemini(prompt, chain[0], undefined, {
+      system: options.system,
+      temperature: options.temperature ?? 0.7,
+      maxTokens: options.maxTokens ?? 16000,
+      modelChain: chain,
+    });
+  }
+
+  const flashChain = ["gpt-4o-mini"];
+  return callOpenAI(prompt, {
+    maxTokens: options.maxTokens ?? 16000,
+    temperature: options.temperature ?? 0.7,
+    modelChain: pinned ? [pinned, ...flashChain.filter((m) => m !== pinned)] : flashChain,
+    system: options.system,
+  });
+}
+
+// ------------------------------------------------------------------
+// 2. SMART MODEL (The "Design Engineer")
+// Used for injecting the "Wooooow" factor, styling, CSS grids, and critiques.
+// ------------------------------------------------------------------
+export async function callSmartModel(
   prompt: string,
   options: BestModelCallOptions,
   provider: GenerationProvider = "openai"
@@ -47,6 +76,9 @@ export async function callBestModel(
     system: options.system,
   });
 }
+
+// Alias for backward compatibility with other scripts
+export const callBestModel = callSmartModel;
 
 // Routes a vision request to the best multi-modal model (currently OpenAI's vision capabilities)
 export async function callBestVisionModel(

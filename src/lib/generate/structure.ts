@@ -1,4 +1,4 @@
-import { callBestModel, type GenerationProvider } from "@/lib/generate/model";
+import { callFastModel, callBestModel, type GenerationProvider } from "@/lib/generate/model";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
 import type { DesignDna } from "@/lib/design-dna";
 import type { MediaPlan } from "@/lib/media/plan-media";
@@ -262,7 +262,7 @@ ${
 Reply with every assigned section exactly once, in batch order, using these exact delimiters and no prose or markdown fences:
 ${batch.map((section) => `<!-- SECTION:${section.id} -->\n<section id="${section.id}" class="site-section ...">...</section>\n<!-- /SECTION:${section.id} -->`).join("\n")}`;
 
-  const raw = await callBestModel(prompt, {
+  const raw = await callFastModel(prompt, {
     maxTokens: 16000,
     temperature: 0.65,
     system: "You are a senior web designer, conversion strategist and copywriter producing grounded semantic HTML. You execute an approved plan, preserve one shared component system across batches, and never invent facts.",

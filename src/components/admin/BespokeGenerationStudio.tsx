@@ -104,12 +104,8 @@ export function BespokeGenerationStudio({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataSignature]);
 
-  const [provider, setProvider] = useState<"openai" | "gemini">("openai");
-  const [model, setModel] = useState("");
-  const [models, setModels] = useState<{ id: string; provider: "openai" | "gemini"; recommended: boolean; note?: string }[]>([]);
-  const [modelsLoading, setModelsLoading] = useState(false);
-  const [modelsError, setModelsError] = useState<string | null>(null);
-
+    const [model, setModel] = useState("");
+      
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
@@ -150,28 +146,7 @@ export function BespokeGenerationStudio({
     }
   }
 
-  const loadModels = useCallback(async () => {
-    setModelsLoading(true);
-    setModelsError(null);
-    try {
-      const res = await fetch("/api/models");
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Could not load models");
-      const modelList = Array.isArray(data.models)
-        ? data.models
-        : [...(Array.isArray(data.openai) ? data.openai : []), ...(Array.isArray(data.gemini) ? data.gemini : [])];
-      setModels(modelList);
-    } catch (err) {
-      setModelsError(err instanceof Error ? err.message : "Could not reach the models endpoint.");
-    } finally {
-      setModelsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadModels();
-  }, [loadModels]);
-
+  
   const notAnalysed = !scrapeResults;
   const isScraping = lead.status === "scraping";
 
@@ -197,9 +172,7 @@ export function BespokeGenerationStudio({
           heroImage: heroImage.trim() || undefined,
           logoUrl: logoUrl.trim() || undefined,
           footerLogoUrl: footerLogoUrl.trim() || undefined,
-          provider,
-          model: model || undefined,
-        }),
+                  }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -581,68 +554,7 @@ export function BespokeGenerationStudio({
             </div>
           </div>
 
-          {/* AI Model Settings Card */}
-          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/60 p-4 sm:p-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-[#533afd]" />
-                <Label className="text-xs font-bold text-slate-900">AI Design Model</Label>
-              </div>
-              <span className="text-[11px] text-slate-500">Writes grounded HTML, typography &amp; CSS</span>
-            </div>
-
-            <div className="grid gap-2 sm:grid-cols-2">
-              {([
-                { id: "openai", name: "OpenAI", note: "House chain (GPT-4.5 / Pro)" },
-                { id: "gemini", name: "Gemini", note: "House chain (Gemini 3.1 Pro)" },
-              ] as const).map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  disabled={generating}
-                  onClick={() => setProvider(option.id)}
-                  className={`rounded-xl border p-3 text-left transition flex items-center justify-between ${
-                    provider === option.id
-                      ? "border-[#533afd] bg-white shadow-xs ring-1 ring-[#533afd]"
-                      : "border-slate-200 bg-white/80 hover:border-slate-300"
-                  }`}
-                >
-                  <div>
-                    <span className="text-xs font-bold text-slate-900 block">{option.name}</span>
-                    <span className="text-[10px] text-slate-500 block">{option.note}</span>
-                  </div>
-                  {provider === option.id && (
-                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#533afd] text-white">
-                      <Check className="h-3 w-3" strokeWidth={3} />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* Model Select Dropdown */}
-            <div className="pt-2 border-t border-slate-200/60">
-              <select
-                id="model-pick"
-                value={model}
-                disabled={generating}
-                onChange={(e) => setModel(e.target.value)}
-                onFocus={() => { if (models.length === 0 && !modelsLoading) void loadModels(); }}
-                className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-[#533afd] shadow-2xs"
-              >
-                <option value="">House chain (recommended default)</option>
-                {models
-                  .filter((m) => m.provider === provider)
-                  .map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.recommended ? "★ " : ""}
-                      {m.id}
-                      {m.note ? ` — ${m.note}` : ""}
-                    </option>
-                  ))}
-              </select>
-            </div>
-          </div>
+          
 
           {genError && (
             <p className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs font-medium text-rose-700">{genError}</p>
