@@ -480,7 +480,7 @@ export function verifyHomepage(
   const inconsistentPrimaryActions = [...html.matchAll(/<(a|button)\b([^>]*)>([\s\S]*?)<\/\1>/gi)].filter(
     ([, , attrs, inner]) =>
       textOf(inner).toLowerCase() === primaryLabel &&
-      !/\bclass=["'][^"']*\bsite-cta--primary\b/i.test(attrs)
+      !/class=["'][^"']*\bsite-cta--primary\b[^"']*["']/i.test(attrs)
   );
   if (inconsistentPrimaryActions.length > 0) {
     add("blocker", "cta-system", `${inconsistentPrimaryActions.length} primary action(s) do not use the shared site-cta--primary treatment.`);
