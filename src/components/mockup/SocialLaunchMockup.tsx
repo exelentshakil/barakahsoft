@@ -969,7 +969,7 @@ export function SocialLaunchMockup({
 
           {stageMode === "rock" ? (
             renderRockPedestalShowcase('preview', screenRef, screenScale, "w-[92%] max-w-[465px]", isExporting, {
-              cardTop: "-top-16 sm:-top-20",
+              cardTop: "-top-28 sm:-top-36",
               cardRight: "-right-1 sm:-right-2",
               macTranslateY: "translateY(12px)",
             })
