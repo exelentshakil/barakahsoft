@@ -440,7 +440,7 @@ export function SocialLaunchMockup({
           <img
             src={data.heroCaptureUrl}
             alt="Hero Section Screenshot"
-            className="w-full h-full object-cover object-top"
+            className="w-full h-auto object-cover object-top min-h-full"
           />
           {/* Glass Glare Reflection Line */}
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none z-10" />
@@ -571,13 +571,13 @@ export function SocialLaunchMockup({
 
       {/* When an uploaded About capture screenshot is present, render it with crisp fidelity */}
       {data.aboutCaptureUrl ? (
-        <div className="relative w-full aspect-[16/11] bg-slate-950 overflow-hidden">
+        <div className="relative w-full aspect-video bg-slate-950 overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={data.aboutCaptureUrl}
             alt={`${businessShortName} About Section Snapshot`}
             crossOrigin="anonymous"
-            className="w-full h-full object-cover object-top"
+            className="w-full h-auto object-cover object-top min-h-full"
           />
           {/* Subtle Glass Glare */}
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/15 pointer-events-none" />
@@ -735,7 +735,7 @@ export function SocialLaunchMockup({
         {/* Screen Display Inner Frame */}
         <div
           ref={customScreenRef}
-          className="relative aspect-[16/10] w-full rounded-lg bg-[#0e1626] overflow-hidden shadow-inner border border-black/90 flex flex-col"
+          className="relative aspect-video w-full rounded-lg bg-[#0e1626] overflow-hidden shadow-inner border border-black/90 flex flex-col"
         >
           {renderScreenContent(customScale, isExport)}
         </div>
