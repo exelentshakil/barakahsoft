@@ -154,51 +154,56 @@ SECTION QUALITY. Every section needs a strong headline, a visual idea and a conv
 
 MOBILE IS A REDESIGN, NOT A COLLAPSE. Preserve hierarchy and colour rhythm at 360px. Reorder media before copy where it improves comprehension, remove decorative overlap, keep natural content height, and ensure no type, metric, form or image crop becomes cramped.`;
 
-export const MASTER_HERO_STANDARD = `═══ HERO SECTION — THE UNMISSABLE HIGH-CONVERTING MASTERPIECE ═══
-STRICT REQUIREMENT: The Hero section MUST use an image. Never generate a hero section without a high-quality real image representing the business.
-Every hero section must look like a high-end $20,000 bespoke agency build with clear visual hierarchy, disciplined grid, and above-the-fold conversion power. NO CHEAP website design will be accepted:
+export const MASTER_HERO_STANDARD = `═══ HERO SECTION — THE "PAINT & PROFITS" HIGH-CONVERTING MASTERPIECE ═══
+STRICT REQUIREMENT: The Hero section MUST perfectly execute a high-converting, aggressive layout. The Lead Form MUST be in the hero, overlapping the background image.
 
-CRITICAL SCREENSHOT CONSTRAINT: The menu + hero section MUST NEVER overflow the above-the-fold viewport! Use extremely tight, disciplined vertical spacing and concise copy so the entire hero fits perfectly on one screen for marketing screenshots.
+MANDATORY HERO DOM STRUCTURE (You MUST use this layout logic):
+1. BACKGROUND: Full width, min-height 85vh (or min-h-[700px]). Uses the hero image with a heavy dark overlay (e.g., bg-black/60 or a gradient).
+2. LAYOUT: 2-Column CSS Grid (or flex row) on desktop.
+   - LEFT (Content - 55% width):
+     * EYEBROW: Solid background block (bg-[var(--bs-accent)]) with white text (e.g., "WYOMING'S PREMIER ROOFERS").
+     * HEADLINE: Massive brutalist font. Highlight 1 or 2 key words with a gradient text clip (bg-clip-text text-transparent bg-gradient-to-r).
+     * SUBHEAD: Short, problem-solving text.
+     * SOCIAL TRUST BADGES: Include visual Google (G) and Facebook (f) or Yelp indicators with Yellow Stars (text-yellow-400) directly under the text.
+   - RIGHT (Form - 40% width):
+     * THE ARROW FORM: A white card (bg-white rounded-md shadow-2xl).
+     * FORM HEADER: A bold colored block at the top of the form with a down-pointing CSS arrow to guide the eye. Example: 
+       <div class="bg-[var(--bs-primary)] text-white p-4 relative text-center font-bold">
+         GET YOUR FREE QUOTE TODAY
+         <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[12px] border-t-[var(--bs-primary)]"></div>
+       </div>
+     * FORM BODY: Inputs for Name, Phone, Email, Service Dropdown, and a MASSIVE gradient CTA button.
 
-CRITICAL DESIGN STRUCTURE: The hero section MUST be a single, cohesive visual block. The background MUST be a full-width, full-height image with a dark overlay, NOT a split white/image layout. The text and forms MUST sit ON TOP of this dark image overlay.
-
-DESKTOP SILHOUETTE (2-Column Balanced Grid, 55% / 45%):
-1. LEFT COLUMN — The Value Stack & Immediate Conversion Anchor:
-   - Eyebrow Tag: A sleek uppercase label or badge (e.g., "PROPERTY DAMAGE RESTORATION IN LAS VEGAS"). NEVER prefix eyebrows, subheadings, or badges with a literal dash or em-dash (never write "— "). Any accent mark is styled purely with CSS.
-   - Massive Typographic Headline: Bold, commanding font-display face (clamp(2.5rem, 4vw, 3.5rem)) directly addressing the urgent customer problem. Keep it to 1-2 lines maximum to prevent vertical overflow!
-   - Outcome-Driven Subhead: Exactly 1 readable sentence connecting real services to relief and peace of mind. DO NOT bloat with extra lines.
-   - Immediate Direct Call CTA: Click-to-call phone link (<a href="tel:..." class="site-cta site-cta--primary">Call (XXX) XXX-XXXX</a>) paired with a 24/7 live dispatch status badge / pulse indicator ("24/7 Emergency Dispatch · Avg 45 Min Response").
-   - Trust Proof Strip: Real Google review rating badge with ★★★★★ stars, verified review count, "Licensed & Insured" reassurance badge, and "Locally Owned" pill.
-
-2. RIGHT COLUMN — Framed Hero Visual AND/OR Above-The-Fold Lead Capture Form Card:
-   - For Service / Quote / Contractor / Lead-Gen Businesses:
-     * A sharp, elevated Lead Capture Card (.hero-lead-card) containing [data-lead-form] with service/pain dropdown, name, phone, email, high-contrast submit button, and reassurance guarantee note ("100% Free · No Obligation · Fast Response").
-     * Pair the form with a stunning hero image behind it or next to it. Positioned strictly above the fold with compact padding so visitors can convert without scrolling!
-   - For Portfolio / Story / E-commerce Businesses:
-     * High-resolution hero image or owner cutout set inside an elegant frame with generous border-radius (var(--bs-radius-lg)), subtle 1px border (var(--bs-border-color)), deep ambient drop shadow (var(--bs-shadow-lift)), and inset caption pill.
-     * Image must use object-fit: cover with explicit aspect-ratio (e.g. 4/3 or 1/1) and loading="eager" fetchpriority="high".
-
-NEVER output a bare text wall without photography, never center-align a generic brochure paragraph, and never leave the hero without immediate trust proof and action targets.`;
+DO NOT DEVIATE from this structure. It is mathematically designed to convert.
+`;
 
 export const MASTER_ABOUT_STANDARD = `═══ ABOUT / OUR STORY SECTION — THE COMPACT LAYERED MASTERPIECE ═══
-STRICT REQUIREMENT: The About section is the main selling point from marketing to actual sale. It MUST feature an ULTRA premium quality layout with a prominent left-side image.
-CRITICAL SCREENSHOT CONSTRAINT: The About section MUST NOT vertically overflow or become a massive wall of text. It must be exceptionally concise, high-impact, and visually tight so the hero + about sections can be cleanly screenshotted together for social media marketing. Use the provided existing About content to ground this section, but distill it into a sharp, flawless presentation!
+STRICT REQUIREMENT: The About section MUST visually overlap the Hero section and contain the 'Slanted Founder Badge' and the 'Power Stat Band'.
 
-LAYERED STRUCTURE:
-1. TIER 1 — Top Story & Authentic Profile Split:
-   - LEFT (Image): Substantial real photograph of the founder, team, or on-site work vehicle inside a rounded-2xl container with a documentary caption rail along the bottom. THIS IS MANDATORY. Use object-fit: cover and a strict aspect-ratio (e.g., 4/3) to prevent vertical blowout.
-   - RIGHT (Content):
-     * Section Eyebrow: A clean uppercase badge or numbered tag. NEVER prefix with a literal dash or em-dash (never write "— ").
-     * Authoritative Customer-Relevant Headline.
-     * 1 to 2 ultra-concise, compelling paragraphs extracted and polished from the provided Existing About Content establishing who does the work, their standards, and why local homeowners trust them. DO NOT write long, sprawling paragraphs that overflow!
-     * "Licensed and Insured" Trust Box: A clean badge card with a 4px solid brand-colored left border.
-     * Primary & Secondary Action Group: High-contrast call button + "Request a callback" button.
+MANDATORY ABOUT DOM STRUCTURE (You MUST use this layout logic):
+1. OVERLAP: The entire About container MUST have a massive negative top margin (e.g., -mt-24 or -mt-32) and relative z-10 positioning so it physically overlaps the bottom of the Hero image.
+2. LAYOUT: 2-Column split inside a solid surface container (e.g., bg-white rounded-lg shadow-xl p-8).
+   - LEFT (Image - 45% width):
+     * Image container MUST be aspect-[4/3] with object-cover.
+     * THE SLANTED FOUNDER BADGE: Overlapping the bottom left of the image. 
+       Use a flex container. Left side is a white box (with the logo). Right side is a solid brand color box (with the founder name/title).
+       To get the slanted edge, apply a clip-path to the colored box.
+       Example structure:
+       <div class="absolute -bottom-6 -left-6 flex items-stretch shadow-2xl h-24">
+         <div class="bg-white p-2 w-24 flex items-center justify-center border border-gray-100 z-10"><img src="logo" class="max-h-full object-contain"/></div>
+         <div class="bg-[var(--bs-primary)] text-white p-4 flex flex-col justify-center -ml-4 pl-8" style="clip-path: polygon(15px 0, 100% 0, 100% 100%, 0 100%);">
+           <span class="font-bold">Tony Ostheimer</span><span class="text-sm">Founder & CEO</span>
+         </div>
+       </div>
+   - RIGHT (Content - 50% width):
+     * EYEBROW: Outline pill with a heart or shield icon (e.g., border border-[var(--bs-ink-muted)] rounded-full px-4 py-1).
+     * HEADLINE: Massive, multi-line.
+     * DUAL BUTTONS: A solid primary CTA and a secondary outline/ghost CTA side-by-side.
 
-2. TIER 2 — Full-Width Solid Metric Ribbon Band (If space permits, otherwise merge into Tier 1):
-   - A full-width contrast ribbon band (in brand primary or dark surface) spanning 3 to 4 bold verified statistics:
-     [Years in Business / Decades of Experience] · [Jobs / Projects Completed] · [4.9★ Average Google Rating] · [100% Satisfaction / Guarantee].
-
-NEVER reduce the founder/team to a tiny circular avatar, never stretch copy across empty dead space, and never invent fake bios or unverified statistics.`;
+3. TIER 2 — THE POWER STAT BAND:
+   - Directly underneath the About layout, place a full-width solid dark band (bg-[var(--bs-ink)]).
+   - Inside, 4 columns of stats. The numbers MUST be a bright contrasting accent color (text-[var(--bs-primary)] or text-yellow-400), and the text below them MUST be white.
+`;
 
 export function aboutDirectionFor(seed: string): string {
   return MASTER_ABOUT_STANDARD;
