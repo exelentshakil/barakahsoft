@@ -435,12 +435,12 @@ export function SocialLaunchMockup({
   const renderScreenContent = (customScale = screenScale, isExport = false) => {
     if (data.heroCaptureUrl) {
       return (
-        <div className="relative w-full h-full overflow-hidden bg-slate-950">
+        <div className="relative w-full h-full overflow-hidden bg-white">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={data.heroCaptureUrl}
             alt="Hero Section Screenshot"
-            className="w-full h-auto object-cover object-top min-h-full origin-top"
+            className="w-full h-auto origin-top"
             style={{ 
               imageRendering: "high-quality" as any, 
               transform: "translateZ(0)", 
@@ -576,13 +576,13 @@ export function SocialLaunchMockup({
 
       {/* When an uploaded About capture screenshot is present, render it with crisp fidelity */}
       {data.aboutCaptureUrl ? (
-        <div className="relative w-full aspect-video bg-slate-950 overflow-hidden">
+        <div className="relative w-full aspect-video bg-white overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={data.aboutCaptureUrl}
             alt={`${businessShortName} About Section Snapshot`}
             crossOrigin="anonymous"
-            className="w-full h-auto object-cover object-top min-h-full origin-top"
+            className="w-full h-auto origin-top"
             style={{ 
               imageRendering: "high-quality" as any, 
               transform: "translateZ(0)", 
