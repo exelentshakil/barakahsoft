@@ -128,12 +128,12 @@ Before writing HTML, decide the page silhouette from top to bottom. Give every s
 - FOCAL: one image-led, dark, primary-colour or typographic moment that resets attention.
 - RESOLUTION: the closing CTA visually answers the opening hero.
 
-PREMIUM FINISHING TOUCHES (The "$20,000 Agency Feel"):
-- Ambient Whitespace Filling: Do not leave large empty voids. Use soft, ambient background light glows (ultra-low opacity radial gradients between 2% and 5%) to give quiet sections subtle depth.
-- High-End Visual Anchors: Embed subtle, minimalist SVG geometric lines or abstract wave accents behind text blurbs to serve as premium visual anchors.
-- Layered Media: Intersect or frame photos intentionally. Overlap images slightly with adjoining layout blocks or stat cards to break rigid grid lines.
-- Content Hierarchy: Structure text with a clear visual hierarchy. Every major section MUST feature a tiny, uppercase, bold category label over a powerful short headline, followed by a crisp 1-2 sentence description.
-- Typography: Use premium typography pairs (e.g., an elegant, sharp serif for headers and a high-readability geometric sans-serif for blurbs).
+MANDATORY DESIGN RULES (DO NOT IGNORE - The "$20,000 Agency Feel"):
+1. FORCE NEGATIVE SPACE & GRID OVERLAPS: Never let sections just sit flat on top of each other. You MUST overlap them. Use negative margins or CSS grid to pull a secondary section (like Trust Badges, Service Cards, or a floating stat box) UP so it physically overlaps the bottom edge of the Hero or Focal sections. Break the grid.
+2. TYPOGRAPHY VIOLENCE (EXTREME CONTRAST): Maximize contrast between massive and tiny. Eyebrows and category labels MUST be tiny, bold, and heavily tracked (e.g., uppercase, letter-spacing: 0.2em). Headlines MUST be massive and brutally tight (e.g., line-height: 1 or 1.05, letter-spacing: -0.04em).
+3. DESTROY THE RECTANGLE (SHAPING): The page cannot be a stack of horizontal blocks. You MUST apply a shaping construct. Use a \`clip-path\` (like a 4-degree diagonal slant \`polygon(0 0, 100% 4vw, 100% 100%, 0 100%)\`) to frame major sections (Hero/Footer). Alternatively, use massive border-radius to create arches or pill shapes.
+4. EDITORIAL MEDIA TREATMENTS: Never drop naked images into a div. Treat images like an editorial magazine. Every image MUST have \`object-fit: cover\` and a strict \`aspect-ratio\`. At least one major image on the page (like in the About section) MUST have an offset decorative pseudo-element (e.g., a solid block of the primary brand color sitting 20px behind and to the right/left of the image) to create physical depth.
+5. AMBIENT LIGHTING: For dark sections or quiet backgrounds, do not use flat colors. Use ultra-subtle radial gradients to create ambient lighting behind the text. Make it look like a spotlight is hitting the background, or a glow is emanating from behind the content.
 
 COLOUR CADENCE. Plan a sequence such as quiet → quiet → focal → reset → structural → focal → quiet. Do not mechanically alternate light/dark bands. Adjacent sections may share a ground when their composition changes, and a strong colour may carry a complete section when contrast is correct. The brand colour should recur as a controlled visual thread in rules, labels, metric bands, caption blocks or graphic shapes.
 
