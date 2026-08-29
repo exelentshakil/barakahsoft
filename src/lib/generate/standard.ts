@@ -160,6 +160,8 @@ Every hero section must look like a high-end $20,000 bespoke agency build with c
 
 CRITICAL SCREENSHOT CONSTRAINT: The menu + hero section MUST NEVER overflow the above-the-fold viewport! Use extremely tight, disciplined vertical spacing and concise copy so the entire hero fits perfectly on one screen for marketing screenshots.
 
+CRITICAL DESIGN STRUCTURE: The hero section MUST be a single, cohesive visual block. The background MUST be a full-width, full-height image with a dark overlay, NOT a split white/image layout. The text and forms MUST sit ON TOP of this dark image overlay.
+
 DESKTOP SILHOUETTE (2-Column Balanced Grid, 55% / 45%):
 1. LEFT COLUMN — The Value Stack & Immediate Conversion Anchor:
    - Eyebrow Tag: A sleek uppercase label or badge (e.g., "PROPERTY DAMAGE RESTORATION IN LAS VEGAS"). NEVER prefix eyebrows, subheadings, or badges with a literal dash or em-dash (never write "— "). Any accent mark is styled purely with CSS.
