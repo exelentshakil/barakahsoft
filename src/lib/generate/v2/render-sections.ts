@@ -122,7 +122,7 @@ after the closing </section> a line "/*CSS*/" followed by CSS in which EVERY sel
     modelChain: FAST_CHAIN,
     maxTokens: 24000,
     temperature: 0.6,
-    timeoutMs: 300_000,
+    timeoutMs: 240_000,
     system:
       "You are a senior front-end engineer building one section of an already-designed page. You output HTML only, you never invent facts, and you never restyle the design system.",
   });
@@ -154,6 +154,37 @@ async function inPool<T, R>(items: T[], limit: number, task: (item: T, index: nu
   });
   await Promise.all(workers);
   return results;
+}
+
+/**
+ * Render one contiguous slice of the manifest.
+ *
+ * The Inngest orchestration calls this a batch at a time: every step is its
+ * own 300-second Vercel invocation, so twenty sections in one step could not
+ * finish inside the ceiling however wide the concurrency was.
+ */
+export async function renderSectionRange(
+  system: PageSystem,
+  dna: LayoutDna,
+  brief: SiteBrief,
+  logoUrl: string | null,
+  offset: number,
+  count: number
+): Promise<RenderedSection[]> {
+  const slice = system.sections.slice(offset, offset + count);
+  const rendered = await Promise.all(
+    slice.map((spec, localIndex) =>
+      renderOne(spec, offset + localIndex, system, dna, brief, logoUrl).catch((err) => {
+        console.error(`[render-sections] "${spec.id}" failed:`, err);
+        return null;
+      })
+    )
+  );
+  const kept = rendered.filter((section): section is RenderedSection => section !== null);
+  if (kept.length < slice.length) {
+    console.warn(`[render-sections] ${slice.length - kept.length} of ${slice.length} sections in this batch did not render`);
+  }
+  return kept;
 }
 
 export async function renderAllSections(
@@ -261,7 +292,7 @@ OUTPUT RULES
     modelChain: chain,
     maxTokens: 20000,
     temperature: 0.55,
-    timeoutMs: 300_000,
+    timeoutMs: 240_000,
     system: "You are a senior front-end engineer. You output HTML only.",
   });
   if (!raw) return null;
@@ -314,7 +345,7 @@ OUTPUT RULES
     modelChain: chain,
     maxTokens: 16000,
     temperature: 0.55,
-    timeoutMs: 300_000,
+    timeoutMs: 240_000,
     system: "You are a senior front-end engineer. You output HTML only.",
   });
   if (!raw) return null;

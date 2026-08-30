@@ -42,6 +42,10 @@ export interface BuiltHomepage {
   notes: string[];
 }
 
+export function pageFontHref(system: PageSystem): string {
+  return googleFontHref(system.typography.displayFamily, system.typography.bodyFamily);
+}
+
 function googleFontHref(display: string, body: string): string {
   const families = [...new Set([display, body])]
     .map((family) => `family=${encodeURIComponent(family.trim()).replace(/%20/g, "+")}:wght@400;500;600;700;800;900`)
@@ -58,7 +62,7 @@ function googleFontHref(display: string, body: string): string {
  * variable, so every button rendered as a beige rectangle with beige text.
  * The model may only reference names that exist here.
  */
-function tokenBlock(system: PageSystem, base: Record<string, string>): string {
+export function tokenBlock(system: PageSystem, base: Record<string, string>): string {
   const vars: Record<string, string> = {
     ...base,
     "--bs-primary": system.palette.primary,
@@ -83,7 +87,7 @@ function tokenBlock(system: PageSystem, base: Record<string, string>): string {
 // rules that land after the generated ones and therefore win: a logo blown up
 // to hero size, a stretched photograph, an element wider than the viewport,
 // something drawn over the navigation.
-const GUARANTEES = `
+export const GUARANTEES = `
 .bespoke-page{overflow-x:clip}
 .bespoke-page img,.bespoke-page svg,.bespoke-page video,.bespoke-page iframe{max-width:100%}
 .bespoke-page .bs-nav__logo img{max-height:52px!important;width:auto!important;object-fit:contain!important}
@@ -98,8 +102,42 @@ const GUARANTEES = `
 `;
 
 /** Rendered standalone for the screenshot pass — the live page adds its own shell. */
-function standalone(html: string, css: string, fontHref: string): string {
+export function standalone(html: string, css: string, fontHref: string): string {
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="${fontHref}"><style>*{box-sizing:border-box}body{margin:0}${css}</style></head><body><div class="bespoke-page">${html}</div></body></html>`;
+}
+
+/**
+ * Assemble the finished page from parts that were produced separately.
+ *
+ * Split out of buildHomepage because on Vercel each Inngest step is its own
+ * 300-second invocation, and the whole chain takes about eight minutes — so
+ * the stages run as separate steps and something has to put them back
+ * together. The footer and the chrome are deliberately NOT concatenated into
+ * the page markup: they belong to the site, and every route under
+ * /s/[leadSlug] renders them around its own body.
+ */
+export function composePage(args: {
+  system: PageSystem;
+  tokens: Record<string, string>;
+  systemCss: string;
+  sections: RenderedSection[];
+  footer: RenderedSection | null;
+  navigation: RenderedSection | null;
+}): { html: string; css: string } {
+  const { system, tokens, systemCss, sections, footer, navigation } = args;
+  return {
+    html: sections.map((section) => section.html).join("\n"),
+    css: [
+      tokenBlock(system, tokens),
+      systemCss,
+      ...sections.map((section) => section.css),
+      footer?.css ?? "",
+      navigation?.css ?? "",
+      GUARANTEES,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  };
 }
 
 export async function buildHomepage(args: {
@@ -140,22 +178,8 @@ export async function buildHomepage(args: {
 
   const fontHref = googleFontHref(system.typography.displayFamily, system.typography.bodyFamily);
 
-  // The footer and the chrome are deliberately NOT concatenated into the page
-  // markup: they belong to the site, and every route under /s/[leadSlug]
-  // renders them around whatever body that route has.
-  const compose = (list: RenderedSection[], foot: RenderedSection | null) => ({
-    html: list.map((section) => section.html).join("\n"),
-    css: [
-      tokenBlock(system, tokens),
-      systemCss,
-      ...list.map((section) => section.css),
-      foot?.css ?? "",
-      navigation?.css ?? "",
-      GUARANTEES,
-    ]
-      .filter(Boolean)
-      .join("\n"),
-  });
+  const compose = (list: RenderedSection[], foot: RenderedSection | null) =>
+    composePage({ system, tokens, systemCss, sections: list, footer: foot, navigation });
 
   let composed = compose(sections, footer);
   let finalSections = sections;

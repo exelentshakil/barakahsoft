@@ -157,7 +157,7 @@ Return STRICT JSON only, no prose, no code fence:
     modelChain: chain,
     maxTokens: 32000,
     temperature: 0.75,
-    timeoutMs: 420_000,
+    timeoutMs: 260_000,
     system:
       "You are a senior art director. You make decisive, specific design choices, you never invent facts about a business, and you return valid JSON only.",
   });
@@ -253,7 +253,7 @@ RULES
     modelChain: chain,
     maxTokens: 60000,
     temperature: 0.4,
-    timeoutMs: 600_000,
+    timeoutMs: 260_000,
     system: "You are a senior CSS engineer writing production stylesheets. You output CSS and nothing else.",
   });
   if (!raw) return "";

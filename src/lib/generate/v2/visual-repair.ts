@@ -112,7 +112,7 @@ Return STRICT JSON only:
 score is 0-100. Put a defect in repairs only when it would embarrass the studio in a public post;
 everything else goes in warnings. An excellent page returns an empty repairs array.`;
 
-interface Critique {
+export interface Critique {
   score: number;
   summary: string;
   repairs: { sectionId: string; defect: string; fix: string }[];
@@ -175,7 +175,7 @@ then rules whose every selector begins with #${section.id}.`;
     modelChain: chain,
     maxTokens: 20000,
     temperature: 0.3,
-    timeoutMs: 300_000,
+    timeoutMs: 240_000,
     system: "You are a senior front-end engineer performing a surgical fix. You output HTML only.",
   });
   if (!raw) return null;
@@ -191,14 +191,20 @@ then rules whose every selector begins with #${section.id}.`;
   };
 }
 
-export async function repairPage(args: {
+/**
+ * Look at the page and say what is wrong. No rebuilding.
+ *
+ * Separate from applying the fixes because on Vercel each Inngest step is its
+ * own 300-second invocation: rendering, critiquing and then regenerating
+ * several sections in one step is what made the whole build time out.
+ */
+export async function critiquePage(args: {
   system: PageSystem;
   sections: RenderedSection[];
-  footer: RenderedSection | null;
   css: string;
   fullHtmlForRender: string;
-}): Promise<RepairResult> {
-  const { system, sections, footer, css, fullHtmlForRender } = args;
+}): Promise<{ critique: Critique | null; mode: RepairResult["mode"] }> {
+  const { system, sections, css, fullHtmlForRender } = args;
   const ids = sections.map((section) => section.id);
 
   const images = await screenshot(fullHtmlForRender);
@@ -216,23 +222,35 @@ export async function repairPage(args: {
       modelChain: bestGeminiChain(),
       maxTokens: 12000,
       temperature: 0.15,
-      timeoutMs: 420_000,
+      timeoutMs: 240_000,
       system: "You are a strict, practical creative director. Evidence decides the release.",
     }
   );
 
   const critique = parseCritique(raw);
-  if (!critique) return { sections, footer, notes: ["[visual-repair] the review was unavailable"], mode: "skipped" };
+  return { critique, mode: critique ? mode : "skipped" };
+}
 
-  const notes = [
+export function critiqueNotes(critique: Critique, mode: RepairResult["mode"]): string[] {
+  return [
     `[score] visual gate (${mode}): ${critique.score}/100 — ${critique.summary}`,
     ...critique.warnings.map((warning) => `[warning] visual gate: ${warning}`),
     ...critique.repairs.map((repair) => `[repaired] ${repair.sectionId}: ${repair.defect}`),
   ];
+}
 
-  // Only the sections the critic actually named are rebuilt, and they are
-  // rebuilt in parallel. Regenerating a section nobody complained about is
-  // how a good build gets replaced by a worse one.
+/**
+ * Rebuild only the sections the critic named, in parallel. Regenerating a
+ * section nobody complained about is how a good build becomes a worse one.
+ */
+export async function applyRepairs(args: {
+  critique: Critique;
+  sections: RenderedSection[];
+  footer: RenderedSection | null;
+  css: string;
+}): Promise<{ sections: RenderedSection[]; footer: RenderedSection | null }> {
+  const { critique, sections, footer, css } = args;
+
   const grouped = new Map<string, { defect: string; fix: string }[]>();
   for (const repair of critique.repairs) {
     const list = grouped.get(repair.sectionId) ?? [];
@@ -242,16 +260,28 @@ export async function repairPage(args: {
 
   const targets = [...sections, ...(footer ? [footer] : [])].filter((section) => grouped.has(section.id));
   const repaired = await Promise.all(
-    targets.map((section) =>
-      repairSection(section, grouped.get(section.id)!, css).catch(() => null)
-    )
+    targets.map((section) => repairSection(section, grouped.get(section.id)!, css).catch(() => null))
   );
 
   const byId = new Map(repaired.filter((s): s is RenderedSection => s !== null).map((s) => [s.id, s]));
   return {
     sections: sections.map((section) => byId.get(section.id) ?? section),
     footer: footer ? byId.get(footer.id) ?? footer : null,
-    notes,
-    mode,
   };
+}
+
+export async function repairPage(args: {
+  system: PageSystem;
+  sections: RenderedSection[];
+  footer: RenderedSection | null;
+  css: string;
+  fullHtmlForRender: string;
+}): Promise<RepairResult> {
+  const { system, sections, footer, css, fullHtmlForRender } = args;
+
+  const { critique, mode } = await critiquePage({ system, sections, css, fullHtmlForRender });
+  if (!critique) return { sections, footer, notes: ["[visual-repair] the review was unavailable"], mode: "skipped" };
+
+  const applied = await applyRepairs({ critique, sections, footer, css });
+  return { ...applied, notes: critiqueNotes(critique, mode), mode };
 }

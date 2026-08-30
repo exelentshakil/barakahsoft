@@ -21,6 +21,9 @@ import { sanitizeBespokeHtml } from "@/lib/sanitize-generated-html";
 import { verifyHomepage } from "@/lib/audit/quality-gate";
 import { setUsageContext } from "@/lib/cost/record-usage";
 import { parseJsonResponse } from "@/lib/parse-json-response";
+import type { PageSystem } from "@/lib/generate/v2/design-system";
+import type { RenderedSection } from "@/lib/generate/v2/render-sections";
+import type { Critique } from "@/lib/generate/v2/visual-repair";
 import { visualQaEnabled, type GenerationCandidate, type VisualQaReport } from "@/lib/visual-qa";
 import { slugifyText } from "@/lib/slug";
 import type { FunnelPageSection, Lead, ScrapeResults, Artifact } from "@/types/database";
@@ -282,62 +285,182 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
       clientBrandHex,
     });
 
-    // The bespoke build. Art direction and the stylesheet are decided once on
-    // the Pro chain, every section is then written in parallel against that
-    // frozen system, and a render-and-repair pass fixes what only shows up in
-    // pixels. See src/lib/generate/v2/build-homepage.ts for why it is split
-    // this way rather than asked for in one shot.
-    const built = await step.run("build-bespoke-homepage", async () => {
+    // The bespoke build, as one Inngest step per stage.
+    //
+    // Every step executes as its own invocation of /api/inngest, which Vercel
+    // caps at 300 seconds. The whole chain takes roughly eight minutes, so
+    // running it inside a single step timed out the platform before the SDK
+    // could answer and the run failed with an unexplained 504. Each stage now
+    // gets its own invocation, and the sections — the long tail — are split
+    // into batches so no batch can approach the ceiling either.
+    //
+    // The split has a second benefit: a failure in the last stage no longer
+    // discards the art direction and the stylesheet that already succeeded.
+    const logoUrl =
+      (loaded.artifact?.extracted_assets as any)?.brand_logo_url ?? (facts.logo_url as string) ?? null;
+
+    // The logo is not a photograph. Passing it in the photo list is exactly
+    // how a previous build ended up rendering a 900px-tall wordmark as its
+    // hero image.
+    const photos = brief.photos.filter((url: string) => url && url !== logoUrl).slice(0, 12);
+
+    // Deterministic and pure, so it is recomputed in each step rather than
+    // carried through the step boundary as serialized state.
+    const { layoutDnaFor } = await import("@/lib/generate/v2/layout-dna");
+    const { buildChromeData } = await import("@/lib/generate/v2/chrome-data");
+    const dnaV2 = layoutDnaFor(`${brief.leadSlug}|${brief.businessName}|${brief.industry}|${brief.city}`);
+    const chromeData = buildChromeData(brief, {
+      services: serviceNames,
+      areas: brief.areas,
+      innerPagesBuilt: Boolean(loaded.artifact?.inner_pages_built),
+    });
+
+    const system = (await step.run("art-direction", async () => {
       await touchProgress(admin, lead_id);
-      const { buildHomepage } = await import("@/lib/generate/v2/build-homepage");
+      const { generatePageSystem } = await import("@/lib/generate/v2/design-system");
+      const result = await generatePageSystem({ brief, dna: dnaV2, tokens: gateTokens.vars, logoUrl, photos });
+      if (!result) throw new Error("Art direction produced no usable page system; the previous live page was preserved.");
+      return result;
+    })) as PageSystem;
 
-      const logoUrl =
-        (loaded.artifact?.extracted_assets as any)?.brand_logo_url ??
-        (facts.logo_url as string) ??
-        null;
+    const systemCss = (await step.run("design-stylesheet", async () => {
+      await touchProgress(admin, lead_id);
+      const { generateSystemStylesheet } = await import("@/lib/generate/v2/design-system");
+      const css = await generateSystemStylesheet(system, dnaV2, gateTokens.vars);
+      if (!css) throw new Error("The stylesheet pass produced nothing usable; the previous live page was preserved.");
+      return css;
+    })) as string;
 
-      // The logo is not a photograph. Passing it in the photo list is exactly
-      // how a previous build ended up rendering a 900px-tall wordmark as its
-      // hero image.
-      const photos = brief.photos.filter((url) => url && url !== logoUrl).slice(0, 12);
+    await bumpProgress(admin, lead_id, 3);
 
-      const { buildChromeData } = await import("@/lib/generate/v2/chrome-data");
+    // Four sections per step: each section is one Flash call and they run
+    // concurrently, so a batch lands comfortably inside the invocation limit
+    // however slow one of them is.
+    const SECTIONS_PER_STEP = 4;
+    const renderedSections: RenderedSection[] = [];
+    for (let offset = 0; offset < system.sections.length; offset += SECTIONS_PER_STEP) {
+      const batchIndex = offset / SECTIONS_PER_STEP + 1;
+      const batch = (await step.run(`sections-${batchIndex}`, async () => {
+        await touchProgress(admin, lead_id);
+        const { renderSectionRange } = await import("@/lib/generate/v2/render-sections");
+        return renderSectionRange(system, dnaV2, brief, logoUrl, offset, SECTIONS_PER_STEP);
+      })) as RenderedSection[];
+      renderedSections.push(...batch);
+    }
+    if (renderedSections.length === 0) {
+      throw new Error("No section rendered; the previous live page was preserved.");
+    }
 
-      const result = await buildHomepage({
-        brief,
-        tokens: gateTokens.vars,
-        logoUrl,
-        photos,
-        chrome: buildChromeData(brief, {
-          services: serviceNames,
-          areas: brief.areas,
-          innerPagesBuilt: Boolean(loaded.artifact?.inner_pages_built),
-        }),
-        repair: process.env.BESPOKE_VISUAL_REPAIR !== "false",
-      });
-      if (!result) throw new Error("The bespoke build produced no usable homepage; the previous live page was preserved.");
+    const chromeParts = (await step.run("chrome-and-footer", async () => {
+      await touchProgress(admin, lead_id);
+      const { renderChrome, renderFooter } = await import("@/lib/generate/v2/render-sections");
+      const [navigation, footer] = await Promise.all([
+        renderChrome(system, dnaV2, brief, logoUrl, chromeData),
+        renderFooter(system, dnaV2, brief, logoUrl),
+      ]);
+      return { navigation, footer };
+    })) as { navigation: RenderedSection | null; footer: RenderedSection | null };
 
+    const { composePage, pageFontHref, standalone } = await import("@/lib/generate/v2/build-homepage");
+    const { enforceChromeHrefs } = await import("@/lib/generate/v2/chrome-data");
+    const fontHref = pageFontHref(system);
+
+    let finalSections = renderedSections;
+    let finalFooter = chromeParts.footer;
+    let composed = composePage({
+      system,
+      tokens: gateTokens.vars,
+      systemCss,
+      sections: finalSections,
+      footer: finalFooter,
+      navigation: chromeParts.navigation,
+    });
+    const repairNotes: string[] = [];
+
+    if (process.env.BESPOKE_VISUAL_REPAIR !== "false") {
+      // Rendering and critiquing is one invocation; rebuilding the sections it
+      // faults is another. Doing both in one step is what the 300-second
+      // ceiling could not accommodate.
+      const reviewed = (await step.run("visual-critique", async () => {
+        await touchProgress(admin, lead_id);
+        const { critiquePage } = await import("@/lib/generate/v2/visual-repair");
+        return critiquePage({
+          system,
+          sections: finalSections,
+          css: composed.css,
+          fullHtmlForRender: standalone(
+            [chromeParts.navigation?.html ?? "", composed.html, finalFooter?.html ?? ""].filter(Boolean).join("\n"),
+            composed.css,
+            fontHref
+          ),
+        });
+      })) as { critique: Critique | null; mode: "rendered" | "source" | "skipped" };
+
+      if (reviewed.critique) {
+        const { critiqueNotes } = await import("@/lib/generate/v2/visual-repair");
+        repairNotes.push(...critiqueNotes(reviewed.critique, reviewed.mode));
+
+        if (reviewed.critique.repairs.length > 0) {
+          const applied = (await step.run("apply-repairs", async () => {
+            await touchProgress(admin, lead_id);
+            const { applyRepairs } = await import("@/lib/generate/v2/visual-repair");
+            return applyRepairs({
+              critique: reviewed.critique!,
+              sections: finalSections,
+              footer: finalFooter,
+              css: composed.css,
+            });
+          })) as { sections: RenderedSection[]; footer: RenderedSection | null };
+          finalSections = applied.sections;
+          finalFooter = applied.footer;
+          composed = composePage({
+            system,
+            tokens: gateTokens.vars,
+            systemCss,
+            sections: finalSections,
+            footer: finalFooter,
+            navigation: chromeParts.navigation,
+          });
+        }
+      } else {
+        repairNotes.push("[visual-repair] the review was unavailable");
+      }
+    }
+
+    const built = {
+      html: composed.html,
+      css: composed.css,
+      rationale: `${system.systemName} — ${system.rationale} Layout DNA: ${dnaV2.hero.name} hero, ${dnaV2.about.name} about, ${dnaV2.footer.name} footer, ${dnaV2.chrome.name} chrome.`,
+      sections: [
+        ...(chromeParts.navigation ? [chromeParts.navigation] : []),
+        ...finalSections,
+        ...(finalFooter ? [finalFooter] : []),
+      ].map((section) => ({
+        id: section.id,
+        kind: section.kind,
+        label: section.label,
+        html: section.html,
+        locked: false,
+      })),
+      notes: repairNotes,
+    };
+
+    await step.run("persist-build", async () => {
       await admin
         .from("artifacts")
         .update({
-          bespoke_homepage_html: result.html,
-          bespoke_chrome_html: result.chromeHtml,
-          bespoke_footer_html: result.footerHtml,
-          bespoke_css: result.css,
-          bespoke_sections: result.sections,
-          bespoke_rationale: result.rationale,
-          design_tokens: { vars: gateTokens.vars, fontHref: result.fontHref, mood: gateTokens.mood },
+          bespoke_homepage_html: built.html,
+          bespoke_chrome_html: chromeParts.navigation
+            ? enforceChromeHrefs(chromeParts.navigation.html, chromeData)
+            : null,
+          bespoke_footer_html: finalFooter?.html ?? null,
+          bespoke_css: built.css,
+          bespoke_sections: built.sections,
+          bespoke_rationale: built.rationale,
+          design_tokens: { vars: gateTokens.vars, fontHref, mood: gateTokens.mood },
           last_edited_at: new Date().toISOString(),
         })
         .eq("lead_id", lead_id);
-
-      return {
-        html: result.html,
-        css: result.css,
-        rationale: result.rationale,
-        sections: result.sections,
-        notes: result.notes,
-      };
     });
 
     const composedHtml = built.html;
