@@ -193,8 +193,8 @@ MANDATORY ABOUT DOM STRUCTURE (You MUST use this layout logic):
 1. OVERLAP: The entire About container MUST have a massive negative top margin (e.g., -mt-24 or -mt-32) and relative z-10 positioning so it physically overlaps the bottom of the Hero image.
 2. LAYOUT: 2-Column split inside a solid surface container (e.g., bg-white rounded-lg shadow-xl p-8).
    - LEFT (Image - 45% width):
-     * Image container MUST be aspect-[4/3] with object-cover.
-     * THE SLANTED FOUNDER BADGE: Overlapping the bottom left of the image. 
+     * Image container MUST be aspect-[4/3] with object-cover. CRITICAL: For this image, you MUST use the URL ABOUT_IMAGE_URL_PLACEHOLDER.
+     * THE SLANTED FOUNDER BADGE: Overlapping the bottom left of the image.
        Use a flex container. Left side is a white box (with the logo). Right side is a solid brand color box (with the founder name/title).
        To get the slanted edge, apply a clip-path to the colored box. ENSURE THE BADGE HAS z-50 OR IS VISIBLE OVER THE IMAGE AND MAIN LAYOUT. 
        Example structure:
@@ -207,7 +207,7 @@ MANDATORY ABOUT DOM STRUCTURE (You MUST use this layout logic):
    - RIGHT (Content - 50% width):
      * EYEBROW: Outline pill with a heart or shield icon (e.g., border border-[var(--bs-ink-muted)] rounded-full px-4 py-1).
      * HEADLINE: Massive, multi-line.
-     * DUAL BUTTONS: A solid primary CTA and a secondary outline/ghost CTA side-by-side.
+     * DUAL BUTTONS: A solid primary CTA and a secondary outline/ghost CTA side-by-side (use flex, flex-wrap, and gap to prevent awkward wrapping or overlapping).
 
 3. TIER 2 — THE POWER STAT BAND:
    - Directly underneath the About layout, place a full-width solid dark band (bg-[var(--bs-ink)]).
@@ -297,7 +297,7 @@ NEVER write anything like these — each came from real failed output:
 
 export const PAGE_SHAPE = `ABOVE THE FOLD a visitor must know what this business does, where, and exactly one thing to do next.
 
-THE HERO HOLDS FOUR THINGS AND STOPS: the promise, one supporting sentence, the actions, and
+THE HERO HOLDS FOUR THINGS AND STOPS: the promise, one supporting sentence (ensure this sentence is complete and not cut off), the actions, and
 at most three short proof items. Each proof item is two or three words — "Licensed and insured",
 "Free estimates" — not a sentence with hours and conditions in it. They sit on one line on a
 desktop and wrap to two on a phone; if they cannot, there are too many or they are too long.

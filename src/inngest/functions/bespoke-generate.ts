@@ -313,7 +313,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
       
       ${MASTER_HERO_STANDARD}
       
-            ${MASTER_ABOUT_STANDARD.replace(/LOGO_URL_PLACEHOLDER/g, loaded.artifact?.extracted_assets?.brand_logo_url ?? "logo").replace(/FOUNDER_NAME_PLACEHOLDER/g, brief.businessName.split(' ')[0] ?? "Founder")}
+            ${MASTER_ABOUT_STANDARD.replace(/LOGO_URL_PLACEHOLDER/g, loaded.artifact?.extracted_assets?.brand_logo_url ?? "logo").replace(/FOUNDER_NAME_PLACEHOLDER/g, brief.businessName.split(' ')[0] ?? "Founder").replace(/ABOUT_IMAGE_URL_PLACEHOLDER/g, brief.photos[1] ?? "https://images.unsplash.com/photo-1541889895054-47f631169c9b?auto=format&fit=crop&q=80")}
       
       IMAGES & BRANDING TO USE:
       - Logo: ${loaded.artifact?.extracted_assets?.brand_logo_url ?? "https://img1.wsimg.com/isteam/ip/ac892ea6-4c1c-444a-8a56-c0458ee66663/Saddle%20Roofing%20Logo%20-%20White%20PNG.png"}

@@ -414,6 +414,8 @@
   font-family: var(--bs-font-body);
   color: var(--bs-ink);
   background: var(--bs-surface);
+  position: relative;
+  z-index: 50;
 }
 
 .bs-utility {
