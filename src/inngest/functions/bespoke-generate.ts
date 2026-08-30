@@ -323,13 +323,11 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
       return result;
     })) as PageSystem;
 
-    const systemCss = (await step.run("design-stylesheet", async () => {
-      await touchProgress(admin, lead_id);
-      const { generateSystemStylesheet } = await import("@/lib/generate/v2/design-system");
-      const css = await generateSystemStylesheet(system, dnaV2, gateTokens.vars);
-      if (!css) throw new Error("The stylesheet pass produced nothing usable; the previous live page was preserved.");
-      return css;
-    })) as string;
+    // The design system is hand-written and shipped with the application, so
+    // there is no stylesheet step any more — and no way for a build to arrive
+    // with a stylesheet that renders the page wrong.
+    const { BASE_STYLESHEET } = await import("@/lib/generate/v2/base-stylesheet");
+    const systemCss = BASE_STYLESHEET;
 
     await bumpProgress(admin, lead_id, 3);
 

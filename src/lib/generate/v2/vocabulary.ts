@@ -87,10 +87,56 @@ CHROME
   .bs-footer / .bs-footer__cols / .bs-footer__col / .bs-footer__bottom
   .bs-footer-cta           the conversion slab attached to the footer
 
+HERO (the first section only)
+  .bs-hero                 root, on the <section> alongside .bs-section. Full-bleed, min-height 92vh,
+                           dark, and it paints its own scrim — you do not add one.
+  .bs-hero--<archetype>    the assigned archetype modifier, given to you in the brief
+  .bs-hero__bg             the background photo frame; put ONE <img> in it, nothing else
+  .bs-hero__proofbar       optional credential strip pinned across the hero's bottom edge
+
+ABOUT
+  .bs-about                root, on the <section> alongside .bs-section
+  .bs-about--<archetype>   the assigned archetype modifier, given to you in the brief
+
 STATE / UTILITY
   .bs-center .bs-left .bs-right      text alignment
   .bs-hide-mobile .bs-hide-desktop
   .bs-accent .bs-muted .bs-invert    colour roles for a single element`;
+
+export const STRUCTURE_CONTRACT = `STRUCTURE — the stylesheet is already written and shipped with the application. It styles these exact
+shapes, so build these shapes. A class you invent has no rule behind it and renders as nothing.
+
+A normal section:
+  <section id="ID" class="bs-section [bs-section--tint|bs-section--ink]">
+    <div class="bs-container"> … </div>
+  </section>
+
+The hero:
+  <section id="hero" class="bs-section bs-hero bs-hero--ARCHETYPE">
+    <div class="bs-hero__bg bs-media"><img src="…" alt="…" width="1600" height="900" loading="eager" fetchpriority="high"></div>
+    <div class="bs-container">
+      <div class="bs-split bs-split--wide-left">
+        <div class="bs-stack"> eyebrow chip, h1.bs-display with one span.bs-mark, p.bs-lede, .bs-rating, .bs-actions </div>
+        <form data-lead-form class="bs-form">
+          <div class="bs-form__head"> <h2 class="bs-h3">…</h2> <p>…</p> </div>
+          <div class="bs-stack--tight">
+            <label class="bs-field"><input class="bs-input" name="name" placeholder="Full Name" required></label>
+            … phone, email, service select …
+            <button type="submit" class="bs-btn bs-btn--wide">PRIMARY LABEL</button>
+            <p class="bs-small bs-center">one line of reassurance</p>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="bs-hero__proofbar"><div class="bs-container"> four short credential items </div></div>
+  </section>
+
+The hero has NO background of its own to set, NO overlay div, and NO nav — the section paints its
+scrim, and the navigation is built separately.
+
+A stat band:  <div class="bs-stats"><div class="bs-stat"><span class="bs-stat__value">10+</span><span class="bs-stat__label">Years</span></div>…</div>
+A card grid:  <div class="bs-grid-3"><article class="bs-card">…</article>…</div>
+A photo:      <figure class="bs-media bs-media--wide"><img …></figure>  (never an empty frame)`;
 
 export const MOCKUP_RULES = `SOCIAL-MOCKUP RULES — the hero and the about section are screenshotted and
 placed on a laptop mockup for social posts. These are hard failures, not taste:

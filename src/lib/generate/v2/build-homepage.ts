@@ -1,5 +1,6 @@
 import { layoutDnaFor, type LayoutDna } from "@/lib/generate/v2/layout-dna";
-import { generatePageSystem, generateSystemStylesheet, type PageSystem } from "@/lib/generate/v2/design-system";
+import { BASE_STYLESHEET } from "@/lib/generate/v2/base-stylesheet";
+import { generatePageSystem, type PageSystem } from "@/lib/generate/v2/design-system";
 import {
   renderAllSections,
   renderChrome,
@@ -160,11 +161,7 @@ export async function buildHomepage(args: {
   }
   console.log(`[build-homepage] "${system.systemName}" — ${system.sections.length} sections planned`);
 
-  const systemCss = await generateSystemStylesheet(system, dna, tokens);
-  if (!systemCss) {
-    console.error("[build-homepage] the stylesheet pass returned nothing usable");
-    return null;
-  }
+  const systemCss = BASE_STYLESHEET;
 
   const [sections, footer, navigation] = await Promise.all([
     renderAllSections(system, dna, brief, logoUrl),

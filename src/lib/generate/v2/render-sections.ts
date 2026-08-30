@@ -2,7 +2,13 @@ import { callGemini, bestGeminiChain } from "@/lib/gemini-client";
 import * as cheerio from "cheerio";
 import { sanitizeBespokeHtml } from "@/lib/sanitize-generated-html";
 import { sanitizeGeneratedCss } from "@/lib/sanitize-css";
-import { CLASS_VOCABULARY, MOCKUP_RULES, COPY_RULES, CONVERSION_RULES } from "@/lib/generate/v2/vocabulary";
+import {
+  CLASS_VOCABULARY,
+  MOCKUP_RULES,
+  COPY_RULES,
+  CONVERSION_RULES,
+  STRUCTURE_CONTRACT,
+} from "@/lib/generate/v2/vocabulary";
 import type { PageSystem, SectionSpec } from "@/lib/generate/v2/design-system";
 import type { LayoutDna } from "@/lib/generate/v2/layout-dna";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
@@ -58,6 +64,8 @@ export function stripEmptyMediaFrames(html: string): string {
 
 function systemSummary(system: PageSystem, dna: LayoutDna): string {
   return `DESIGN SYSTEM ALREADY BUILT AND FROZEN — you are writing markup for it, not redesigning it.
+The stylesheet is hand-written and ships with the application. It is not generated, you cannot see
+it change, and nothing you write can restyle it. Your job is to produce the exact shapes it styles.
 - ${system.systemName}: ${system.rationale}
 - Palette: primary ${system.palette.primary}, accent ${system.palette.accent}, ink ${system.palette.ink}, surface ${system.palette.surface}
 - Type: ${system.typography.displayFamily} display / ${system.typography.bodyFamily} body
@@ -99,6 +107,16 @@ async function renderOne(
   const isHero = index === 0 || spec.kind === "hero";
   const archetypeOverride =
     isHero ? dna.hero.spec : spec.kind === "about" ? dna.about.spec : null;
+
+  // The archetype is a class the shipped stylesheet implements, not a
+  // description the model has to rebuild from scratch in CSS.
+  const background =
+    spec.background === "tint" ? " bs-section--tint" : spec.background === "ink" ? " bs-section--ink" : "";
+  const rootClass = isHero
+    ? `bs-section bs-hero bs-hero--${dna.hero.id}`
+    : spec.kind === "about"
+      ? `bs-section bs-about bs-about--${dna.about.id}${background}`
+      : `bs-section${background}`;
   // The hero used to write the site navigation. It cannot: a nav living inside
   // the homepage hero does not exist on any inner route, and a model writing
   // its own hrefs linked at on-page anchors instead of real pages. Chrome is
@@ -110,8 +128,11 @@ ${systemSummary(system, dna)}
 
 ${CLASS_VOCABULARY}
 
+${STRUCTURE_CONTRACT}
+
 THE SECTION YOU ARE WRITING (section ${index + 1} of ${system.sections.length})
 - id: ${spec.id}   kind: ${spec.kind}   label: ${spec.label}
+- REQUIRED root element: <section id="${spec.id}" class="${rootClass}">
 - Background role: ${spec.background}
 - Its job on the page: ${spec.intent}
 - Composition to build: ${archetypeOverride ?? spec.archetype}
@@ -132,8 +153,8 @@ ${CONVERSION_RULES}
 ${MOCKUP_RULES}
 
 OUTPUT RULES
-- Return a single <section id="${spec.id}" class="bs-section ...">…</section>. Nothing before it,
-  nothing after it, no markdown fence, no explanation.
+- Return a single <section id="${spec.id}" class="${rootClass}">…</section> with exactly that class
+  list. Nothing before it, nothing after it, no markdown fence, no explanation.
 - Do NOT write a <nav>, a <header> or a <footer>. The site chrome is built separately and
   rendered around this page; anything you write here would be a second copy of it.${isHero ? " The hero's top padding must clear a fixed navigation bar roughly 96px tall." : ""}
 - Real semantic HTML: headings step down properly, lists are lists, figures are figures. Exactly
@@ -282,6 +303,33 @@ THE COMPOSITION TO BUILD
 ${dna.chrome.name} — ${dna.chrome.spec}
 Mega-menu panel style for this lead: ${panel}
 
+THE EXACT SHAPE THE SHIPPED STYLESHEET STYLES — build this, do not improvise it:
+  <nav class="bs-nav" data-nav data-sticky-nav>
+    <div class="bs-utility"><div class="bs-container"><span>…</span><span>…</span></div></div>   (omit if no utility items)
+    <div class="bs-nav__bar">
+      <a class="bs-nav__logo" href="/"> logo <img> or the business name </a>
+      <ul class="bs-nav__links">
+        <li><a href="/">Home</a></li>
+        <li class="bs-nav__item" data-nav-dropdown>
+          <button type="button" data-nav-trigger aria-expanded="false">Services</button>
+          <div class="bs-nav__panel" data-nav-panel><div class="bs-grid-3"> … item links … </div></div>
+        </li>
+        …
+      </ul>
+      <div class="bs-nav__actions">
+        <a class="bs-link-call" href="tel:…"> icon + number </a>
+        <a class="bs-btn" href="…">PRIMARY LABEL</a>
+        <button type="button" data-nav-toggle aria-expanded="false" aria-label="Menu"> burger svg </button>
+      </div>
+    </div>
+    <div class="bs-nav__drawer" data-nav-drawer>
+      <button type="button" data-nav-close aria-label="Close menu">×</button>
+      … every link, flat, as plain <a> …
+    </div>
+  </nav>
+The panel's closed state, the drawer's off-screen state and the mobile breakpoints are already in
+the stylesheet. Do not write CSS for them and do not add inline styles that would fight them.
+
 BUSINESS
 - ${brief.businessName}, ${brief.industry} in ${brief.city}
 - Logo image: ${logoUrl ?? "none — set the business name in the display face as a wordmark instead"}
@@ -364,8 +412,23 @@ LINKS THE FOOTER MUST CARRY (relative hrefs exactly as written)
 
 ${COPY_RULES}
 
+THE EXACT SHAPE THE SHIPPED STYLESHEET STYLES:
+  <footer class="bs-footer">
+    <div class="bs-container">
+      <div class="bs-footer-cta"> h2.bs-h2, a line, .bs-actions with a .bs-btn--light and a .bs-link-call </div>
+      <div class="bs-footer__cols">
+        <div class="bs-footer__col"> identity, short blurb, .bs-badge trust chips, tel link </div>
+        <div class="bs-footer__col"><h3>Services</h3><ul>…</ul></div>
+        <div class="bs-footer__col"><h3>Service Areas</h3><ul>…</ul></div>
+        <div class="bs-footer__col"><h3>Useful Links</h3><ul>…</ul></div>
+      </div>
+      <div class="bs-footer__bottom"><span>© 2026 …</span><span>…legal links…</span></div>
+    </div>
+  </footer>
+
 OUTPUT RULES
-- Return a single <footer class="bs-footer">…</footer>. Nothing else, no fence, no commentary.
+- Return a single <footer class="bs-footer">…</footer> built to that shape. Nothing else, no fence,
+  no commentary.
 - Include the year 2026 and the business name in the bottom bar.
 - Include the phone as a real tel: link and the address/service area line if supplied.
 - No <script>, no <style>, no inline colour styles, no Tailwind classes.

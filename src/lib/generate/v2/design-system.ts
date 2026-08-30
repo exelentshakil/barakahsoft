@@ -199,83 +199,13 @@ Return STRICT JSON only, no prose, no code fence:
   return { ...parsed.data, sections: unique };
 }
 
-export async function generateSystemStylesheet(
-  system: PageSystem,
-  dna: LayoutDna,
-  tokens: Record<string, string>
-): Promise<string> {
-  const prompt = `Write the complete stylesheet for one bespoke local-business homepage.
-
-THE DESIGN THIS IMPLEMENTS
-- System name: ${system.systemName}
-- Rationale: ${system.rationale}
-- Palette: primary ${system.palette.primary}, accent ${system.palette.accent}, ink ${system.palette.ink}, surface ${system.palette.surface}, surface-alt ${system.palette.surfaceAlt}
-- Display face: ${system.typography.displayFamily} at weight ${system.typography.displayWeight}, headings ${system.typography.headingCase}
-- Body face: ${system.typography.bodyFamily}
-- Corner language: ${dna.cornerStyle}
-- Recurring motif: ${dna.motif}
-- Section rhythm: ${dna.rhythm}
-- Contrast strategy: ${dna.contrastStrategy}
-
-${CLASS_VOCABULARY}
-
-CUSTOM PROPERTIES THAT ALREADY EXIST — the application emits this block before your stylesheet.
-These are the ONLY variables that are defined for you:
-${Object.keys(tokens).sort().join(", ")}
-
-RULES
-- Output CSS ONLY. No markdown fence, no commentary, no <style> tag.
-- Do NOT write @import or @font-face; the font link is added by the application.
-- NEVER reference a custom property that is not in the list above unless you define it yourself
-  in this same file with a LITERAL value. A var() pointing at an undefined name renders as
-  nothing, which is how a previous build shipped with beige text on beige buttons.
-- Do not redefine the variables above. Derive from them with color-mix() or rgb(var(--x-rgb) / a)
-  where you need a tint, and give every such rule a literal fallback.
-- Implement EVERY class in the vocabulary above. A class that is used by a section but has no rule renders as nothing —
-  so implement all of them, including the ones you personally would not have chosen.
-- Fluid type with clamp() for .bs-display, .bs-h2, .bs-h3, .bs-lede. This page must read as LOUD,
-  not editorial: .bs-display is clamp(2.9rem, 6.2vw, 5.6rem) or bolder, line-height 0.98-1.04,
-  letter-spacing about -0.03em, at the display face's heaviest available weight. .bs-h2 is
-  clamp(2rem, 3.6vw, 3.2rem). Set overflow-wrap so nothing overflows its column at any width.
-- .bs-mark is the one emphasised phrase in a headline: give it the brand colour at full strength,
-  not a tint, not an underline alone.
-- .bs-eyebrow--chip is a SOLID filled chip in the accent colour with white caps text, not an
-  outline. .bs-badge and .bs-chip are compact and legible at 12-13px, never truncating.
-- .bs-form is an elevated white card: .bs-form__head is a solid brand-coloured bar with white caps
-  text, .bs-input/.bs-select are tall (48px minimum) with a light fill and no heavy border, and the
-  submit button is full width in the brand colour at a substantial size.
-- .bs-stat__value is large, heavy and brand-coloured; on .bs-section--ink it stays brand-coloured
-  while the label goes white.
-- .bs-section vertical rhythm uses clamp() too, generous on desktop (around 100px) and tighter on
-  mobile. .bs-section--ink flips text, headings, links and muted colour to the inverted palette.
-- Real responsive behaviour at 1200px, 900px and 620px. Grids collapse, splits stack, the image
-  column comes FIRST on mobile in .bs-split--reverse, type steps down, section padding tightens.
-- Every interactive element gets a visible :hover and a :focus-visible outline.
-- Buttons: substantial padding, a real weight, a transform or shadow shift on hover, and never a
-  transparent primary button. .bs-btn--light is for ink backgrounds.
-- .bs-media forces its <img> to width:100%, height:100%, object-fit:cover, display:block.
-- Include the mockup-safety rules as real CSS: html/body overflow-x hidden is not allowed as a
-  fix — instead nothing may exceed 100%; .bs-nav gets z-index:100; .bs-founder-badge and any
-  overlapping chip get their own z-index above their image but below the nav; images never
-  stretch.
-- Add restrained CSS-only motion: transitions on cards and buttons, and a subtle reveal on
-  [data-reveal] elements. No keyframe animation on text that would be caught mid-animation in a
-  screenshot.
-- Aim for 600 to 1100 lines. Quality of the visual result is what is being judged.`;
-
-  const chain = bestGeminiChain();
-  const raw = await callGemini(prompt, chain[0], undefined, {
-    modelChain: chain,
-    maxTokens: 60000,
-    temperature: 0.4,
-    timeoutMs: 260_000,
-    system: "You are a senior CSS engineer writing production stylesheets. You output CSS and nothing else.",
-  });
-  if (!raw) return "";
-
-  const stripped = raw
-    .replace(/^```[a-z]*\s*/i, "")
-    .replace(/```\s*$/i, "")
-    .trim();
-  return sanitizeGeneratedCss(stripped);
-}
+// generateSystemStylesheet is gone on purpose.
+//
+// One Pro call used to invent the entire stylesheet on every build. That made
+// the look of the page a lottery: the run that shipped mega-menu panels open
+// down the top of the page, a hero that never filled the screen and a polite
+// type scale was not a bad prompt, it was the inevitable outcome of asking a
+// model for six hundred lines of CSS it cannot see the result of.
+//
+// The design system is hand-written now (base-stylesheet.ts) and this call
+// only chooses palette, typefaces and composition. See BASE_STYLESHEET.
