@@ -302,6 +302,9 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
       PHONE: ${brief.phone}
       PROBLEMS TO SOLVE: ${brief.painInstructions.join(", ")}
       
+      ABOUT PAGE CONTENT (USE THIS TO WRITE THE ABOUT SECTION COPY INSTEAD OF GENERIC TEXT):
+      ${brief.aboutContent || "Write a compelling story about how this local business was started."}
+      
       DESIGN TOKENS TO USE AS TAILWIND ARBITRARY VALUES:
       - Primary (Buttons/Gradients): ${gateTokens.vars["--bs-primary"]}
       - Accent (Eyebrows/Badges): ${gateTokens.vars["--bs-accent"]}
