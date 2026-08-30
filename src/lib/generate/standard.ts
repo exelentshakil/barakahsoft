@@ -158,7 +158,7 @@ export const MASTER_HERO_STANDARD = `═══ HERO SECTION — THE "PAINT & PRO
 STRICT REQUIREMENT: The Hero section MUST perfectly execute a high-converting, aggressive layout. The Lead Form MUST be in the hero, overlapping the background image.
 
 MANDATORY HERO DOM STRUCTURE (You MUST use this layout logic):
-1. BACKGROUND: Full width, min-height 85vh (or min-h-[700px]). Uses the hero image with a heavy dark overlay (e.g., bg-black/60 or a gradient).
+1. BACKGROUND: Full width, min-height 85vh (or min-h-[700px]). Uses the hero image with a heavy dark overlay (e.g., bg-black/60 or a gradient). MAKE SURE THE MAIN NAV / MEGA MENU IS AT THE VERY TOP AND HAS z-50.
 2. LAYOUT: 2-Column CSS Grid (or flex row) on desktop.
    - LEFT (Content - 55% width):
      * EYEBROW: Solid background block (bg-[var(--bs-accent)]) with white text (e.g., "WYOMING'S PREMIER ROOFERS").
@@ -196,12 +196,12 @@ MANDATORY ABOUT DOM STRUCTURE (You MUST use this layout logic):
      * Image container MUST be aspect-[4/3] with object-cover.
      * THE SLANTED FOUNDER BADGE: Overlapping the bottom left of the image. 
        Use a flex container. Left side is a white box (with the logo). Right side is a solid brand color box (with the founder name/title).
-       To get the slanted edge, apply a clip-path to the colored box.
+       To get the slanted edge, apply a clip-path to the colored box. ENSURE THE BADGE HAS z-50 OR IS VISIBLE OVER THE IMAGE AND MAIN LAYOUT. 
        Example structure:
-       <div class="absolute -bottom-6 -left-6 flex items-stretch shadow-2xl h-24">
-         <div class="bg-white p-2 w-24 flex items-center justify-center border border-gray-100 z-10"><img src="logo" class="max-h-full object-contain"/></div>
+       <div class="absolute -bottom-6 -left-6 flex items-stretch shadow-2xl h-24 z-50">
+         <div class="bg-white p-2 w-24 flex items-center justify-center border border-gray-100 z-10"><img src="LOGO_URL_PLACEHOLDER" class="max-h-full object-contain" alt="Logo"/></div>
          <div class="bg-[var(--bs-primary)] text-white p-4 flex flex-col justify-center -ml-4 pl-8" style="clip-path: polygon(15px 0, 100% 0, 100% 100%, 0 100%);">
-           <span class="font-bold">Tony Ostheimer</span><span class="text-sm">Founder & CEO</span>
+           <span class="font-bold">FOUNDER_NAME_PLACEHOLDER</span><span class="text-sm">Founder & CEO</span>
          </div>
        </div>
    - RIGHT (Content - 50% width):

@@ -293,7 +293,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
       Generate the FULL HTML (with inline Tailwind CSS) for the Hero and About sections of this website in ONE shot.
       
       STRICT INSTRUCTIONS:
-      1. MUST INCLUDE MEGA MENU: Add a full header/nav bar before the hero section with links to the services, areas, and an emergency phone number.
+      1. MUST INCLUDE MEGA MENU: Add a full header/nav bar before the hero section with links to the services, areas, and an emergency phone number. THIS HEADER MUST BE AT THE TOP OF THE PAGE AND SHOULD BE INCLUDED BEFORE THE HERO BACKGROUND IMAGE, NOT INSIDE THE HERO LAYOUT.
       2. USE CLIENT IMAGES: If provided, use the client's actual logo from the brief, and an actual image for the hero. DO NOT USE placeholder paths like "/assets/" or "/images/". Use the photos from the brief or Unsplash.
       3. FIX SPACING: Ensure there is ample vertical padding (e.g., py-24) on sections. Do not make elements inside the hero and about sections super tight. Use generous gap and margins.
       4. INCLUDE CALLS TO ACTION (CTAs) FOR OTHER SECTIONS: Ensure there are visible buttons (like "View All Services", "Read FAQs", etc.) pointing to the rest of the site's content.
@@ -310,12 +310,12 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
       
       ${MASTER_HERO_STANDARD}
       
-      ${MASTER_ABOUT_STANDARD}
+            ${MASTER_ABOUT_STANDARD.replace(/LOGO_URL_PLACEHOLDER/g, loaded.artifact?.extracted_assets?.brand_logo_url ?? "logo").replace(/FOUNDER_NAME_PLACEHOLDER/g, brief.businessName.split(' ')[0] ?? "Founder")}
       
       IMAGES & BRANDING TO USE:
       - Logo: ${loaded.artifact?.extracted_assets?.brand_logo_url ?? "https://img1.wsimg.com/isteam/ip/ac892ea6-4c1c-444a-8a56-c0458ee66663/Saddle%20Roofing%20Logo%20-%20White%20PNG.png"}
       - Hero Image: ${brief.photos[0] ?? "https://images.unsplash.com/photo-1632759145355-6d5dfb8c2a86?auto=format&fit=crop&q=80"}
-      - About Image: ${brief.photos[1] ?? "https://images.unsplash.com/photo-1541889895054-47f631169c9b?auto=format&fit=crop&q=80"}
+      - About Image (Three workers with a van and ladder): ${brief.photos[1] ?? "https://images.unsplash.com/photo-1541889895054-47f631169c9b?auto=format&fit=crop&q=80"}
       
       Return ONLY valid HTML inside a \`\`\`html block. Include a dark header with the logo and contact info.
       `;
