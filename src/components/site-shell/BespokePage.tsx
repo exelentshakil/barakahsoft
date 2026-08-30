@@ -18,7 +18,9 @@ export function BespokePageBody({ html, css, leadSlug }: { html: string; css?: s
         // Every selector was scoped to .bespoke-page before storage, so these
         // rules cannot reach the site's real navigation and footer, the admin,
         // or the portal that previews this page.
-        <style dangerouslySetInnerHTML={{ __html: css }} />
+        // href/precedence rather than a bare tag: the nav and the footer render
+        // the same stylesheet, and React dedupes styles by href so it is sent once.
+        <style href="bespoke-css" precedence="default" dangerouslySetInnerHTML={{ __html: css }} />
       )}
       <div className="bespoke-page" dangerouslySetInnerHTML={{ __html: html }} />
       <BespokeRuntime leadSlug={leadSlug} />

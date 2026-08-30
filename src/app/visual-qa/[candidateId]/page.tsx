@@ -40,6 +40,8 @@ export default async function CandidatePreviewPage({
     ...site.payload,
     bespokeHomepageHtml: candidate.html,
     bespokeCss: candidate.css,
+    bespokeChromeHtml: null,
+    bespokeFooterHtml: null,
   };
 
   return (

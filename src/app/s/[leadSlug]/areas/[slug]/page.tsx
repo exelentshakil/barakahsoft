@@ -2,8 +2,7 @@ export const runtime = "edge";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getSiteData } from "@/lib/get-site-data";
-import { BespokeNav } from "@/components/site-shell/BespokeNav";
-import { BespokeFooter } from "@/components/site-shell/BespokeFooter";
+import { BespokeSiteNav, BespokeSiteFooter } from "@/components/site-shell/BespokeChrome";
 import { BespokePageBody } from "@/components/site-shell/BespokePage";
 import { siteRootStyle } from "@/components/site-shell/shell-style";
 import { breadcrumbSchema } from "@/lib/seo/breadcrumb-schema";
@@ -39,9 +38,9 @@ export default async function AreaPage({ params, searchParams }: { params: Promi
   return (
     <div style={siteRootStyle(payload)}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
-      <BespokeNav payload={payload} spec={payload.chromeSpec} />
+      <BespokeSiteNav payload={payload} />
       {pageHtml ? <BespokePageBody html={pageHtml} css={payload.bespokeCss} leadSlug={payload.leadSlug} /> : null}
-      <BespokeFooter payload={payload} spec={payload.chromeSpec} />
+      <BespokeSiteFooter payload={payload} />
     </div>
   );
 }

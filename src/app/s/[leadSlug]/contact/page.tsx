@@ -3,8 +3,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { Phone, Mail, MapPin } from "lucide-react";
 import { getSiteData } from "@/lib/get-site-data";
-import { BespokeNav } from "@/components/site-shell/BespokeNav";
-import { BespokeFooter } from "@/components/site-shell/BespokeFooter";
+import { BespokeSiteNav, BespokeSiteFooter } from "@/components/site-shell/BespokeChrome";
 import { BookingForm } from "@/components/site-shell/BookingForm";
 import { siteRootStyle } from "@/components/site-shell/shell-style";
 import { BespokePageBody } from "@/components/site-shell/BespokePage";
@@ -35,7 +34,7 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
   return (
     <div style={siteRootStyle(payload)}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
-      <BespokeNav payload={payload} spec={payload.chromeSpec} />
+      <BespokeSiteNav payload={payload} />
 
       {/* Generated contact content renders ABOVE the booking form rather
           than replacing it: <form> is stripped from generated markup by the
@@ -75,7 +74,7 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
         </div>
       </section>
 
-      <BespokeFooter payload={payload} spec={payload.chromeSpec} />
+      <BespokeSiteFooter payload={payload} />
     </div>
   );
 }

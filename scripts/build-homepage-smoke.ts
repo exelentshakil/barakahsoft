@@ -1,0 +1,99 @@
+/**
+ * End-to-end smoke test for the bespoke homepage build.
+ *
+ *   npx tsx --env-file=.env.local scripts/build-homepage-smoke.ts [outfile]
+ *
+ * Runs the real model chain against a synthetic brief and writes a standalone
+ * HTML file, so the whole pipeline can be judged by looking at it rather than
+ * by reading logs.
+ */
+import { writeFileSync } from "node:fs";
+import { buildHomepage } from "@/lib/generate/v2/build-homepage";
+import { conversionIntentFor } from "@/lib/conversion-intent";
+import { buildChromeData } from "@/lib/generate/v2/chrome-data";
+import { compileDesignTokens } from "@/lib/design-tokens";
+import { DEFAULT_DESIGN_DNA } from "@/lib/design-dna";
+import type { SiteBrief } from "@/lib/generate-bespoke-site";
+
+const brief: SiteBrief = {
+  businessName: "Saddle Roofing",
+  industry: "Roofing contractor",
+  city: "Cheyenne, WY",
+  founder: "Tony Ostheimer",
+  phone: "(307) 475-6088",
+  email: "info@saddleroofing.com",
+  aboutContent:
+    "Saddle Roofing was founded by Wyoming locals Tony and Hannah Ostheimer. Tony's background is in civil and environmental engineering, which he brings to every roof structure. They started the company after watching out-of-state storm chasers take Wyoming homeowners' money and disappear. Every project is backed by a 10-year transferable workmanship warranty.",
+  services: [
+    "Roof inspection",
+    "Roof repair",
+    "Roof replacement",
+    "Gutter services",
+    "Skylight services",
+    "Shingle roofs",
+    "Metal roofs",
+    "Emergency roof repair",
+  ],
+  areas: ["Cheyenne", "Laramie", "Gillette", "Casper", "Rock Springs", "Sheridan"],
+  rating: 4.9,
+  reviewCount: 299,
+  reviews: [
+    { author: "Dana R.", rating: 5, text: "They replaced our roof after a hailstorm in four days and handled the whole insurance claim for us." },
+    { author: "Mark H.", rating: 5, text: "Tony walked the roof with me and showed me photos of every problem before quoting anything." },
+    { author: "Priya S.", rating: 5, text: "Crew cleaned up so thoroughly you could not tell they had been here, apart from the new roof." },
+  ],
+  photos: [
+    "https://images.unsplash.com/photo-1632759145355-6d5dfb8c2a86?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1541889895054-47f631169c9b?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80",
+  ],
+  heroImage: null,
+  factsDigest:
+    "Licensed, bonded and insured roofing contractors serving Cheyenne, Laramie and surrounding Wyoming areas. Manufacturer certified. 10+ years of experience. 24/7 emergency response.",
+  licensedInsured: true,
+  leadSlug: "saddle-roofing-smoke",
+  painInstructions: [
+    "Our current site looks like a template and does not explain the warranty",
+    "We lose jobs to out-of-state storm chasers",
+  ],
+  intent: conversionIntentFor("Roofing contractor", true),
+};
+
+const tokens = compileDesignTokens(DEFAULT_DESIGN_DNA, {
+  colourSource: "client",
+  clientBrandHex: "#E4761B",
+}).vars;
+
+async function main() {
+  const started = Date.now();
+  const result = await buildHomepage({
+    brief,
+    tokens,
+    logoUrl: null,
+    photos: brief.photos,
+    chrome: buildChromeData(brief, { services: brief.services, areas: brief.areas, innerPagesBuilt: false }),
+    repair: process.env.BESPOKE_VISUAL_REPAIR !== "false",
+  });
+  if (!result) {
+    console.error("BUILD FAILED");
+    process.exit(1);
+  }
+
+  const out = process.argv[2] ?? "/tmp/bespoke-smoke.html";
+  writeFileSync(
+    out,
+    `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${brief.businessName}</title><link rel="stylesheet" href="${result.fontHref}"><style>*{box-sizing:border-box}body{margin:0}${result.css}</style></head><body><div class="bespoke-page">${result.html}</div></body></html>`
+  );
+
+  console.log(`\n--- built in ${Math.round((Date.now() - started) / 1000)}s ---`);
+  console.log(`system    : ${result.system.systemName}`);
+  console.log(`dna       : ${result.dna.hero.id} / ${result.dna.about.id} / ${result.dna.footer.id} / ${result.dna.chrome.id}`);
+  console.log(`sections  : ${result.sections.length} (${result.sections.map((s) => s.id).join(", ")})`);
+  console.log(`css       : ${result.css.length} chars`);
+  console.log(`html      : ${result.html.length} chars`);
+  for (const note of result.notes) console.log(`  ${note}`);
+  console.log(`\nwrote ${out}`);
+}
+
+void main();

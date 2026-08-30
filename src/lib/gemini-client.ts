@@ -7,6 +7,12 @@ export interface GeminiCallOptions {
   maxTokens?: number;
   /** Tried in order; the first the key accepts is used. */
   modelChain?: string[];
+  /**
+   * Overrides the default request timeout. A Pro call asked for a thousand
+   * lines of CSS legitimately runs past two and a half minutes, and killing
+   * it there threw away the whole build.
+   */
+  timeoutMs?: number;
 }
 
 // The strongest models for a call where output quality IS the product.
@@ -49,6 +55,7 @@ export function bestGeminiChain(): string[] {
 // request is clamped rather than rejected.
 const MAX_OUTPUT_TOKENS = 65536;
 const REQUEST_TIMEOUT_MS = 150_000;
+const MAX_TIMEOUT_MS = 900_000;
 
 function isModelUnavailable(status: number, body: string): boolean {
   if (status === 404) return true;
@@ -92,6 +99,7 @@ export async function callGemini(
   }
   if (Object.keys(generationConfig).length > 0) requestBody.generationConfig = generationConfig;
 
+  const timeoutMs = Math.min(options?.timeoutMs ?? REQUEST_TIMEOUT_MS, MAX_TIMEOUT_MS);
   const candidates = options?.modelChain?.length ? options.modelChain : [model];
 
   for (const candidate of candidates) {
@@ -102,7 +110,7 @@ export async function callGemini(
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(requestBody),
-          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+          signal: AbortSignal.timeout(timeoutMs),
         }
       );
 
@@ -150,7 +158,7 @@ export async function callGemini(
       return text.trim();
     } catch (err) {
       const timedOut = err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
-      console.error(timedOut ? `[gemini] "${candidate}" timed out after ${REQUEST_TIMEOUT_MS / 1000}s` : `[gemini] network error on "${candidate}" —`, timedOut ? "" : err);
+      console.error(timedOut ? `[gemini] "${candidate}" timed out after ${timeoutMs / 1000}s` : `[gemini] network error on "${candidate}" —`, timedOut ? "" : err);
       return null;
     }
   }

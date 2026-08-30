@@ -2,8 +2,7 @@ export const runtime = "edge";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getSiteData } from "@/lib/get-site-data";
-import { BespokeNav } from "@/components/site-shell/BespokeNav";
-import { BespokeFooter } from "@/components/site-shell/BespokeFooter";
+import { BespokeSiteNav, BespokeSiteFooter } from "@/components/site-shell/BespokeChrome";
 import { BookingForm } from "@/components/site-shell/BookingForm";
 import { siteRootStyle } from "@/components/site-shell/shell-style";
 import { isAdminSession } from "@/lib/is-admin-session";
@@ -32,7 +31,7 @@ export default async function BookingPage({ params }: { params: Promise<{ leadSl
 
   return (
     <div style={siteRootStyle(payload)}>
-      <BespokeNav payload={payload} spec={payload.chromeSpec} />
+      <BespokeSiteNav payload={payload} />
 
       <section className="py-16">
         <div className="mx-auto max-w-lg px-6">
@@ -44,7 +43,7 @@ export default async function BookingPage({ params }: { params: Promise<{ leadSl
         </div>
       </section>
 
-      <BespokeFooter payload={payload} spec={payload.chromeSpec} />
+      <BespokeSiteFooter payload={payload} />
     </div>
   );
 }

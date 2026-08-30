@@ -46,6 +46,17 @@ const INTERACTION_ATTRS = [
   "data-bar-max",
   "data-bar-fill",
   "data-lead-form",
+  // Site chrome. The generated nav asks for its dropdowns, its mobile drawer
+  // and its sticky state with these; BespokeChromeRuntime implements them.
+  "data-nav",
+  "data-nav-dropdown",
+  "data-nav-trigger",
+  "data-nav-panel",
+  "data-nav-toggle",
+  "data-nav-drawer",
+  "data-nav-close",
+  "data-sticky-nav",
+  "data-open",
   "data-lead-form-message",
   "data-open-quote-modal",
 ];

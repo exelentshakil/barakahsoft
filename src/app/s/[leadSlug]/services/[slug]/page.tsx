@@ -4,8 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { getSiteData } from "@/lib/get-site-data";
 import { ServiceDetailTemplate } from "@/components/site-shell/pages/ServiceDetailTemplate";
 import { BespokePageBody } from "@/components/site-shell/BespokePage";
-import { BespokeNav } from "@/components/site-shell/BespokeNav";
-import { BespokeFooter } from "@/components/site-shell/BespokeFooter";
+import { BespokeSiteNav, BespokeSiteFooter } from "@/components/site-shell/BespokeChrome";
 import { siteRootStyle } from "@/components/site-shell/shell-style";
 import { breadcrumbSchema, serviceSchema } from "@/lib/seo/breadcrumb-schema";
 import { isAdminSession } from "@/lib/is-admin-session";
@@ -52,13 +51,13 @@ export default async function ServicePage({ params, searchParams }: { params: Pr
     <div style={siteRootStyle(payload)}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(service_schema) }} />
-      <BespokeNav payload={payload} spec={payload.chromeSpec} />
+      <BespokeSiteNav payload={payload} />
       {payload.bespokePages[`services/${slug}`] ? (
         <BespokePageBody html={payload.bespokePages[`services/${slug}`]} css={payload.bespokeCss} leadSlug={payload.leadSlug} />
       ) : (
         <ServiceDetailTemplate payload={payload} service={service} />
       )}
-      <BespokeFooter payload={payload} spec={payload.chromeSpec} />
+      <BespokeSiteFooter payload={payload} />
     </div>
   );
 }

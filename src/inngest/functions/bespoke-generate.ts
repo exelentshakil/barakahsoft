@@ -282,73 +282,67 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
       clientBrandHex,
     });
 
-    const composedHtml = await step.run("gemini-woooooooow-generate", async () => {
+    // The bespoke build. Art direction and the stylesheet are decided once on
+    // the Pro chain, every section is then written in parallel against that
+    // frozen system, and a render-and-repair pass fixes what only shows up in
+    // pixels. See src/lib/generate/v2/build-homepage.ts for why it is split
+    // this way rather than asked for in one shot.
+    const built = await step.run("build-bespoke-homepage", async () => {
       await touchProgress(admin, lead_id);
-      
-      const { MASTER_HERO_STANDARD, MASTER_ABOUT_STANDARD } = require("@/lib/generate/standard");
-      const { callGemini } = require("@/lib/gemini-client");
-      
-      const prompt = `
-      You are an elite conversion rate optimizer and frontend developer building a high-ticket agency website.
-      Generate the FULL HTML (with inline Tailwind CSS) for the Hero and About sections of this website in ONE shot.
-      
-      STRICT INSTRUCTIONS:
-      1. MUST INCLUDE MEGA MENU: Add a full header/nav bar before the hero section with links to the services, areas, and an emergency phone number. THIS HEADER MUST BE AT THE TOP OF THE PAGE AND SHOULD BE INCLUDED BEFORE THE HERO BACKGROUND IMAGE, NOT INSIDE THE HERO LAYOUT.
-      2. USE CLIENT IMAGES: If provided, use the client's actual logo from the brief, and an actual image for the hero. DO NOT USE placeholder paths like "/assets/" or "/images/". Use the photos from the brief or Unsplash.
-      3. FIX SPACING: Ensure there is ample vertical padding (e.g., py-24) on sections. Do not make elements inside the hero and about sections super tight. Use generous gap and margins.
-      4. INCLUDE CALLS TO ACTION (CTAs) FOR OTHER SECTIONS: Ensure there are visible buttons (like "View All Services", "Read FAQs", etc.) pointing to the rest of the site's content.
-      
-      BUSINESS: ${brief.businessName} in ${brief.city}
-      PHONE: ${brief.phone}
-      PROBLEMS TO SOLVE: ${brief.painInstructions.join(", ")}
-      
-      ABOUT PAGE CONTENT (USE THIS TO WRITE THE ABOUT SECTION COPY INSTEAD OF GENERIC TEXT):
-      ${brief.aboutContent || "Write a compelling story about how this local business was started."}
-      
-      DESIGN TOKENS TO USE AS TAILWIND ARBITRARY VALUES:
-      - Primary (Buttons/Gradients): ${gateTokens.vars["--bs-primary"]}
-      - Accent (Eyebrows/Badges): ${gateTokens.vars["--bs-accent"]}
-      - Ink (Dark Text/Backgrounds): ${gateTokens.vars["--bs-ink"]}
-      - Surface: ${gateTokens.vars["--bs-surface"]}
-      
-      ${MASTER_HERO_STANDARD}
-      
-            ${MASTER_ABOUT_STANDARD.replace(/LOGO_URL_PLACEHOLDER/g, loaded.artifact?.extracted_assets?.brand_logo_url ?? "logo").replace(/FOUNDER_NAME_PLACEHOLDER/g, brief.businessName.split(' ')[0] ?? "Founder").replace(/ABOUT_IMAGE_URL_PLACEHOLDER/g, brief.photos[1] ?? "https://images.unsplash.com/photo-1541889895054-47f631169c9b?auto=format&fit=crop&q=80")}
-      
-      IMAGES & BRANDING TO USE:
-      - Logo: ${loaded.artifact?.extracted_assets?.brand_logo_url ?? "https://img1.wsimg.com/isteam/ip/ac892ea6-4c1c-444a-8a56-c0458ee66663/Saddle%20Roofing%20Logo%20-%20White%20PNG.png"}
-      - Hero Image: ${brief.photos[0] ?? "https://images.unsplash.com/photo-1632759145355-6d5dfb8c2a86?auto=format&fit=crop&q=80"}
-      - About Image (Three workers with a van and ladder): ${brief.photos[1] ?? "https://images.unsplash.com/photo-1541889895054-47f631169c9b?auto=format&fit=crop&q=80"}
-      
-      Return ONLY valid HTML inside a \`\`\`html block. Include a dark header with the logo and contact info.
-      `;
+      const { buildHomepage } = await import("@/lib/generate/v2/build-homepage");
 
-      try {
-        let html = await callGemini(prompt, "gemini-3.1-pro-preview");
-        if (!html) throw new Error("Gemini returned null");
-        
-        // Strip markdown block
-        html = html.replace(/\`\`\`html\n?/g, "").replace(/\`\`\`/g, "").trim();
-        
-        await admin
-          .from("artifacts")
-          .update({
-            bespoke_homepage_html: html,
-            bespoke_sections: [
-              { id: "hero", kind: "hero", label: "Hero", html, locked: false },
-              { id: "about", kind: "about", label: "About", html, locked: false }
-            ],
-            last_edited_at: new Date().toISOString(),
-          })
-          .eq("lead_id", lead_id);
-          
-        return html;
-      } catch (err) {
-        throw new Error("Failed to generate with Gemini: " + (err instanceof Error ? err.message : String(err)));
-      }
+      const logoUrl =
+        (loaded.artifact?.extracted_assets as any)?.brand_logo_url ??
+        (facts.logo_url as string) ??
+        null;
+
+      // The logo is not a photograph. Passing it in the photo list is exactly
+      // how a previous build ended up rendering a 900px-tall wordmark as its
+      // hero image.
+      const photos = brief.photos.filter((url) => url && url !== logoUrl).slice(0, 12);
+
+      const { buildChromeData } = await import("@/lib/generate/v2/chrome-data");
+
+      const result = await buildHomepage({
+        brief,
+        tokens: gateTokens.vars,
+        logoUrl,
+        photos,
+        chrome: buildChromeData(brief, {
+          services: serviceNames,
+          areas: brief.areas,
+          innerPagesBuilt: Boolean(loaded.artifact?.inner_pages_built),
+        }),
+        repair: process.env.BESPOKE_VISUAL_REPAIR !== "false",
+      });
+      if (!result) throw new Error("The bespoke build produced no usable homepage; the previous live page was preserved.");
+
+      await admin
+        .from("artifacts")
+        .update({
+          bespoke_homepage_html: result.html,
+          bespoke_chrome_html: result.chromeHtml,
+          bespoke_footer_html: result.footerHtml,
+          bespoke_css: result.css,
+          bespoke_sections: result.sections,
+          bespoke_rationale: result.rationale,
+          design_tokens: { vars: gateTokens.vars, fontHref: result.fontHref, mood: gateTokens.mood },
+          last_edited_at: new Date().toISOString(),
+        })
+        .eq("lead_id", lead_id);
+
+      return {
+        html: result.html,
+        css: result.css,
+        rationale: result.rationale,
+        sections: result.sections,
+        notes: result.notes,
+      };
     });
 
-    const stylesheetCss = ""; // No longer needed
+    const composedHtml = built.html;
+
+    const stylesheetCss = built.css;
     const checked = { report: { passes: true, findings: [] as any[], constraints: [] as any[] } }; // Bypass deterministic checks entirely!
 
 
@@ -375,7 +369,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
               attempt: 1,
               html: composedHtml,
               css: stylesheetCss,
-              rationale: "Generated via Gemini one-shot",
+              rationale: built.rationale,
               context: {
                 businessName: brief.businessName,
                 industry: brief.industry,
@@ -389,7 +383,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
                    layout: dna.layout,
                    motifs: dna.motifs,
                    rationale: dna.rationale,
-                   candidateNotes: "Generated via Gemini one-shot",
+                   candidateNotes: built.rationale,
                    sectionPlan: [],
                  },
                },
@@ -459,7 +453,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
       }
     }
 
-    const homepage = { html: composedHtml, css: stylesheetCss, rationale: "Generated via Gemini one-shot", visualReport };
+    const homepage = { html: composedHtml, css: stylesheetCss, rationale: built.rationale, visualReport };
     const homepageHtml = homepage.html;
     const verdict = checked.report;
 
@@ -472,10 +466,10 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
         .from("artifacts")
         .update({
            bespoke_rationale: homepage.rationale,
-           bespoke_sections: [
-             { id: "hero", kind: "hero", label: "Hero", html: sanitizeBespokeHtml(composedHtml), locked: false },
-             { id: "about", kind: "about", label: "About", html: sanitizeBespokeHtml(composedHtml), locked: false }
-           ],
+           // The real per-section split, written by the build. It was
+           // previously two entries both holding the ENTIRE page, so
+           // editing "Hero" in the studio rewrote the whole homepage twice.
+           bespoke_sections: built.sections,
           // Kept so the operator can see what the critic caught, rather than
           // trusting that it ran.
           // Stored so the operator sees exactly what the gate found rather
@@ -496,6 +490,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
             ...(homepage.visualReport?.critique
               ? [`[score] visual-critic: ${homepage.visualReport.critique.score}/100 — ${homepage.visualReport.critique.summary}`]
               : []),
+            ...built.notes,
           ].join("\n") || null,
           bespoke_css: homepage.css,
         })

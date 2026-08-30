@@ -2,8 +2,7 @@ export const runtime = "edge";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getSiteData } from "@/lib/get-site-data";
-import { BespokeNav } from "@/components/site-shell/BespokeNav";
-import { BespokeFooter } from "@/components/site-shell/BespokeFooter";
+import { BespokeSiteNav, BespokeSiteFooter } from "@/components/site-shell/BespokeChrome";
 import { AboutTemplate } from "@/components/site-shell/pages/AboutTemplate";
 import { siteRootStyle } from "@/components/site-shell/shell-style";
 import { BespokePageBody } from "@/components/site-shell/BespokePage";
@@ -35,13 +34,13 @@ export default async function AboutPage({ params, searchParams }: { params: Prom
   return (
     <div style={siteRootStyle(payload)}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
-      <BespokeNav payload={payload} spec={payload.chromeSpec} />
+      <BespokeSiteNav payload={payload} />
       {payload.bespokePages["about"] ? (
         <BespokePageBody html={payload.bespokePages["about"]} css={payload.bespokeCss} leadSlug={payload.leadSlug} />
       ) : (
         <AboutTemplate payload={payload} />
       )}
-      <BespokeFooter payload={payload} spec={payload.chromeSpec} />
+      <BespokeSiteFooter payload={payload} />
     </div>
   );
 }

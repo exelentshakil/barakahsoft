@@ -90,6 +90,8 @@ export interface SitePayload {
   bespokeHomepageHtml: string | null;
   // The page's own stylesheet, scoped to .bespoke-page before storage.
   bespokeCss: string | null;
+  bespokeChromeHtml: string | null;
+  bespokeFooterHtml: string | null;
   // v9 -- CSS custom properties compiled from the lead's inspiration design
   // DNA. Applied to the wrapper element so every bs-* class in generated
   // markup resolves to this lead's own palette, type and rhythm.

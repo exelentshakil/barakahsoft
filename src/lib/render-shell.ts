@@ -195,6 +195,8 @@ export function renderShell(
     leadSlug: lead.slug,
     bespokeHomepageHtml: artifact.bespoke_homepage_html,
     bespokeCss: artifact.bespoke_css ?? null,
+    bespokeChromeHtml: artifact.bespoke_chrome_html ?? null,
+    bespokeFooterHtml: artifact.bespoke_footer_html ?? null,
     designTokens: artifact.design_tokens ?? null,
     bespokePages: artifact.bespoke_pages ?? {},
     // Leads generated before chrome was part of the design system fall back
