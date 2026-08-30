@@ -4,6 +4,8 @@ import { Marquee } from "@/components/landing/primitives/Marquee";
 import { SectionEyebrow } from "@/components/site-shell/primitives/SectionEyebrow";
 import { Sparkles } from "lucide-react";
 
+import Image from "next/image";
+
 const CLIENTS_DIR = path.join(process.cwd(), "public", "refs", "clients");
 const IMAGE_EXT = /\.(png|jpe?g|webp)$/i;
 
@@ -26,8 +28,13 @@ function GalleryCard({ file }: { file: string }) {
         <span className="h-2.5 w-2.5 rounded-full bg-warning/60" />
         <span className="h-2.5 w-2.5 rounded-full bg-success/60" />
       </div>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={`/refs/clients/${file}`} alt={labelFromFilename(file)} className="aspect-[4/3] w-full object-cover object-top" />
+      <Image
+        src={`/refs/clients/${file}`}
+        alt={labelFromFilename(file)}
+        width={380}
+        height={285}
+        className="aspect-[4/3] w-full object-cover object-top"
+      />
       <p className="px-3 py-2 text-sm font-medium text-muted-foreground">{labelFromFilename(file)}</p>
     </div>
   );

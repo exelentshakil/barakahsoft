@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'barakahsoft.com',
+      },
+    ],
+  },
   // The export route reads the chrome stylesheet and the real header,
   // footer and sticky-bar components off disk and ships them inside the
   // client's zip. Without this they are not traced into the serverless
