@@ -45,7 +45,35 @@ async function screenshot(fullHtml: string): Promise<GeminiImagePart[] | null> {
     const images: GeminiImagePart[] = [];
     for (const viewport of VIEWPORTS) {
       const page = await browser.newPage({ viewport: { width: viewport.width, height: viewport.height } });
-      await page.setContent(fullHtml, { waitUntil: "networkidle", timeout: 45_000 }).catch(() => {});
+      await page.setContent(fullHtml, { waitUntil: "load", timeout: 60_000 }).catch(() => {});
+
+      // Client photography and stock URLs are slow, and "networkidle" alone
+      // would let a half-loaded page be captured — at which point the critic
+      // reports broken images that are not broken and rebuilds good sections
+      // to fix them. Wait for the images themselves, report the ones that
+      // genuinely failed, and scroll the page so lazy-loaded ones start.
+      await page.evaluate(async () => {
+        window.scrollTo(0, document.body.scrollHeight);
+        window.scrollTo(0, 0);
+        await Promise.all(
+          Array.from(document.images)
+            .filter((image) => !image.complete)
+            .map(
+              (image) =>
+                new Promise((resolve) => {
+                  image.addEventListener("load", resolve, { once: true });
+                  image.addEventListener("error", resolve, { once: true });
+                  window.setTimeout(resolve, 12_000);
+                })
+            )
+        );
+      }).catch(() => {});
+
+      const broken = await page
+        .evaluate(() => Array.from(document.images).filter((image) => image.naturalWidth === 0).map((image) => image.src))
+        .catch(() => [] as string[]);
+      if (broken.length) console.warn(`[visual-repair] ${broken.length} image(s) did not load: ${broken.slice(0, 3).join(", ")}`);
+
       // The first screen, which is what lands on the mockup.
       const first = await page.screenshot({ type: "png" });
       images.push({ mimeType: "image/png", data: first.toString("base64") });
