@@ -2,7 +2,7 @@ import { z } from "zod";
 import { bestGeminiChain, callGemini } from "@/lib/gemini-client";
 import { parseJsonResponse } from "@/lib/parse-json-response";
 import { sanitizeGeneratedCss } from "@/lib/sanitize-css";
-import { CLASS_VOCABULARY, MOCKUP_RULES, COPY_RULES } from "@/lib/generate/v2/vocabulary";
+import { CLASS_VOCABULARY, MOCKUP_RULES, COPY_RULES, CONVERSION_RULES } from "@/lib/generate/v2/vocabulary";
 import type { LayoutDna } from "@/lib/generate/v2/layout-dna";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
 
@@ -124,6 +124,8 @@ unusable for contrast, in which case adjust the minimum amount and say so in the
 
 ${COPY_RULES}
 
+${CONVERSION_RULES}
+
 ${MOCKUP_RULES}
 
 YOUR JOB
@@ -140,8 +142,11 @@ continuous commercial argument for THIS business. Requirements:
 - Give each section an archetype description concrete enough that another designer could build
   it without seeing the rest of the page: describe the composition, what is on the left, what is
   on the right, what overlaps what, what the focal element is.
-- Assign an imageUrl only from the supplied list, and use each photograph at most once. Sections
-  with no photograph must be composed to look deliberate, not empty.
+- Assign an imageUrl only from the supplied list. A photograph may be used at most twice, and never
+  in two adjacent sections. A section with no photograph must be composed WITHOUT any image frame —
+  a stat band, a quote plate, an SVG glyph grid, a numbered rail — because an empty frame renders as
+  a grey box. Do not assign a photograph to more sections than there are photographs.
+- The hero always carries the lead-capture form. That is not negotiable and not a section of its own.
 - copyPoints are the real, factual points the section must make, drawn from the facts above.
 
 Choose Google-hosted type: a display family with real character for headings and a highly legible
@@ -228,9 +233,19 @@ RULES
   where you need a tint, and give every such rule a literal fallback.
 - Implement EVERY class in the vocabulary above. A class that is used by a section but has no rule renders as nothing —
   so implement all of them, including the ones you personally would not have chosen.
-- Fluid type with clamp() for .bs-display, .bs-h2, .bs-h3, .bs-lede. The display size must be
-  genuinely large on desktop (clamp floor no lower than 2.4rem, ceiling around 5rem) and must not
-  overflow its column at any width: set overflow-wrap and a sensible line-height near 1.02.
+- Fluid type with clamp() for .bs-display, .bs-h2, .bs-h3, .bs-lede. This page must read as LOUD,
+  not editorial: .bs-display is clamp(2.9rem, 6.2vw, 5.6rem) or bolder, line-height 0.98-1.04,
+  letter-spacing about -0.03em, at the display face's heaviest available weight. .bs-h2 is
+  clamp(2rem, 3.6vw, 3.2rem). Set overflow-wrap so nothing overflows its column at any width.
+- .bs-mark is the one emphasised phrase in a headline: give it the brand colour at full strength,
+  not a tint, not an underline alone.
+- .bs-eyebrow--chip is a SOLID filled chip in the accent colour with white caps text, not an
+  outline. .bs-badge and .bs-chip are compact and legible at 12-13px, never truncating.
+- .bs-form is an elevated white card: .bs-form__head is a solid brand-coloured bar with white caps
+  text, .bs-input/.bs-select are tall (48px minimum) with a light fill and no heavy border, and the
+  submit button is full width in the brand colour at a substantial size.
+- .bs-stat__value is large, heavy and brand-coloured; on .bs-section--ink it stays brand-coloured
+  while the label goes white.
 - .bs-section vertical rhythm uses clamp() too, generous on desktop (around 100px) and tighter on
   mobile. .bs-section--ink flips text, headings, links and muted colour to the inverted palette.
 - Real responsive behaviour at 1200px, 900px and 620px. Grids collapse, splits stack, the image

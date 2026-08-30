@@ -37,32 +37,57 @@ const HEROES: HeroArchetype[] = [
   {
     id: "split-form",
     name: "Split promise + inline lead form",
-    spec: `Full-bleed photographic background under a dark scrim. Two columns: left is eyebrow chip, a three-to-four-line display headline with ONE phrase in the accent colour, a two-line subhead, a rating strip with real star glyphs, and two actions. Right is an elevated white lead-capture card with a coloured header bar, five fields and one full-width primary button. Card overlaps the section's bottom edge by roughly 40px.`,
+    spec: `Full-bleed photographic background under a heavy dark scrim. Two columns. LEFT (~55%): a solid
+accent-filled eyebrow chip in caps, then a MASSIVE display headline of three or four short lines with the
+final line set in the brand colour, a two-line subhead, a trust strip (five star glyphs, the rating, the
+review count, and the words Google and Facebook), and a click-to-call link. RIGHT (~42%): the lead-capture
+form as a white elevated card with a solid brand-coloured header bar carrying a two-line hook, a small
+downward triangle notch under the bar, five fields, a full-width brand-coloured submit button and one line
+of reassurance under it. The card overlaps the section's bottom edge.`,
   },
   {
     id: "offset-slab",
-    name: "Offset colour slab over photo",
-    spec: `Photographic right two-thirds. A solid ink or primary slab occupies the left, bleeding off the left edge and overlapping the photo by ~120px. All copy sits on the slab: eyebrow rule, oversized display headline, short proof line, one primary and one ghost action. A horizontal proof bar (four short credential items separated by hairlines) is pinned across the bottom of the whole hero.`,
+    name: "Offset colour slab + form",
+    spec: `Photographic right two-thirds. A solid ink slab bleeds off the left edge and overlaps the photo.
+On the slab: an accent rule and eyebrow, an oversized display headline with one line in the brand colour, a
+short proof line, and a rating strip. The lead-capture form sits as a white card floating over the photo on
+the right, with a brand-coloured header bar. A horizontal proof bar of four credential items with small
+icons is pinned across the full width of the hero's bottom edge.`,
   },
   {
     id: "centered-editorial",
-    name: "Centred editorial statement",
-    spec: `Centred, generous, magazine-like. A small capitalised eyebrow, then a very large centred headline with a hand-drawn underline or accent rule beneath one word, a single-sentence subhead at a 60ch measure, then one primary and one ghost action side by side. Below the fold-line, a full-width strip of three photographs in a 1fr 1.4fr 1fr grid, with a rating badge overlapping the strip's top edge.`,
+    name: "Centred statement + wide form bar",
+    spec: `Centred and confident over a darkened photograph. A small caps eyebrow chip, a very large centred
+display headline with one word in the brand colour, a single-sentence subhead at a 60ch measure, and a
+rating strip with star glyphs. Directly beneath, the lead-capture form is a wide horizontal white bar —
+fields laid out in one row on desktop, stacked on mobile — with the submit button as the final cell in the
+brand colour. Four credential chips sit under the bar.`,
   },
   {
     id: "diagonal-band",
-    name: "Diagonal brand band",
-    spec: `Photo background with a diagonal (clip-path) brand-coloured band crossing the lower third. Copy sits left-aligned in the upper two-thirds with a heavy display headline; the diagonal band carries the primary action, the phone number and a guarantee line in white. Nothing overlaps the diagonal edge — the band is a clean cut.`,
+    name: "Diagonal brand band + form card",
+    spec: `Photo background with a diagonal clip-path brand-coloured band crossing the lower third. Copy sits
+left in the upper two-thirds: eyebrow chip, heavy display headline with the last line in white on the brand
+colour, subhead, rating strip. The lead-capture form is a white card on the right spanning from the upper
+area down over the diagonal band, with a coloured header bar. The band itself carries the phone number as a
+large click-to-call link and a guarantee line.`,
   },
   {
     id: "card-stack",
-    name: "Framed hero card",
-    spec: `Coloured or ink page background with a large rounded content card inset by 32px on all sides holding the photograph. Copy is overlaid on the card's left with a soft gradient behind it for legibility. Beneath the card, a row of three outcome tiles (icon, three-word title, one line) sits half-overlapping the card's bottom edge.`,
+    name: "Framed hero card + form",
+    spec: `Ink page background with a large rounded content card inset by 32px holding the photograph. Copy
+overlays the card's left under a gradient scrim: eyebrow chip, huge display headline with one line in the
+brand colour, subhead, rating strip. The lead-capture form is a white card overlapping the photo card's
+right side, with a brand-coloured header bar. Beneath the card, three outcome tiles (icon, three-word title,
+one line) half-overlap its bottom edge.`,
   },
   {
     id: "stat-anchored",
-    name: "Promise over a stat rail",
-    spec: `Two-thirds photograph on the right with an organic mask; copy on the left over the surface colour, no scrim needed. Under the copy a vertical rail of three stat rows (big number, label, hairline between) runs down the left column. Primary action is a wide bar button spanning the copy column.`,
+    name: "Promise, stat rail and form",
+    spec: `Photograph on the right under a scrim; copy on the left over a deep ink panel. Eyebrow chip, huge
+display headline with one line in the brand colour, subhead, then a vertical rail of three stats (big
+brand-coloured number, label, hairline between). The lead-capture form is a white card overlapping the
+photograph, with a brand-coloured header bar and a compact five-field layout.`,
   },
 ];
 

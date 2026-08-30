@@ -129,3 +129,20 @@ export const COPY_RULES = `COPY RULES
 - Numbers that ARE supplied should be used prominently.
 - The primary action wording is identical everywhere it appears.
 - No em-dash-prefixed eyebrows, no "unlock", "elevate", "seamless", "dive in".`;
+
+export const CONVERSION_RULES = `CONVERSION AND IMPACT — this is a sales page for a local business, not a brochure.
+
+1. The hero carries a real lead-capture form. Not a link to one, not a button that scrolls: the form
+   itself, in the first screen, as an elevated card with a solid brand-coloured header bar.
+2. Headlines are LOUD. The hero h1 is the largest thing on the page by a wide margin, set in the
+   display face at its heaviest weight, with tight leading and one line or phrase in the brand
+   colour. A polite, evenly-sized headline is the single most common way one of these pages fails.
+3. Every section below the hero ends with a way to act: a primary button, a click-to-call link, or
+   both. Never let a visitor reach the bottom of a section with nowhere to go.
+4. The phone number is a real tel: link everywhere it appears, and it appears often.
+5. Proof is specific and visible: the star rating, the review count, the named platforms, the
+   warranty length, the credentials. Vague reassurance persuades nobody.
+6. Buttons look like buttons — solid fill, generous padding, real weight. Never two ghost buttons
+   side by side, and never a primary action rendered as a text link.
+7. A section that is only text is a wasted section. Give every one a visual anchor: a photograph, a
+   stat band, an inline SVG glyph set, a quote plate, a numbered rail or a bordered card grid.`;

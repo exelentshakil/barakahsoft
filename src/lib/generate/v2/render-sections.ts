@@ -1,7 +1,8 @@
 import { callGemini, bestGeminiChain } from "@/lib/gemini-client";
+import * as cheerio from "cheerio";
 import { sanitizeBespokeHtml } from "@/lib/sanitize-generated-html";
 import { sanitizeGeneratedCss } from "@/lib/sanitize-css";
-import { CLASS_VOCABULARY, MOCKUP_RULES, COPY_RULES } from "@/lib/generate/v2/vocabulary";
+import { CLASS_VOCABULARY, MOCKUP_RULES, COPY_RULES, CONVERSION_RULES } from "@/lib/generate/v2/vocabulary";
 import type { PageSystem, SectionSpec } from "@/lib/generate/v2/design-system";
 import type { LayoutDna } from "@/lib/generate/v2/layout-dna";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
@@ -25,6 +26,35 @@ export interface RenderedSection {
 }
 
 const FAST_CHAIN = ["gemini-flash-latest", "gemini-2.5-flash"];
+
+/**
+ * Remove media frames that have no image in them.
+ *
+ * A .bs-media frame is a fixed-aspect box with a background — with an <img>
+ * inside it is a photograph, and without one it is a large grey rectangle. A
+ * section writer given no photograph would lay out the composition it was
+ * asked for and leave the frame empty, and the first real build shipped with
+ * eleven frames and six images: five grey boxes down the page.
+ *
+ * Deterministic rather than another line in the prompt, because "do not emit
+ * an empty frame" is exactly the kind of instruction a model follows in four
+ * sections out of five.
+ */
+export function stripEmptyMediaFrames(html: string): string {
+  const $ = cheerio.load(html, null, false);
+  let removed = 0;
+  $("[class*='bs-media'], [class*='bs-collage']").each((_, element) => {
+    const node = $(element);
+    if (node.find("img").length > 0 || node.find("svg").length > 0) return;
+    // Text inside the frame means it is being used as a plate, not a photo
+    // slot, so leaving it alone is safer than deleting visible copy.
+    if (node.text().trim().length > 0) return;
+    node.remove();
+    removed++;
+  });
+  if (removed > 0) console.warn(`[render-sections] removed ${removed} empty media frame(s)`);
+  return removed > 0 ? $.html() : html;
+}
 
 function systemSummary(system: PageSystem, dna: LayoutDna): string {
   return `DESIGN SYSTEM ALREADY BUILT AND FROZEN — you are writing markup for it, not redesigning it.
@@ -87,7 +117,7 @@ THE SECTION YOU ARE WRITING (section ${index + 1} of ${system.sections.length})
 - Composition to build: ${archetypeOverride ?? spec.archetype}
 ${archetypeOverride ? `- Section-specific brief from the art director: ${spec.archetype}` : ""}
 - Factual points it must make: ${spec.copyPoints.join(" | ") || "derive from the business facts below"}
-- Photograph for this section: ${spec.imageUrl ?? "none — compose with colour, type and the motif instead. Do NOT invent an image URL, do NOT use a placeholder path, do NOT use the logo as a photograph."}
+- Photograph for this section: ${spec.imageUrl ?? "NONE. Do not emit a .bs-media or .bs-collage frame at all — an empty frame renders as a large grey rectangle. Compose with colour, type, inline SVG and the motif instead. Never invent an image URL, never use a placeholder path, never use the logo as a photograph."}
 
 
 ${neighbourNote(system.sections, index)}
@@ -96,6 +126,8 @@ BUSINESS FACTS
 ${factsFor(brief)}
 
 ${COPY_RULES}
+
+${CONVERSION_RULES}
 
 ${MOCKUP_RULES}
 
@@ -130,7 +162,7 @@ after the closing </section> a line "/*CSS*/" followed by CSS in which EVERY sel
 
   const cleaned = raw.replace(/```[a-z]*\s*/gi, "").replace(/```/g, "").trim();
   const [markup, extra] = cleaned.split("/*CSS*/");
-  const html = sanitizeBespokeHtml(markup.trim());
+  const html = stripEmptyMediaFrames(sanitizeBespokeHtml(markup.trim()));
   if (!html || html.length < 120) return null;
 
   return {
