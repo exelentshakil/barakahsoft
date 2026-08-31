@@ -1,42 +1,40 @@
 import type { MockupData } from "@/components/mockup/SocialLaunchMockup";
-import { Shield } from "lucide-react";
+import { Shield, MapPin, CalendarDays, Star } from "lucide-react";
 import { trimParagraphs } from "@/lib/text-trim";
 
 export function ProposalAbout({ data }: { data: MockupData }) {
-  // The business's own about copy arrives as one string with its paragraph
-  // breaks intact; rendering it in a single <p> made a company history read
-  // as an unbroken wall of text.
-  //
-  // It is also budgeted here rather than shown in full. This is a two-column
-  // section balanced against a fixed-height capture on the left, and a client
-  // who wrote four paragraphs of company history ran the text column hundreds
-  // of pixels past the image. Two paragraphs ending on a full stop is the most
-  // that sits level with the artwork; the whole story is on their own page.
-  const aboutParagraphs = trimParagraphs(data.aboutBody ?? "", 420, 2)
+  // One paragraph, not the company's full history. This column is balanced
+  // against a fixed capture on the left, and the standing intro paragraph
+  // above it already carries four lines before the client's own words start.
+  const aboutParagraphs = trimParagraphs(data.aboutBody ?? "", 240, 1)
     .split(/\n{2,}/)
     .map((p) => p.trim())
     .filter(Boolean);
 
-  const proof = [
-    data.city ? `Serving ${data.city}` : null,
-    data.yearsExperience ? `${data.yearsExperience}+ years in business` : null,
-    data.reviewCount ? `${data.reviewCount} customer reviews` : null,
-  ].filter(Boolean) as string[];
+  // Only facts we actually hold. A default here is a claim about someone
+  // else's business printed on a document they are meant to trust.
+  const facts = [
+    data.city ? { icon: MapPin, value: data.city, label: "Primary service area" } : null,
+    data.yearsExperience ? { icon: CalendarDays, value: `${data.yearsExperience}+ years`, label: "In business" } : null,
+    data.reviewCount
+      ? {
+          icon: Star,
+          value: data.rating ? `${data.rating} / 5` : `${data.reviewCount}`,
+          label: data.rating ? `${data.reviewCount} customer reviews` : "Customer reviews",
+        }
+      : null,
+  ].filter(Boolean) as { icon: typeof MapPin; value: string; label: string }[];
 
   return (
     <section className="relative overflow-hidden rounded-3xl border border-[#e5e7f2] bg-white p-8 sm:p-12 shadow-xl shadow-[#533afd]/5">
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#533afd]/5 rounded-full blur-[100px] -translate-y-1/3 translate-x-1/3 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-[#ffd12d]/10 rounded-full blur-[100px] translate-y-1/3 -translate-x-1/3 pointer-events-none" />
-      
-      <div className="relative z-10 grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-        {/* Right side (Image) now on Left for visual balance, or we can keep text left */}
-        
+
+      <div className="relative z-10 grid gap-10 lg:gap-14 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
         <div className="order-2 lg:order-1 relative">
           <div className="absolute inset-0 bg-gradient-to-tr from-[#533afd] to-[#263477] rounded-[2.5rem] transform -rotate-3 scale-[1.02] opacity-10" />
-          {/* No fixed aspect ratio on the frame. The capture is a full About
-              section, whose height varies with how much copy the business
-              wrote; a 4/5 box with object-cover cut the bottom off every
-              tall one. The frame now takes its height from the image. */}
+          {/* No fixed aspect ratio: the capture is a whole About section, and
+              its height varies with how much copy the business wrote. */}
           <div className="relative overflow-hidden rounded-[2.5rem] border-[6px] border-white shadow-2xl bg-[#0d1738]">
             {data.aboutCaptureUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -46,25 +44,21 @@ export function ProposalAbout({ data }: { data: MockupData }) {
                 className="block h-auto w-full"
               />
             ) : (
-              // The placeholder has no intrinsic height, so it keeps one.
               <div className="flex aspect-[4/5] items-end bg-gradient-to-br from-[#533afd] via-[#263477] to-[#0d1738] p-10">
                 <p className="max-w-xs text-3xl font-bold leading-tight text-white">Built around the people behind the work.</p>
               </div>
             )}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0d1738]/60 via-transparent to-transparent" />
-            
-            {/* Overlay trust badge */}
-            <div className="absolute bottom-6 left-6 right-6">
-              <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-5 text-white shadow-lg">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <Shield className="w-5 h-5 text-white" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0d1738]/80 via-[#0d1738]/10 to-transparent" />
+
+            <div className="absolute bottom-5 left-5 right-5">
+              <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl px-4 py-3.5 text-white shadow-lg">
+                <div className="flex items-center gap-3">
+                  <div className="shrink-0 p-2 bg-white/20 rounded-xl">
+                    <Shield className="w-4 h-4 text-white" />
                   </div>
-                  <div>
-                    <h4 className="font-bold text-sm">Owner-Operated by {data.founderName || "the founder"}</h4>
-                    <p className="text-white/80 text-xs mt-1 leading-relaxed">
-                      Direct oversight on every project to ensure structural integrity and a flawless finish.
-                    </p>
+                  <div className="min-w-0">
+                    <p className="text-[0.6rem] font-bold uppercase tracking-[0.14em] text-white/60">Owner-operated</p>
+                    <p className="font-bold text-sm leading-tight truncate">{data.founderName || "The founding team"}</p>
                   </div>
                 </div>
               </div>
@@ -72,7 +66,7 @@ export function ProposalAbout({ data }: { data: MockupData }) {
           </div>
         </div>
 
-        <div className="order-1 lg:order-2 space-y-8">
+        <div className="order-1 lg:order-2 space-y-6">
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#533afd]/20 bg-[#533afd]/5 px-3 py-1">
               <span className="flex h-1.5 w-1.5 rounded-full bg-[#533afd]" />
@@ -84,30 +78,36 @@ export function ProposalAbout({ data }: { data: MockupData }) {
               Your reputation should be doing more of the selling.
             </h2>
           </div>
-          
-          <div className="space-y-5">
-            <p className="text-base leading-relaxed text-[#42506a] sm:text-lg">
-              We did not start with a template. We started with your real business, your team, and the proof customers already
-              have to trust you. The redesign puts that credibility in front of the right customer before they call someone else.
+
+          <div className="space-y-4">
+            <p className="text-base leading-relaxed text-[#42506a]">
+              We did not start with a template. We started with your real business, your team, and the proof customers
+              already have to trust you.
             </p>
             {aboutParagraphs.map((para, i) => (
-              <p key={i} className="text-base leading-relaxed text-[#42506a] sm:text-lg font-medium">
+              <p key={i} className="border-l-2 border-[#533afd]/25 pl-4 text-base italic leading-relaxed text-[#42506a]">
                 {para}
               </p>
             ))}
           </div>
 
-          {proof.length > 0 && (
-            <div className="flex flex-wrap gap-3 pt-4 border-t border-[#e5e7f2]">
-              {proof.map((item) => (
-                <span key={item} className="inline-flex items-center rounded-full bg-[#f0f3ff] px-4 py-2 text-sm font-bold text-[#533afd] border border-[#c7d0fb]">
-                  {item}
-                </span>
+          {facts.length > 0 && (
+            <div className="grid gap-3 pt-2 sm:grid-cols-3">
+              {facts.map(({ icon: Icon, value, label }) => (
+                <div
+                  key={label}
+                  className="rounded-2xl border border-[#e5e7f2] bg-white/70 p-4 shadow-sm shadow-[#533afd]/5 backdrop-blur-sm"
+                >
+                  <div className="mb-2.5 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#f0f3ff] text-[#533afd]">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <p className="text-lg font-bold leading-tight text-[#0d1738]">{value}</p>
+                  <p className="mt-0.5 text-xs font-medium text-[#7a86a1]">{label}</p>
+                </div>
               ))}
             </div>
           )}
         </div>
-
       </div>
     </section>
   );

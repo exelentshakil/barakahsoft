@@ -91,7 +91,17 @@ export function extractMockupData({
   const bespokeCss = artifact?.bespoke_css || payload?.bespokeCss || null;
 
   const businessName = unescapeHtml(lead.business_name || (facts?.business_name as string) || payload?.businessName || lead.slug);
-  const city = unescapeHtml((facts?.town as string) || (facts?.city as string) || (extracted?.city as string) || "Las Vegas");
+  // The primary service area, not `town`. The crawler's `town` is a single
+  // guess and it gets this wrong — Saddle Roofing, whose every page says
+  // Cheyenne, came back as "Stuart", so the proposal told a Wyoming roofer we
+  // were serving a town they do not work in. The first derived area is what
+  // the built site itself leads with, so the two agree by construction.
+  const derivedAreas = ((facts?.derived_areas as string[] | undefined) ?? []).filter(
+    (area) => typeof area === "string" && area.trim().length > 0
+  );
+  const city = unescapeHtml(
+    derivedAreas[0] || (facts?.town as string) || (facts?.city as string) || (extracted?.city as string) || ""
+  );
   const trade = unescapeHtml(lead.industry || (facts?.industry as string) || (extracted?.industry as string) || payload?.services?.[0]?.h2 || "Restoration Contractor");
 
   // Prioritize compiled design tokens from the bespoke website
@@ -110,9 +120,21 @@ export function extractMockupData({
 
   const rating = (facts?.rating as number) || (payload?.proof?.rating as number) || 4.9;
   const reviewCount = (facts?.review_count as number) || (payload?.proof?.reviewCount as number) || 109;
-  const yearsExperience = (facts?.years_in_business as number) || 15;
-  const rawFounderName = (facts?.founder_name as string) || (extracted?.founder_name as string) || lead.contact_name || "Leadership Team";
-  const founderName = unescapeHtml(rawFounderName.length > 30 ? "Leadership Team" : rawFounderName);
+  // Null rather than 15. This is printed on a proposal a stranger reads as a
+  // claim about their own business; a default is a fabrication, and a fact we
+  // cannot source is one we do not show.
+  const yearsExperience = (facts?.years_in_business as number) || null;
+  // The built page already names the founders correctly in its badge, and it
+  // is the name the client will read on their own site. `lead.contact_name`
+  // is whoever was typed in at intake — "Tony" where the business is run by
+  // "Tony & Hannah Ostheimer" — so it is the last resort, not the first.
+  const badgeFounder = bespokeHtml
+    ?.match(/<div class="bs-founder-badge__name">\s*<strong>([\s\S]*?)<\/strong>/i)?.[1]
+    ?.replace(/<[^>]+>/g, "")
+    .trim();
+  const rawFounderName =
+    badgeFounder || (facts?.founder_name as string) || (extracted?.founder_name as string) || lead.contact_name || "Leadership Team";
+  const founderName = unescapeHtml(rawFounderName.length > 40 ? "Leadership Team" : rawFounderName);
   const founderTitle = founderName !== "Leadership Team" ? "Founder & Owner" : ("Team at " + businessName);
 
   const phone =
