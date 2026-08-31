@@ -556,4 +556,40 @@ export const BASE_STYLESHEET = `
   .bespoke-page .bs-whyus--v3 .bs-whyus__panel{margin-top:-40px}
 }
 
+/* ---------- review slider ----------------------------------------------- */
+.bespoke-page .bs-reviews__head{margin-bottom:clamp(28px,3.4vw,44px)}
+.bespoke-page .bs-reviews{position:relative}
+.bespoke-page .bs-reviews__track{
+  display:grid;grid-auto-flow:column;grid-auto-columns:minmax(300px,1fr);gap:24px;
+  overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;
+  padding:6px 2px 20px;scrollbar-width:none;
+}
+.bespoke-page .bs-reviews__track::-webkit-scrollbar{display:none}
+.bespoke-page .bs-reviews__track>.bs-review{scroll-snap-align:start;height:100%}
+.bespoke-page .bs-review__head{display:flex;align-items:center;gap:12px}
+.bespoke-page .bs-review__who{display:flex;flex-direction:column;line-height:1.25;flex:1;min-width:0}
+.bespoke-page .bs-review__who strong{font-size:.98rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bespoke-page .bs-review__avatar{width:44px;height:44px;border-radius:999px;flex:none;object-fit:cover}
+.bespoke-page .bs-google{display:inline-flex;flex:none;align-items:center}
+.bespoke-page .bs-rating--centred{justify-content:center;margin-top:14px}
+.bespoke-page .bs-reviews__arrow{
+  position:absolute;top:50%;transform:translateY(-50%);z-index:3;
+  width:46px;height:46px;border-radius:999px;border:1px solid var(--bs-line);
+  background:var(--bs-surface,#fff);color:var(--bs-ink,#16181d);
+  display:grid;place-items:center;cursor:pointer;box-shadow:var(--bs-shadow);
+  transition:transform .16s ease,background .16s ease;
+}
+.bespoke-page .bs-reviews__arrow:hover{background:var(--bs-primary,#e4761b);color:var(--bs-on-primary,#fff);border-color:transparent}
+.bespoke-page .bs-reviews__arrow--prev{left:-22px}
+.bespoke-page .bs-reviews__arrow--prev .bs-icon{transform:rotate(180deg)}
+.bespoke-page .bs-reviews__arrow--next{right:-22px}
+@media (max-width:1300px){
+  .bespoke-page .bs-reviews__arrow--prev{left:4px}
+  .bespoke-page .bs-reviews__arrow--next{right:4px}
+}
+@media (max-width:620px){
+  .bespoke-page .bs-reviews__track{grid-auto-columns:minmax(84%,1fr)}
+  .bespoke-page .bs-reviews__arrow{display:none}
+}
+
 `;

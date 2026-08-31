@@ -38,9 +38,11 @@ const brief: SiteBrief = {
   rating: 4.9,
   reviewCount: 299,
   reviews: [
-    { author: "Dana R.", rating: 5, text: "They replaced our roof after a hailstorm in four days and handled the whole insurance claim for us." },
-    { author: "Mark H.", rating: 5, text: "Tony walked the roof with me and showed me photos of every problem before quoting anything." },
-    { author: "Priya S.", rating: 5, text: "Crew cleaned up so thoroughly you could not tell they had been here, apart from the new roof." },
+    { author: "Dana Rutherford", rating: 5, when: "2 months ago", avatar: null, text: "They replaced our roof after a hailstorm in four days and handled the whole insurance claim for us." },
+    { author: "Mark Halloran", rating: 5, when: "5 months ago", avatar: null, text: "Tony walked the roof with me and showed me photos of every problem before quoting anything." },
+    { author: "Priya Sandhu", rating: 5, when: "a year ago", avatar: null, text: "Crew cleaned up so thoroughly you could not tell they had been here, apart from the new roof." },
+    { author: "Ben Whitaker", rating: 5, when: "3 weeks ago", avatar: null, text: "Quoted on Tuesday, on the roof by Friday. Price on the invoice matched the quote exactly." },
+    { author: "Sarah Klein", rating: 5, when: "8 months ago", avatar: null, text: "They found storm damage two other companies missed and dealt with the insurer directly." },
   ],
   photos: [
     "https://images.unsplash.com/photo-1632759145355-6d5dfb8c2a86?auto=format&fit=crop&w=1600&q=80",

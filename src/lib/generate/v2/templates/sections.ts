@@ -1,4 +1,4 @@
-import { esc, markHeadline, icon, seal, stars, button, callLink, media, slug, telHref } from "@/lib/generate/v2/templates/parts";
+import { esc, markHeadline, icon, seal, stars, button, callLink, media, slug, telHref, GOOGLE_MARK } from "@/lib/generate/v2/templates/parts";
 import type { PageCopy } from "@/lib/generate/v2/page-copy";
 import type { LayoutDna } from "@/lib/generate/v2/layout-dna";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
@@ -286,27 +286,51 @@ export function bandSection(ctx: RenderContext): string {
 </section>`;
 }
 
+/**
+ * Reviews as a slider, not a grid.
+ *
+ * A three-card grid shows three reviews and implies there are only three. The
+ * reference sites all use a horizontal slider, which shows the count is real
+ * and lets someone browse. The track is a scroll-snap container that swipes
+ * natively and stays readable with JavaScript off; the arrows use the
+ * data-review-* contract the reviewed runtime already implements.
+ */
 export function reviewsSection(ctx: RenderContext): string {
   const { copy, brief } = ctx;
   if (brief.reviews.length === 0) return "";
+
+  const cards = brief.reviews
+    .slice(0, 12)
+    .map((review) => {
+      const initial = review.author.trim().charAt(0).toUpperCase() || "C";
+      const avatar = review.avatar
+        ? `<img class="bs-review__avatar" src="${esc(review.avatar)}" alt="" width="44" height="44" loading="lazy" referrerpolicy="no-referrer">`
+        : `<span class="bs-review__avatar">${esc(initial)}</span>`;
+      return `<article class="bs-review">
+      <header class="bs-review__head">
+        ${avatar}
+        <span class="bs-review__who"><strong>${esc(review.author)}</strong>${review.when ? `<span class="bs-small">${esc(review.when)}</span>` : ""}</span>
+        ${GOOGLE_MARK}
+      </header>
+      ${stars(review.rating)}
+      <p class="bs-body">${esc(review.text.slice(0, 420))}${review.text.length > 420 ? "…" : ""}</p>
+    </article>`;
+    })
+    .join("");
+
+  const showArrows = brief.reviews.length > 3;
+
   return `<section id="reviews" class="bs-section">
   <div class="bs-container">
-    <div class="bs-center">
+    <div class="bs-center bs-reviews__head">
       <span class="bs-eyebrow">${esc(copy.reviews.eyebrow)}</span>
       <h2 class="bs-h2">${esc(copy.reviews.headline)}</h2>
-      ${brief.rating ? `<div class="bs-rating bs-rating--centred">${stars(brief.rating)}<span><strong>${esc(String(brief.rating))}</strong>${brief.reviewCount ? ` from ${esc(String(brief.reviewCount))} reviews` : ""}</span></div>` : ""}
+      ${brief.rating ? `<div class="bs-rating bs-rating--centred">${stars(brief.rating)}<span><strong>${esc(String(brief.rating))}</strong>${brief.reviewCount ? ` from ${esc(String(brief.reviewCount))} Google reviews` : ""}</span>${GOOGLE_MARK}</div>` : ""}
     </div>
-    <div class="bs-grid-3">
-      ${brief.reviews
-        .slice(0, 6)
-        .map(
-          (review) => `<article class="bs-review">
-        ${stars(review.rating)}
-        <p class="bs-body">${esc(review.text.slice(0, 420))}</p>
-        <div class="bs-review__author"><span class="bs-review__avatar">${esc(review.author.trim().charAt(0).toUpperCase() || "C")}</span><span>${esc(review.author)}</span></div>
-      </article>`
-        )
-        .join("")}
+    <div class="bs-reviews" data-review-slider>
+      ${showArrows ? `<button class="bs-reviews__arrow bs-reviews__arrow--prev" type="button" data-review-prev aria-label="Previous reviews">${icon("arrow")}</button>` : ""}
+      <div class="bs-reviews__track" data-review-track>${cards}</div>
+      ${showArrows ? `<button class="bs-reviews__arrow bs-reviews__arrow--next" type="button" data-review-next aria-label="Next reviews">${icon("arrow")}</button>` : ""}
     </div>
   </div>
 </section>`;

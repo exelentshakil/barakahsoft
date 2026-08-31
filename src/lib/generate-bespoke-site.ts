@@ -30,7 +30,7 @@ export interface SiteBrief {
   areas: string[];
   rating: number | null;
   reviewCount: number | null;
-  reviews: { author: string; rating: number; text: string }[];
+  reviews: { author: string; rating: number; text: string; avatar?: string | null; when?: string | null }[];
   /** Real photo URLs from the client's own site and Google profile. */
   photos: string[];
   heroImage: string | null;

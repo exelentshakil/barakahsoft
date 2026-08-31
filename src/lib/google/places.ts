@@ -76,12 +76,26 @@ export async function callPlacesApi(name: string, addressHint?: string): Promise
       website: result.website ?? null,
       rating: result.rating ?? null,
       review_count: result.user_ratings_total ?? null,
-      reviews: (result.reviews ?? []).map((r: { author_name: string; rating: number; text: string; time: number }) => ({
-        author_name: r.author_name,
-        rating: r.rating,
-        text: r.text,
-        time: r.time,
-      })),
+      reviews: (result.reviews ?? []).map(
+        (r: {
+          author_name: string;
+          rating: number;
+          text: string;
+          time: number;
+          profile_photo_url?: string;
+          relative_time_description?: string;
+        }) => ({
+          author_name: r.author_name,
+          rating: r.rating,
+          text: r.text,
+          time: r.time,
+          // Both were already in the response and both were dropped. A review
+          // card with a face and a date reads as a real person; the same card
+          // with an initial and no date reads as filler we wrote ourselves.
+          profile_photo_url: r.profile_photo_url ?? null,
+          relative_time_description: r.relative_time_description ?? null,
+        })
+      ),
       weekday_hours: result.opening_hours?.weekday_text ?? null,
       business_status: result.business_status ?? null,
       photo_refs: (result.photos ?? []).map((p: { photo_reference: string }) => p.photo_reference),

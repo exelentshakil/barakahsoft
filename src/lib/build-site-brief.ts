@@ -146,10 +146,22 @@ export function buildSiteBrief(
   const rating = typeof facts.rating === "number" ? facts.rating : null;
   const reviewCount = typeof facts.review_count === "number" ? facts.review_count : null;
 
-  const reviews = ((facts.reviews as { author_name: string; rating: number; text: string }[] | undefined) ?? [])
+  const reviews = ((facts.reviews as {
+    author_name: string;
+    rating: number;
+    text: string;
+    profile_photo_url?: string | null;
+    relative_time_description?: string | null;
+  }[] | undefined) ?? [])
     .filter((r) => r?.text && r.text.trim().length > 20 && (typeof r.rating !== "number" || r.rating >= 4))
     .slice(0, 8)
-    .map((r) => ({ author: r.author_name, rating: r.rating || 5, text: r.text.trim() }));
+    .map((r) => ({
+      author: r.author_name,
+      rating: r.rating || 5,
+      text: r.text.trim(),
+      avatar: typeof r.profile_photo_url === "string" && /^https:\/\//.test(r.profile_photo_url) ? r.profile_photo_url : null,
+      when: typeof r.relative_time_description === "string" ? r.relative_time_description : null,
+    }));
 
   return {
     businessName:
