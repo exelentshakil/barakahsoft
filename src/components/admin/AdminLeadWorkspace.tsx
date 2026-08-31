@@ -82,6 +82,39 @@ import { Textarea } from "@/components/ui/textarea";
 import { buildOfferOptions, type OfferOption } from "@/lib/audit/lead-value";
 import type { LeadCost } from "@/lib/cost/lead-cost";
 
+/**
+ * A timestamp the browser formats, never the server.
+ *
+ * These strings were built with toLocaleTimeString during the server render
+ * and again during hydration. The server runs UTC and the operator's browser
+ * does not, so the two never matched, React discarded the mismatched subtree,
+ * and the proposal-open badge and its activity tile came back blank or stale
+ * on every load after the first.
+ *
+ * Formatting after mount means one render with nothing in it and no mismatch,
+ * rather than markup React has to throw away.
+ */
+function LocalTime({ value, withDate = false }: { value: string | null | undefined; withDate?: boolean }) {
+  const [text, setText] = useState("");
+
+  useEffect(() => {
+    if (!value) {
+      setText("");
+      return;
+    }
+    const when = new Date(value);
+    if (Number.isNaN(when.getTime())) {
+      setText("");
+      return;
+    }
+    const time = when.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true });
+    setText(withDate ? `${when.toLocaleDateString([], { month: "short", day: "numeric" })} ${time}` : time);
+  }, [value, withDate]);
+
+  // Reserves its own line height so the tile does not jump when the text lands.
+  return <span suppressHydrationWarning>{text}</span>;
+}
+
 const STATUS_LABEL: Record<string, string> = {
   new: "New — not looked at yet",
   scraping: "Reading their site",
@@ -104,7 +137,7 @@ function HeaderStat({
 }: {
   label: string;
   value: string | React.ReactNode;
-  suffix?: string;
+  suffix?: React.ReactNode;
   tone?: "good" | "bad" | "neutral";
   onClick?: () => void;
 }) {
@@ -1220,7 +1253,7 @@ Shaq`,
                   }} className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 transition animate-pulse">
                     <Eye className="h-3 w-3" />
                     Proposal Opened {proposalViews?.length > 1 ? `(${proposalViews.length}x) ` : ''}
-                    {new Date((proposalViews && proposalViews[0]?.created_at) || lead.last_viewed_at!).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })}
+                    <LocalTime value={(proposalViews && proposalViews[0]?.created_at) || lead.last_viewed_at} />
                   </button>
                 ) : lead.delivered_at ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200/70 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700">
@@ -1296,9 +1329,11 @@ Shaq`,
                 ) : lead.delivered_at ? "Sent" : "Unsent"
               }
               suffix={
-                proposalViews && proposalViews.length > 0
-                  ? ` · ${new Date(proposalViews[0]?.created_at).toLocaleDateString([], { month: "short", day: "numeric" })} ${new Date(proposalViews[0]?.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}`
-                  : ""
+                proposalViews && proposalViews.length > 0 ? (
+                  <> · <LocalTime value={proposalViews[0]?.created_at} withDate /></>
+                ) : (
+                  ""
+                )
               }
               tone={proposalViews && proposalViews.length > 0 ? "good" : "neutral"}
               onClick={() => {
