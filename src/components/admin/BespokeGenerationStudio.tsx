@@ -165,21 +165,47 @@ export function BespokeGenerationStudio({
     async function poll() {
       try {
         const res = await fetch(`/api/leads/${lead.id}/generate`, { cache: "no-store" });
-        if (!res.ok) return;
+
+        // Swallowing a non-OK response meant a 401 or a 500 looked exactly
+        // like "no build running": the panel sat on its default text and there
+        // was no way to tell the difference from the outside.
+        if (!res.ok) {
+          if (!cancelled) setJobError(`Cannot read the build status (HTTP ${res.status}).`);
+          return;
+        }
+
         const data = (await res.json()) as {
-          job: { status: string; pages_done: number | null; pages_total: number | null; error_message: string | null } | null;
+          job: {
+            status: string;
+            pages_done: number | null;
+            pages_total: number | null;
+            error_message: string | null;
+            updated_at: string | null;
+          } | null;
         };
         if (cancelled) return;
 
         const job = data.job;
-        const running = job?.status === "running";
+
+        // A row can be left saying "running" by a run that died without its
+        // failure handler firing. Treating that as live would disable the
+        // rebuild button forever, which is worse than the original problem.
+        const ageMs = job?.updated_at ? Date.now() - new Date(job.updated_at).getTime() : 0;
+        const stalled = job?.status === "running" && ageMs > 15 * 60 * 1000;
+        const running = job?.status === "running" && !stalled;
+
         setJobRunning(running);
-        setJobError(job?.status === "failed" ? job.error_message ?? "The build failed." : null);
+        setJobError(
+          job?.status === "failed"
+            ? job.error_message ?? "The build failed."
+            : stalled
+              ? `The last run stopped responding ${Math.round(ageMs / 60000)} minutes ago. Rebuilding is safe.`
+              : null
+        );
         if (job) setProgress({ done: job.pages_done ?? 0, total: Math.max(job.pages_total ?? 1, 1) });
-        // The run has finished, so release the button and show the result.
         if (!running) setGenerating(false);
-      } catch {
-        // A dropped poll is not worth surfacing; the next one will land.
+      } catch (err) {
+        if (!cancelled) setJobError(err instanceof Error ? `Build status unavailable: ${err.message}` : "Build status unavailable.");
       }
     }
 
