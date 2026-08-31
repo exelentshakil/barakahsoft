@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trackPixelEvent } from "@/lib/meta-pixel";
 import { isValidUrl } from "@/lib/validate-url";
+import { LEAD_PROBLEMS } from "@/lib/lead-problems";
 
 export function RedesignIntakeFlow() {
   const [url, setUrl] = useState("");
@@ -17,6 +18,10 @@ export function RedesignIntakeFlow() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [consent, setConsent] = useState(false);
+  // What the visitor says is wrong with their site. This drives the brief's
+  // pain instructions, so a lead that arrives with none gets a site written
+  // against nothing in particular.
+  const [problems, setProblems] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -40,7 +45,13 @@ export function RedesignIntakeFlow() {
       const response = await fetch("/api/intake", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source_url: url, source: "home", help_needed: [], anything_else: "", name, email, phone, tcpa_consent: consent, event_id: eventId }),
+        body: JSON.stringify({
+          source_url: url,
+          source: "home",
+          help_needed: problems.length > 0 ? problems : ["Other issue — we'll check for you"],
+          anything_else: "",
+          name, email, phone, tcpa_consent: consent, event_id: eventId,
+        }),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -91,6 +102,38 @@ export function RedesignIntakeFlow() {
                 </DialogDescription>
               </DialogHeader>
               <div className="mt-6 space-y-4">
+                <div>
+                  <Label className="text-xs font-bold text-[#0d1738]">
+                    What is not working right now?{" "}
+                    <span className="font-medium text-[#777588]">Pick any — it shapes what we build.</span>
+                  </Label>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {LEAD_PROBLEMS.map((problem) => {
+                      const chosen = problems.includes(problem);
+                      return (
+                        <button
+                          key={problem}
+                          type="button"
+                          aria-pressed={chosen}
+                          onClick={() =>
+                            setProblems((current) =>
+                              current.includes(problem)
+                                ? current.filter((item) => item !== problem)
+                                : [...current, problem]
+                            )
+                          }
+                          className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                            chosen
+                              ? "border-[#533afd] bg-[#533afd] text-white"
+                              : "border-[#e5e7f2] bg-white text-[#42506a] hover:border-[#c7d0fb] hover:bg-[#f7f8ff]"
+                          }`}
+                        >
+                          {problem}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
                 <div>
                   <Label htmlFor="redesign-name" className="text-xs font-bold text-[#0d1738]">First name</Label>
                   <Input id="redesign-name" required value={name} onChange={(event) => setName(event.target.value)} className="mt-1 border-[#e5e7f2] text-base sm:text-sm" />
