@@ -152,7 +152,7 @@ export async function buildHomepage(args: {
 }): Promise<BuiltHomepage | null> {
   const { brief, tokens, logoUrl, photos, chrome, repair = true } = args;
 
-  const dna = layoutDnaFor(`${brief.leadSlug}|${brief.businessName}|${brief.industry}|${brief.city}`);
+  const dna = layoutDnaFor(`${brief.leadSlug}|${brief.businessName}|${brief.industry}|${brief.city}`, brief.layoutSalt ?? 0);
   console.log(`[build-homepage] DNA: hero=${dna.hero.id} about=${dna.about.id} footer=${dna.footer.id} chrome=${dna.chrome.id}`);
 
   const pool = await buildPhotoPool(brief, photos);

@@ -38,6 +38,8 @@ export interface SiteBrief {
   /** Facebook proof, entered by the operator — it cannot be scraped. */
   facebookRating: number | null;
   facebookReviewCount: number | null;
+  /** Resolved once per lead so no two leads ship the same composition. */
+  layoutSalt: number;
   /** Real photo URLs from the client's own site and Google profile. */
   photos: string[];
   heroImage: string | null;

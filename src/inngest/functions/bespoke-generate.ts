@@ -325,7 +325,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     // carried through the step boundary as serialized state.
     const { layoutDnaFor } = await import("@/lib/generate/v2/layout-dna");
     const { buildChromeData } = await import("@/lib/generate/v2/chrome-data");
-    const dnaV2 = layoutDnaFor(`${brief.leadSlug}|${brief.businessName}|${brief.industry}|${brief.city}`);
+    const dnaV2 = layoutDnaFor(`${brief.leadSlug}|${brief.businessName}|${brief.industry}|${brief.city}`, brief.layoutSalt ?? 0);
     const chromeData = buildChromeData(brief, {
       services: serviceNames,
       areas: brief.areas,

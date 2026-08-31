@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminSession } from "@/lib/is-admin-session";
 import { inngest } from "@/inngest/client";
 import { buildSiteBrief, briefReadiness, type BriefOverrides } from "@/lib/build-site-brief";
+import { layoutDnaFor } from "@/lib/generate/v2/layout-dna";
 import { visualQaEnabled } from "@/lib/visual-qa";
 import type { Lead, ScrapeResults } from "@/types/database";
 
@@ -72,7 +73,55 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     );
   }
 
-    const brief = buildSiteBrief(lead, scrapeResults, overrides);
+    // No two leads ship the same composition.
+  //
+  // The DNA already spread across ~29,000 skins, but every page was built on
+  // one skeleton, so two roofers read as the same website however different
+  // their heroes were. Recipes vary the skeleton; this makes the result
+  // actually unique rather than merely unlikely to repeat.
+  //
+  // The salt is resolved once and then persisted with the rest of the
+  // overrides, so a rebuild is a rebuild — the client does not open their
+  // site to a different page than the one they approved.
+  if (overrides.layoutSalt == null) {
+    const identity = `${lead.slug}|${lead.business_name ?? ""}|${lead.industry ?? ""}|${(scrapeResults.facts as Record<string, unknown> | null)?.town ?? ""}`;
+
+    const { data: siblings } = await admin
+      .from("artifacts")
+      .select("lead_id, extracted_assets, leads!inner(industry)")
+      .neq("lead_id", leadId);
+
+    const takenFingerprints = new Set<string>();
+    const takenRecipesInTrade = new Set<string>();
+    // The embed comes back as an array even on a to-one relation.
+    for (const row of (siblings ?? []) as unknown as { extracted_assets: Record<string, unknown> | null; leads: { industry: string | null }[] | null }[]) {
+      const composition = (row.extracted_assets?.layout_composition ?? {}) as { fingerprint?: string; recipe?: string };
+      if (composition.fingerprint) takenFingerprints.add(composition.fingerprint);
+      // Within one trade the pages sit side by side in the same inbox, so
+      // they get a different recipe, not merely a different footer.
+      const siblingTrade = row.leads?.[0]?.industry ?? null;
+      if (composition.recipe && siblingTrade && lead.industry && siblingTrade === lead.industry) {
+        takenRecipesInTrade.add(composition.recipe);
+      }
+    }
+
+    let salt = 0;
+    for (; salt < 64; salt += 1) {
+      const candidate = layoutDnaFor(identity, salt);
+      const fingerprintFree = !takenFingerprints.has(candidate.fingerprint);
+      const recipeFree = !takenRecipesInTrade.has(candidate.recipe.id);
+      // Past the recipe catalogue every arrangement is spoken for in this
+      // trade, so a unique fingerprint is the most that can be promised.
+      if (fingerprintFree && (recipeFree || takenRecipesInTrade.size >= 12)) break;
+    }
+    overrides.layoutSalt = salt;
+  }
+
+  const brief = buildSiteBrief(lead, scrapeResults, overrides);
+  const resolvedDna = layoutDnaFor(
+    `${brief.leadSlug}|${brief.businessName}|${brief.industry}|${brief.city}`,
+    brief.layoutSalt ?? 0
+  );
   const { ready, warnings } = briefReadiness(brief);
 
   // Generating from a brief this thin produces exactly the generic page
@@ -138,7 +187,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     .maybeSingle<{ extracted_assets: Record<string, unknown> | null }>();
   await admin
     .from("artifacts")
-    .update({ extracted_assets: { ...(artifactRow?.extracted_assets ?? {}), brief_overrides: overrides } })
+    .update({
+      extracted_assets: {
+        ...(artifactRow?.extracted_assets ?? {}),
+        brief_overrides: overrides,
+        // Claims this composition so the next lead cannot land on it.
+        layout_composition: {
+          fingerprint: resolvedDna.fingerprint,
+          recipe: resolvedDna.recipe.id,
+          recipeName: resolvedDna.recipe.name,
+          salt: overrides.layoutSalt ?? 0,
+        },
+      },
+    })
     .eq("lead_id", leadId);
 
   await inngest.send({

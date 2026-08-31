@@ -36,6 +36,8 @@ export interface BriefOverrides {
    *  client's page and type them in. */
   facebookRating?: number | null;
   facebookReviewCount?: number | null;
+  /** Advances this lead off a composition another lead already holds. */
+  layoutSalt?: number | null;
 }
 
 /**
@@ -191,6 +193,7 @@ export function buildSiteBrief(
     googleReviewUrl: lead.place_id ? `https://search.google.com/local/reviews?placeid=${lead.place_id}` : null,
     facebookRating: overrides.facebookRating ?? null,
     facebookReviewCount: overrides.facebookReviewCount ?? null,
+    layoutSalt: overrides.layoutSalt ?? 0,
     socials: ((facts.social_urls as string[] | undefined) ?? [])
       .filter((url) => /^https?:\/\//i.test(url))
       .slice(0, 6),

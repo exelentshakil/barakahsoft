@@ -63,6 +63,7 @@ const brief: SiteBrief = {
     "Our current site looks like a template and does not explain the warranty",
     "We lose jobs to out-of-state storm chasers",
   ],
+  layoutSalt: 0,
   intent: conversionIntentFor("Roofing contractor", true),
 };
 

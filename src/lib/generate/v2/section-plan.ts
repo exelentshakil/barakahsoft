@@ -211,7 +211,34 @@ export function buildPageSystem(args: {
     },
   ];
 
-  const included = candidates.filter((candidate) => candidate.include);
+  // The recipe decides the middle: which of the optional blocks this lead
+  // carries, and in what order. The spine does not move — hero and trust open
+  // every page and contact closes it, because that is the order a buyer's
+  // questions arrive in and it is the part that converts.
+  //
+  // `include` still has the last word. A recipe asking for reviews on a lead
+  // with no reviews gets no reviews section; it decides arrangement, never
+  // whether there is anything real to put in one.
+  const byId = new Map(candidates.map((candidate) => [candidate.id, candidate]));
+  const spineOpen = ["hero", "trust"];
+  const spineClose = ["contact"];
+
+  const arranged = [
+    ...spineOpen,
+    ...dna.recipe.middle,
+    ...spineClose,
+  ]
+    .map((id) => byId.get(id))
+    .filter((candidate): candidate is Candidate => Boolean(candidate) && candidate!.include);
+
+  // A recipe may name a section twice (the review sandwich does, on purpose).
+  // Dedupe by identity so the same block is never built twice.
+  const seen = new Set<Candidate>();
+  const included = arranged.filter((candidate) => {
+    if (seen.has(candidate)) return false;
+    seen.add(candidate);
+    return true;
+  });
 
   // Photographs go to the sections that asked for them, best first — the
   // client's own photos lead the pool, so the hero and about get real work.
@@ -243,7 +270,7 @@ export function buildPageSystem(args: {
 
   return {
     systemName: `${brief.businessName} — ${dna.hero.name}`,
-    rationale: `${palette.scheme} harmony derived from the client's own brand colour, ${type.displayFamily} over ${type.bodyFamily}, ${dna.rhythm}. ${sections.length} sections planned deterministically for a ${trade} in ${city}.`,
+    rationale: `${palette.scheme} harmony derived from the client's own brand colour, ${type.displayFamily} over ${type.bodyFamily}, ${dna.rhythm}. Composed on the "${dna.recipe.name}" recipe: ${sections.length} sections for a ${trade} in ${city}.`,
     palette: {
       primary: palette.primary,
       accent: palette.accent,

@@ -84,7 +84,7 @@ export async function buildPage(args: {
 }): Promise<BuiltPage> {
   const { brief, logoUrl, media, photos, clientPhotos, brandHex, design, innerPagesBuilt } = args;
 
-  const dna = layoutDnaFor(`${brief.leadSlug}|${brief.businessName}|${brief.industry}|${brief.city}`);
+  const dna = layoutDnaFor(`${brief.leadSlug}|${brief.businessName}|${brief.industry}|${brief.city}`, brief.layoutSalt ?? 0);
 
   // The operator picked a design direction on the brief screen — palette,
   // typefaces, geometry. Deriving our own from a scraped hex ignored that and

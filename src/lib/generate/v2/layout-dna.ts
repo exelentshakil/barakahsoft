@@ -9,8 +9,132 @@
 // a different website. Two different leads in the same trade land on
 // different archetypes because the hash of their identity differs.
 
+
+/**
+ * Page recipes — the part that was never varying.
+ *
+ * The archetypes above already spread across roughly 29,000 combinations, so
+ * two roofers were never getting the same hero. They still felt like the same
+ * website, because the *skeleton* was identical every time: thirteen sections,
+ * ten of them unconditional, always in one order. People read sameness off
+ * scroll rhythm long before they read it off which hero variant they got.
+ *
+ * A recipe fixes the spine — hero, trust and contact never move, because that
+ * is the order a buyer's questions actually arrive in — and varies everything
+ * between them: the order of the middle, and which optional blocks a page
+ * carries at all. A real agency's sites differ this way; not every one of them
+ * runs a process strip and a guarantee band.
+ *
+ * Curated rather than model-composed, for the reason at the top of this file:
+ * every recipe here is an arrangement somebody has looked at.
+ */
+export interface PageRecipe {
+  id: string;
+  name: string;
+  /** Middle sections in order. Anything omitted is not built for this lead. */
+  middle: string[];
+}
+
+/** Sections the recipe may arrange. The spine is not in here — it cannot move. */
+export const MIDDLE_SECTIONS = [
+  "about",
+  "services",
+  "why-us",
+  "process",
+  "gallery",
+  "emergency",
+  "reviews",
+  "areas",
+  "guarantee",
+  "faq",
+] as const;
+
+const RECIPES: PageRecipe[] = [
+  {
+    id: "proof-first",
+    name: "Proof first",
+    middle: ["reviews", "services", "about", "why-us", "gallery", "areas", "faq"],
+  },
+  {
+    id: "services-led",
+    name: "Services led",
+    middle: ["services", "why-us", "gallery", "reviews", "process", "areas", "faq"],
+  },
+  {
+    id: "story-led",
+    name: "Owner story led",
+    middle: ["about", "why-us", "services", "reviews", "guarantee", "areas", "faq"],
+  },
+  {
+    id: "emergency-led",
+    name: "Emergency response led",
+    middle: ["emergency", "services", "reviews", "process", "why-us", "areas", "faq"],
+  },
+  {
+    id: "showcase",
+    name: "Work showcase",
+    middle: ["gallery", "services", "reviews", "about", "guarantee", "areas", "faq"],
+  },
+  {
+    id: "trust-heavy",
+    name: "Trust heavy",
+    middle: ["reviews", "guarantee", "about", "services", "why-us", "faq", "areas"],
+  },
+  {
+    id: "method",
+    name: "Method and process",
+    middle: ["process", "services", "why-us", "gallery", "reviews", "faq", "areas"],
+  },
+  {
+    id: "local-first",
+    name: "Local first",
+    middle: ["areas", "services", "reviews", "about", "why-us", "faq"],
+  },
+  {
+    id: "lean-services",
+    name: "Lean services",
+    middle: ["services", "reviews", "about", "faq"],
+  },
+  {
+    id: "lean-proof",
+    name: "Lean proof",
+    middle: ["reviews", "services", "gallery", "faq"],
+  },
+  {
+    id: "editorial",
+    name: "Editorial",
+    middle: ["about", "gallery", "services", "reviews", "areas", "faq"],
+  },
+  {
+    id: "guarantee-led",
+    name: "Guarantee led",
+    middle: ["guarantee", "services", "reviews", "why-us", "process", "areas", "faq"],
+  },
+  {
+    id: "conversion-dense",
+    name: "Conversion dense",
+    middle: ["services", "reviews", "emergency", "why-us", "guarantee", "gallery", "areas", "faq"],
+  },
+  {
+    id: "why-us-led",
+    name: "Differentiator led",
+    middle: ["why-us", "services", "reviews", "about", "gallery", "faq", "areas"],
+  },
+  {
+    id: "full-depth",
+    name: "Full depth",
+    middle: ["about", "services", "why-us", "process", "gallery", "reviews", "guarantee", "areas", "faq"],
+  },
+  {
+    id: "review-sandwich",
+    name: "Review sandwich",
+    middle: ["reviews", "services", "why-us", "about", "gallery", "reviews", "faq", "areas"],
+  },
+];
+
 export interface LayoutDna {
   seed: number;
+  recipe: PageRecipe;
   hero: HeroArchetype;
   about: AboutArchetype;
   footer: FooterArchetype;
@@ -19,6 +143,8 @@ export interface LayoutDna {
   motif: string;
   cornerStyle: "sharp" | "soft" | "pill" | "mixed";
   contrastStrategy: string;
+  /** Identifies this exact composition, for the no-two-leads-alike check. */
+  fingerprint: string;
 }
 
 export interface Archetype {
@@ -193,18 +319,52 @@ function pick<T>(list: T[], seed: number, salt: number): T {
   return list[(seed + salt * 7919) % list.length];
 }
 
-export function layoutDnaFor(identity: string): LayoutDna {
-  const seed = hash(identity);
+/**
+ * @param salt advances the whole composition to the next one. Zero for almost
+ *   every lead; raised only by the collision check, so that a lead whose hash
+ *   happens to land on a composition already in use moves off it instead of
+ *   shipping a second copy of somebody else's page.
+ */
+export function layoutDnaFor(identity: string, salt = 0): LayoutDna {
+  const seed = (hash(identity) + salt * 2654435761) >>> 0;
   const corners: LayoutDna["cornerStyle"][] = ["sharp", "soft", "pill", "mixed"];
+
+  const recipe = pick(RECIPES, seed, 0);
+  const hero = pick(HEROES, seed, 1);
+  const about = pick(ABOUTS, seed, 2);
+  const footer = pick(FOOTERS, seed, 3);
+  const chrome = pick(CHROMES, seed, 4);
+  const rhythm = pick(RHYTHMS, seed, 5);
+  const motif = pick(MOTIFS, seed, 6);
+  const cornerStyle = pick(corners, seed, 8);
+  const contrastStrategy = pick(CONTRAST, seed, 9);
+
   return {
     seed,
-    hero: pick(HEROES, seed, 1),
-    about: pick(ABOUTS, seed, 2),
-    footer: pick(FOOTERS, seed, 3),
-    chrome: pick(CHROMES, seed, 4),
-    rhythm: pick(RHYTHMS, seed, 5),
-    motif: pick(MOTIFS, seed, 6),
-    cornerStyle: pick(corners, seed, 8),
-    contrastStrategy: pick(CONTRAST, seed, 9),
+    recipe,
+    hero,
+    about,
+    footer,
+    chrome,
+    rhythm,
+    motif,
+    cornerStyle,
+    contrastStrategy,
+    fingerprint: [
+      recipe.id,
+      hero.id,
+      about.id,
+      footer.id,
+      chrome.id,
+      RHYTHMS.indexOf(rhythm),
+      MOTIFS.indexOf(motif),
+      CONTRAST.indexOf(contrastStrategy),
+      cornerStyle,
+    ].join("|"),
   };
+}
+
+/** The recipe alone, for the stronger same-trade-same-town rule. */
+export function recipeIdFor(identity: string, salt = 0): string {
+  return layoutDnaFor(identity, salt).recipe.id;
 }
