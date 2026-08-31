@@ -355,6 +355,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
         // photography is placed first; the pool only tops up what it leaves.
         media,
         photos: pool.map((photo) => photo.url),
+        clientPhotos: pool.filter((photo) => photo.source === "client").map((photo) => photo.url),
         brandHex: clientBrandHex,
         design: dna,
         innerPagesBuilt: Boolean(loaded.artifact?.inner_pages_built),

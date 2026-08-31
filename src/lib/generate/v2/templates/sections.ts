@@ -163,6 +163,19 @@ export function resolveFounders(brief: SiteBrief): { name: string; role: string 
   return { name: brief.businessName, role: "Locally owned & operated" };
 }
 
+/** A glyph that means something, chosen from what the stat actually says. */
+function statGlyph(label: string): string {
+  const text = label.toLowerCase();
+  if (/rating|star/.test(text)) return "star";
+  if (/review|customer|client/.test(text)) return "quote";
+  if (/year|experience|since|decade/.test(text)) return "clock";
+  if (/warrant|guarantee|insur|licens|bond/.test(text)) return "shield";
+  if (/service|offer|job|project|install/.test(text)) return "wrench";
+  if (/area|town|city|cover|serving|local/.test(text)) return "pin";
+  if (/home|propert|roof|house/.test(text)) return "home";
+  return "award";
+}
+
 export function aboutSection(ctx: RenderContext): string {
   const { copy, brief, dna, logoUrl } = ctx;
   const about = copy.about;
@@ -201,8 +214,14 @@ export function aboutSection(ctx: RenderContext): string {
   const stats = [...about.stats, ...derived.filter((stat) => !seenLabels.has(stat.label.toLowerCase()))].slice(0, 4);
 
   const statBand = stats.length
-    ? `<div class="bs-stats" style="--stat-count:${Math.min(stats.length, 4)}">${stats
-        .map((stat) => `<div class="bs-stat"><span class="bs-stat__value">${esc(stat.value)}</span><span class="bs-stat__label">${esc(stat.label)}</span></div>`)
+    ? `<div class="bs-stats" data-count="${Math.min(stats.length, 4)}">${stats
+        .map(
+          (stat) => `<div class="bs-stat">
+        <span class="bs-stat__icon">${icon(statGlyph(stat.label))}</span>
+        <span class="bs-stat__value">${esc(stat.value)}</span>
+        <span class="bs-stat__label">${esc(stat.label)}</span>
+      </div>`
+        )
         .join("")}</div>`
     : "";
 

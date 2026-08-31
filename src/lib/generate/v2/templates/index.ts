@@ -74,12 +74,15 @@ export async function buildPage(args: {
   media: MediaPlan;
   /** Stock top-up, used only where the plan has no real photo. */
   photos: string[];
+  /** The client's OWN photographs, including anything uploaded since the last
+   *  build. Only these may appear under "our recent work". */
+  clientPhotos: string[];
   brandHex: string | null;
   /** The operator's design direction from the brief screen. */
   design: DesignDna | null;
   innerPagesBuilt: boolean;
 }): Promise<BuiltPage> {
-  const { brief, logoUrl, media, photos, brandHex, design, innerPagesBuilt } = args;
+  const { brief, logoUrl, media, photos, clientPhotos, brandHex, design, innerPagesBuilt } = args;
 
   const dna = layoutDnaFor(`${brief.leadSlug}|${brief.businessName}|${brief.industry}|${brief.city}`);
 
@@ -137,13 +140,22 @@ export async function buildPage(args: {
   // Work photography only: the service and proof slots. The hero shot is
   // already the first thing on the page, and the about slot is the founders'
   // portrait — a family photo under the heading "recent projects" is wrong.
+  const planned = media.filter((item) => item.origin === "real");
+  const spentElsewhere = new Set([bySlot.get("hero"), bySlot.get("about")].filter(Boolean) as string[]);
+
   const realPhotos = [
-    ...new Set(
-      media
-        .filter((item) => item.origin === "real" && (item.slot.startsWith("service-") || item.slot === "proof"))
-        .map((item) => item.url)
-    ),
-  ].filter((url) => url !== logoUrl && !/logo|badge|icon|favicon/i.test(url));
+    ...new Set([
+      // The plan's work slots first, in plan order.
+      ...planned.filter((item) => item.slot.startsWith("service-") || item.slot === "proof").map((item) => item.url),
+      // Then the client's own photographs the plan did not place. The media
+      // plan is reused between builds so operator choices stick, which meant a
+      // photo uploaded after the first build was never slotted and so never
+      // reached the gallery — uploading two images to balance the grid did
+      // nothing at all. Stock is deliberately excluded: a stock photo under
+      // "our recent work" is a lie about who did the work.
+      ...clientPhotos.filter((url) => !spentElsewhere.has(url)),
+    ]),
+  ].filter((url) => url !== logoUrl && !/logo|badge|icon|favicon/i.test(url) && !spentElsewhere.has(url));
   console.log(`[build-page] ${media.length} planned photo(s) from the brief, ${resolvedPhotos.length} usable in total`);
 
   const ctx: RenderContext = {

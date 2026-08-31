@@ -83,6 +83,7 @@ async function main() {
       origin: "real" as const,
     })),
     photos: brief.photos,
+    clientPhotos: brief.photos,
     brandHex: "#F37A1F",
     design: {
       ...DEFAULT_DESIGN_DNA,

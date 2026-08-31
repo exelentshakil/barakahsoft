@@ -167,9 +167,40 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-section--ink .bs-badge{border-color:rgb(255 255 255 / .22)}
 .bespoke-page .bs-chip{display:inline-flex;align-items:center;gap:7px;font-size:.85rem;font-weight:600;padding:7px 12px;border-radius:6px;background:var(--bs-surface-alt,#f4f5f7)}
 /* Four fixed columns left two stats floating in half a section of white. */
-.bespoke-page .bs-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));max-width:min(100%,calc(180px * var(--stat-count, 4) + 4rem));margin-inline:auto;gap:clamp(16px,2vw,28px);text-align:center}
-.bespoke-page .bs-stat__value{display:block;font-family:var(--bs-font-display,inherit);font-weight:900;font-size:clamp(2.2rem,3.6vw,3.4rem);line-height:1;color:var(--bs-primary,#e4761b)}
-.bespoke-page .bs-stat__label{display:block;margin-top:8px;font-size:.76rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.75}
+/* An explicit column count, not auto-fit.
+   auto-fit with a max-width cap looked right and was not: the cap counted the
+   columns but not the gaps between them, so four 180px stats needed 804px and
+   were allowed 784 — one dropped to a second row on its own, every time. */
+.bespoke-page .bs-stats{display:grid;grid-template-columns:repeat(var(--stat-cols,4),minmax(0,1fr));gap:clamp(14px,1.6vw,22px)}
+.bespoke-page .bs-stats[data-count="2"]{--stat-cols:2;max-width:640px;margin-inline:auto}
+.bespoke-page .bs-stats[data-count="3"]{--stat-cols:3}
+.bespoke-page .bs-stats[data-count="4"]{--stat-cols:4}
+.bespoke-page .bs-stat{
+  position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;
+  padding:clamp(20px,2.2vw,30px) 16px;border-radius:var(--bs-r);
+  background:var(--bs-surface,#fff);border:1px solid var(--bs-line);
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.bespoke-page .bs-stat:hover{transform:translateY(-3px);box-shadow:var(--bs-shadow);border-color:color-mix(in srgb,var(--bs-primary-strong,#e4761b) 45%,transparent)}
+.bespoke-page .bs-stat__icon{
+  display:grid;place-items:center;width:44px;height:44px;border-radius:999px;margin-bottom:2px;
+  background:color-mix(in srgb,var(--bs-primary-strong,#e4761b) 12%,#fff);
+  color:var(--bs-primary-strong,#e4761b);
+}
+.bespoke-page .bs-stat__icon .bs-icon{width:21px;height:21px}
+.bespoke-page .bs-stat__value{
+  display:block;font-family:var(--bs-font-display,inherit);font-weight:900;
+  font-size:clamp(2rem,3.2vw,3rem);line-height:1;letter-spacing:-.02em;
+  color:var(--bs-primary-strong,#e4761b);
+}
+.bespoke-page .bs-stat__label{
+  display:block;font-size:.72rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;line-height:1.35;color:var(--bs-muted);max-width:20ch;
+}
+.bespoke-page .bs-section--ink .bs-stat__value,.bespoke-page .bs-section--brand .bs-stat__value{color:#fff}
+.bespoke-page .bs-section--ink .bs-stat__label,.bespoke-page .bs-section--brand .bs-stat__label{color:rgb(255 255 255 / .72)}
+.bespoke-page .bs-section--ink .bs-stat,.bespoke-page .bs-section--brand .bs-stat{background:rgb(255 255 255 / .06);border-color:rgb(255 255 255 / .16)}
+.bespoke-page .bs-section--ink .bs-stat__icon,.bespoke-page .bs-section--brand .bs-stat__icon{background:rgb(255 255 255 / .12);color:#fff}
 .bespoke-page .bs-rating{display:inline-flex;align-items:center;gap:10px;font-weight:700;font-size:.92rem}
 .bespoke-page .bs-rating svg{color:#f5b301;fill:#f5b301}
 .bespoke-page .bs-icon{display:inline-flex;width:24px;height:24px;flex:none;align-items:center;justify-content:center}
@@ -339,7 +370,7 @@ export const BASE_STYLESHEET = `
   .bespoke-page .bs-hero__proofbar .bs-container{grid-template-columns:repeat(2,1fr)}
   .bespoke-page .bs-collage{grid-template-columns:1fr 1fr}
   .bespoke-page .bs-collage>*:first-child{grid-row:auto;grid-column:span 2}
-  .bespoke-page .bs-stats{grid-template-columns:repeat(2,1fr)}
+  .bespoke-page .bs-stats,.bespoke-page .bs-stats[data-count="3"],.bespoke-page .bs-stats[data-count="4"]{--stat-cols:2}
   .bespoke-page .bs-overlap-up,.bespoke-page .bs-about--overlap-card .bs-panel{margin-top:0}
 }
 @media (max-width:620px){
@@ -831,7 +862,7 @@ export const BASE_STYLESHEET = `
   .bespoke-page .bs-reviews__track{grid-auto-columns:minmax(80%,1fr)}
   .bespoke-page .bs-trustbar .bs-container{grid-template-columns:repeat(2,1fr);gap:18px 0}
   .bespoke-page .bs-trustbar__cell{border-left:0;padding:4px 10px}
-  .bespoke-page .bs-stats{grid-template-columns:repeat(2,1fr)}
+  .bespoke-page .bs-stats,.bespoke-page .bs-stats[data-count="3"],.bespoke-page .bs-stats[data-count="4"]{--stat-cols:2}
 }
 @media (max-width:620px){
   .bespoke-page .bs-nav__actions .bs-btn{display:none}
