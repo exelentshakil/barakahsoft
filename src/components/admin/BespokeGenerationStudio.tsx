@@ -108,6 +108,11 @@ export function BespokeGenerationStudio({
       
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  // Whether the SERVER thinks a build is in flight. Local `generating` is lost
+  // on any refresh, so the button came back enabled while Inngest was still
+  // mid-build and a second click queued a second run over the first.
+  const [jobRunning, setJobRunning] = useState(false);
+  const [jobError, setJobError] = useState<string | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
   const [genWarnings, setGenWarnings] = useState<string[]>([]);
   const [visualQa, setVisualQa] = useState<{
@@ -150,8 +155,49 @@ export function BespokeGenerationStudio({
   const notAnalysed = !scrapeResults;
   const isScraping = lead.status === "scraping";
 
+  // Poll the build job. GET /api/leads/[id]/generate has always reported
+  // status and pages_done; nothing was reading it, so the progress bar sat at
+  // its initial value for the whole run and the button never knew when to
+  // re-enable.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function poll() {
+      try {
+        const res = await fetch(`/api/leads/${lead.id}/generate`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          job: { status: string; pages_done: number | null; pages_total: number | null; error_message: string | null } | null;
+        };
+        if (cancelled) return;
+
+        const job = data.job;
+        const running = job?.status === "running";
+        setJobRunning(running);
+        setJobError(job?.status === "failed" ? job.error_message ?? "The build failed." : null);
+        if (job) setProgress({ done: job.pages_done ?? 0, total: Math.max(job.pages_total ?? 1, 1) });
+        // The run has finished, so release the button and show the result.
+        if (!running) setGenerating(false);
+      } catch {
+        // A dropped poll is not worth surfacing; the next one will land.
+      }
+    }
+
+    void poll();
+    // Fast while a build is in flight, slow otherwise — this component stays
+    // mounted for as long as the operator has the tab open.
+    const interval = setInterval(poll, generating || jobRunning ? 4000 : 20000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [lead.id, generating, jobRunning]);
+
+  const busy = generating || jobRunning;
+
   async function handleGenerate(e: React.FormEvent) {
     e.preventDefault();
+    if (busy) return;
     setGenerating(true);
     setGenError(null);
     setGenWarnings([]);
@@ -569,7 +615,7 @@ export function BespokeGenerationStudio({
           )}
 
           {/* Progress Bar */}
-          {generating && progress && (
+          {busy && progress && (
             <div className="space-y-2 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
               <div className="flex items-center justify-between text-xs font-bold text-slate-900">
                 <span>
@@ -599,18 +645,27 @@ export function BespokeGenerationStudio({
           {/* Bottom Action Strip */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-100 pt-5">
             <span className="text-[11px] text-slate-500">
-              Builds the complete homepage from this brief and the selected design archetype.
+              {jobError ? (
+                <span className="font-semibold text-rose-600">{jobError}</span>
+              ) : busy ? (
+                "Running. This page can be closed — the build continues on the server."
+              ) : (
+                "Builds the complete homepage from this brief and the selected design archetype."
+              )}
             </span>
 
             <Button
               type="submit"
-              disabled={generating}
-              className="gap-2 font-bold bg-[#533afd] hover:bg-[#432ec4] text-white shadow-md shadow-indigo-500/20 px-7 py-2.5 rounded-xl text-xs"
+              disabled={busy}
+              aria-busy={busy}
+              className="gap-2 font-bold bg-[#533afd] hover:bg-[#432ec4] text-white shadow-md shadow-indigo-500/20 px-7 py-2.5 rounded-xl text-xs disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {generating ? (
+              {busy ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin text-white" />
-                  Generating Homepage...
+                  {progress && progress.total > 1
+                    ? `Building — step ${progress.done} of ${progress.total}`
+                    : "Building the homepage..."}
                 </>
               ) : (
                 <>
