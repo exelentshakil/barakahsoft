@@ -35,6 +35,9 @@ export interface SiteBrief {
   socials: string[];
   /** Where to read this business's real Google reviews, when we know. */
   googleReviewUrl: string | null;
+  /** Facebook proof, entered by the operator — it cannot be scraped. */
+  facebookRating: number | null;
+  facebookReviewCount: number | null;
   /** Real photo URLs from the client's own site and Google profile. */
   photos: string[];
   heroImage: string | null;

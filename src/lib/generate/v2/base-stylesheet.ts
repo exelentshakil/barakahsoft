@@ -217,6 +217,29 @@ export const BASE_STYLESHEET = `
   text-decoration:none;transition:transform .16s ease,box-shadow .16s ease;
 }
 .bespoke-page a.bs-pill:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgb(0 0 0 / .2)}
+
+/* Frosted on the hero only. A solid white block sitting on a photograph reads
+   as a sticker; the same badge in glass reads as part of the composition. It
+   is scoped to the hero because glass over white is invisible. */
+.bespoke-page .bs-hero .bs-pill{
+  background:rgb(255 255 255 / .13);
+  -webkit-backdrop-filter:blur(16px) saturate(140%);
+  backdrop-filter:blur(16px) saturate(140%);
+  border-color:rgb(255 255 255 / .28);
+  color:#fff;
+  box-shadow:0 10px 30px rgb(0 0 0 / .3),inset 0 1px 0 rgb(255 255 255 / .22);
+}
+.bespoke-page .bs-hero a.bs-pill:hover{background:rgb(255 255 255 / .2);border-color:rgb(255 255 255 / .42)}
+.bespoke-page .bs-hero .bs-pill__sub{color:rgb(255 255 255 / .82)}
+/* The marks keep a light disc so Google's colours and Facebook's blue stay
+   legible against the frosting rather than sinking into it. */
+.bespoke-page .bs-hero .bs-google,.bespoke-page .bs-hero .bs-fbmark{
+  background:#fff;border-radius:999px;padding:3px;box-shadow:0 2px 6px rgb(0 0 0 / .18);
+}
+.bespoke-page .bs-pill__marks{display:inline-flex;align-items:center;flex:none}
+/* Overlapped, so two marks read as one badge rather than two icons. */
+.bespoke-page .bs-pill__marks>*+*{margin-left:-9px}
+.bespoke-page .bs-pill--combined{min-width:212px}
 .bespoke-page .bs-pill__body{display:flex;flex-direction:column;justify-content:center;gap:2px;line-height:1.2}
 /* min-height, so the Facebook pill's single-line top sits at the same optical
    position as Google's number-plus-stars rather than drifting upward. */

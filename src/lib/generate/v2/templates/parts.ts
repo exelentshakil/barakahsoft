@@ -94,42 +94,60 @@ export function socialIcon(url: string): string {
 export const FACEBOOK_MARK = `<span class="bs-fbmark" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#1877F2"/><path fill="#fff" d="M15.6 12.5h-2.3V20h-3v-7.5H8.6V10h1.7V8.5c0-2 1.2-3.2 3.1-3.2.9 0 1.7.07 2 .1v2.3h-1.4c-.9 0-1.1.44-1.1 1.07V10h2.5z"/></svg></span>`;
 
 /**
- * The review proof strip: real platform marks, real numbers.
+ * The review proof strip.
  *
- * Star glyphs alone read as decoration. A Google mark beside a rating reads as
- * something a stranger could go and verify, which is the whole point of it —
- * so the pill links to their actual review list rather than a search.
+ * Two shapes, because most local trades have Google reviews and no Facebook
+ * ones, and a hollow second badge reading "read our reviews" next to a real
+ * rating diluted the only number that carries weight.
  *
- * A Facebook pill appears only when a Facebook page was found, and never with
- * a rating attached: Facebook's review counts sit behind a login wall, so any
- * number we printed there would be invented.
+ *   Both platforms rated -> two pills, each with its own real rating and count.
+ *   Google only          -> ONE combined badge carrying both marks, the rating
+ *                           and the Google count. The Facebook mark says where
+ *                           else the business can be found; the count is
+ *                           attributed to Google in the text, because that is
+ *                           where it came from.
  */
 export function reviewPills(args: {
   rating: number | null;
   reviewCount: number | null;
   googleReviewUrl: string | null;
   facebookUrl: string | null;
+  facebookRating: number | null;
+  facebookReviewCount: number | null;
 }): string {
-  const pills: string[] = [];
+  if (!args.rating) return "";
 
-  if (args.rating) {
-    const inner = `${GOOGLE_MARK}<span class="bs-pill__body"><span class="bs-pill__top"><strong>${esc(String(args.rating))}</strong>${stars(args.rating)}</span><span class="bs-pill__sub">${
-      args.reviewCount ? `${esc(String(args.reviewCount))} Google reviews` : "Google reviews"
-    }</span></span>`;
-    pills.push(
-      args.googleReviewUrl
-        ? `<a class="bs-pill" href="${esc(args.googleReviewUrl)}" target="_blank" rel="noopener noreferrer">${inner}</a>`
-        : `<span class="bs-pill">${inner}</span>`
-    );
+  const stack = (mark: string, value: string, sub: string) =>
+    `${mark}<span class="bs-pill__body"><span class="bs-pill__top"><strong>${esc(value)}</strong>${stars(Number(value) || args.rating)}</span><span class="bs-pill__sub">${esc(sub)}</span></span>`;
+
+  const wrap = (href: string | null, inner: string, extra = "") =>
+    href
+      ? `<a class="bs-pill${extra}" href="${esc(href)}" target="_blank" rel="noopener noreferrer">${inner}</a>`
+      : `<span class="bs-pill${extra}">${inner}</span>`;
+
+  // Both platforms have real numbers: show them separately, as equals.
+  if (args.facebookRating && args.facebookReviewCount) {
+    return `<div class="bs-pills">${[
+      wrap(
+        args.googleReviewUrl,
+        stack(GOOGLE_MARK, String(args.rating), args.reviewCount ? `${args.reviewCount} Google reviews` : "Google reviews")
+      ),
+      wrap(
+        args.facebookUrl,
+        stack(FACEBOOK_MARK, String(args.facebookRating), `${args.facebookReviewCount} Facebook reviews`)
+      ),
+    ].join("")}</div>`;
   }
 
-  if (args.facebookUrl) {
-    pills.push(
-      `<a class="bs-pill" href="${esc(args.facebookUrl)}" target="_blank" rel="noopener noreferrer">${FACEBOOK_MARK}<span class="bs-pill__body"><span class="bs-pill__top"><strong>Facebook</strong></span><span class="bs-pill__sub">Read our reviews</span></span></a>`
-    );
-  }
+  // One rating, both marks — a single badge rather than a real one beside a
+  // hollow one.
+  const marks = `<span class="bs-pill__marks">${GOOGLE_MARK}${args.facebookUrl ? FACEBOOK_MARK : ""}</span>`;
+  const inner = `${marks}<span class="bs-pill__body">
+    <span class="bs-pill__top"><strong>${esc(String(args.rating))}</strong>${stars(args.rating)}</span>
+    <span class="bs-pill__sub">${args.reviewCount ? `${esc(String(args.reviewCount))} Google reviews` : "Google reviews"}</span>
+  </span>`;
 
-  return pills.length ? `<div class="bs-pills">${pills.join("")}</div>` : "";
+  return `<div class="bs-pills">${wrap(args.googleReviewUrl, inner, " bs-pill--combined")}</div>`;
 }
 
 export function stars(rating: number | null): string {

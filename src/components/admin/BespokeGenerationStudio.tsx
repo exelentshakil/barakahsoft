@@ -78,6 +78,20 @@ export function BespokeGenerationStudio({
   const [city, setCity] = useState(defaultCity);
   const [industry, setIndustry] = useState(defaultIndustry);
   const [aboutContent, setAboutContent] = useState(defaultAboutContent);
+  // Facebook proof is typed in, not scraped: Facebook puts review counts
+  // behind a login wall, so the operator reads them off the client's page.
+  // Left empty, the hero shows one combined badge carrying both marks rather
+  // than a real Google rating beside a hollow Facebook one.
+  const [facebookRating, setFacebookRating] = useState(
+    typeof (extracted.mockup as Record<string, unknown> | undefined)?.facebookRating === "number"
+      ? String((extracted.mockup as Record<string, number>).facebookRating)
+      : ""
+  );
+  const [facebookReviewCount, setFacebookReviewCount] = useState(
+    typeof (extracted.mockup as Record<string, unknown> | undefined)?.facebookReviewCount === "number"
+      ? String((extracted.mockup as Record<string, number>).facebookReviewCount)
+      : ""
+  );
   const [servicesText, setServicesText] = useState(defaultServices);
   const [areasText, setAreasText] = useState(defaultAreas);
   const [primaryColor, setPrimaryColor] = useState(extracted.branding?.colors?.primary || (facts.colors as any)?.primary || "#533AFD");
@@ -242,6 +256,8 @@ export function BespokeGenerationStudio({
           services: servicesText.split("\n").map((x: string) => x.trim()).filter(Boolean),
           areas: areasText.split("\n").map((x: string) => x.trim()).filter(Boolean),
           heroImage: heroImage.trim() || undefined,
+          facebookRating: Number(facebookRating) > 0 ? Number(facebookRating) : null,
+          facebookReviewCount: Number(facebookReviewCount) > 0 ? Number(facebookReviewCount) : null,
           logoUrl: logoUrl.trim() || undefined,
           footerLogoUrl: footerLogoUrl.trim() || undefined,
                   }),
@@ -405,6 +421,38 @@ export function BespokeGenerationStudio({
                 placeholder="e.g. Pinnacle Restoration"
                 required
               />
+            </div>
+
+            <div className="sm:col-span-2">
+              <Label className="text-xs font-bold text-slate-800">Facebook reviews (optional)</Label>
+              <p className="mt-0.5 text-[10px] text-slate-500">
+                Facebook hides review counts from scrapers — read them off the client&apos;s page and type them here.
+                Leave blank and the hero shows one badge with both marks and the Google rating.
+              </p>
+              <div className="mt-1.5 flex gap-2">
+                <Input
+                  id="gen-fb-rating"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="5"
+                  value={facebookRating}
+                  onChange={(e) => { markTouched(); setFacebookRating(e.target.value); }}
+                  className="h-9 w-24 text-xs bg-slate-50/70 border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 font-medium"
+                  placeholder="4.9"
+                  aria-label="Facebook rating out of five"
+                />
+                <Input
+                  id="gen-fb-count"
+                  type="number"
+                  min="0"
+                  value={facebookReviewCount}
+                  onChange={(e) => { markTouched(); setFacebookReviewCount(e.target.value); }}
+                  className="h-9 w-32 text-xs bg-slate-50/70 border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 font-medium"
+                  placeholder="reviews"
+                  aria-label="Number of Facebook reviews"
+                />
+              </div>
             </div>
 
             <div>

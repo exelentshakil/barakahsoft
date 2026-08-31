@@ -77,6 +77,8 @@ export function heroSection(ctx: RenderContext): string {
     reviewCount: brief.reviewCount,
     googleReviewUrl: brief.googleReviewUrl,
     facebookUrl: brief.socials.find((url) => /facebook\.com/i.test(url)) ?? null,
+    facebookRating: brief.facebookRating,
+    facebookReviewCount: brief.facebookReviewCount,
   });
 
   // The credential badges used to sit here AND in the trust bar, wrapping

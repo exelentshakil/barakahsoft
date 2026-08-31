@@ -45,6 +45,8 @@ const brief: SiteBrief = {
     { author: "Sarah Klein", rating: 5, when: "8 months ago", avatar: null, text: "They found storm damage two other companies missed and dealt with the insurer directly." },
   ],
   googleReviewUrl: "https://search.google.com/local/reviews?placeid=ChIJexample",
+  facebookRating: null,
+  facebookReviewCount: null,
   socials: ["https://www.facebook.com/253163434551662", "https://www.instagram.com/SaddleRoofing"],
   photos: [
     "https://images.unsplash.com/photo-1632759145355-6d5dfb8c2a86?auto=format&fit=crop&w=1600&q=80",

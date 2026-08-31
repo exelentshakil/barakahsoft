@@ -1550,6 +1550,7 @@ Shaq`,
                 photos={((scrapeResults?.facts as { site_photos?: { url: string; caption?: string }[] } | undefined)?.site_photos ?? []).filter(
                   (photo) => photo?.url
                 )}
+                mediaPlan={(Array.isArray(artifact?.media_plan) ? artifact.media_plan : []) as { slot: string; url: string }[]}
                 onUploadComplete={() => setReloadKey((k) => k + 1)}
               />
 

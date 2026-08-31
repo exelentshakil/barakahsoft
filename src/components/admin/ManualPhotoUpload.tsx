@@ -10,14 +10,42 @@ interface LeadPhoto {
   caption?: string;
 }
 
+interface PlannedSlot {
+  slot: string;
+  url: string;
+}
+
+// Which part of the page a photo ends up in. Grouping by that is the only way
+// an operator can judge a picture: a shot that is wrong as the founders'
+// portrait may be perfectly good in the work gallery, and "here are nine
+// photos" tells you nothing about either.
+const GROUPS = [
+  { key: "gallery", title: "Recent projects", hint: "The work gallery. Add or remove to balance the grid." },
+  { key: "hero", title: "Hero background", hint: "Behind the headline on the first screen." },
+  { key: "about", title: "About / founders", hint: "The portrait beside the story." },
+  { key: "unused", title: "Not placed yet", hint: "Available to the next build." },
+] as const;
+
+function groupFor(url: string, plan: PlannedSlot[]): (typeof GROUPS)[number]["key"] {
+  const slot = plan.find((item) => item.url === url)?.slot;
+  if (slot === "hero") return "hero";
+  if (slot === "about") return "about";
+  if (slot === "proof" || slot?.startsWith("service-")) return "gallery";
+  // Anything real and unplaced also reaches the gallery on the next build.
+  return slot ? "unused" : "gallery";
+}
+
 export function ManualPhotoUpload({
   leadId,
   photos = [],
+  mediaPlan = [],
   onUploadComplete,
 }: {
   leadId: string;
   /** The lead's current photo library, so the operator can see and prune it. */
   photos?: LeadPhoto[];
+  /** Where the last build placed each photo. */
+  mediaPlan?: PlannedSlot[];
   onUploadComplete?: () => void;
 }) {
   const [library, setLibrary] = useState<LeadPhoto[]>(photos);
@@ -125,30 +153,53 @@ export function ManualPhotoUpload({
         </Button>
 
         {library.length > 0 && (
-          <div className="mt-5">
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#42506a]">
-              {library.length} photo{library.length === 1 ? "" : "s"} in this lead&apos;s library
-            </p>
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-              {library.map((photo) => (
-                <div key={photo.url} className="group relative overflow-hidden rounded-lg border border-[#e5e7f2] bg-slate-50">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={photo.url} alt={photo.caption || "Client photo"} className="aspect-square w-full object-cover" loading="lazy" />
-                  <button
-                    type="button"
-                    onClick={() => handleRemove(photo.url)}
-                    disabled={removing === photo.url}
-                    title="Remove from this lead"
-                    aria-label="Remove photo"
-                    className="absolute right-1 top-1 rounded-md bg-white/90 p-1 text-rose-600 opacity-0 shadow transition group-hover:opacity-100 focus:opacity-100 disabled:opacity-60"
-                  >
-                    {removing === photo.url ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                  </button>
+          <div className="mt-5 space-y-5">
+            {GROUPS.map((group) => {
+              const items = library.filter((photo) => groupFor(photo.url, mediaPlan) === group.key);
+              if (items.length === 0) return null;
+              return (
+                <div key={group.key}>
+                  <div className="mb-2 flex flex-wrap items-baseline gap-2">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-[#0d1738]">{group.title}</p>
+                    <span className="rounded-full bg-slate-100 px-1.5 text-[10px] font-bold text-[#42506a]">{items.length}</span>
+                    <span className="text-[10px] text-[#42506a]">{group.hint}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                    {items.map((photo) => (
+                      <div
+                        key={photo.url}
+                        className="group relative overflow-hidden rounded-lg border border-[#e5e7f2] bg-slate-50"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={photo.url}
+                          alt={photo.caption || "Client photo"}
+                          className="aspect-square w-full object-cover"
+                          loading="lazy"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemove(photo.url)}
+                          disabled={removing === photo.url}
+                          title="Remove from this lead"
+                          aria-label="Remove photo"
+                          className="absolute right-1 top-1 rounded-md bg-white/90 p-1 text-rose-600 opacity-0 shadow transition group-hover:opacity-100 focus:opacity-100 disabled:opacity-60"
+                        >
+                          {removing === photo.url ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3.5 w-3.5" />
+                          )}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
-            </div>
-            <p className="mt-2 text-[10px] text-[#42506a]">
-              Removing takes a photo out of future builds. Pages already delivered keep working.
+              );
+            })}
+            <p className="text-[10px] text-[#42506a]">
+              Removing takes a photo out of future builds. Pages already delivered keep working. Grouping reflects the
+              last build — a photo added now joins Recent projects on the next one.
             </p>
           </div>
         )}

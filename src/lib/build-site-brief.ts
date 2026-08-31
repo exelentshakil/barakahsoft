@@ -31,6 +31,11 @@ export interface BriefOverrides {
   areas?: string[];
   heroImage?: string;
   aboutContent?: string;
+  /** Operator-entered Facebook proof. Facebook's counts sit behind a login
+   *  wall, so they cannot be scraped — but the operator can read them off the
+   *  client's page and type them in. */
+  facebookRating?: number | null;
+  facebookReviewCount?: number | null;
 }
 
 /**
@@ -184,6 +189,8 @@ export function buildSiteBrief(
     // Places gives us the place_id, so the "read all reviews" link goes to
     // their real review list rather than a search that might land anywhere.
     googleReviewUrl: lead.place_id ? `https://search.google.com/local/reviews?placeid=${lead.place_id}` : null,
+    facebookRating: overrides.facebookRating ?? null,
+    facebookReviewCount: overrides.facebookReviewCount ?? null,
     socials: ((facts.social_urls as string[] | undefined) ?? [])
       .filter((url) => /^https?:\/\//i.test(url))
       .slice(0, 6),
