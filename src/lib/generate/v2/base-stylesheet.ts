@@ -376,8 +376,16 @@ export const BASE_STYLESHEET = `
   padding:28px var(--bs-gutter);overflow-y:auto;transform:translateX(100%);transition:transform .24s ease;
 }
 .bespoke-page [data-nav-drawer][data-open=true]{transform:translateX(0)}
-.bespoke-page [data-nav-drawer] a{display:block;padding:13px 2px;border-bottom:1px solid rgb(255 255 255 / .12);font-weight:600}
-.bespoke-page [data-nav-drawer] .bs-btn{margin-top:18px;padding:15px 20px;width:100%;justify-content:center}
+.bespoke-page [data-nav-drawer] a:not(.bs-btn){display:block;padding:13px 2px;border-bottom:1px solid rgb(255 255 255 / .12);font-weight:600}
+.bespoke-page [data-nav-drawer] .bs-btn{margin-top:22px;padding:14px 20px;width:100%;justify-content:center}
+/* The drawer's call action. A translucent chip around the handset and the
+   number set over a quiet label reads as a considered primary action rather
+   than a bare phone number in an orange box. */
+.bespoke-page .bs-btn--call{gap:12px;text-align:left}
+.bespoke-page .bs-btn__chip{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;flex:0 0 34px;border-radius:999px;background:rgb(255 255 255 / .18);box-shadow:inset 0 0 0 1px rgb(255 255 255 / .26)}
+.bespoke-page .bs-btn__calltext{display:inline-flex;flex-direction:column;line-height:1.15}
+.bespoke-page .bs-btn__calllabel{font-size:.66rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.72}
+.bespoke-page .bs-btn__callnumber{font-size:1.06rem;font-weight:800;letter-spacing:.01em}
 .bespoke-page .bs-nav__group{border-bottom:1px solid rgb(255 255 255 / .12)}
 .bespoke-page .bs-nav__group>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 2px;font-weight:700;cursor:pointer;list-style:none}
 .bespoke-page .bs-nav__group>summary::-webkit-details-marker{display:none}

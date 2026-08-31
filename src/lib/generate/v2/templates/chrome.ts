@@ -128,7 +128,7 @@ export function navMarkup(ctx: RenderContext): string {
           : group.links.map((link) => `<a href="${esc(link.href)}">${esc(link.label)}</a>`).join("")
       )
       .join("")}
-  ${brief.phone ? `<a class="bs-btn bs-btn--wide" href="${esc(telHref(brief.phone) ?? "#")}">${esc(brief.phone)}</a>` : ""}
+  ${brief.phone ? `<a class="bs-btn bs-btn--wide bs-btn--call" href="${esc(telHref(brief.phone) ?? "#")}"><span class="bs-btn__chip">${icon("phone-call", "bs-icon bs-icon--sm")}</span><span class="bs-btn__calltext"><span class="bs-btn__calllabel">Call now</span><span class="bs-btn__callnumber">${esc(brief.phone)}</span></span></a>` : ""}
 </div>`;
 }
 
