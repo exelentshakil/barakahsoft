@@ -10,6 +10,7 @@ import {
 } from "@/lib/generate/v2/render-sections";
 import { enforceChromeHrefs } from "@/lib/generate/v2/chrome-data";
 import { repairPage } from "@/lib/generate/v2/visual-repair";
+import { buildPhotoPool } from "@/lib/generate/v2/photo-pool";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
 
 // The whole homepage build, in one place.
@@ -154,7 +155,8 @@ export async function buildHomepage(args: {
   const dna = layoutDnaFor(`${brief.leadSlug}|${brief.businessName}|${brief.industry}|${brief.city}`);
   console.log(`[build-homepage] DNA: hero=${dna.hero.id} about=${dna.about.id} footer=${dna.footer.id} chrome=${dna.chrome.id}`);
 
-  const system = await generatePageSystem({ brief, dna, tokens, logoUrl, photos });
+  const pool = await buildPhotoPool(brief, photos);
+  const system = await generatePageSystem({ brief, dna, tokens, logoUrl, photos: pool });
   if (!system) {
     console.error("[build-homepage] the art direction pass returned nothing usable");
     return null;

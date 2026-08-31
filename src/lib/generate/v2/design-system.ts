@@ -4,6 +4,7 @@ import { parseJsonResponse } from "@/lib/parse-json-response";
 import { sanitizeGeneratedCss } from "@/lib/sanitize-css";
 import { CLASS_VOCABULARY, MOCKUP_RULES, COPY_RULES, CONVERSION_RULES } from "@/lib/generate/v2/vocabulary";
 import type { LayoutDna } from "@/lib/generate/v2/layout-dna";
+import type { PoolPhoto } from "@/lib/generate/v2/photo-pool";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
 
 // Stage one: one Pro call decides the whole design, and one Pro call writes
@@ -21,6 +22,7 @@ const SectionSpecSchema = z.object({
   // The art director reliably reaches for the token name it was shown
   // ("surfaceAlt") rather than the role name, so the alias is accepted and
   // normalised instead of failing the whole manifest over vocabulary.
+  // "brand" is a solid brand-colour band; the stylesheet implements it.
   background: z
     .string()
     .transform((value) => {
@@ -28,9 +30,10 @@ const SectionSpecSchema = z.object({
       if (normalised === "surfacealt" || normalised === "surface-alt" || normalised === "alt") return "tint";
       if (normalised === "image" || normalised === "photograph") return "photo";
       if (normalised === "dark" || normalised === "inverted") return "ink";
+      if (normalised === "primary" || normalised === "colour" || normalised === "color") return "brand";
       return normalised;
     })
-    .pipe(z.enum(["surface", "tint", "ink", "photo"]).catch("surface"))
+    .pipe(z.enum(["surface", "tint", "ink", "photo", "brand"]).catch("surface"))
     .default("surface"),
   imageUrl: z.string().nullable().catch(null).default(null),
 });
@@ -69,7 +72,7 @@ export interface SystemInputs {
   dna: LayoutDna;
   tokens: Record<string, string>;
   logoUrl: string | null;
-  photos: string[];
+  photos: PoolPhoto[];
 }
 
 function briefFacts(brief: SiteBrief): string {
@@ -102,7 +105,9 @@ ${briefFacts(brief)}
 
 REAL ASSETS AVAILABLE (these exact URLs, no others, no placeholders)
 - Logo: ${logoUrl ?? "none — do not render a logo image anywhere; set the business name in the display face instead"}
-- Photographs, in order of quality: ${photos.length ? photos.map((url, index) => `[${index}] ${url}`).join("\n  ") : "none — the page must work with zero photographs, using colour, type and motif instead"}
+- Photographs available (client photos first — prefer those for the hero, the about section and any
+  section about this business's own work; the stock ones are for service cards and supporting bands):
+${photos.length ? photos.map((photo) => `  [${photo.source}] ${photo.url} — ${photo.caption}`).join("\n") : "  none — the page must work with zero photographs"}
 
 ASSIGNED LAYOUT DNA — this lead's structural identity. You must design INTO it, not around it.
 - Chrome: ${dna.chrome.name} — ${dna.chrome.spec}
@@ -142,11 +147,19 @@ continuous commercial argument for THIS business. Requirements:
 - Give each section an archetype description concrete enough that another designer could build
   it without seeing the rest of the page: describe the composition, what is on the left, what is
   on the right, what overlaps what, what the focal element is.
-- Assign an imageUrl only from the supplied list. A photograph may be used at most twice, and never
-  in two adjacent sections. A section with no photograph must be composed WITHOUT any image frame —
-  a stat band, a quote plate, an SVG glyph grid, a numbered rail — because an empty frame renders as
-  a grey box. Do not assign a photograph to more sections than there are photographs.
+- THIS PAGE IS PHOTO-LED. At least eight sections must carry a photograph, and the services section
+  must use photo cards (one image per service). Assign an imageUrl only from the list above, each URL
+  at most once, never the same one in adjacent sections. A section with no photograph must be
+  composed WITHOUT any image frame — an empty frame renders as a grey box.
+- COLOUR RHYTHM. The page is LIGHT overall, with colour used decisively: use background "surface"
+  or "tint" for most sections, AT MOST TWO "ink" sections in the whole page, and at least one
+  "brand" section (solid brand colour, white text) for the emergency or mid-page conversion band.
+  A page that is mostly dark grey reads as cheap; a light page with two or three confident colour
+  bands reads as expensive.
+- Section two is a trust bar: rating, review count, years, and the credential badges. Short.
 - The hero always carries the lead-capture form. That is not negotiable and not a section of its own.
+- The about section always carries the founder identity: the founder's name and role on a badge over
+  the photograph, with the business logo beside it.
 - copyPoints are the real, factual points the section must make, drawn from the facts above.
 
 Choose Google-hosted type: a display family with real character for headings and a highly legible
@@ -155,7 +168,9 @@ body family. They must not be the same family and must not both be Inter.
 Return STRICT JSON only, no prose, no code fence:
 {"systemName":"","rationale":"","palette":{"primary":"#","accent":"#","ink":"#","surface":"#","surfaceAlt":"#"},
 "typography":{"displayFamily":"","bodyFamily":"","displayWeight":"800","headingCase":"title"},
-"sections":[{"id":"hero","kind":"hero","label":"","archetype":"","intent":"","copyPoints":[""],"background":"photo","imageUrl":null}]}`;
+"sections":[{"id":"hero","kind":"hero","label":"","archetype":"","intent":"","copyPoints":[""],"background":"photo","imageUrl":null}]}
+
+background is one of: surface | tint | ink | brand | photo`;
 
   const chain = bestGeminiChain();
   const raw = await callGemini(prompt, chain[0], undefined, {
@@ -175,7 +190,7 @@ Return STRICT JSON only, no prose, no code fence:
   }
 
   // A photograph the model hallucinated is a broken image on the live page.
-  const allowed = new Set(photos);
+  const allowed = new Set(photos.map((photo) => photo.url));
   const used = new Set<string>();
   const sections = parsed.data.sections.map((section) => {
     const url = section.imageUrl;

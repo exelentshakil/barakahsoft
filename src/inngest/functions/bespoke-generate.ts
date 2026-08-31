@@ -318,7 +318,13 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     const system = (await step.run("art-direction", async () => {
       await touchProgress(admin, lead_id);
       const { generatePageSystem } = await import("@/lib/generate/v2/design-system");
-      const result = await generatePageSystem({ brief, dna: dnaV2, tokens: gateTokens.vars, logoUrl, photos });
+      const { buildPhotoPool } = await import("@/lib/generate/v2/photo-pool");
+
+      // The client's own photos, topped up with trade stock, so a photo-led
+      // page is actually buildable. Four scraped images cannot fill fifteen
+      // sections, which is why the last build was text on dark grey.
+      const pool = await buildPhotoPool(brief, photos);
+      const result = await generatePageSystem({ brief, dna: dnaV2, tokens: gateTokens.vars, logoUrl, photos: pool });
       if (!result) throw new Error("Art direction produced no usable page system; the previous live page was preserved.");
       return result;
     })) as PageSystem;

@@ -190,7 +190,14 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-hero .bs-container{position:relative;z-index:3;padding-block:clamp(120px,14vh,180px) clamp(64px,8vh,110px);width:100%}
 .bespoke-page .bs-hero__bg{position:absolute;inset:0;z-index:0;border-radius:0;aspect-ratio:auto}
 .bespoke-page .bs-hero__bg>img{width:100%;height:100%;object-fit:cover}
-.bespoke-page .bs-hero::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(100deg,rgb(0 0 0 / .86) 0%,rgb(0 0 0 / .68) 48%,rgb(0 0 0 / .42) 100%)}
+.bespoke-page .bs-hero::after{
+  content:"";position:absolute;inset:0;z-index:1;
+  background:
+    linear-gradient(100deg,rgb(0 0 0 / .84) 0%,rgb(0 0 0 / .62) 46%,rgb(0 0 0 / .30) 100%),
+    linear-gradient(200deg,rgb(var(--bs-primary-rgb,228 118 27) / .30) 0%,transparent 62%);
+}
+.bespoke-page .bs-hero .bs-display{overflow:visible;max-width:15ch}
+.bespoke-page .bs-hero .bs-eyebrow--chip{box-shadow:0 8px 22px rgb(0 0 0 / .3)}
 .bespoke-page .bs-hero .bs-lede{color:rgb(255 255 255 / .84);max-width:52ch}
 .bespoke-page .bs-hero .bs-rating{background:rgb(0 0 0 / .45);border:1px solid rgb(255 255 255 / .18);padding:10px 16px;border-radius:8px}
 .bespoke-page .bs-hero .bs-badge{border-color:rgb(255 255 255 / .26)}
@@ -292,4 +299,49 @@ export const BASE_STYLESHEET = `
   .bespoke-page .bs-hide-desktop{display:revert}
   .bespoke-page .bs-hero__proofbar .bs-container{grid-template-columns:1fr;text-align:left}
 }
+/* ---------- colour bands ----------------------------------------------- */
+/* The references are LIGHT pages with brand colour used decisively — a solid
+   band, a filled badge row, a coloured card header. Ours came out as text on
+   dark grey because ink was the only strong background available. */
+.bespoke-page .bs-section--brand{background:var(--bs-primary,#e4761b);color:var(--bs-on-primary,#fff)}
+.bespoke-page .bs-section--brand .bs-lede,.bespoke-page .bs-section--brand .bs-body{color:rgb(255 255 255 / .88)}
+.bespoke-page .bs-section--brand .bs-eyebrow,.bespoke-page .bs-section--brand .bs-mark{color:#fff}
+.bespoke-page .bs-section--brand .bs-card{background:#fff;color:var(--bs-ink,#16181d)}
+.bespoke-page .bs-section--brand .bs-btn{background:#fff;color:var(--bs-ink,#16181d)}
+.bespoke-page .bs-section--photo{position:relative;background:var(--bs-ink,#16181d);color:#fff;overflow:hidden}
+.bespoke-page .bs-section--photo>.bs-media{position:absolute;inset:0;border-radius:0;aspect-ratio:auto;z-index:0}
+.bespoke-page .bs-section--photo>.bs-media>img{width:100%;height:100%;object-fit:cover}
+.bespoke-page .bs-section--photo::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgb(0 0 0 / .82),rgb(0 0 0 / .45))}
+.bespoke-page .bs-section--photo>.bs-container{position:relative;z-index:2}
+.bespoke-page .bs-section--photo .bs-lede{color:rgb(255 255 255 / .84)}
+
+/* ---------- trust bar --------------------------------------------------- */
+.bespoke-page .bs-trustbar{background:var(--bs-surface-alt,#f4f5f7);border-bottom:1px solid var(--bs-line);padding:22px 0}
+.bespoke-page .bs-trustbar .bs-container{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:clamp(16px,3vw,44px)}
+.bespoke-page .bs-trustbar .bs-stat__value{font-size:clamp(1.7rem,2.4vw,2.4rem)}
+.bespoke-page .bs-trustbar .bs-badge{background:#fff;border-color:transparent;box-shadow:0 2px 10px rgb(0 0 0 / .08)}
+
+/* ---------- photo-led cards --------------------------------------------- */
+/* A service card with a photograph is what makes the reference pages feel
+   like a business rather than a brochure. */
+.bespoke-page .bs-card--photo{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.bespoke-page .bs-card--photo .bs-media{border-radius:0;aspect-ratio:16/10}
+.bespoke-page .bs-card--photo>*:not(.bs-media){padding:22px 24px}
+.bespoke-page .bs-card--photo>*:last-child{padding-bottom:24px}
+.bespoke-page .bs-card--photo .bs-h3{margin-bottom:8px}
+.bespoke-page .bs-gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.bespoke-page .bs-gallery .bs-media{aspect-ratio:1/1;border-radius:8px}
+.bespoke-page .bs-gallery .bs-media img{transition:transform .5s ease}
+.bespoke-page .bs-gallery .bs-media:hover img{transform:scale(1.06)}
+
+/* ---------- review cards ------------------------------------------------ */
+.bespoke-page .bs-review{background:#fff;border:1px solid var(--bs-line);border-radius:var(--bs-r);padding:26px;box-shadow:var(--bs-shadow);display:flex;flex-direction:column;gap:14px}
+.bespoke-page .bs-review__author{display:flex;align-items:center;gap:12px;font-weight:800;margin-top:auto}
+.bespoke-page .bs-review__avatar{width:44px;height:44px;border-radius:999px;flex:none;display:grid;place-items:center;background:var(--bs-primary,#e4761b);color:var(--bs-on-primary,#fff);font-family:var(--bs-font-display,inherit);font-weight:900}
+
+@media (max-width:900px){
+  .bespoke-page .bs-gallery{grid-template-columns:repeat(2,1fr)}
+  .bespoke-page .bs-trustbar .bs-container{justify-content:flex-start;gap:20px}
+}
+
 `;

@@ -74,6 +74,31 @@ it change, and nothing you write can restyle it. Your job is to produce the exac
   a class you have not been given unless you also return the CSS for it.`;
 }
 
+/**
+ * The About section's founder badge, spelled out.
+ *
+ * Every reference site the client works from has the same thing: the owner's
+ * photograph with a plate carrying the logo and their name and role. Left to
+ * a description it came out as a text chip, or with an invented job title, or
+ * missing entirely — so the exact markup and the exact facts are supplied.
+ */
+function aboutBadgeBrief(brief: SiteBrief, logoUrl: string | null, imageUrl: string | null): string {
+  const founder = brief.founder?.trim();
+  return `
+THE FOUNDER BADGE — mandatory in this section, built exactly like this:
+  <figure class="bs-media bs-media--wide">
+    <img src="${imageUrl ?? "USE THE PHOTOGRAPH ASSIGNED ABOVE"}" alt="…" width="1200" height="800" loading="lazy">
+    <div class="bs-founder-badge">
+      ${logoUrl ? `<div><img src="${logoUrl}" alt="${brief.businessName} logo" width="120" height="48"></div>` : `<div><strong>${brief.businessName}</strong></div>`}
+      <div><span>${founder ?? brief.businessName}</span><span class="bs-small">${founder ? "Founder" : "Local, family owned"}</span></div>
+    </div>
+  </figure>
+The badge sits INSIDE the photograph's frame (the stylesheet positions it) and never over body copy.
+${founder ? `The founder's name is exactly "${founder}". Do not invent a second name, a job title beyond "Founder", or a year count.` : "No founder name was supplied — use the business name and do not invent a person."}
+The section must also carry the real story from the source material below, two actions, and a stat
+band of four supported numbers.`;
+}
+
 function neighbourNote(sections: SectionSpec[], index: number): string {
   const before = sections[index - 1];
   const after = sections[index + 1];
@@ -105,13 +130,22 @@ async function renderOne(
   logoUrl: string | null
 ): Promise<RenderedSection | null> {
   const isHero = index === 0 || spec.kind === "hero";
+  const isAbout = spec.kind === "about";
   const archetypeOverride =
     isHero ? dna.hero.spec : spec.kind === "about" ? dna.about.spec : null;
 
   // The archetype is a class the shipped stylesheet implements, not a
   // description the model has to rebuild from scratch in CSS.
   const background =
-    spec.background === "tint" ? " bs-section--tint" : spec.background === "ink" ? " bs-section--ink" : "";
+    spec.background === "tint"
+      ? " bs-section--tint"
+      : spec.background === "ink"
+        ? " bs-section--ink"
+        : spec.background === "brand"
+          ? " bs-section--brand"
+          : spec.background === "photo"
+            ? " bs-section--photo"
+            : "";
   const rootClass = isHero
     ? `bs-section bs-hero bs-hero--${dna.hero.id}`
     : spec.kind === "about"
@@ -141,6 +175,7 @@ ${archetypeOverride ? `- Section-specific brief from the art director: ${spec.ar
 - Photograph for this section: ${spec.imageUrl ?? "NONE. Do not emit a .bs-media or .bs-collage frame at all — an empty frame renders as a large grey rectangle. Compose with colour, type, inline SVG and the motif instead. Never invent an image URL, never use a placeholder path, never use the logo as a photograph."}
 
 
+${isAbout ? aboutBadgeBrief(brief, logoUrl, spec.imageUrl) : ""}
 ${neighbourNote(system.sections, index)}
 
 BUSINESS FACTS

@@ -22,6 +22,9 @@ LAYOUT
   .bs-section              every top-level <section>. Owns the vertical rhythm.
   .bs-section--tint        quiet tinted background variant
   .bs-section--ink         dark inverted background variant (text flips automatically)
+  .bs-section--brand       SOLID brand-colour background, white text, white cards and buttons
+  .bs-section--photo       full-bleed photographic band; its FIRST child is a .bs-media holding the
+                           image, everything else goes in a .bs-container after it
   .bs-section--flush       removes vertical padding (for full-bleed media bands)
   .bs-container            max-width wrapper with the page gutter
   .bs-container--narrow    reading-width wrapper (~72ch)
@@ -59,6 +62,10 @@ ACTION
 
 SURFACE
   .bs-card                 elevated content card
+  .bs-card--photo          a card whose FIRST child is a .bs-media — use this for service cards
+  .bs-gallery              four-across work gallery of .bs-media squares
+  .bs-trustbar             slim credential/stat strip, usually directly under the hero
+  .bs-review               one review card: copy, then .bs-review__author with a .bs-review__avatar
   .bs-card--flat           bordered, no shadow
   .bs-card--ink            dark card
   .bs-panel                large surface panel (used by hero form, about card)
