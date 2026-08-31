@@ -111,9 +111,13 @@ export function navMarkup(ctx: RenderContext): string {
       <button class="bs-nav__burger" type="button" data-nav-toggle aria-expanded="false" aria-label="Open menu">${icon("menu")}</button>
     </div>
   </div>
-  <div class="bs-nav__drawer" data-nav-drawer data-open="false">
+</nav>
+<!-- Deliberately a SIBLING of the nav, not a child: position:fixed resolves
+     against the nearest filtered/transformed ancestor, and any such property
+     on the bar would trap the drawer inside it. -->
+<div class="bs-nav__drawer" data-nav-drawer data-open="false">
     <button class="bs-nav__close" type="button" data-nav-close aria-label="Close menu">${icon("close")}</button>
-    ${drawerGroups
+  ${drawerGroups
       .map(
         (group) =>
           `${group.title ? `<p class="bs-nav__drawerhead">${esc(group.title)}</p>` : ""}${group.links
@@ -121,9 +125,8 @@ export function navMarkup(ctx: RenderContext): string {
             .join("")}`
       )
       .join("")}
-    ${brief.phone ? `<a class="bs-btn bs-btn--wide" href="${esc(telHref(brief.phone) ?? "#")}">${esc(brief.phone)}</a>` : ""}
-  </div>
-</nav>`;
+  ${brief.phone ? `<a class="bs-btn bs-btn--wide" href="${esc(telHref(brief.phone) ?? "#")}">${esc(brief.phone)}</a>` : ""}
+</div>`;
 }
 
 export function footerMarkup(ctx: RenderContext): string {

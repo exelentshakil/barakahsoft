@@ -20,7 +20,7 @@
 export const BASE_STYLESHEET = `
 /* ---------- foundation ------------------------------------------------- */
 .bespoke-page{
-  --bs-max:1240px;
+  --bs-max:1360px;
   --bs-gutter:clamp(20px,4vw,48px);
   --bs-r:12px;
   --bs-r-lg:20px;
@@ -188,7 +188,7 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-founder-badge>*:last-child{background:var(--bs-primary-strong,var(--bs-primary,#e4761b));color:var(--bs-on-primary,#fff);padding:12px 20px;display:flex;flex-direction:column;justify-content:center;line-height:1.25}
 
 /* ---------- lead form -------------------------------------------------- */
-.bespoke-page .bs-form{background:#fff;color:var(--bs-ink,#16181d);border-radius:var(--bs-r);box-shadow:var(--bs-shadow-lg);overflow:visible;width:100%;max-width:460px}
+.bespoke-page .bs-form{background:#fff;color:var(--bs-ink,#16181d);border-radius:var(--bs-r);box-shadow:var(--bs-shadow-lg);overflow:visible;width:100%;max-width:440px}
 .bespoke-page .bs-form__head{position:relative;background:var(--bs-primary-strong,var(--bs-primary,#e4761b));color:var(--bs-on-primary,#fff);padding:22px 24px;text-align:center;border-radius:var(--bs-r) var(--bs-r) 0 0}
 .bespoke-page .bs-form__head::after{content:"";position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);border-left:12px solid transparent;border-right:12px solid transparent;border-top:12px solid var(--bs-primary-strong,var(--bs-primary,#e4761b))}
 .bespoke-page .bs-form__head h2,.bespoke-page .bs-form__head h3,.bespoke-page .bs-form__head .bs-h3{font-family:var(--bs-font-display,inherit);font-weight:900;text-transform:uppercase;letter-spacing:.04em;font-size:1.2rem;line-height:1.15}
@@ -207,8 +207,8 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-form [type=submit],.bespoke-page .bs-form button{width:100%}
 
 /* ---------- hero ------------------------------------------------------- */
-.bespoke-page .bs-hero{position:relative;padding:0;min-height:clamp(640px,92vh,940px);display:flex;align-items:center;overflow:hidden;background:var(--bs-ink,#16181d);color:#fff}
-.bespoke-page .bs-hero .bs-container{position:relative;z-index:3;padding-block:clamp(120px,14vh,180px) clamp(64px,8vh,110px);width:100%}
+.bespoke-page .bs-hero{position:relative;padding:0;min-height:clamp(620px,88vh,900px);display:flex;align-items:center;overflow:hidden;background:var(--bs-ink,#16181d);color:#fff}
+.bespoke-page .bs-hero .bs-container{position:relative;z-index:3;padding-block:clamp(104px,11vh,140px) clamp(48px,6vh,80px);width:100%}
 .bespoke-page .bs-hero__bg{position:absolute;inset:0;z-index:0;border-radius:0;aspect-ratio:auto}
 .bespoke-page .bs-hero__bg>img{width:100%;height:100%;object-fit:cover}
 .bespoke-page .bs-hero::after{
@@ -217,7 +217,7 @@ export const BASE_STYLESHEET = `
     linear-gradient(100deg,rgb(0 0 0 / .84) 0%,rgb(0 0 0 / .62) 46%,rgb(0 0 0 / .30) 100%),
     linear-gradient(200deg,rgb(var(--bs-primary-rgb,228 118 27) / .30) 0%,transparent 62%);
 }
-.bespoke-page .bs-hero .bs-display{overflow:visible;max-width:15ch}
+.bespoke-page .bs-hero .bs-display{overflow:visible;max-width:16ch;font-size:clamp(2.6rem,5vw,4.4rem)}
 .bespoke-page .bs-hero .bs-eyebrow--chip{box-shadow:0 8px 22px rgb(0 0 0 / .3)}
 .bespoke-page .bs-hero .bs-lede{color:rgb(255 255 255 / .84);max-width:52ch}
 .bespoke-page .bs-hero .bs-rating{background:rgb(0 0 0 / .45);border:1px solid rgb(255 255 255 / .18);padding:10px 16px;border-radius:8px}
@@ -242,7 +242,13 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-utility{background:color-mix(in srgb,var(--bs-ink,#16181d) 88%,#000);color:rgb(255 255 255 / .82);font-size:.8rem;font-weight:600;border-bottom:1px solid rgb(255 255 255 / .08)}
 .bespoke-page .bs-utility .bs-icon{color:var(--bs-accent,#c1273c)}
 .bespoke-page .bs-utility .bs-container{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding-block:9px}
-.bespoke-page .bs-nav{position:sticky;top:0;z-index:100;background:var(--bs-ink,#16181d);color:#fff;box-shadow:0 2px 20px rgb(0 0 0 / .2)}
+/* backdrop-filter must stay OFF here. The application's legacy stylesheet
+   (src/app/bespoke.css) styles .bs-nav for the old React navigation with
+   backdrop-filter:blur(12px), and a filtered element becomes the containing
+   block for its position:fixed descendants — which made the mobile drawer
+   resolve against the 105px-tall nav instead of the viewport and vanish
+   behind the hero. Measured: 330x105 at x=375 before this. */
+.bespoke-page .bs-nav{position:sticky;top:0;z-index:100;background:var(--bs-ink,#16181d);color:#fff;box-shadow:0 2px 20px rgb(0 0 0 / .2);backdrop-filter:none;-webkit-backdrop-filter:none;filter:none;border-bottom:0}
 .bespoke-page .bs-nav__bar{display:flex;align-items:center;justify-content:space-between;gap:24px;width:100%;max-width:var(--bs-max);margin-inline:auto;padding:14px var(--bs-gutter)}
 .bespoke-page .bs-nav__logo{display:flex;align-items:center;gap:10px;font-family:var(--bs-font-display,inherit);font-weight:900;font-size:1.15rem;letter-spacing:-.01em}
 .bespoke-page .bs-nav__logo img{max-height:52px;width:auto;object-fit:contain}
@@ -387,7 +393,7 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-phone-xl:hover{color:var(--bs-primary,#e4761b)}
 
 /* hero grid, owned rather than described */
-.bespoke-page .bs-hero__grid{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(32px,4vw,64px);align-items:center}
+.bespoke-page .bs-hero__grid{display:grid;grid-template-columns:1.05fr minmax(380px,.75fr);gap:clamp(32px,4vw,72px);align-items:center}
 .bespoke-page .bs-hero__copy{display:flex;flex-direction:column;align-items:flex-start;gap:clamp(16px,1.8vw,24px)}
 .bespoke-page .bs-hero__form{justify-self:end;width:100%}
 .bespoke-page .bs-row--badges{gap:10px}
@@ -687,9 +693,10 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-gallery__tile figcaption{font-size:.82rem;font-weight:600;color:var(--bs-muted);text-align:center}
 .bespoke-page .bs-gallery--v2 .bs-gallery{grid-template-columns:repeat(3,1fr)}
 .bespoke-page .bs-gallery--v2 .bs-gallery__tile .bs-media{aspect-ratio:4/3}
-.bespoke-page .bs-gallery--v3 .bs-gallery{grid-template-columns:repeat(6,1fr)}
-.bespoke-page .bs-gallery--v3 .bs-gallery__tile:nth-child(1) .bs-media,.bespoke-page .bs-gallery--v3 .bs-gallery__tile:nth-child(6) .bs-media{aspect-ratio:1/1}
-.bespoke-page .bs-gallery--v3 .bs-gallery__tile:nth-child(1),.bespoke-page .bs-gallery--v3 .bs-gallery__tile:nth-child(6){grid-column:span 2;grid-row:span 2}
+/* The mosaic left ragged holes whenever the photo count was not exactly
+   right. Every variant is now a uniform grid; only the column count varies. */
+.bespoke-page .bs-gallery--v3 .bs-gallery{grid-template-columns:repeat(4,1fr)}
+.bespoke-page .bs-gallery--v3 .bs-gallery__tile .bs-media{aspect-ratio:3/2}
 
 /* ---------- service-area pins -------------------------------------------- */
 .bespoke-page .bs-areas__list{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;list-style:none;margin-block:6px;width:100%}
@@ -736,8 +743,10 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-nav__panelmain{display:grid;grid-template-columns:1fr 300px;gap:0}
 .bespoke-page .bs-nav__panelgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;padding:16px}
 .bespoke-page .bs-nav__panelgrid--areas{grid-template-columns:repeat(2,1fr)}
-.bespoke-page .bs-nav__panel a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--bs-r);color:inherit;font-weight:600}
-.bespoke-page .bs-nav__panel a:hover{background:var(--bs-surface-alt,#f4f5f7)}
+.bespoke-page .bs-nav__panel a:not(.bs-btn):not(.bs-textlink){display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--bs-r);color:inherit;font-weight:600}
+.bespoke-page .bs-nav__panel a:not(.bs-btn):not(.bs-textlink):hover{background:var(--bs-surface-alt,#f4f5f7)}
+.bespoke-page .bs-nav__ctabody .bs-btn{background:var(--bs-primary-strong,#e4761b);color:var(--bs-on-primary,#fff);justify-content:center;width:100%}
+.bespoke-page .bs-nav__ctabody .bs-textlink{align-self:center}
 .bespoke-page .bs-nav__thumb{flex:none;width:46px;height:46px;border-radius:10px;overflow:hidden;background:var(--bs-surface-alt,#f4f5f7);display:grid;place-items:center}
 .bespoke-page .bs-nav__thumb img{width:100%;height:100%;object-fit:cover}
 .bespoke-page .bs-nav__thumb--glyph,.bespoke-page .bs-nav__thumb--pin{background:color-mix(in srgb,var(--bs-primary-strong,#e4761b) 12%,#fff);color:var(--bs-primary-strong,#e4761b)}

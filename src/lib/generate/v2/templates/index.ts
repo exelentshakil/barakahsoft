@@ -134,9 +134,16 @@ export async function buildPage(args: {
   // The gallery is the client's OWN work or it is nothing. Stock in a section
   // headed "our recent work" is a lie, and the logo appearing among the photos
   // is what made that grid look cluttered and unfinished.
-  const realPhotos = [...new Set(media.filter((item) => item.origin === "real").map((item) => item.url))].filter(
-    (url) => url !== logoUrl && !/logo|badge|icon|favicon/i.test(url)
-  );
+  // Work photography only: the service and proof slots. The hero shot is
+  // already the first thing on the page, and the about slot is the founders'
+  // portrait — a family photo under the heading "recent projects" is wrong.
+  const realPhotos = [
+    ...new Set(
+      media
+        .filter((item) => item.origin === "real" && (item.slot.startsWith("service-") || item.slot === "proof"))
+        .map((item) => item.url)
+    ),
+  ].filter((url) => url !== logoUrl && !/logo|badge|icon|favicon/i.test(url));
   console.log(`[build-page] ${media.length} planned photo(s) from the brief, ${resolvedPhotos.length} usable in total`);
 
   const ctx: RenderContext = {

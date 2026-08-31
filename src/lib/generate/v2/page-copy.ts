@@ -100,24 +100,51 @@ export type PageCopy = z.infer<typeof PageCopySchema>;
  */
 export function cleanAboutContent(raw: string | null): string {
   if (!raw) return "";
-  const lines = raw.split(/\r?\n/);
-  const kept: string[] = [];
 
-  for (const line of lines) {
-    const text = line
-      .replace(/!\[[^\]]*\]\([^)]*\)/g, "")          // images
-      .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")        // links, keeping the label
-      .replace(/^[#>\-*\s]+/, "")
-      .trim();
+  // Markdown is stripped GLOBALLY first. The line-based version of this
+  // assumed the scrape arrives one element per line; when a site's About page
+  // came back as a single long line it passed straight through and the raw
+  // "[![](https://...)](https://...)" ended up rendered on the client's page.
+  const flattened = raw
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/https?:\/\/\S+/g, " ")
+    .replace(/[#>*_`|]/g, " ")
+    // Known chrome debris, removed before sentences are formed — otherwise a
+    // menu glued to the front of a real paragraph takes the paragraph down
+    // with it, which is how the founders' names went missing.
+    .replace(/hamburger site navigation icon|skip to (?:main )?content|site navigation/gi, " ")
+    .replace(/(^|\s)[-–—]\s+(?=[A-Z])/g, " ");
 
-    if (text.length < 40) continue;                       // nav items, headings, labels
-    if (/^(home|about us?|residential|commercial|contact us?|careers|more)$/i.test(text)) continue;
-    if (/cookies?|copyright|all rights reserved|powered by|social link|navigation icon/i.test(text)) continue;
-    if (kept.includes(text)) continue;                    // the menu repeated three times
-    kept.push(text);
-  }
+  // Sentences, not lines, so a single-line document still splits correctly.
+  const sentences = flattened
+    .split(/(?<=[.!?])\s+|\n{2,}/)
+    .map((sentence) =>
+      sentence
+        .replace(/\s+/g, " ")
+        .trim()
+        // A run of Title Case words glued to the front of a real sentence is
+        // the page's own headings ("About Saddle Roofing Our Story Welcome
+        // to..."). Cut back to where the prose starts. Anchored to ^, so this
+        // has to run AFTER the trim — a single leading space defeated it.
+        .replace(/^(?:[A-Z][\w'&-]*\s+){2,}(?=[A-Z][a-z]+\s+(?:to|the|a|we|our|is|was|has|have)\b)/, "")
+        .trim()
+    )
+    .filter((sentence) => {
+      if (sentence.length < 50) return false;
+      if (/cookies?|copyright|all rights reserved|powered by|social link|navigation icon|skip to|privacy policy/i.test(sentence)) return false;
+      // A "sentence" that is mostly punctuation or nav labels is not prose.
+      const words = sentence.split(/\s+/);
+      // Prose has plenty of lowercase words; a menu is almost all Title Case.
+      return words.length >= 8 && words.filter((word) => /^[a-z]/.test(word)).length / words.length >= 0.4;
+    });
 
-  return kept.join("\n\n").slice(0, 4000);
+  return [...new Set(sentences)].join(" ").slice(0, 4000);
+}
+
+/** Markup that escaped into copy is never acceptable on a client's page. */
+export function looksLikeMarkup(text: string): boolean {
+  return /\]\(|!\[|https?:\/\/|<[a-z]+[\s>]/i.test(text);
 }
 
 function facts(brief: SiteBrief): string {
@@ -327,6 +354,17 @@ name verbatim. faq.items: six. whyUs.points: four. process.steps: three or four.
     // fallback is written from the same real facts.
     console.warn("[page-copy] copy failed validation; using grounded fallback", parsed.error.flatten().fieldErrors);
     return fallbackCopy(brief);
+  }
+
+  // A model handed messy source sometimes echoes it. The about section is the
+  // one place that happens, and raw markdown on a client's page is worse than
+  // plainer prose, so it is replaced rather than shipped.
+  const story = cleanAboutContent(brief.aboutContent);
+  if (parsed.data.about.paragraphs.some(looksLikeMarkup)) {
+    console.warn("[page-copy] the about copy contained raw markup; substituting the cleaned story");
+    parsed.data.about.paragraphs = story
+      ? [story.slice(0, 780)]
+      : [`${brief.businessName} works with homeowners and businesses across ${brief.city}, doing ${brief.industry.toLowerCase()} properly and explaining it in plain language.`];
   }
 
   // The service list is the client's, not the model's.
