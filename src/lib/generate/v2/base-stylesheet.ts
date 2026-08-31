@@ -250,6 +250,10 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-fbmark,.bespoke-page .bs-google{display:inline-flex;flex:none;align-items:center}
 .bespoke-page .bs-fbmark svg,.bespoke-page .bs-google svg{width:26px;height:26px}
 @media (max-width:620px){
+/* A phone has no room to spend on margins. The gutter token drops here so
+   the hero copy, every band and the form all pull in together rather than
+   each being tightened one rule at a time. */
+.bespoke-page{--bs-gutter:15px}
   .bespoke-page .bs-pills{width:100%}
   .bespoke-page .bs-pill{flex:1 1 100%;justify-content:center;min-width:0}
 }
