@@ -47,6 +47,7 @@ export const ICONS: Record<string, string> = {
   arrow: `<path d="M5 12h14M13 6l6 6-6 6"/>`,
   menu: `<path d="M3 6h18M3 12h18M3 18h18"/>`,
   close: `<path d="M18 6 6 18M6 6l12 12"/>`,
+  mail: `<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7.5 9.4 5.6a1.2 1.2 0 0 0 1.2 0L22 7.5"/>`,
   quote: `<path d="M7 7h4v6a4 4 0 0 1-4 4V7zm9 0h4v6a4 4 0 0 1-4 4V7z"/>`,
 };
 

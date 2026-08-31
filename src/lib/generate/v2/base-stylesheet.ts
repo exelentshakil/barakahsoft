@@ -250,14 +250,6 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-fbmark,.bespoke-page .bs-google{display:inline-flex;flex:none;align-items:center}
 .bespoke-page .bs-fbmark svg,.bespoke-page .bs-google svg{width:26px;height:26px}
 @media (max-width:620px){
-/* The contact band stacks to one column on a phone, and a left-aligned
-   column under a centred form card reads as a mistake. The eyebrow's rule
-   sits above its label rather than beside it once centred. */
-.bespoke-page #contact .bs-stack{align-items:center;text-align:center}
-.bespoke-page #contact .bs-eyebrow{flex-direction:column;gap:8px}
-.bespoke-page #contact .bs-phone-xl{width:100%}
-}
-@media (max-width:620px){
   .bespoke-page .bs-pills{width:100%}
   .bespoke-page .bs-pill{flex:1 1 100%;justify-content:center;min-width:0}
 }
@@ -403,6 +395,91 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-nav__grouplinks{padding:2px 0 12px 14px;border-left:2px solid rgb(255 255 255 / .14);margin-bottom:10px}
 .bespoke-page .bs-nav__grouplinks a{padding:11px 0;border-bottom:0;font-weight:500;opacity:.88}
 .bespoke-page [data-nav-close]{background:none;border:0;color:inherit;font-size:1.6rem;cursor:pointer;padding:4px 10px}
+
+
+/* ---------- contact ---------------------------------------------------- */
+/* The band that asks for the call. It carries more weight than any other
+   section, so it is the one place with layered light: a brand aura bled
+   behind the copy, a hairline mesh for depth, and pressable channel rows. */
+.bespoke-page .bs-contact{position:relative;overflow:hidden;isolation:isolate}
+.bespoke-page .bs-contact__aura{
+  position:absolute;inset:-30% -10% auto -25%;height:150%;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(48% 42% at 18% 30%, color-mix(in srgb, var(--bs-primary,#e4761b) 42%, transparent) 0%, transparent 68%),
+    radial-gradient(38% 38% at 78% 78%, color-mix(in srgb, var(--bs-accent,#c1273c) 30%, transparent) 0%, transparent 70%);
+  filter:blur(28px);opacity:.5;
+}
+/* Hairline mesh, faded out at the edges so it never reads as a border. */
+.bespoke-page .bs-contact__mesh{
+  position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background-image:linear-gradient(rgb(255 255 255 / .045) 1px,transparent 1px),linear-gradient(90deg,rgb(255 255 255 / .045) 1px,transparent 1px);
+  background-size:64px 64px;
+  -webkit-mask-image:radial-gradient(70% 60% at 50% 45%,#000 0%,transparent 100%);
+  mask-image:radial-gradient(70% 60% at 50% 45%,#000 0%,transparent 100%);
+}
+.bespoke-page .bs-contact>.bs-container{position:relative;z-index:2}
+.bespoke-page .bs-contact__inner{display:grid;grid-template-columns:1.15fr .85fr;gap:clamp(36px,5vw,80px);align-items:center}
+.bespoke-page .bs-contact__copy{display:flex;flex-direction:column;align-items:flex-start;gap:clamp(16px,1.8vw,22px)}
+.bespoke-page .bs-contact__copy .bs-lede{margin-bottom:4px}
+.bespoke-page .bs-contact__form{display:flex;justify-content:flex-end}
+
+/* Channels ------------------------------------------------------------- */
+.bespoke-page .bs-channels{display:flex;flex-direction:column;gap:12px;width:100%;max-width:440px}
+.bespoke-page .bs-channel{
+  display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;
+  padding:15px 18px;border-radius:var(--bs-r);
+  background:rgb(255 255 255 / .05);border:1px solid rgb(255 255 255 / .12);
+  color:#fff;transition:transform .2s ease,background .2s ease,border-color .2s ease,box-shadow .2s ease;
+}
+.bespoke-page .bs-channel:hover{
+  transform:translateY(-2px);background:rgb(255 255 255 / .09);
+  border-color:color-mix(in srgb, var(--bs-primary,#e4761b) 55%, transparent);
+  box-shadow:0 18px 40px rgb(0 0 0 / .34);
+}
+.bespoke-page .bs-channel__chip{
+  display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;flex:none;border-radius:999px;
+  background:rgb(255 255 255 / .1);box-shadow:inset 0 0 0 1px rgb(255 255 255 / .18);transition:background .2s ease,color .2s ease;
+}
+.bespoke-page .bs-channel--call .bs-channel__chip{background:var(--bs-primary-strong,var(--bs-primary,#e4761b));color:var(--bs-on-primary,#fff);box-shadow:0 8px 20px rgb(0 0 0 / .3)}
+.bespoke-page .bs-channel:hover .bs-channel__chip{background:var(--bs-primary-strong,var(--bs-primary,#e4761b));color:var(--bs-on-primary,#fff)}
+.bespoke-page .bs-channel__text{display:flex;flex-direction:column;gap:3px;min-width:0}
+.bespoke-page .bs-channel__label{font-size:.68rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.6}
+.bespoke-page .bs-channel__value{font-family:var(--bs-font-display,inherit);font-weight:900;letter-spacing:-.01em;font-size:1.16rem;overflow-wrap:anywhere}
+.bespoke-page .bs-channel--call .bs-channel__value{font-size:clamp(1.35rem,2vw,1.7rem)}
+.bespoke-page .bs-channel__go{opacity:.35;transition:transform .2s ease,opacity .2s ease}
+.bespoke-page .bs-channel:hover .bs-channel__go{opacity:1;transform:translateX(4px)}
+
+/* Reassurance ---------------------------------------------------------- */
+.bespoke-page .bs-contact__meta{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.bespoke-page .bs-live{
+  display:inline-flex;align-items:center;gap:9px;font-size:.83rem;font-weight:700;color:rgb(255 255 255 / .82);
+  padding:7px 14px;border-radius:999px;background:rgb(255 255 255 / .06);border:1px solid rgb(255 255 255 / .14);
+}
+.bespoke-page .bs-live__dot{width:8px;height:8px;flex:none;border-radius:999px;background:#31d07f;box-shadow:0 0 0 0 rgb(49 208 127 / .55);animation:bs-live-pulse 2.4s ease-out infinite}
+@keyframes bs-live-pulse{70%{box-shadow:0 0 0 9px rgb(49 208 127 / 0)}100%{box-shadow:0 0 0 0 rgb(49 208 127 / 0)}}
+
+/* Areas ---------------------------------------------------------------- */
+.bespoke-page .bs-areas{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding-top:4px}
+.bespoke-page .bs-areas__label{display:inline-flex;align-items:center;gap:7px;font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.55}
+.bespoke-page .bs-areas__list{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0}
+.bespoke-page .bs-areas__list li{font-size:.82rem;font-weight:600;padding:6px 13px;border-radius:999px;background:rgb(255 255 255 / .05);border:1px solid rgb(255 255 255 / .13);color:rgb(255 255 255 / .84)}
+
+/* The card is the destination, so it sits highest. */
+.bespoke-page .bs-contact .bs-form{box-shadow:0 44px 90px rgb(0 0 0 / .48);max-width:460px}
+
+@media (max-width:900px){
+  .bespoke-page .bs-contact__inner{grid-template-columns:1fr;gap:40px}
+  .bespoke-page .bs-contact__form{justify-content:center}
+  .bespoke-page .bs-channels{max-width:none}
+}
+@media (max-width:620px){
+  .bespoke-page .bs-contact__copy{align-items:center;text-align:center}
+  .bespoke-page .bs-contact .bs-eyebrow{flex-direction:column;gap:8px}
+  .bespoke-page .bs-contact__meta,.bespoke-page .bs-areas,.bespoke-page .bs-areas__list{justify-content:center}
+  .bespoke-page .bs-channel{grid-template-columns:auto 1fr;text-align:left;padding:14px 16px;gap:13px}
+  .bespoke-page .bs-channel__go{display:none}
+  .bespoke-page .bs-contact .bs-form{max-width:none}
+}
 
 /* ---------- footer ----------------------------------------------------- */
 .bespoke-page .bs-footer{background:var(--bs-ink,#16181d);color:rgb(255 255 255 / .82);padding-top:clamp(48px,6vw,88px)}

@@ -662,19 +662,56 @@ export function faqSection(ctx: RenderContext): string {
 
 export function contactSection(ctx: RenderContext): string {
   const { copy, brief } = ctx;
-  const email = brief.email ? `<a class="bs-link-call" href="mailto:${esc(brief.email)}">${esc(brief.email)}</a>` : "";
-  return `<section id="contact" class="bs-section bs-section--ink">
+  const tel = telHref(brief.phone);
+  const areas = brief.areas.slice(0, 6);
+
+  // Each way of reaching the business is a card, not a line of text. A phone
+  // number set as body copy asks to be read; set as a row with its own chip,
+  // label and affordance, it asks to be pressed.
+  const channel = (href: string, glyph: string, label: string, value: string, modifier = "") =>
+    `<a class="bs-channel${modifier}" href="${esc(href)}">
+        <span class="bs-channel__chip">${icon(glyph, "bs-icon bs-icon--sm")}</span>
+        <span class="bs-channel__text">
+          <span class="bs-channel__label">${esc(label)}</span>
+          <span class="bs-channel__value">${esc(value)}</span>
+        </span>
+        <span class="bs-channel__go" aria-hidden="true">${icon("arrow", "bs-icon bs-icon--sm")}</span>
+      </a>`;
+
+  const badges = [
+    brief.licensedInsured ? `<span class="bs-badge">${icon("shield", "bs-icon bs-icon--sm")}Licensed &amp; insured</span>` : "",
+    brief.rating && brief.reviewCount
+      ? `<span class="bs-badge">${icon("star", "bs-icon bs-icon--sm")}${esc(String(brief.rating))} from ${esc(String(brief.reviewCount))} reviews</span>`
+      : "",
+  ].filter(Boolean).join("");
+
+  return `<section id="contact" class="bs-section bs-section--ink bs-contact">
+  <div class="bs-contact__aura" aria-hidden="true"></div>
+  <div class="bs-contact__mesh" aria-hidden="true"></div>
   <div class="bs-container">
-    <div class="bs-split bs-split--wide-left">
-      <div class="bs-stack">
+    <div class="bs-contact__inner">
+      <div class="bs-contact__copy">
         <span class="bs-eyebrow">${esc(copy.contact.eyebrow)}</span>
         <h2 class="bs-h2">${esc(copy.contact.headline)}</h2>
         <p class="bs-lede">${esc(copy.contact.body)}</p>
-        ${brief.phone ? `<a class="bs-phone-xl" href="${esc(telHref(brief.phone) ?? "#")}">${esc(brief.phone)}</a>` : ""}
-        ${email}
-        <p class="bs-small">${esc(brief.areas.slice(0, 6).join(" · ") || brief.city)}</p>
+
+        <div class="bs-channels">
+          ${brief.phone && tel ? channel(tel, "phone-call", "Call us direct", brief.phone, " bs-channel--call") : ""}
+          ${brief.email ? channel(`mailto:${brief.email}`, "mail", "Email the office", brief.email) : ""}
+        </div>
+
+        <div class="bs-contact__meta">
+          <span class="bs-live"><span class="bs-live__dot" aria-hidden="true"></span>Answered by the team, not a call centre</span>
+          ${badges}
+        </div>
+
+        ${areas.length ? `<div class="bs-areas">
+          <span class="bs-areas__label">${icon("pin", "bs-icon bs-icon--sm")}Serving</span>
+          <ul class="bs-areas__list">${areas.map((area) => `<li>${esc(area)}</li>`).join("")}</ul>
+        </div>` : ""}
       </div>
-      <div>${leadForm(ctx, copy.contact.formTitle, copy.contact.formSubtitle, copy.contact.submitLabel, "")}</div>
+
+      <div class="bs-contact__form">${leadForm(ctx, copy.contact.formTitle, copy.contact.formSubtitle, copy.contact.submitLabel, "")}</div>
     </div>
   </div>
 </section>`;
