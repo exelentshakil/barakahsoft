@@ -499,6 +499,156 @@ export const BASE_STYLESHEET = `
   .bespoke-page .bs-contact .bs-form{max-width:none}
 }
 
+
+/* ---------- treatment axes --------------------------------------------- */
+/* Identity lives here, not in where the form sits. The reference sites in
+   this market all keep one arrangement — photo, copy left, form right — and
+   differ by the shape of the nav, the skin of the form, and what the hero is
+   a photograph of. */
+
+/* Header strip --------------------------------------------------------- */
+.bespoke-page .bs-utility--split{padding:0;background:none}
+.bespoke-page .bs-utility--split .bs-container{gap:0;padding-inline:0}
+.bespoke-page .bs-utility--split span{padding:9px var(--bs-gutter);background:var(--bs-ink,#16181d)}
+.bespoke-page .bs-utility--split span:last-child{background:var(--bs-accent,#c1273c);color:#fff}
+.bespoke-page .bs-utility--striped{
+  background:repeating-linear-gradient(115deg,var(--bs-ink,#16181d) 0 26px,var(--bs-primary-strong,#c2410c) 26px 52px);
+}
+.bespoke-page .bs-utility--striped span{background:rgb(0 0 0 / .62);padding:4px 12px;border-radius:4px}
+.bespoke-page .bs-utility--offer{background:var(--bs-accent,#c1273c);color:#fff;font-weight:700}
+.bespoke-page .bs-utility--offer .bs-container{justify-content:center;text-align:center}
+
+/* Nav edge ------------------------------------------------------------- */
+.bespoke-page .bs-nav{position:relative}
+.bespoke-page .bs-nav__edge{
+  position:absolute;left:0;right:0;top:100%;width:100%;height:30px;display:block;z-index:3;
+  filter:drop-shadow(0 6px 10px rgb(0 0 0 / .16));
+}
+.bespoke-page .bs-nav__edge path{fill:var(--bs-surface,#fff)}
+.bespoke-page .bs-nav--edge-plinth .bs-nav__plinth{
+  position:absolute;left:50%;top:100%;transform:translate(-50%,-1px);z-index:4;
+  padding:14px 34px 17px;border-radius:0 0 14px 14px;background:var(--bs-surface,#fff);
+  box-shadow:0 12px 26px rgb(0 0 0 / .24);
+}
+/* The bar keeps the logo's footprint so the links do not slide left. */
+.bespoke-page .bs-nav__logo--hidden{display:block;width:180px;height:52px}
+
+/* Hero subject --------------------------------------------------------- */
+/* The photograph is the client's own; the treatment is what changes. */
+.bespoke-page .bs-hero--subject-founder .bs-hero__bg img{object-position:center 28%}
+.bespoke-page .bs-hero--subject-fleet .bs-hero__bg img{object-position:center 62%}
+.bespoke-page .bs-hero--subject-storm .bs-hero__bg::after{
+  content:"";position:absolute;inset:0;background:linear-gradient(186deg,rgb(120 160 205 / .3) 0%,rgb(0 0 0 / 0) 55%);
+}
+.bespoke-page .bs-hero--subject-before-after .bs-hero__bg::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(103deg,rgb(0 0 0 / .5) 0 48.4%,var(--bs-accent,#c1273c) 48.4% 49.4%,rgb(0 0 0 / 0) 49.4%);
+}
+.bespoke-page .bs-certs{display:flex;flex-wrap:wrap;gap:9px;margin-block:4px 6px}
+.bespoke-page .bs-cert{
+  display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:5px;
+  border:1.5px solid var(--bs-accent,#c1273c);background:rgb(255 255 255 / .08);
+  font-family:var(--bs-font-display,inherit);font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+}
+
+/* Decor motifs --------------------------------------------------------- */
+.bespoke-page .bs-hero--decor-slab .bs-hero__copy{
+  background:rgb(0 0 0 / .46);padding:clamp(24px,2.6vw,42px);border-radius:var(--bs-r-lg);
+}
+.bespoke-page .bs-hero--decor-stripes::after{
+  content:"";position:absolute;right:0;bottom:0;width:46%;height:15px;z-index:2;
+  background:repeating-linear-gradient(90deg,var(--bs-accent,#c1273c) 0 44px,var(--bs-primary,#e4761b) 44px 88px);
+}
+/* Two stripe treatments at one scale fight; at two scales they read as a
+   system, which is what the reference sites that run both actually do. */
+.bespoke-page .bs-hero--decor-stripes.bs-hero--decor-fine::after{
+  opacity:.55;background:repeating-linear-gradient(90deg,var(--bs-accent,#c1273c) 0 14px,var(--bs-primary,#e4761b) 14px 28px);
+}
+.bespoke-page .bs-hero--decor-corner::after{
+  content:"";position:absolute;right:0;top:0;width:190px;height:190px;z-index:2;
+  background:var(--bs-accent,#c1273c);opacity:.85;transform:rotate(45deg) translate(38%,-62%);
+}
+
+/* Headline case -------------------------------------------------------- */
+.bespoke-page .bs-display--caps{text-transform:uppercase;letter-spacing:-.018em}
+/* Caps eats roughly a third more width, so a long headline steps down rather
+   than running to five lines and swallowing the fold. */
+.bespoke-page .bs-display--tight{font-size:clamp(2.3rem,4.6vw,4.1rem)}
+.bespoke-page .bs-h2--caps{text-transform:uppercase;letter-spacing:-.012em}
+
+/* Eyebrow ------------------------------------------------------------- */
+.bespoke-page .bs-eyebrow--rule::before{content:"";width:26px;height:3px;background:currentColor;flex:none}
+
+/* Hero credential row -------------------------------------------------- */
+.bespoke-page .bs-heroproof{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+.bespoke-page .bs-heroproof__cell{
+  display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:6px;
+  background:rgb(255 255 255 / .1);border:1px solid rgb(255 255 255 / .2);
+  font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+}
+
+/* Form skins ----------------------------------------------------------- */
+.bespoke-page .bs-form--solid-brand{background:var(--bs-primary,#e4761b)}
+.bespoke-page .bs-form--solid-brand .bs-form__head{background:var(--bs-primary-strong,#c2410c)}
+.bespoke-page .bs-form--solid-brand .bs-form__head::after{border-top-color:var(--bs-primary-strong,#c2410c)}
+.bespoke-page .bs-form--solid-brand .bs-input{background:rgb(255 255 255 / .95);border-color:transparent}
+.bespoke-page .bs-form--solid-brand .bs-btn{background:var(--bs-accent,#c1273c);color:#fff}
+.bespoke-page .bs-form--solid-brand .bs-form__note{color:rgb(255 255 255 / .78)}
+
+.bespoke-page .bs-form--offer-banner .bs-form__head{background:var(--bs-accent,#c1273c);color:#fff}
+.bespoke-page .bs-form--offer-banner .bs-form__head::after{border-top-color:var(--bs-accent,#c1273c)}
+
+/* Glass loses its edges over a bright photograph, so it earns a deeper floor
+   and a brighter rim rather than being dropped as an option. */
+.bespoke-page .bs-form--dark-glass{
+  background:rgb(10 13 18 / .9);color:#fff;border:1px solid rgb(255 255 255 / .22);
+  box-shadow:0 30px 70px rgb(0 0 0 / .5);
+}
+@supports (backdrop-filter:blur(2px)){
+  .bespoke-page .bs-form--dark-glass{background:rgb(10 13 18 / .72);backdrop-filter:blur(16px)}
+}
+.bespoke-page .bs-form--dark-glass .bs-form__head{background:rgb(255 255 255 / .12)}
+.bespoke-page .bs-form--dark-glass .bs-form__head::after{border-top-color:rgb(255 255 255 / .12)}
+.bespoke-page .bs-form--dark-glass .bs-input{
+  background:rgb(255 255 255 / .09);border-color:rgb(255 255 255 / .18);color:#fff;
+}
+.bespoke-page .bs-form--dark-glass .bs-input::placeholder{color:rgb(255 255 255 / .5)}
+.bespoke-page .bs-form--dark-glass .bs-form__note{color:rgb(255 255 255 / .6)}
+
+/* About surface -------------------------------------------------------- */
+.bespoke-page .bs-about--surface-ink{background:var(--bs-primary-strong,#16181d);color:#fff}
+.bespoke-page .bs-about--surface-ink .bs-h2,
+.bespoke-page .bs-about--surface-ink .bs-founder-badge strong{color:#fff}
+.bespoke-page .bs-about--surface-ink .bs-body{color:rgb(255 255 255 / .8)}
+.bespoke-page .bs-about--surface-ink .bs-eyebrow{color:var(--bs-accent,#e4761b)}
+.bespoke-page .bs-about--surface-tint{background:var(--bs-surface-alt,#f4f6f8)}
+.bespoke-page .bs-about--surface-white{background:var(--bs-surface,#fff)}
+
+/* Founder badge -------------------------------------------------------- */
+/* Separated by contrast, never by elevation — a floated card carries its own
+   fill because it sits over a photograph, and one set below the picture it is
+   already clear of is a row of text beside a mark. */
+.bespoke-page .bs-founder-badge--below{
+  position:static;margin-top:18px;background:none;box-shadow:none;padding:0;
+}
+.bespoke-page .bs-about--surface-ink .bs-founder-badge--overlap{background:#fff;color:var(--bs-ink,#16181d)}
+
+/* Stat band ------------------------------------------------------------ */
+.bespoke-page .bs-statband{background:var(--bs-primary-strong,#c2410c);color:#fff;padding-block:clamp(26px,3vw,42px);margin-top:clamp(36px,4vw,64px)}
+.bespoke-page .bs-statband .bs-stat{background:none;border:0}
+.bespoke-page .bs-statband .bs-stat__value,.bespoke-page .bs-statband .bs-stat__label{color:#fff}
+.bespoke-page .bs-statband .bs-stat__icon{background:rgb(255 255 255 / .14);color:#fff}
+/* A dark band butted against a dark about reads as one slab with a seam. */
+.bespoke-page .bs-statband--accent{background:var(--bs-accent,#c1273c)}
+
+@media (max-width:620px){
+  .bespoke-page .bs-utility--split .bs-container{flex-direction:column}
+  .bespoke-page .bs-utility--split span{width:100%;text-align:center}
+  .bespoke-page .bs-nav__edge{height:18px}
+  .bespoke-page .bs-nav--edge-plinth .bs-nav__plinth{padding:10px 22px 12px}
+  .bespoke-page .bs-certs .bs-cert{font-size:.66rem;padding:6px 10px}
+}
+
 /* ---------- footer ----------------------------------------------------- */
 .bespoke-page .bs-footer{background:var(--bs-ink,#16181d);color:rgb(255 255 255 / .82);padding-top:clamp(48px,6vw,88px)}
 .bespoke-page .bs-footer a{color:inherit}

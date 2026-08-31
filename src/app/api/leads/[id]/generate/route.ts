@@ -92,16 +92,24 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       .neq("lead_id", leadId);
 
     const takenFingerprints = new Set<string>();
+    const takenFoldsInTrade = new Set<string>();
     const takenRecipesInTrade = new Set<string>();
     // The embed comes back as an array even on a to-one relation.
     for (const row of (siblings ?? []) as unknown as { extracted_assets: Record<string, unknown> | null; leads: { industry: string | null }[] | null }[]) {
-      const composition = (row.extracted_assets?.layout_composition ?? {}) as { fingerprint?: string; recipe?: string };
+      const composition = (row.extracted_assets?.layout_composition ?? {}) as {
+        fingerprint?: string;
+        heroFingerprint?: string;
+        recipe?: string;
+      };
       if (composition.fingerprint) takenFingerprints.add(composition.fingerprint);
       // Within one trade the pages sit side by side in the same inbox, so
       // they get a different recipe, not merely a different footer.
       const siblingTrade = row.leads?.[0]?.industry ?? null;
-      if (composition.recipe && siblingTrade && lead.industry && siblingTrade === lead.industry) {
-        takenRecipesInTrade.add(composition.recipe);
+      if (siblingTrade && lead.industry && siblingTrade === lead.industry) {
+        if (composition.recipe) takenRecipesInTrade.add(composition.recipe);
+        // The launch post shows the fold and nothing else, so two leads in one
+        // trade must differ there and not merely somewhere below it.
+        if (composition.heroFingerprint) takenFoldsInTrade.add(composition.heroFingerprint);
       }
     }
 
@@ -109,10 +117,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     for (; salt < 64; salt += 1) {
       const candidate = layoutDnaFor(identity, salt);
       const fingerprintFree = !takenFingerprints.has(candidate.fingerprint);
+      const foldFree = !takenFoldsInTrade.has(candidate.heroFingerprint);
       const recipeFree = !takenRecipesInTrade.has(candidate.recipe.id);
-      // Past the recipe catalogue every arrangement is spoken for in this
-      // trade, so a unique fingerprint is the most that can be promised.
-      if (fingerprintFree && (recipeFree || takenRecipesInTrade.size >= 12)) break;
+      // Past the catalogue every arrangement is spoken for in this trade, so a
+      // unique fingerprint is the most that can be promised.
+      const exhausted = takenRecipesInTrade.size >= 12;
+      if (fingerprintFree && (exhausted || (foldFree && recipeFree))) break;
     }
     overrides.layoutSalt = salt;
   }
@@ -194,6 +204,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         // Claims this composition so the next lead cannot land on it.
         layout_composition: {
           fingerprint: resolvedDna.fingerprint,
+          heroFingerprint: resolvedDna.heroFingerprint,
+          tone: resolvedDna.tone.id,
+          treatment: resolvedDna.treatment,
           recipe: resolvedDna.recipe.id,
           recipeName: resolvedDna.recipe.name,
           salt: overrides.layoutSalt ?? 0,

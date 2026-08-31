@@ -7,13 +7,13 @@
 //
 //   npm run restyle -- saddleroofing
 //   npm run restyle -- --all
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { BASE_STYLESHEET } from "@/lib/generate/v2/base-stylesheet";
 
 // The token block the generator writes ends where the base sheet begins.
 const MARKER = "/* ---------- foundation";
 
-async function restyle(db: ReturnType<typeof createClient>, slug: string, leadId: string) {
+async function restyle(db: SupabaseClient, slug: string, leadId: string) {
   const { data: artifact } = await db
     .from("artifacts")
     .select("bespoke_css")

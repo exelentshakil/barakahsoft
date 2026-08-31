@@ -49,10 +49,17 @@ const FIELD_SERVICE = (services: string[]) =>
 
 /** The lead form. One implementation, used in the hero and the contact section. */
 function leadForm(ctx: RenderContext, title: string, subtitle: string, submitLabel: string, reassurance = ""): string {
-  return `<form class="bs-form" data-lead-form>
+  const { formSkin } = ctx.dna.treatment;
+  // The bar already carries the discount, so the form goes back to
+  // reassurance rather than repeating it three inches away.
+  const muted = ctx.dna.resolutions.formOfferMuted;
+  const headTitle = muted && formSkin === "offer-banner" ? "Get your free quote" : title;
+  const headSub = muted && formSkin === "offer-banner" ? "No obligation, no pressure" : subtitle;
+
+  return `<form class="bs-form bs-form--${formSkin}" data-lead-form>
   <div class="bs-form__head">
-    <p class="bs-form__title">${esc(title)}</p>
-    ${subtitle ? `<p class="bs-form__sub">${esc(subtitle)}</p>` : ""}
+    <p class="bs-form__title">${esc(headTitle)}</p>
+    ${headSub ? `<p class="bs-form__sub">${esc(headSub)}</p>` : ""}
   </div>
   <div class="bs-form__body">
     <label class="bs-field"><span class="bs-sr">Your name</span><input class="bs-input" type="text" name="name" placeholder="Your name" autocomplete="name" required></label>
@@ -73,6 +80,8 @@ export function heroSection(ctx: RenderContext): string {
   // proof a stranger can go and check, which is the only reason the number is
   // worth printing.
   const rating = reviewPills({
+    mode: dna.treatment.proofMode,
+    qualitative: dna.resolutions.heroStatsQualitative,
     rating: brief.rating,
     reviewCount: brief.reviewCount,
     googleReviewUrl: brief.googleReviewUrl,
@@ -84,14 +93,44 @@ export function heroSection(ctx: RenderContext): string {
   // The credential badges used to sit here AND in the trust bar, wrapping
   // raggedly in both. They belong in one place, evenly spaced, below.
 
-  return `<section id="hero" class="bs-section bs-hero bs-hero--${dna.hero.id} bs-hero--${variant(dna.seed, 1)}">
+  const t = dna.treatment;
+
+  // The eyebrow's voice, not just its shape. A category label, the company's
+  // own slogan, a welcome, or the region it leads with — or nothing, where the
+  // headline is carrying a slab on its own.
+  const eyebrowText =
+    t.eyebrowMode === "welcome"
+      ? `Welcome to ${brief.businessName}`
+      : t.eyebrowMode === "region"
+      ? `${brief.city}'s ${brief.industry.toLowerCase()} team`
+      : t.eyebrowMode === "slogan"
+      ? copy.band.headline
+      : hero.eyebrow;
+  const eyebrowEl =
+    t.eyebrowMode === "none"
+      ? ""
+      : `<span class="bs-eyebrow bs-eyebrow--${t.eyebrowMode === "slogan" || t.eyebrowMode === "region" ? "rule" : "chip"}">${esc(eyebrowText)}</span>`;
+
+  // Manufacturer certification is the credential this trade cares most about
+  // and the one most of their own sites bury in the footer.
+  const subject =
+    t.heroSubject === "certification" && brief.certifications.length === 0 ? "worksite" : t.heroSubject;
+  const certs =
+    subject === "certification"
+      ? `<div class="bs-certs">${brief.certifications
+          .map((name: string) => `<span class="bs-cert">${icon("award", "bs-icon bs-icon--sm")}${esc(name)}</span>`)
+          .join("")}</div>`
+      : "";
+
+  return `<section id="hero" class="bs-section bs-hero bs-hero--${dna.hero.id} bs-hero--${variant(dna.seed, 1)} bs-hero--subject-${subject} bs-hero--decor-${t.decorMotif}${dna.resolutions.decorStripesFine ? " bs-hero--decor-fine" : ""}">
   ${photo ? `<figure class="bs-hero__bg bs-media"><img src="${esc(photo)}" alt="${esc(brief.businessName)} ${esc(brief.industry.toLowerCase())} work in ${esc(brief.city)}" width="1920" height="1280" loading="eager" fetchpriority="high" decoding="async"></figure>` : ""}
   <div class="bs-container">
     <div class="bs-hero__grid">
       <div class="bs-hero__copy">
-        <span class="bs-eyebrow bs-eyebrow--chip">${esc(hero.eyebrow)}</span>
-        <h1 class="bs-display">${markHeadline(hero.headline, hero.headlineMark)}</h1>
+        ${eyebrowEl}
+        <h1 class="bs-display${t.headlineCase === "caps" ? " bs-display--caps" : ""}${dna.resolutions.headlineTight && hero.headline.length > 46 ? " bs-display--tight" : ""}">${markHeadline(hero.headline, hero.headlineMark)}</h1>
         <p class="bs-lede">${esc(hero.subhead)}</p>
+        ${certs}
         ${rating}
         <div class="bs-actions">
           ${button(hero.submitLabel, ctx.primaryHref)}
@@ -245,23 +284,43 @@ export function aboutSection(ctx: RenderContext): string {
         .join("")}</div>`
     : "";
 
-  return `<section id="about" class="bs-section bs-about bs-about--${dna.about.id} bs-about--${variant(dna.seed, 2)}">
-  <div class="bs-container">
-    <div class="bs-about__grid">
-      <div class="bs-about__figure">
-        ${photo ? `<figure class="bs-media bs-media--tall"><img src="${esc(photo)}" alt="${esc(founder)} of ${esc(brief.businessName)}" width="900" height="1100" loading="lazy" decoding="async"></figure>` : ""}
-        <div class="bs-founder-badge">
+  const t = dna.treatment;
+
+  // Fused sits inside the about; standalone is its own band after it. Where
+  // the about is already ink, a standalone band in the same ink butts against
+  // it as one slab with a seam, so it takes the accent instead.
+  const bandClass = dna.resolutions.statBandAccent ? " bs-statband--accent" : "";
+  const fused = t.statBand === "fused" ? statBand : "";
+  const standalone =
+    t.statBand === "standalone" && statBand
+      ? `<div class="bs-statband${bandClass}"><div class="bs-container">${statBand}</div></div>`
+      : "";
+
+  const badge = t.founderBadge === "none"
+    ? ""
+    : `<div class="bs-founder-badge bs-founder-badge--${t.founderBadge}">
           ${logoUrl ? `<div class="bs-founder-badge__logo"><img src="${esc(logoUrl)}" alt="${esc(brief.businessName)} logo" width="120" height="48"></div>` : `<div class="bs-founder-badge__logo"><strong>${esc(brief.businessName)}</strong></div>`}
           <div class="bs-founder-badge__name">
             <strong>${esc(founder)}</strong>
             <span>${esc(role)}</span>
           </div>
-        </div>
+        </div>`;
+
+  // The about's eyebrow and heading case come off the hero rather than rolling
+  // again: in a showcase post the two panels sit inches apart in one frame.
+  const caps = t.headlineCase === "caps";
+
+  return `<section id="about" class="bs-section bs-about bs-about--${dna.about.id} bs-about--${variant(dna.seed, 2)} bs-about--surface-${t.aboutSurface}">
+  <div class="bs-container">
+    <div class="bs-about__grid">
+      <div class="bs-about__figure">
+        ${photo ? `<figure class="bs-media bs-media--tall"><img src="${esc(photo)}" alt="${esc(founder)} of ${esc(brief.businessName)}" width="900" height="1100" loading="lazy" decoding="async"></figure>` : ""}
+        ${badge}
         ${seal(about.sealLine, logoUrl, brief.businessName)}
       </div>
       <div class="bs-about__copy">
-        <span class="bs-eyebrow">${esc(about.eyebrow)}</span>
-        <h2 class="bs-h2">${markHeadline(about.headline, about.headlineMark)}</h2>
+        <span class="bs-eyebrow bs-eyebrow--${t.eyebrowMode === "slogan" || t.eyebrowMode === "region" ? "rule" : "chip"}">${esc(about.eyebrow)}</span>
+        <h2 class="bs-h2${caps ? " bs-h2--caps" : ""}">${markHeadline(about.headline, about.headlineMark)}</h2>
         ${about.paragraphs.map((paragraph) => `<p class="bs-body">${esc(paragraph)}</p>`).join("")}
         <div class="bs-actions">
           ${button(about.ctaLabel, ctx.primaryHref)}
@@ -269,8 +328,9 @@ export function aboutSection(ctx: RenderContext): string {
         </div>
       </div>
     </div>
-    ${statBand}
+    ${fused}
   </div>
+  ${standalone}
 </section>`;
 }
 

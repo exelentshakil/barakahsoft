@@ -118,8 +118,27 @@ export function reviewPills(args: {
   facebookUrl: string | null;
   facebookRating: number | null;
   facebookReviewCount: number | null;
+  /** Which proof shape this lead's treatment asked for. */
+  mode?: "combined" | "two-pills" | "pills-stats";
+  /** With a stat band below, the hero shows credentials rather than figures. */
+  qualitative?: boolean;
 }): string {
   if (!args.rating) return "";
+  const mode = args.mode ?? "combined";
+
+  // pills-stats hangs a credential row beneath the badge. Where a stat band
+  // also runs below, those cells stay qualitative so no number is printed
+  // twice inside one showcase frame.
+  const statRow =
+    mode === "pills-stats"
+      ? `<div class="bs-heroproof">${(
+          args.qualitative
+            ? ["Licensed &amp; insured", "Own crews, no subs", "Written warranty"]
+            : ["Licensed &amp; insured", "Free written quotes", "Workmanship warranty"]
+        )
+          .map((label) => `<span class="bs-heroproof__cell">${icon("check", "bs-icon bs-icon--sm")}${label}</span>`)
+          .join("")}</div>`
+      : "";
 
   const stack = (mark: string, value: string, sub: string) =>
     `${mark}<span class="bs-pill__body"><span class="bs-pill__top"><strong>${esc(value)}</strong>${stars(Number(value) || args.rating)}</span><span class="bs-pill__sub">${esc(sub)}</span></span>`;
@@ -130,7 +149,7 @@ export function reviewPills(args: {
       : `<span class="bs-pill${extra}">${inner}</span>`;
 
   // Both platforms have real numbers: show them separately, as equals.
-  if (args.facebookRating && args.facebookReviewCount) {
+  if (mode !== "combined" && args.facebookRating && args.facebookReviewCount) {
     return `<div class="bs-pills">${[
       wrap(
         args.googleReviewUrl,
@@ -140,7 +159,7 @@ export function reviewPills(args: {
         args.facebookUrl,
         stack(FACEBOOK_MARK, String(args.facebookRating), `${args.facebookReviewCount} Facebook reviews`)
       ),
-    ].join("")}</div>`;
+    ].join("")}</div>${statRow}`;
   }
 
   // One rating, both marks — a single badge rather than a real one beside a
@@ -151,7 +170,7 @@ export function reviewPills(args: {
     <span class="bs-pill__sub">${args.reviewCount ? `${esc(String(args.reviewCount))} Google reviews` : "Google reviews"}</span>
   </span>`;
 
-  return `<div class="bs-pills">${wrap(args.googleReviewUrl, inner, " bs-pill--combined")}</div>`;
+  return `<div class="bs-pills">${wrap(args.googleReviewUrl, inner, " bs-pill--combined")}</div>${statRow}`;
 }
 
 export function stars(rating: number | null): string {

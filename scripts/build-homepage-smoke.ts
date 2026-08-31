@@ -64,6 +64,7 @@ const brief: SiteBrief = {
     "We lose jobs to out-of-state storm chasers",
   ],
   layoutSalt: 0,
+  certifications: [],
   intent: conversionIntentFor("Roofing contractor", true),
 };
 

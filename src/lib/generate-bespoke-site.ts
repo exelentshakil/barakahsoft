@@ -40,6 +40,16 @@ export interface SiteBrief {
   facebookReviewCount: number | null;
   /** Resolved once per lead so no two leads ship the same composition. */
   layoutSalt: number;
+  /**
+   * Manufacturer and trade accreditations — GAF Master Elite, Owens Corning
+   * Preferred, BBB. The credential this trade cares most about, and the one
+   * most of their own sites bury in the footer.
+   *
+   * Never inferred. Nothing scrapes these reliably, and a certification a
+   * business does not hold is the worst possible thing to print on their
+   * homepage, so it is empty until an operator types it in.
+   */
+  certifications: string[];
   /** Real photo URLs from the client's own site and Google profile. */
   photos: string[];
   heroImage: string | null;

@@ -28,6 +28,182 @@
  * Curated rather than model-composed, for the reason at the top of this file:
  * every recipe here is an arrangement somebody has looked at.
  */
+
+/**
+ * Treatment axes — the part the reference sites actually vary.
+ *
+ * The archetypes below move furniture: where the form sits, how the hero is
+ * arranged. Every high-performing site in this market keeps that arrangement
+ * identical — photo, copy left, form right, city in the headline — and earns
+ * its identity from treatment instead: the palette, the shape of the nav, the
+ * skin of the form, what the hero is a photograph OF.
+ *
+ * Which means the old spread was pointed at the wrong axis. Six hero
+ * arrangements varied the one thing that should not vary, while the form, the
+ * eyebrow and the proof badge were single hard-coded constants on every site
+ * this system has ever built.
+ */
+export type HeaderBar = "plain" | "split" | "offer" | "striped" | "none";
+export type NavEdge = "straight" | "wave" | "angled" | "plinth";
+export type HeroSubject = "worksite" | "fleet" | "founder" | "before-after" | "certification" | "storm";
+export type FormSkin = "solid-brand" | "white-header" | "offer-banner" | "dark-glass";
+export type EyebrowMode = "category" | "slogan" | "welcome" | "region" | "none";
+export type HeadlineCase = "title" | "caps";
+export type ProofMode = "combined" | "two-pills" | "pills-stats";
+export type DecorMotif = "none" | "slab" | "stripes" | "corner";
+export type AboutSurface = "ink" | "white" | "tint";
+export type FounderBadge = "overlap" | "below" | "none";
+export type StatBand = "fused" | "standalone" | "none";
+
+export interface Treatment {
+  headerBar: HeaderBar;
+  navEdge: NavEdge;
+  heroSubject: HeroSubject;
+  formSkin: FormSkin;
+  eyebrowMode: EyebrowMode;
+  headlineCase: HeadlineCase;
+  proofMode: ProofMode;
+  decorMotif: DecorMotif;
+  aboutSurface: AboutSurface;
+  founderBadge: FounderBadge;
+  statBand: StatBand;
+}
+
+/**
+ * Tones — coherent bundles rather than eleven independent rolls.
+ *
+ * Rolling every axis freely hands a burgundy heritage roofer neon stripes and
+ * a mascot: each choice defensible alone, the set indefensible. A tone is
+ * drawn first and weights what follows.
+ *
+ * It weights rather than forbids. A tone lists its values in preference order
+ * and the seed takes one, so a lead reaches its tone's natural treatment most
+ * of the time and something unexpected occasionally — but every value stays
+ * reachable, because a combination nobody can reach is a page some lead should
+ * have had and never got.
+ */
+export interface Tone {
+  id: string;
+  name: string;
+  headerBar: HeaderBar[];
+  navEdge: NavEdge[];
+  heroSubject: HeroSubject[];
+  formSkin: FormSkin[];
+  eyebrowMode: EyebrowMode[];
+  headlineCase: HeadlineCase[];
+  proofMode: ProofMode[];
+  decorMotif: DecorMotif[];
+  aboutSurface: AboutSurface[];
+  founderBadge: FounderBadge[];
+  statBand: StatBand[];
+}
+
+export const TONES: Tone[] = [
+  {
+    id: "civic", name: "Civic",
+    headerBar: ["split", "striped", "plain", "offer"],
+    navEdge: ["straight", "angled", "plinth", "wave"],
+    heroSubject: ["fleet", "worksite", "before-after", "certification"],
+    formSkin: ["white-header", "solid-brand", "offer-banner", "dark-glass"],
+    eyebrowMode: ["category", "none", "slogan"],
+    headlineCase: ["caps", "title"],
+    proofMode: ["pills-stats", "two-pills", "combined"],
+    decorMotif: ["slab", "stripes", "corner", "none"],
+    aboutSurface: ["ink", "white", "tint"],
+    founderBadge: ["overlap", "below", "none"],
+    statBand: ["standalone", "fused", "none"],
+  },
+  {
+    id: "heritage", name: "Heritage",
+    headerBar: ["plain", "none", "offer", "split"],
+    navEdge: ["straight", "plinth", "wave", "angled"],
+    heroSubject: ["founder", "worksite", "certification", "before-after"],
+    formSkin: ["white-header", "offer-banner", "solid-brand", "dark-glass"],
+    eyebrowMode: ["welcome", "region", "category"],
+    headlineCase: ["title", "caps"],
+    proofMode: ["combined", "two-pills", "pills-stats"],
+    decorMotif: ["none", "corner", "slab"],
+    aboutSurface: ["ink", "tint", "white"],
+    founderBadge: ["overlap", "none", "below"],
+    statBand: ["fused", "none", "standalone"],
+  },
+  {
+    id: "industrial", name: "Industrial",
+    headerBar: ["plain", "split", "striped", "none"],
+    navEdge: ["straight", "angled", "plinth", "wave"],
+    heroSubject: ["worksite", "fleet", "storm", "certification"],
+    formSkin: ["dark-glass", "solid-brand", "white-header"],
+    eyebrowMode: ["slogan", "category", "none"],
+    headlineCase: ["caps", "title"],
+    proofMode: ["two-pills", "combined", "pills-stats"],
+    decorMotif: ["corner", "slab", "stripes", "none"],
+    aboutSurface: ["ink", "tint"],
+    founderBadge: ["below", "none", "overlap"],
+    statBand: ["fused", "standalone", "none"],
+  },
+  {
+    id: "corporate", name: "Clean corporate",
+    headerBar: ["offer", "plain", "split", "none"],
+    navEdge: ["wave", "plinth", "straight", "angled"],
+    heroSubject: ["worksite", "certification", "founder", "before-after"],
+    formSkin: ["solid-brand", "white-header", "offer-banner"],
+    eyebrowMode: ["category", "welcome", "region"],
+    headlineCase: ["title", "caps"],
+    proofMode: ["combined", "pills-stats", "two-pills"],
+    decorMotif: ["none", "corner", "slab"],
+    aboutSurface: ["white", "tint", "ink"],
+    founderBadge: ["below", "overlap", "none"],
+    statBand: ["standalone", "fused", "none"],
+  },
+  {
+    id: "local", name: "Local and friendly",
+    headerBar: ["offer", "striped", "plain", "split"],
+    navEdge: ["wave", "plinth", "straight", "angled"],
+    heroSubject: ["founder", "fleet", "worksite", "before-after"],
+    formSkin: ["solid-brand", "offer-banner", "white-header", "dark-glass"],
+    eyebrowMode: ["region", "slogan", "welcome"],
+    headlineCase: ["caps", "title"],
+    proofMode: ["two-pills", "combined", "pills-stats"],
+    decorMotif: ["stripes", "none", "corner", "slab"],
+    aboutSurface: ["tint", "white", "ink"],
+    founderBadge: ["overlap", "below", "none"],
+    statBand: ["standalone", "fused", "none"],
+  },
+];
+
+/**
+ * What a pairing means when two choices would otherwise clash.
+ *
+ * Deleting the combination is the lazy fix and it costs some lead the best
+ * page it could have had. Each rule here takes a pairing that would have
+ * fought and changes how the second element is treated so both survive.
+ */
+export interface Resolutions {
+  /** Dark band against a dark about reads as one slab with a seam. */
+  statBandAccent: boolean;
+  /** Numbers in the hero and the about, in one frame, read as padding. */
+  heroStatsQualitative: boolean;
+  /** The same discount twice above the fold reads desperate. */
+  formOfferMuted: boolean;
+  /** Two stripe treatments at one scale fight; at two scales they read as a system. */
+  decorStripesFine: boolean;
+  /** Glass loses its edges over a bright photograph. */
+  formNeedsScrim: boolean;
+  /** Caps eats a third more width than title case. */
+  headlineTight: boolean;
+}
+
+export function resolveTreatment(t: Treatment): Resolutions {
+  return {
+    statBandAccent: t.aboutSurface === "ink" && t.statBand === "standalone",
+    heroStatsQualitative: t.proofMode === "pills-stats" && t.statBand !== "none",
+    formOfferMuted: t.headerBar === "offer" && t.formSkin === "offer-banner",
+    decorStripesFine: t.headerBar === "striped" && t.decorMotif === "stripes",
+    formNeedsScrim: t.formSkin === "dark-glass",
+    headlineTight: t.headlineCase === "caps",
+  };
+}
+
 export interface PageRecipe {
   id: string;
   name: string;
@@ -134,6 +310,9 @@ const RECIPES: PageRecipe[] = [
 
 export interface LayoutDna {
   seed: number;
+  tone: Tone;
+  treatment: Treatment;
+  resolutions: Resolutions;
   recipe: PageRecipe;
   hero: HeroArchetype;
   about: AboutArchetype;
@@ -145,6 +324,15 @@ export interface LayoutDna {
   contrastStrategy: string;
   /** Identifies this exact composition, for the no-two-leads-alike check. */
   fingerprint: string;
+  /**
+   * The fold alone.
+   *
+   * Two leads can differ only below the fold and still be identical in the
+   * launch post, which shows the hero and the about and nothing else. Cold
+   * outreach is judged on that image, so the fold gets its own uniqueness
+   * check rather than riding on a recipe difference nobody in the inbox sees.
+   */
+  heroFingerprint: string;
 }
 
 export interface Archetype {
@@ -329,9 +517,31 @@ export function layoutDnaFor(identity: string, salt = 0): LayoutDna {
   const seed = (hash(identity) + salt * 2654435761) >>> 0;
   const corners: LayoutDna["cornerStyle"][] = ["sharp", "soft", "pill", "mixed"];
 
+  const tone = pick(TONES, seed, 20);
+
+  // Drawn from the tone's own preference order, so a lead lands on its
+  // natural treatment most of the time without any value being unreachable.
+  const treatment: Treatment = {
+    headerBar: pick(tone.headerBar, seed, 21),
+    navEdge: pick(tone.navEdge, seed, 22),
+    heroSubject: pick(tone.heroSubject, seed, 23),
+    formSkin: pick(tone.formSkin, seed, 24),
+    eyebrowMode: pick(tone.eyebrowMode, seed, 25),
+    headlineCase: pick(tone.headlineCase, seed, 26),
+    proofMode: pick(tone.proofMode, seed, 27),
+    decorMotif: pick(tone.decorMotif, seed, 28),
+    aboutSurface: pick(tone.aboutSurface, seed, 29),
+    founderBadge: pick(tone.founderBadge, seed, 30),
+    statBand: pick(tone.statBand, seed, 31),
+  };
+
   const recipe = pick(RECIPES, seed, 0);
   const hero = pick(HEROES, seed, 1);
-  const about = pick(ABOUTS, seed, 2);
+  // Salted off the hero rather than independently. These were picked with
+  // separate salts, so a bold slab hero could draw a soft editorial about —
+  // invisible while nobody views the two together, and glaring in a showcase
+  // post where they sit inches apart in one frame.
+  const about = pick(ABOUTS, seed + HEROES.indexOf(hero) * 31, 2);
   const footer = pick(FOOTERS, seed, 3);
   const chrome = pick(CHROMES, seed, 4);
   const rhythm = pick(RHYTHMS, seed, 5);
@@ -341,6 +551,9 @@ export function layoutDnaFor(identity: string, salt = 0): LayoutDna {
 
   return {
     seed,
+    tone,
+    treatment,
+    resolutions: resolveTreatment(treatment),
     recipe,
     hero,
     about,
@@ -350,7 +563,31 @@ export function layoutDnaFor(identity: string, salt = 0): LayoutDna {
     motif,
     cornerStyle,
     contrastStrategy,
+    heroFingerprint: [
+      tone.id,
+      treatment.headerBar,
+      treatment.navEdge,
+      treatment.heroSubject,
+      treatment.formSkin,
+      treatment.eyebrowMode,
+      treatment.headlineCase,
+      treatment.proofMode,
+      treatment.decorMotif,
+      hero.id,
+    ].join("|"),
     fingerprint: [
+      tone.id,
+      treatment.headerBar,
+      treatment.navEdge,
+      treatment.heroSubject,
+      treatment.formSkin,
+      treatment.eyebrowMode,
+      treatment.headlineCase,
+      treatment.proofMode,
+      treatment.decorMotif,
+      treatment.aboutSurface,
+      treatment.founderBadge,
+      treatment.statBand,
       recipe.id,
       hero.id,
       about.id,

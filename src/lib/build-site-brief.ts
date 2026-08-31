@@ -38,6 +38,8 @@ export interface BriefOverrides {
   facebookReviewCount?: number | null;
   /** Advances this lead off a composition another lead already holds. */
   layoutSalt?: number | null;
+  /** Operator-entered accreditations. Never inferred — see SiteBrief. */
+  certifications?: string[];
 }
 
 /**
@@ -194,6 +196,9 @@ export function buildSiteBrief(
     facebookRating: overrides.facebookRating ?? null,
     facebookReviewCount: overrides.facebookReviewCount ?? null,
     layoutSalt: overrides.layoutSalt ?? 0,
+    certifications: (overrides.certifications ?? (facts?.certifications as string[] | undefined) ?? [])
+      .filter((name): name is string => typeof name === "string" && name.trim().length > 0)
+      .slice(0, 3),
     socials: ((facts.social_urls as string[] | undefined) ?? [])
       .filter((url) => /^https?:\/\//i.test(url))
       .slice(0, 6),

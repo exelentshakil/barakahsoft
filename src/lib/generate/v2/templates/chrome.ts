@@ -93,10 +93,40 @@ export function navMarkup(ctx: RenderContext): string {
     { title: "Service areas", links: areas.map((area) => ({ label: area, href: ctx.href(`/areas/${slug(area)}`) })) },
   ].filter((group) => group.links.length > 0);
 
-  return `<nav class="bs-nav" data-nav data-sticky-nav aria-label="Main">
-  ${utility.length ? `<div class="bs-utility"><div class="bs-container">${utility.map((item) => `<span>${item}</span>`).join("")}</div></div>` : ""}
+  // The strip above the nav. On the reference sites this is where a company
+  // says what kind of company it is before a word of the page is read: a
+  // two-tone flag, a promotion, a hazard stripe, or nothing at all.
+  const { headerBar, navEdge } = ctx.dna.treatment;
+  const utilityBar =
+    headerBar === "none" || !utility.length
+      ? ""
+      : headerBar === "offer"
+      ? `<div class="bs-utility bs-utility--offer"><div class="bs-container"><span>${icon("award", "bs-icon bs-icon--sm")}${esc(copy.band.headline)}</span></div></div>`
+      : `<div class="bs-utility bs-utility--${headerBar}"><div class="bs-container">${utility
+          .map((item) => `<span>${item}</span>`)
+          .join("")}</div></div>`;
+
+  // The nav's bottom edge, and whether the wordmark breaks out of it. Reads as
+  // brand shape long before anyone parses the logo.
+  const edge =
+    navEdge === "wave"
+      ? `<svg class="bs-nav__edge" viewBox="0 0 1240 34" preserveAspectRatio="none" aria-hidden="true"><path d="M0,0 H1240 V12 C980,40 820,4 620,18 C420,32 250,6 0,20 Z"/></svg>`
+      : navEdge === "angled"
+      ? `<svg class="bs-nav__edge" viewBox="0 0 1240 26" preserveAspectRatio="none" aria-hidden="true"><path d="M0,0 H1240 V4 L0,26 Z"/></svg>`
+      : "";
+
+  // The plinth carries the wordmark, so the bar leaves a gap where the logo
+  // would sit — otherwise the logo renders twice.
+  const plinth = navEdge === "plinth" ? `<div class="bs-nav__plinth">${brand}</div>` : "";
+  const barBrand =
+    navEdge === "plinth"
+      ? `<span class="bs-nav__logo bs-nav__logo--hidden" aria-hidden="true"></span>`
+      : `<a class="bs-nav__logo" href="${esc(ctx.href("/"))}" aria-label="${esc(brief.businessName)} home">${brand}</a>`;
+
+  return `<nav class="bs-nav bs-nav--edge-${navEdge}" data-nav data-sticky-nav aria-label="Main">
+  ${utilityBar}
   <div class="bs-nav__bar">
-    <a class="bs-nav__logo" href="${esc(ctx.href("/"))}" aria-label="${esc(brief.businessName)} home">${brand}</a>
+    ${barBrand}
     <ul class="bs-nav__links">
       <li><a class="bs-nav__link" href="${esc(ctx.href("/"))}">Home</a></li>
       ${servicesPanel}
@@ -111,6 +141,7 @@ export function navMarkup(ctx: RenderContext): string {
       <button class="bs-nav__burger" type="button" data-nav-toggle aria-expanded="false" aria-label="Open menu">${icon("menu")}</button>
     </div>
   </div>
+  ${edge}${plinth}
 </nav>
 <!-- Deliberately a SIBLING of the nav, not a child: position:fixed resolves
      against the nearest filtered/transformed ancestor, and any such property
