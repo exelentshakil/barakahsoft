@@ -33,6 +33,8 @@ export interface SiteBrief {
   reviews: { author: string; rating: number; text: string; avatar?: string | null; when?: string | null }[];
   /** Social profiles found during the scrape. */
   socials: string[];
+  /** Where to read this business's real Google reviews, when we know. */
+  googleReviewUrl: string | null;
   /** Real photo URLs from the client's own site and Google profile. */
   photos: string[];
   heroImage: string | null;

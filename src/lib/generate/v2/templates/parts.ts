@@ -91,6 +91,47 @@ export function socialIcon(url: string): string {
   return `<span class="bs-social" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${path}</svg></span>`;
 }
 
+export const FACEBOOK_MARK = `<span class="bs-fbmark" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#1877F2"/><path fill="#fff" d="M15.6 12.5h-2.3V20h-3v-7.5H8.6V10h1.7V8.5c0-2 1.2-3.2 3.1-3.2.9 0 1.7.07 2 .1v2.3h-1.4c-.9 0-1.1.44-1.1 1.07V10h2.5z"/></svg></span>`;
+
+/**
+ * The review proof strip: real platform marks, real numbers.
+ *
+ * Star glyphs alone read as decoration. A Google mark beside a rating reads as
+ * something a stranger could go and verify, which is the whole point of it —
+ * so the pill links to their actual review list rather than a search.
+ *
+ * A Facebook pill appears only when a Facebook page was found, and never with
+ * a rating attached: Facebook's review counts sit behind a login wall, so any
+ * number we printed there would be invented.
+ */
+export function reviewPills(args: {
+  rating: number | null;
+  reviewCount: number | null;
+  googleReviewUrl: string | null;
+  facebookUrl: string | null;
+}): string {
+  const pills: string[] = [];
+
+  if (args.rating) {
+    const inner = `${GOOGLE_MARK}<span class="bs-pill__body"><span class="bs-pill__top"><strong>${esc(String(args.rating))}</strong>${stars(args.rating)}</span><span class="bs-pill__sub">${
+      args.reviewCount ? `${esc(String(args.reviewCount))} Google reviews` : "Google reviews"
+    }</span></span>`;
+    pills.push(
+      args.googleReviewUrl
+        ? `<a class="bs-pill" href="${esc(args.googleReviewUrl)}" target="_blank" rel="noopener noreferrer">${inner}</a>`
+        : `<span class="bs-pill">${inner}</span>`
+    );
+  }
+
+  if (args.facebookUrl) {
+    pills.push(
+      `<a class="bs-pill" href="${esc(args.facebookUrl)}" target="_blank" rel="noopener noreferrer">${FACEBOOK_MARK}<span class="bs-pill__body"><span class="bs-pill__top"><strong>Facebook</strong></span><span class="bs-pill__sub">Read our reviews</span></span></a>`
+    );
+  }
+
+  return pills.length ? `<div class="bs-pills">${pills.join("")}</div>` : "";
+}
+
 export function stars(rating: number | null): string {
   const filled = Math.round(rating ?? 5);
   return `<span class="bs-stars" aria-hidden="true">${Array.from({ length: 5 }, (_, index) =>

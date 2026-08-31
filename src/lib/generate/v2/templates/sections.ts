@@ -1,4 +1,17 @@
-import { esc, markHeadline, icon, seal, stars, button, callLink, media, slug, telHref, GOOGLE_MARK } from "@/lib/generate/v2/templates/parts";
+import {
+  esc,
+  markHeadline,
+  icon,
+  seal,
+  stars,
+  reviewPills,
+  button,
+  callLink,
+  media,
+  slug,
+  telHref,
+  GOOGLE_MARK,
+} from "@/lib/generate/v2/templates/parts";
 import type { PageCopy } from "@/lib/generate/v2/page-copy";
 import type { LayoutDna } from "@/lib/generate/v2/layout-dna";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
@@ -56,10 +69,15 @@ export function heroSection(ctx: RenderContext): string {
   const { copy, brief, dna } = ctx;
   const hero = copy.hero;
   const photo = ctx.photos[0] ?? null;
-  const rating =
-    brief.rating && brief.reviewCount
-      ? `<div class="bs-rating">${stars(brief.rating)}<span><strong>${esc(String(brief.rating))}</strong> from ${esc(String(brief.reviewCount))} reviews</span></div>`
-      : "";
+  // Platform marks rather than bare stars: a Google logo beside the number is
+  // proof a stranger can go and check, which is the only reason the number is
+  // worth printing.
+  const rating = reviewPills({
+    rating: brief.rating,
+    reviewCount: brief.reviewCount,
+    googleReviewUrl: brief.googleReviewUrl,
+    facebookUrl: brief.socials.find((url) => /facebook\.com/i.test(url)) ?? null,
+  });
 
   // The credential badges used to sit here AND in the trust bar, wrapping
   // raggedly in both. They belong in one place, evenly spaced, below.

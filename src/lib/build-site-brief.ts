@@ -181,6 +181,9 @@ export function buildSiteBrief(
     reviewCount,
     reviews,
     photos,
+    // Places gives us the place_id, so the "read all reviews" link goes to
+    // their real review list rather than a search that might land anywhere.
+    googleReviewUrl: lead.place_id ? `https://search.google.com/local/reviews?placeid=${lead.place_id}` : null,
     socials: ((facts.social_urls as string[] | undefined) ?? [])
       .filter((url) => /^https?:\/\//i.test(url))
       .slice(0, 6),
