@@ -131,11 +131,44 @@ export function trustSection(ctx: RenderContext): string {
 </section>`;
 }
 
+/**
+ * Who to name on the founder badge.
+ *
+ * The brief carries a single founder field ("Tony"), but the client's own
+ * story says "founded by Tony and Hannah Ostheimer" — and naming one of two
+ * co-founders on their own website is the kind of mistake that loses trust in
+ * the first meeting. When the story names a pair, both are used.
+ */
+export function resolveFounders(brief: SiteBrief): { name: string; role: string } {
+  const first = brief.founder?.trim();
+  const story = brief.aboutContent ?? "";
+
+  // Descriptors sit between the verb and the names more often than not —
+  // "founded by Wyoming locals Tony and Hannah Ostheimer" — so a few words are
+  // allowed to intervene before the pair.
+  const pair = story.match(
+    /(?:founded|started|owned|run|established)\s+(?:and\s+operated\s+)?by\s+(?:[\w-]+\s+){0,3}?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:and|&)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/
+  );
+
+  if (pair) {
+    const [, one, two] = pair;
+    // "Tony" + "Hannah Ostheimer" reads better as "Tony & Hannah Ostheimer"
+    // than as the two names in full with the surname repeated.
+    const surname = two.split(/\s+/).slice(1).join(" ");
+    const oneShort = surname && one.endsWith(surname) ? one.slice(0, -surname.length).trim() : one;
+    return { name: `${oneShort} & ${two}`, role: "Founders" };
+  }
+
+  if (first) return { name: first, role: "Founder" };
+  return { name: brief.businessName, role: "Locally owned & operated" };
+}
+
 export function aboutSection(ctx: RenderContext): string {
   const { copy, brief, dna, logoUrl } = ctx;
   const about = copy.about;
   const photo = ctx.photos[1] ?? ctx.photos[0] ?? null;
-  const founder = brief.founder?.trim();
+  const founders = resolveFounders(brief);
+  const founder = founders.name;
 
   // Copy models reliably answer "founderRole" with the name attached
   // ("Tony Ostheimer, Co-Founder"), which printed the name twice on the badge.
@@ -148,7 +181,7 @@ export function aboutSection(ctx: RenderContext): string {
       }
     }
     value = value.replace(/^[\s,·&-]+|[\s,·&-]+$/g, "").trim();
-    return value || (founder ? "Founder" : "Locally owned & operated");
+    return value || founders.role;
   })();
 
   const statBand = about.stats.length
@@ -162,11 +195,11 @@ export function aboutSection(ctx: RenderContext): string {
   <div class="bs-container">
     <div class="bs-about__grid">
       <div class="bs-about__figure">
-        ${photo ? `<figure class="bs-media bs-media--tall"><img src="${esc(photo)}" alt="${esc(founder ?? brief.businessName)} of ${esc(brief.businessName)}" width="900" height="1100" loading="lazy" decoding="async"></figure>` : ""}
+        ${photo ? `<figure class="bs-media bs-media--tall"><img src="${esc(photo)}" alt="${esc(founder)} of ${esc(brief.businessName)}" width="900" height="1100" loading="lazy" decoding="async"></figure>` : ""}
         <div class="bs-founder-badge">
           ${logoUrl ? `<div class="bs-founder-badge__logo"><img src="${esc(logoUrl)}" alt="${esc(brief.businessName)} logo" width="120" height="48"></div>` : `<div class="bs-founder-badge__logo"><strong>${esc(brief.businessName)}</strong></div>`}
           <div class="bs-founder-badge__name">
-            <strong>${esc(founder ?? brief.businessName)}</strong>
+            <strong>${esc(founder)}</strong>
             <span>${esc(role)}</span>
           </div>
         </div>
@@ -321,8 +354,13 @@ export function gallerySection(ctx: RenderContext): string {
   const { copy, brief } = ctx;
   const services = copy.services.items;
 
+  // A ragged last row is the loudest "unfinished" signal a grid can send, so
+  // the tile count is trimmed to something the column count divides exactly.
+  const columns = photos.length % 4 === 0 ? 4 : photos.length % 3 === 0 ? 3 : photos.length >= 8 ? 4 : 3;
+  const usable = Math.max(columns, Math.floor(Math.min(photos.length, 12) / columns) * columns);
+
   const tiles = photos
-    .slice(0, 8)
+    .slice(0, usable)
     .map((photo, index) => {
       const caption = copy.gallery.captions[index] ?? services[index % Math.max(services.length, 1)]?.name ?? `${brief.industry} in ${brief.city}`;
       return `<figure class="bs-gallery__tile">
@@ -338,7 +376,7 @@ export function gallerySection(ctx: RenderContext): string {
       <span class="bs-eyebrow">${esc(copy.gallery.eyebrow)}</span>
       <h2 class="bs-h2">${esc(copy.gallery.headline)}</h2>
     </div>
-    <div class="bs-gallery">${tiles}</div>
+    <div class="bs-gallery" data-columns="${columns}">${tiles}</div>
   </div>
 </section>`;
 }

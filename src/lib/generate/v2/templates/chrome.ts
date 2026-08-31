@@ -118,11 +118,14 @@ export function navMarkup(ctx: RenderContext): string {
 <div class="bs-nav__drawer" data-nav-drawer data-open="false">
     <button class="bs-nav__close" type="button" data-nav-close aria-label="Close menu">${icon("close")}</button>
   ${drawerGroups
-      .map(
-        (group) =>
-          `${group.title ? `<p class="bs-nav__drawerhead">${esc(group.title)}</p>` : ""}${group.links
-            .map((link) => `<a href="${esc(link.href)}">${esc(link.label)}</a>`)
-            .join("")}`
+      .map((group) =>
+        group.title
+          ? // <details> rather than a script: the sanitizer strips script, and
+            // twenty links in one flat list is not a menu anyone can navigate.
+            `<details class="bs-nav__group"><summary>${esc(group.title)}${icon("arrow", "bs-icon bs-icon--sm")}</summary><div class="bs-nav__grouplinks">${group.links
+              .map((link) => `<a href="${esc(link.href)}">${esc(link.label)}</a>`)
+              .join("")}</div></details>`
+          : group.links.map((link) => `<a href="${esc(link.href)}">${esc(link.label)}</a>`).join("")
       )
       .join("")}
   ${brief.phone ? `<a class="bs-btn bs-btn--wide" href="${esc(telHref(brief.phone) ?? "#")}">${esc(brief.phone)}</a>` : ""}

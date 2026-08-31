@@ -221,9 +221,26 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     // Media first: the copy pass benefits from knowing what imagery exists,
     // and the markup pass cannot place an image it has not been given.
     const media = await step.run("plan-media", async () => {
-      const assets = await ingestRealPhotos(lead_id, brief.photos, brief.industry);
       const slots = buildSlots(services, brief.industry, brief.city);
-      const plan = await planMedia(lead_id, assets, slots, dna.mood);
+
+      // An existing plan is kept. It was being rebuilt from scratch every run,
+      // which overwrote whatever the operator had chosen on the brief screen
+      // and re-generated every AI image — so the About photo changed on every
+      // rebuild and there was no way to make one stick. Only slots the stored
+      // plan does not cover are planned now, so a rebuild is a rebuild.
+      const existing = (loaded.artifact?.media_plan as MediaPlan | null) ?? [];
+      const covered = new Set(existing.filter((item) => item.url).map((item) => item.slot));
+      const missing = slots.filter((slot) => !covered.has(slot.key));
+
+      if (missing.length === 0) {
+        console.log(`[plan-media] reusing the stored plan (${existing.length} slots); nothing to add`);
+        return existing;
+      }
+
+      const assets = await ingestRealPhotos(lead_id, brief.photos, brief.industry);
+      const added = await planMedia(lead_id, assets, missing, dna.mood);
+      const plan = [...existing, ...added];
+      console.log(`[plan-media] kept ${existing.length} stored slot(s), planned ${added.length} new`);
       await admin.from("artifacts").update({ media_plan: plan }).eq("lead_id", lead_id);
       return plan;
     });

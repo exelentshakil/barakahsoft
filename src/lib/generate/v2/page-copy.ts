@@ -73,7 +73,7 @@ export const PageCopySchema = z.object({
   faq: z.object({
     eyebrow: S(4, 60),
     headline: S(8, 80),
-    items: z.array(z.object({ q: S(8, 140), a: S(30, 600) })).min(4).max(8),
+    items: z.array(z.object({ q: S(8, 140), a: S(30, 600) })).min(4).max(14),
   }),
   contact: z.object({
     eyebrow: S(4, 60),
@@ -260,6 +260,12 @@ function fallbackCopy(brief: SiteBrief): PageCopy {
         { q: "How soon can you start?", a: "It depends on the work and the season. Get in touch and we will tell you honestly where we are." },
         { q: "Are you insured?", a: brief.licensedInsured ? "Yes — we are licensed, bonded and insured, and we are happy to show you the paperwork." : "Ask us and we will talk you through exactly how we are covered." },
         { q: "Do you clean up afterwards?", a: "Yes. The site is left tidy — that is part of the job, not an extra." },
+        { q: "How long does the work take?", a: "Most jobs are done in a day or two once we start. We tell you the expected window before you commit, and if it changes you hear it from us first." },
+        { q: "Do you offer a warranty?", a: "Yes. We stand behind our workmanship, and we will tell you exactly what is covered and for how long before any work begins." },
+        { q: "What materials do you use?", a: "We use trade-quality materials suited to the job and the local weather, and we will explain the options and what each one costs." },
+        { q: "How do payments work?", a: "There is nothing to pay for the quote. We agree the payment terms in writing before starting, and there are no surprise charges at the end." },
+        { q: "What if something goes wrong after the job?", a: `Call us on ${brief.phone ?? "the number on this page"}. We are local, we are not going anywhere, and putting it right is part of the deal.` },
+        { q: "How do I get started?", a: `Send the form or call us. We will ask a few questions, arrange a time to look at the work, and give you a written price with no obligation.` },
       ],
     },
     contact: {
@@ -302,7 +308,8 @@ HOW TO WRITE
 - headlineMark must be a phrase copied EXACTLY from its headline — it gets the brand colour.
 - The hero headline is the most important sentence on the page. Short, concrete, about the outcome
   the customer wants. Under nine words if you can.
-- FAQ answers are real answers, two or three sentences, the way the owner would actually reply.
+- Write TEN FAQ answers. Real answers, two or three sentences, the way the owner would actually
+  reply on the phone. Never "contact us for details" as an entire answer.
 - Service blurbs say what the customer gets, not what the trade is called.
 - The whyUs points must be things a competitor could NOT also claim, drawn from the facts above.
 - about.paragraphs must be a rewrite of THEIR OWN STORY above — the same names, the same history,
@@ -331,7 +338,8 @@ Return STRICT JSON matching this shape exactly, no markdown fence, no commentary
 "seo":{"title":"","description":""}}
 
 services.items must have one entry per supplied service, in the supplied order, using the supplied
-name verbatim. faq.items: six. whyUs.points: four. process.steps: three or four.`;
+name verbatim. faq.items: TEN. Cover price, timing, process, mess and disruption, insurance and licensing,
+warranty, materials, payment, what happens if something goes wrong, and how to get started. whyUs.points: four. process.steps: three or four.`;
 
   const chain = bestGeminiChain();
   const raw = await callGemini(prompt, chain[0], undefined, {

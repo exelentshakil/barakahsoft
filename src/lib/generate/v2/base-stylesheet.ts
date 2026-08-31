@@ -280,7 +280,16 @@ export const BASE_STYLESHEET = `
   padding:28px var(--bs-gutter);overflow-y:auto;transform:translateX(100%);transition:transform .24s ease;
 }
 .bespoke-page [data-nav-drawer][data-open=true]{transform:translateX(0)}
-.bespoke-page [data-nav-drawer] a{display:block;padding:13px 0;border-bottom:1px solid rgb(255 255 255 / .12);font-weight:600}
+.bespoke-page [data-nav-drawer] a{display:block;padding:13px 2px;border-bottom:1px solid rgb(255 255 255 / .12);font-weight:600}
+.bespoke-page [data-nav-drawer] .bs-btn{margin-top:18px;padding:15px 20px;width:100%;justify-content:center}
+.bespoke-page .bs-nav__group{border-bottom:1px solid rgb(255 255 255 / .12)}
+.bespoke-page .bs-nav__group>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 2px;font-weight:700;cursor:pointer;list-style:none}
+.bespoke-page .bs-nav__group>summary::-webkit-details-marker{display:none}
+.bespoke-page .bs-nav__group>summary .bs-icon{transition:transform .2s ease;transform:rotate(90deg);opacity:.6}
+.bespoke-page .bs-nav__group[open]>summary .bs-icon{transform:rotate(-90deg)}
+.bespoke-page .bs-nav__group[open]>summary{color:var(--bs-primary-strong,#e4761b)}
+.bespoke-page .bs-nav__grouplinks{padding:2px 0 12px 14px;border-left:2px solid rgb(255 255 255 / .14);margin-bottom:10px}
+.bespoke-page .bs-nav__grouplinks a{padding:11px 0;border-bottom:0;font-weight:500;opacity:.88}
 .bespoke-page [data-nav-close]{background:none;border:0;color:inherit;font-size:1.6rem;cursor:pointer;padding:4px 10px}
 
 /* ---------- footer ----------------------------------------------------- */
@@ -602,8 +611,13 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-reviews__track{
   display:grid;grid-auto-flow:column;grid-auto-columns:minmax(300px,1fr);gap:24px;
   overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;
-  padding:6px 2px 20px;scrollbar-width:none;
+  padding:6px 28px 20px;scrollbar-width:none;
+  /* Feathered rather than hard-cut: a card sliced flat at the edge reads as
+     broken, the same card fading out reads as "there are more". */
+  mask-image:linear-gradient(90deg,transparent 0,#000 34px,#000 calc(100% - 34px),transparent 100%);
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 34px,#000 calc(100% - 34px),transparent 100%);
 }
+.bespoke-page .bs-reviews__track>.bs-review:last-child{margin-right:8px}
 .bespoke-page .bs-reviews__track::-webkit-scrollbar{display:none}
 .bespoke-page .bs-reviews__track>.bs-review{scroll-snap-align:start;height:100%}
 .bespoke-page .bs-review__head{display:flex;align-items:center;gap:12px}
@@ -685,7 +699,9 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-whyus .bs-point{padding-right:8px}
 
 /* ---------- gallery ------------------------------------------------------- */
-.bespoke-page .bs-gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:clamp(28px,3.4vw,44px)}
+.bespoke-page .bs-gallery{display:grid;grid-template-columns:repeat(var(--gallery-cols,4),1fr);gap:14px;margin-top:clamp(28px,3.4vw,44px)}
+.bespoke-page .bs-gallery[data-columns="3"]{--gallery-cols:3}
+.bespoke-page .bs-gallery[data-columns="4"]{--gallery-cols:4}
 .bespoke-page .bs-gallery__tile{display:flex;flex-direction:column;gap:8px}
 .bespoke-page .bs-gallery__tile .bs-media{display:block;position:relative;overflow:hidden;border-radius:var(--bs-r);aspect-ratio:1/1;background:var(--bs-surface-alt,#eee)}
 .bespoke-page .bs-gallery__tile img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
@@ -746,7 +762,12 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-nav__panel a:not(.bs-btn):not(.bs-textlink){display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--bs-r);color:inherit;font-weight:600}
 .bespoke-page .bs-nav__panel a:not(.bs-btn):not(.bs-textlink):hover{background:var(--bs-surface-alt,#f4f5f7)}
 .bespoke-page .bs-nav__ctabody .bs-btn{background:var(--bs-primary-strong,#e4761b);color:var(--bs-on-primary,#fff);justify-content:center;width:100%}
-.bespoke-page .bs-nav__ctabody .bs-textlink{align-self:center}
+/* The generic accent hover made the call button flash a second brand colour;
+   it stays its own colour and just lifts. The quote link is full width so the
+   two actions line up instead of one being a stray centred word. */
+.bespoke-page .bs-nav__ctabody .bs-btn:hover{background:var(--bs-primary-strong,#e4761b);color:var(--bs-on-primary,#fff);filter:brightness(1.08);transform:translateY(-1px)}
+.bespoke-page .bs-nav__ctabody .bs-textlink{width:100%;justify-content:center;padding:10px 0;border-radius:var(--bs-r);border:1px solid var(--bs-line)}
+.bespoke-page .bs-nav__ctabody .bs-textlink:hover{gap:8px;background:var(--bs-surface-alt,#f4f5f7);border-color:var(--bs-primary-strong,#e4761b)}
 .bespoke-page .bs-nav__thumb{flex:none;width:46px;height:46px;border-radius:10px;overflow:hidden;background:var(--bs-surface-alt,#f4f5f7);display:grid;place-items:center}
 .bespoke-page .bs-nav__thumb img{width:100%;height:100%;object-fit:cover}
 .bespoke-page .bs-nav__thumb--glyph,.bespoke-page .bs-nav__thumb--pin{background:color-mix(in srgb,var(--bs-primary-strong,#e4761b) 12%,#fff);color:var(--bs-primary-strong,#e4761b)}
