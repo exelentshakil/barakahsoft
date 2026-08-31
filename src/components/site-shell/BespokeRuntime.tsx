@@ -51,7 +51,7 @@ export function BespokeRuntime({ leadSlug }: { leadSlug: string }) {
     // back onto the form and its status element via data-state, which the
     // stylesheet pass was told to style. A native submit is never allowed
     // to fire — that would be a bare GET/reload to nowhere.
-    const forms = root.querySelectorAll<HTMLFormElement>("[data-lead-form]");
+    const forms = root.querySelectorAll<HTMLFormElement>("[data-lead-form],[data-booking-form]");
     const formCleanups: (() => void)[] = [];
     forms.forEach((form) => {
       const message = form.querySelector<HTMLElement>("[data-lead-form-message]");
@@ -64,6 +64,10 @@ export function BespokeRuntime({ leadSlug }: { leadSlug: string }) {
         const phone = String(data.get("phone") ?? "").trim();
         const email = String(data.get("email") ?? "").trim();
         const service = String(data.get("service") ?? "").trim();
+        // The booking widget adds a requested date; it travels with the
+        // enquiry rather than into a scheduling system of its own.
+        const preferred_date = String(data.get("preferred_date") ?? "").trim();
+        const other_date = String(data.get("other_date") ?? "").trim();
 
         if (!name || (!phone && !email)) {
           form.setAttribute("data-state", "error");
@@ -79,12 +83,16 @@ export function BespokeRuntime({ leadSlug }: { leadSlug: string }) {
           const res = await fetch(`/api/s/${leadSlug}/quote-request`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, phone, email, service }),
+            body: JSON.stringify({ name, phone, email, service, preferred_date, other_date }),
           });
           const result = await res.json().catch(() => ({}));
           if (!res.ok) throw new Error(result.error || "Something went wrong — please try again or call directly.");
           form.setAttribute("data-state", "success");
-          if (message) message.textContent = "Thanks — we'll be in touch shortly.";
+          if (message) {
+            message.textContent = other_date || preferred_date
+              ? "Thanks — we'll call to confirm your visit."
+              : "Thanks — we'll be in touch shortly.";
+          }
         } catch (err) {
           form.setAttribute("data-state", "error");
           if (message) message.textContent = err instanceof Error ? err.message : "Something went wrong — please try again.";

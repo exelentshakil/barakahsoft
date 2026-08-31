@@ -315,176 +315,42 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
       innerPagesBuilt: Boolean(loaded.artifact?.inner_pages_built),
     });
 
-    // The page system, decided in code.
+    // The page, assembled from templates the application owns.
     //
-    // This used to be a two-minute Pro call. What a local service homepage
-    // needs is not actually in doubt — every reference site in this market
-    // runs the same argument in the same order — and asking a model to
-    // rediscover it every build cost two minutes and produced manifests with
-    // twelve dark sections and no trust bar. Composition, palette,
-    // photography and copy all still vary per lead; the running order does
-    // not. See section-plan.ts and palette.ts.
-    const system = (await step.run("plan-page", async () => {
+    // One model call, for copy only. Everything structural — running order,
+    // markup, classes, palette, photography placement, every href — is decided
+    // in code, which is why a build can no longer come back with a dead
+    // dropdown, an empty image frame, an invented link or half the page
+    // unstyled. See src/lib/generate/v2/templates.
+    const page = (await step.run("build-page", async () => {
       await touchProgress(admin, lead_id);
-      const { buildPageSystem } = await import("@/lib/generate/v2/section-plan");
+      const { buildPage } = await import("@/lib/generate/v2/templates");
       const { buildPhotoPool } = await import("@/lib/generate/v2/photo-pool");
 
-      // The client's own photos, topped up with trade stock, so a photo-led
-      // page is actually buildable. Four scraped images cannot fill fifteen
-      // sections, which is why an earlier build was text on dark grey.
+      // The client's own photos first, topped up with trade stock so a
+      // photo-led page is actually buildable from four scraped images.
       const pool = await buildPhotoPool(brief, photos);
-      return buildPageSystem({ brief, dna: dnaV2, photos: pool, brandHex: clientBrandHex });
-    })) as PageSystem;
 
-    // The design system is hand-written and shipped with the application, so
-    // there is no stylesheet step any more — and no way for a build to arrive
-    // with a stylesheet that renders the page wrong.
+      return buildPage({
+        brief,
+        logoUrl,
+        photos: pool.map((photo) => photo.url),
+        brandHex: clientBrandHex,
+        innerPagesBuilt: Boolean(loaded.artifact?.inner_pages_built),
+      });
+    })) as Awaited<ReturnType<typeof import("@/lib/generate/v2/templates").buildPage>>;
+
     const { BASE_STYLESHEET } = await import("@/lib/generate/v2/base-stylesheet");
-    const { rgbTriplet, readableOn } = await import("@/lib/generate/v2/palette");
-    const systemCss = BASE_STYLESHEET;
-
-    // The derived palette replaces the scraped tokens, so the page renders in
-    // one harmony rather than a mixture of the two.
-    const paletteVars: Record<string, string> = {
-      ...gateTokens.vars,
-      "--bs-primary": system.palette.primary,
-      "--bs-primary-rgb": rgbTriplet(system.palette.primary),
-      "--bs-on-primary": readableOn(system.palette.primary),
-      "--bs-accent": system.palette.accent,
-      "--bs-accent-rgb": rgbTriplet(system.palette.accent),
-      "--bs-on-accent": readableOn(system.palette.accent),
-      "--bs-ink": system.palette.ink,
-      "--bs-surface": system.palette.surface,
-      "--bs-surface-alt": system.palette.surfaceAlt,
-    };
-
-    await bumpProgress(admin, lead_id, 3);
-
-    // Every section in one step, written concurrently.
-    //
-    // They used to run four at a time across four steps, which was four
-    // sequential invocations for work that is entirely parallel. Eight at a
-    // time finishes a fifteen-section page in two waves, comfortably inside
-    // the 300-second invocation ceiling.
-    const renderedSections = (await step.run("sections", async () => {
-      await touchProgress(admin, lead_id);
-      const { renderAllSections } = await import("@/lib/generate/v2/render-sections");
-      return renderAllSections(system, dnaV2, brief, logoUrl, 8);
-    })) as RenderedSection[];
-
-    if (renderedSections.length === 0) {
-      throw new Error("No section rendered; the previous live page was preserved.");
-    }
-
-    const chromeParts = (await step.run("chrome-and-footer", async () => {
-      await touchProgress(admin, lead_id);
-      const { renderChrome, renderFooter } = await import("@/lib/generate/v2/render-sections");
-      const [navigation, footer] = await Promise.all([
-        renderChrome(system, dnaV2, brief, logoUrl, chromeData),
-        renderFooter(system, dnaV2, brief, logoUrl),
-      ]);
-      return { navigation, footer };
-    })) as { navigation: RenderedSection | null; footer: RenderedSection | null };
-
-    const { composePage, pageFontHref, standalone } = await import("@/lib/generate/v2/build-homepage");
-    const { enforceChromeHrefs } = await import("@/lib/generate/v2/chrome-data");
-    const fontHref = pageFontHref(system);
-
-    let finalSections = renderedSections;
-    let finalFooter = chromeParts.footer;
-    let composed = composePage({
-      system,
-      tokens: paletteVars,
-      systemCss,
-      sections: finalSections,
-      footer: finalFooter,
-      navigation: chromeParts.navigation,
-    });
-    const repairNotes: string[] = [];
-
-    if (process.env.BESPOKE_VISUAL_REPAIR !== "false") {
-      const reviewed = (await step.run("review", async () => {
-        await touchProgress(admin, lead_id);
-        const { critiquePage } = await import("@/lib/generate/v2/visual-repair");
-        const { checkStructure } = await import("@/lib/generate/v2/structural-check");
-
-        // A rendered review is worth two Pro calls because it sees the page.
-        // Without a browser it is a model reading markup, which took six and
-        // a half minutes to produce observations about something nobody had
-        // looked at — so that case runs an exact check in code instead.
-        const canRender = await import("playwright").then(() => true).catch(() => false);
-        if (!canRender) {
-          const findings = checkStructure(renderedSections, chromeParts.footer, chromeParts.navigation);
-          return {
-            critique: {
-              score: findings.length === 0 ? 88 : Math.max(55, 88 - findings.length * 6),
-              summary: `Structural check only — no browser in this runtime. ${findings.length} defect(s) found.`,
-              repairs: findings,
-              warnings: [] as string[],
-            },
-            mode: "source" as const,
-          };
-        }
-
-        return critiquePage({
-          system,
-          sections: renderedSections,
-          css: composed.css,
-          fullHtmlForRender: standalone(
-            [chromeParts.navigation?.html ?? "", composed.html, chromeParts.footer?.html ?? ""].filter(Boolean).join("\n"),
-            composed.css,
-            fontHref
-          ),
-        });
-      })) as { critique: Critique | null; mode: "rendered" | "source" | "skipped" };
-
-      if (reviewed.critique) {
-        const { critiqueNotes } = await import("@/lib/generate/v2/visual-repair");
-        repairNotes.push(...critiqueNotes(reviewed.critique, reviewed.mode));
-
-        if (reviewed.critique.repairs.length > 0) {
-          const applied = (await step.run("apply-repairs", async () => {
-            await touchProgress(admin, lead_id);
-            const { applyRepairs } = await import("@/lib/generate/v2/visual-repair");
-            return applyRepairs({
-              critique: reviewed.critique!,
-              sections: finalSections,
-              footer: finalFooter,
-              css: composed.css,
-            });
-          })) as { sections: RenderedSection[]; footer: RenderedSection | null };
-          finalSections = applied.sections;
-          finalFooter = applied.footer;
-          composed = composePage({
-            system,
-            tokens: paletteVars,
-            systemCss,
-            sections: finalSections,
-            footer: finalFooter,
-            navigation: chromeParts.navigation,
-          });
-        }
-      } else {
-        repairNotes.push("[visual-repair] the review was unavailable");
-      }
-    }
+    const tokenBlock = `.bespoke-page{${Object.entries(page.tokens)
+      .map(([name, value]) => `${name}:${value}`)
+      .join(";")}}`;
 
     const built = {
-      html: composed.html,
-      css: composed.css,
-      rationale: `${system.systemName} — ${system.rationale} Layout DNA: ${dnaV2.hero.name} hero, ${dnaV2.about.name} about, ${dnaV2.footer.name} footer, ${dnaV2.chrome.name} chrome.`,
-      sections: [
-        ...(chromeParts.navigation ? [chromeParts.navigation] : []),
-        ...finalSections,
-        ...(finalFooter ? [finalFooter] : []),
-      ].map((section) => ({
-        id: section.id,
-        kind: section.kind,
-        label: section.label,
-        html: section.html,
-        locked: false,
-      })),
-      notes: repairNotes,
+      html: page.bodyHtml,
+      css: `${tokenBlock}\n${BASE_STYLESHEET}`,
+      rationale: page.rationale,
+      sections: page.sections,
+      notes: [] as string[],
     };
 
     await step.run("persist-build", async () => {
@@ -492,14 +358,12 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
         .from("artifacts")
         .update({
           bespoke_homepage_html: built.html,
-          bespoke_chrome_html: chromeParts.navigation
-            ? enforceChromeHrefs(chromeParts.navigation.html, chromeData)
-            : null,
-          bespoke_footer_html: finalFooter?.html ?? null,
+          bespoke_chrome_html: page.chromeHtml,
+          bespoke_footer_html: page.footerHtml,
           bespoke_css: built.css,
           bespoke_sections: built.sections,
           bespoke_rationale: built.rationale,
-          design_tokens: { vars: paletteVars, fontHref, mood: gateTokens.mood },
+          design_tokens: { vars: page.tokens, fontHref: page.fontHref, mood: gateTokens.mood },
           last_edited_at: new Date().toISOString(),
         })
         .eq("lead_id", lead_id);

@@ -67,32 +67,31 @@ const tokens = compileDesignTokens(DEFAULT_DESIGN_DNA, {
 
 async function main() {
   const started = Date.now();
-  const result = await buildHomepage({
+  const { buildPage } = await import("@/lib/generate/v2/templates");
+  const { BASE_STYLESHEET } = await import("@/lib/generate/v2/base-stylesheet");
+
+  const page = await buildPage({
     brief,
-    tokens,
     logoUrl: null,
     photos: brief.photos,
-    chrome: buildChromeData(brief, { services: brief.services, areas: brief.areas, innerPagesBuilt: false }),
-    repair: process.env.BESPOKE_VISUAL_REPAIR !== "false",
+    brandHex: "#E4761B",
+    innerPagesBuilt: false,
   });
-  if (!result) {
-    console.error("BUILD FAILED");
-    process.exit(1);
-  }
+
+  const tokenBlock = `.bespoke-page{${Object.entries(page.tokens).map(([k, v]) => `${k}:${v}`).join(";")}}`;
+  const css = `${tokenBlock}\n${BASE_STYLESHEET}`;
 
   const out = process.argv[2] ?? "/tmp/bespoke-smoke.html";
   writeFileSync(
     out,
-    `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${brief.businessName}</title><link rel="stylesheet" href="${result.fontHref}"><style>*{box-sizing:border-box}body{margin:0}${result.css}</style></head><body><div class="bespoke-page">${result.html}</div></body></html>`
+    `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${page.copy.seo.title}</title><link rel="stylesheet" href="${page.fontHref}"><style>*{box-sizing:border-box}body{margin:0}${css}</style></head><body><div class="bespoke-page">${page.chromeHtml}${page.bodyHtml}${page.footerHtml}</div></body></html>`
   );
 
   console.log(`\n--- built in ${Math.round((Date.now() - started) / 1000)}s ---`);
-  console.log(`system    : ${result.system.systemName}`);
-  console.log(`dna       : ${result.dna.hero.id} / ${result.dna.about.id} / ${result.dna.footer.id} / ${result.dna.chrome.id}`);
-  console.log(`sections  : ${result.sections.length} (${result.sections.map((s) => s.id).join(", ")})`);
-  console.log(`css       : ${result.css.length} chars`);
-  console.log(`html      : ${result.html.length} chars`);
-  for (const note of result.notes) console.log(`  ${note}`);
+  console.log(`dna      : ${page.dna.hero.id} / ${page.dna.about.id} / ${page.dna.chrome.id}`);
+  console.log(`sections : ${page.sections.length} (${page.sections.map((s) => s.id).join(", ")})`);
+  console.log(`headline : ${page.copy.hero.headline}`);
+  console.log(`css      : ${css.length} chars, html ${page.bodyHtml.length} chars`);
   console.log(`\nwrote ${out}`);
 }
 

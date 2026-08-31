@@ -45,6 +45,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ leadSlu
 
   const message = typeof body.message === "string" ? body.message : "";
 
+  // The booking widget posts here too. A requested visit is an enquiry with a
+  // date attached — it needs the same row and the same email, not a parallel
+  // system the client would have to check separately.
+  const preferredDate = typeof body?.preferred_date === "string" ? body.preferred_date.trim().slice(0, 20) : "";
+  const otherDate = typeof body?.other_date === "string" ? body.other_date.trim().slice(0, 20) : "";
+  const requestedDate = otherDate || preferredDate;
+
   const sent = await captureInquiry({
     leadId: result.lead.id,
     businessName: result.payload.businessName,
@@ -54,7 +61,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ leadSlu
     // the right field is labelled in the email the owner receives.
     phone: phone || (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact) ? "" : contact),
     email: email || (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact) ? contact : ""),
-    message: [service, message].filter(Boolean).join(" — "),
+    message: [service, requestedDate ? `Requested visit: ${requestedDate}` : "", message].filter(Boolean).join(" — "),
     source: "website_form",
   });
 
