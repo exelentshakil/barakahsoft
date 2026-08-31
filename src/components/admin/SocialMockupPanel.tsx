@@ -71,6 +71,8 @@ export function SocialMockupPanel({
   async function saveMockupConfig(update: {
     themeId?: string;
     headlineMode?: MockupHeadlineMode;
+    heroOffsetY?: number;
+    aboutOffsetY?: number;
   }) {
     try {
       await fetch(`/api/leads/${lead.id}/mockup`, {
@@ -97,6 +99,20 @@ export function SocialMockupPanel({
       headlineMode: mode,
     }));
     saveMockupConfig({ headlineMode: mode });
+  }
+
+  // How far up each panel's content is pulled, in CSS pixels.
+  //
+  // These were hard-coded to the values that happened to suit one build. Where
+  // a page's About section starts depends on how much copy its hero carried,
+  // so the number that framed Saddle Roofing perfectly cropped the next site.
+  // The operator nudges each panel and sees the result immediately; the value
+  // is saved per lead.
+  function handleOffsetChange(slot: "hero" | "about", value: number) {
+    const key = slot === "hero" ? "heroOffsetY" : "aboutOffsetY";
+    const clamped = Math.max(slot === "hero" ? -600 : -1600, Math.min(300, Math.round(value)));
+    setMockupData((prev) => ({ ...prev, [key]: clamped }));
+    saveMockupConfig({ [key]: clamped });
   }
 
   async function handleCaptureUpload(slot: "hero" | "about", file: File | undefined) {
@@ -284,6 +300,47 @@ export function SocialMockupPanel({
                       />
                     </label>
                   </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Vertical framing. Live, so the fit is judged by looking at it. */}
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {(["hero", "about"] as const).map((slot) => {
+              const value = (slot === "hero" ? mockupData.heroOffsetY : mockupData.aboutOffsetY) ?? (slot === "hero" ? -20 : -80);
+              const min = slot === "hero" ? -600 : -1600;
+              return (
+                <div key={`${slot}-offset`} className="rounded-lg border border-border bg-white px-3 py-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold capitalize text-[#0d1738]">{slot} framing</span>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        value={value}
+                        step={10}
+                        min={min}
+                        max={300}
+                        onChange={(event) => handleOffsetChange(slot, Number(event.target.value))}
+                        className="w-16 rounded border border-border px-1.5 py-0.5 text-right text-[11px] font-semibold tabular-nums"
+                        aria-label={`${slot} vertical offset in pixels`}
+                      />
+                      <span className="text-[10px] text-muted-foreground">px</span>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    value={value}
+                    min={min}
+                    max={300}
+                    step={10}
+                    onChange={(event) => handleOffsetChange(slot, Number(event.target.value))}
+                    className="mt-1.5 w-full accent-[#533afd]"
+                    aria-label={`${slot} vertical offset slider`}
+                  />
+                  <span className="block text-[10px] text-muted-foreground">
+                    Negative pulls the {slot} section up into frame.
+                  </span>
                 </div>
               );
             })}

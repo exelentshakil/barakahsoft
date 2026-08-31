@@ -59,6 +59,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       ...(body && typeof body.headlineMode === "string" ? { headlineMode: body.headlineMode } : {}),
       ...(body && "heroCaptureUrl" in body ? { heroCaptureUrl: body.heroCaptureUrl || null } : {}),
       ...(body && "aboutCaptureUrl" in body ? { aboutCaptureUrl: body.aboutCaptureUrl || null } : {}),
+      // Vertical nudge for each panel, in CSS pixels. A single hard-coded
+      // offset cannot be right for every site: how far down a page the About
+      // section starts depends on how much copy the hero carried.
+      ...(body && typeof body.heroOffsetY === "number" ? { heroOffsetY: Math.max(-600, Math.min(300, body.heroOffsetY)) } : {}),
+      ...(body && typeof body.aboutOffsetY === "number" ? { aboutOffsetY: Math.max(-1600, Math.min(300, body.aboutOffsetY)) } : {}),
       ...(uploadedCapture ? { [uploadedCapture.key]: uploadedCapture.url } : {}),
       updated_at: new Date().toISOString(),
       updated_by: user.email,

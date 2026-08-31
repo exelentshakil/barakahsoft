@@ -53,6 +53,9 @@ export interface MockupData {
   bespokeCss?: string | null;
   heroCaptureUrl?: string | null;
   aboutCaptureUrl?: string | null;
+  /** Vertical nudge, in CSS pixels, for the laptop screen and the about card. */
+  heroOffsetY?: number | null;
+  aboutOffsetY?: number | null;
   aboutImageUrl?: string | null;
 }
 
@@ -440,11 +443,11 @@ export function SocialLaunchMockup({
           <img
             src={data.heroCaptureUrl}
             alt="Hero Section Screenshot"
-            className="w-full h-full object-cover object-top origin-top"
-            style={{ 
-              imageRendering: "high-quality" as any, 
-              transform: "translateZ(0)", 
-              backfaceVisibility: "hidden"
+            className="w-full h-full object-cover object-top"
+            style={{
+              imageRendering: "high-quality" as any,
+              transform: `translateZ(0) translateY(${heroOffsetY}px)`,
+              backfaceVisibility: "hidden",
             }}
           />
           {/* Glass Glare Reflection Line */}
@@ -468,7 +471,7 @@ export function SocialLaunchMockup({
               width: "1280px",
               height: "800px",
               transform: `scale(${customScale})`,
-              transformOrigin: "top left",
+              transformOrigin: `0 ${heroOffsetY}px`,
             }}
           />
           {/* Glass Reflection Glare */}
@@ -539,6 +542,8 @@ export function SocialLaunchMockup({
   // The about card is laid out at its own width, so it needs its own scale
   // rather than borrowing the laptop's.
   const aboutScale = screenScale * 0.92;
+  const heroOffsetY = data.heroOffsetY ?? -20;
+  const aboutOffsetY = data.aboutOffsetY ?? -80;
 
   const renderFloatingAboutCard = (opts?: {
     topOffset?: string;
@@ -589,11 +594,11 @@ export function SocialLaunchMockup({
             src={data.aboutCaptureUrl}
             alt={`${businessShortName} About Section Snapshot`}
             crossOrigin="anonymous"
-            className="w-full h-auto origin-top"
-            style={{ 
-              imageRendering: "high-quality" as any, 
-              transform: "translateZ(0)", 
-              backfaceVisibility: "hidden"
+            className="w-full h-auto"
+            style={{
+              imageRendering: "high-quality" as any,
+              transform: `translateZ(0) translateY(${aboutOffsetY}px)`,
+              backfaceVisibility: "hidden",
             }}
           />
           {/* Subtle Glass Glare */}
@@ -613,7 +618,7 @@ export function SocialLaunchMockup({
             tabIndex={-1}
             scrolling="no"
             className="absolute top-0 left-0 border-0 pointer-events-none"
-            style={{ width: "1280px", height: "960px", transform: `scale(${aboutScale})`, transformOrigin: "top left" }}
+            style={{ width: "1280px", height: "960px", transform: `scale(${aboutScale})`, transformOrigin: `0 ${aboutOffsetY}px` }}
           />
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/15 pointer-events-none" />
         </div>

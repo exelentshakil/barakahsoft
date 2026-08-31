@@ -51,6 +51,8 @@ export function extractMockupData({
     headlineMode?: MockupHeadlineMode;
     heroCaptureUrl?: string;
     aboutCaptureUrl?: string;
+    heroOffsetY?: number;
+    aboutOffsetY?: number;
   } | undefined) ?? {};
 
   const bespokeHtml = artifact?.bespoke_homepage_html || payload?.bespokeHomepageHtml || null;
@@ -217,6 +219,9 @@ export function extractMockupData({
     bespokeCss,
     heroCaptureUrl: savedMockup.heroCaptureUrl || null,
     aboutCaptureUrl: savedMockup.aboutCaptureUrl || null,
+    // Defaults that suit a typical build; the operator nudges from here.
+    heroOffsetY: typeof savedMockup.heroOffsetY === "number" ? savedMockup.heroOffsetY : -20,
+    aboutOffsetY: typeof savedMockup.aboutOffsetY === "number" ? savedMockup.aboutOffsetY : -80,
     aboutImageUrl:
       ((artifact?.media_plan as Array<{ slot: string; url: string }>) || []).find(
         (m) => m.slot === "about" || m.slot === "team" || m.slot === "service-0"
