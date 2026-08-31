@@ -250,6 +250,14 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-fbmark,.bespoke-page .bs-google{display:inline-flex;flex:none;align-items:center}
 .bespoke-page .bs-fbmark svg,.bespoke-page .bs-google svg{width:26px;height:26px}
 @media (max-width:620px){
+/* The contact band stacks to one column on a phone, and a left-aligned
+   column under a centred form card reads as a mistake. The eyebrow's rule
+   sits above its label rather than beside it once centred. */
+.bespoke-page #contact .bs-stack{align-items:center;text-align:center}
+.bespoke-page #contact .bs-eyebrow{flex-direction:column;gap:8px}
+.bespoke-page #contact .bs-phone-xl{width:100%}
+}
+@media (max-width:620px){
   .bespoke-page .bs-pills{width:100%}
   .bespoke-page .bs-pill{flex:1 1 100%;justify-content:center;min-width:0}
 }
