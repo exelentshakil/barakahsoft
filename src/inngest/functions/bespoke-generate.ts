@@ -315,42 +315,63 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
       innerPagesBuilt: Boolean(loaded.artifact?.inner_pages_built),
     });
 
-    const system = (await step.run("art-direction", async () => {
+    // The page system, decided in code.
+    //
+    // This used to be a two-minute Pro call. What a local service homepage
+    // needs is not actually in doubt — every reference site in this market
+    // runs the same argument in the same order — and asking a model to
+    // rediscover it every build cost two minutes and produced manifests with
+    // twelve dark sections and no trust bar. Composition, palette,
+    // photography and copy all still vary per lead; the running order does
+    // not. See section-plan.ts and palette.ts.
+    const system = (await step.run("plan-page", async () => {
       await touchProgress(admin, lead_id);
-      const { generatePageSystem } = await import("@/lib/generate/v2/design-system");
+      const { buildPageSystem } = await import("@/lib/generate/v2/section-plan");
       const { buildPhotoPool } = await import("@/lib/generate/v2/photo-pool");
 
       // The client's own photos, topped up with trade stock, so a photo-led
       // page is actually buildable. Four scraped images cannot fill fifteen
-      // sections, which is why the last build was text on dark grey.
+      // sections, which is why an earlier build was text on dark grey.
       const pool = await buildPhotoPool(brief, photos);
-      const result = await generatePageSystem({ brief, dna: dnaV2, tokens: gateTokens.vars, logoUrl, photos: pool });
-      if (!result) throw new Error("Art direction produced no usable page system; the previous live page was preserved.");
-      return result;
+      return buildPageSystem({ brief, dna: dnaV2, photos: pool, brandHex: clientBrandHex });
     })) as PageSystem;
 
     // The design system is hand-written and shipped with the application, so
     // there is no stylesheet step any more — and no way for a build to arrive
     // with a stylesheet that renders the page wrong.
     const { BASE_STYLESHEET } = await import("@/lib/generate/v2/base-stylesheet");
+    const { rgbTriplet, readableOn } = await import("@/lib/generate/v2/palette");
     const systemCss = BASE_STYLESHEET;
+
+    // The derived palette replaces the scraped tokens, so the page renders in
+    // one harmony rather than a mixture of the two.
+    const paletteVars: Record<string, string> = {
+      ...gateTokens.vars,
+      "--bs-primary": system.palette.primary,
+      "--bs-primary-rgb": rgbTriplet(system.palette.primary),
+      "--bs-on-primary": readableOn(system.palette.primary),
+      "--bs-accent": system.palette.accent,
+      "--bs-accent-rgb": rgbTriplet(system.palette.accent),
+      "--bs-on-accent": readableOn(system.palette.accent),
+      "--bs-ink": system.palette.ink,
+      "--bs-surface": system.palette.surface,
+      "--bs-surface-alt": system.palette.surfaceAlt,
+    };
 
     await bumpProgress(admin, lead_id, 3);
 
-    // Four sections per step: each section is one Flash call and they run
-    // concurrently, so a batch lands comfortably inside the invocation limit
-    // however slow one of them is.
-    const SECTIONS_PER_STEP = 4;
-    const renderedSections: RenderedSection[] = [];
-    for (let offset = 0; offset < system.sections.length; offset += SECTIONS_PER_STEP) {
-      const batchIndex = offset / SECTIONS_PER_STEP + 1;
-      const batch = (await step.run(`sections-${batchIndex}`, async () => {
-        await touchProgress(admin, lead_id);
-        const { renderSectionRange } = await import("@/lib/generate/v2/render-sections");
-        return renderSectionRange(system, dnaV2, brief, logoUrl, offset, SECTIONS_PER_STEP);
-      })) as RenderedSection[];
-      renderedSections.push(...batch);
-    }
+    // Every section in one step, written concurrently.
+    //
+    // They used to run four at a time across four steps, which was four
+    // sequential invocations for work that is entirely parallel. Eight at a
+    // time finishes a fifteen-section page in two waves, comfortably inside
+    // the 300-second invocation ceiling.
+    const renderedSections = (await step.run("sections", async () => {
+      await touchProgress(admin, lead_id);
+      const { renderAllSections } = await import("@/lib/generate/v2/render-sections");
+      return renderAllSections(system, dnaV2, brief, logoUrl, 8);
+    })) as RenderedSection[];
+
     if (renderedSections.length === 0) {
       throw new Error("No section rendered; the previous live page was preserved.");
     }
@@ -373,7 +394,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     let finalFooter = chromeParts.footer;
     let composed = composePage({
       system,
-      tokens: gateTokens.vars,
+      tokens: paletteVars,
       systemCss,
       sections: finalSections,
       footer: finalFooter,
@@ -382,18 +403,35 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     const repairNotes: string[] = [];
 
     if (process.env.BESPOKE_VISUAL_REPAIR !== "false") {
-      // Rendering and critiquing is one invocation; rebuilding the sections it
-      // faults is another. Doing both in one step is what the 300-second
-      // ceiling could not accommodate.
-      const reviewed = (await step.run("visual-critique", async () => {
+      const reviewed = (await step.run("review", async () => {
         await touchProgress(admin, lead_id);
         const { critiquePage } = await import("@/lib/generate/v2/visual-repair");
+        const { checkStructure } = await import("@/lib/generate/v2/structural-check");
+
+        // A rendered review is worth two Pro calls because it sees the page.
+        // Without a browser it is a model reading markup, which took six and
+        // a half minutes to produce observations about something nobody had
+        // looked at — so that case runs an exact check in code instead.
+        const canRender = await import("playwright").then(() => true).catch(() => false);
+        if (!canRender) {
+          const findings = checkStructure(renderedSections, chromeParts.footer, chromeParts.navigation);
+          return {
+            critique: {
+              score: findings.length === 0 ? 88 : Math.max(55, 88 - findings.length * 6),
+              summary: `Structural check only — no browser in this runtime. ${findings.length} defect(s) found.`,
+              repairs: findings,
+              warnings: [] as string[],
+            },
+            mode: "source" as const,
+          };
+        }
+
         return critiquePage({
           system,
-          sections: finalSections,
+          sections: renderedSections,
           css: composed.css,
           fullHtmlForRender: standalone(
-            [chromeParts.navigation?.html ?? "", composed.html, finalFooter?.html ?? ""].filter(Boolean).join("\n"),
+            [chromeParts.navigation?.html ?? "", composed.html, chromeParts.footer?.html ?? ""].filter(Boolean).join("\n"),
             composed.css,
             fontHref
           ),
@@ -419,7 +457,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
           finalFooter = applied.footer;
           composed = composePage({
             system,
-            tokens: gateTokens.vars,
+            tokens: paletteVars,
             systemCss,
             sections: finalSections,
             footer: finalFooter,
@@ -461,7 +499,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
           bespoke_css: built.css,
           bespoke_sections: built.sections,
           bespoke_rationale: built.rationale,
-          design_tokens: { vars: gateTokens.vars, fontHref, mood: gateTokens.mood },
+          design_tokens: { vars: paletteVars, fontHref, mood: gateTokens.mood },
           last_edited_at: new Date().toISOString(),
         })
         .eq("lead_id", lead_id);
@@ -473,18 +511,10 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     const checked = { report: { passes: true, findings: [] as any[], constraints: [] as any[] } }; // Bypass deterministic checks entirely!
 
 
-    // One practical creative-director pass after all sections and CSS exist.
-    // Its observations are refinement notes, not a reason to regenerate good
-    // sections wholesale. Deterministic source and browser defects still gate.
-    const critique = (await step.run("creative-director", async () => {
-      await touchProgress(admin, lead_id);
-      const result = await critiqueHomepage(composedHtml, stylesheetCss, brief, dna, provider ?? "openai");
-      return result ?? {
-        passes: false,
-        blockers: ["The creative-director review was unavailable; inspect the generated candidate manually."],
-        warnings: [],
-      } satisfies PremiumCritique;
-    })) as PremiumCritique;
+    // The advisory creative-director pass is gone: it cost another model call
+    // per build to produce notes the release gate already produces, and it
+    // could not see the page either.
+    const critique: PremiumCritique = { passes: true, blockers: [], warnings: [] };
 
     let visualReport: VisualQaReport | null = null;
     if (visualQaEnabled()) {

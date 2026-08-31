@@ -1,4 +1,4 @@
-import { callGemini, bestGeminiChain } from "@/lib/gemini-client";
+import { callGemini } from "@/lib/gemini-client";
 import * as cheerio from "cheerio";
 import { sanitizeBespokeHtml } from "@/lib/sanitize-generated-html";
 import { sanitizeGeneratedCss } from "@/lib/sanitize-css";
@@ -402,9 +402,8 @@ OUTPUT RULES
 - If the composition needs extra CSS, append "/*CSS*/" then CSS whose every selector begins with
   .bs-nav.`;
 
-  const chain = bestGeminiChain();
-  const raw = await callGemini(prompt, chain[0], undefined, {
-    modelChain: chain,
+  const raw = await callGemini(prompt, FAST_CHAIN[0], undefined, {
+    modelChain: FAST_CHAIN,
     maxTokens: 20000,
     temperature: 0.55,
     timeoutMs: 240_000,
@@ -470,9 +469,8 @@ OUTPUT RULES
 - If the composition needs extra CSS, append "/*CSS*/" then CSS whose every selector begins with
   .bs-footer.`;
 
-  const chain = bestGeminiChain();
-  const raw = await callGemini(prompt, chain[0], undefined, {
-    modelChain: chain,
+  const raw = await callGemini(prompt, FAST_CHAIN[0], undefined, {
+    modelChain: FAST_CHAIN,
     maxTokens: 16000,
     temperature: 0.55,
     timeoutMs: 240_000,
