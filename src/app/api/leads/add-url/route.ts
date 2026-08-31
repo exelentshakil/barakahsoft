@@ -16,6 +16,31 @@ export interface BulkLeadInput {
   source_url: string;
   business_name?: string;
   email?: string;
+  phone?: string;
+  place_id?: string;
+  /** Observed findings from discovery, in place of the generic defaults. */
+  pain_points?: string[];
+}
+
+// What a lead is pitched on. A hand-pasted URL has no evidence behind it
+// yet, so it falls back to the generic five; a discovered lead arrives
+// carrying what the crawl actually found on its site.
+const GENERIC_PAIN_POINTS = [
+  "Outdated design / looks wrong on phones",
+  "Not enough leads or enquiries",
+  "Nobody finds us on Google",
+  "Invisible in AI search",
+  "Visitors don't convert into calls",
+];
+
+function pickPainPoints(...candidates: unknown[]): string[] {
+  for (const c of candidates) {
+    if (Array.isArray(c) && c.length > 0) {
+      const clean = c.filter((x): x is string => typeof x === "string" && x.trim().length > 0);
+      if (clean.length > 0) return clean;
+    }
+  }
+  return GENERIC_PAIN_POINTS;
 }
 
 export async function POST(req: Request) {
@@ -58,12 +83,24 @@ export async function POST(req: Request) {
 
       try {
         const domain = extractDomain(rawUrl);
-  if (domain) {
-    const { data: existing } = await admin.from("leads").select("id, status").ilike("source_url", `%${domain}%`).limit(1).maybeSingle();
-    if (existing) {
-      return NextResponse.json({ error: `A lead for ${domain} already exists (status: ${existing.status}).` }, { status: 400 });
-    }
-  }
+        if (domain) {
+          const { data: existing } = await admin
+            .from("leads")
+            .select("id, status")
+            .ilike("source_url", `%${domain}%`)
+            .limit(1)
+            .maybeSingle();
+          if (existing) {
+            // Skip this one and keep going. This used to `return` a 400,
+            // which aborted the whole batch and threw away every lead
+            // already inserted in the same run. Harmless when four URLs
+            // were pasted by hand; fatal for discovery imports, where a
+            // Places sweep of a city you have worked before is mostly
+            // domains you already hold.
+            errors.push({ url: rawUrl, error: `Already a lead (status: ${existing.status})` });
+            continue;
+          }
+        }
 
   const slug = await generateUniqueDomainSlug(admin, rawUrl);
         const { data: lead, error } = await admin
@@ -72,16 +109,12 @@ export async function POST(req: Request) {
             source_url: rawUrl,
             business_name: item.business_name?.trim() || null,
             email: validEmail,
+            phone: item.phone?.trim() || null,
+            place_id: item.place_id?.trim() || null,
             slug,
             status: "new",
             source: "outreach",
-            pain_points: Array.isArray(body.pain_points) && body.pain_points.length > 0 ? body.pain_points : [
-              "Outdated design / looks wrong on phones",
-              "Not enough leads or enquiries",
-              "Nobody finds us on Google",
-              "Invisible in AI search",
-              "Visitors don't convert into calls"
-            ],
+            pain_points: pickPainPoints(item.pain_points, body.pain_points),
           })
           .select()
           .single();
@@ -131,13 +164,7 @@ export async function POST(req: Request) {
       slug,
       status: "new",
       source: "outreach",
-            pain_points: Array.isArray(body.pain_points) && body.pain_points.length > 0 ? body.pain_points : [
-              "Outdated design / looks wrong on phones",
-              "Not enough leads or enquiries",
-              "Nobody finds us on Google",
-              "Invisible in AI search",
-              "Visitors don't convert into calls"
-            ],
+      pain_points: pickPainPoints(body.pain_points),
     })
     .select()
     .single();

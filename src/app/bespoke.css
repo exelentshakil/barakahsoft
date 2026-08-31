@@ -22,6 +22,11 @@
  */
 
 .bespoke-page {
+  /* One source of truth for edge clearance. Both .bs-wrap and the no-wrap
+     fallback below read this, so a child that falls through to the fallback
+     lines up with every wrapped section instead of sitting 1.25rem proud of
+     them on desktop. */
+  --bs-gutter: 1.25rem;
   font-family: var(--bs-font-body);
   font-size: var(--bs-text-body);
   line-height: 1.65;
@@ -80,14 +85,30 @@
   position: relative;
 }
 .bs-section-tight { padding-block: calc(var(--bs-section-y) * 0.55); }
-.bs-wrap { width: 100%; max-width: 1200px; margin-inline: auto; padding-inline: 1.25rem; }
-.bs-wrap-narrow { width: 100%; max-width: 760px; margin-inline: auto; padding-inline: 1.25rem; }
+.bs-wrap { width: 100%; max-width: 1200px; margin-inline: auto; padding-inline: var(--bs-gutter); }
+.bs-wrap-narrow { width: 100%; max-width: 760px; margin-inline: auto; padding-inline: var(--bs-gutter); }
 
 /* Content dropped straight into a band with no wrap around it still clears
-   the edge. Decorative layers are excluded — they are meant to bleed. */
-.bespoke-page > section > :not(.bs-wrap):not(.bs-wrap-narrow):not(.bs-hero-media):not(.bs-hero-scrim):not(.bs-decor-orb),
-.bs-hero-content > :not(.bs-wrap):not(.bs-wrap-narrow) {
-  padding-inline: 1.25rem;
+   the edge. Decorative layers are excluded — they are meant to bleed.
+ *
+ * Two exclusions carry the "never doubles up" guarantee, and both were
+ * missing:
+ *
+ *   - :has(> .bs-wrap) — a positioning shell like .bs-hero-content is a
+ *     bare child of the section, so it took a gutter here, and then the
+ *     .bs-wrap inside it added a second one. Anything already holding a
+ *     wrap is skipped and lets that wrap own the clearance.
+ *
+ *   - The old second selector, `.bs-hero-content > :not(.bs-wrap)`, padded
+ *     every direct child of the hero. When the generator wrote the common
+ *     `<div class="bs-wrap bs-hero-content">` the wrap padded the shell and
+ *     this padded each child inside it again — 2.5rem on mobile, and on
+ *     desktop a hard-coded 1.25rem that never grew with the breakpoints,
+ *     so the hero's headline sat indented from every heading below it.
+ *     It is gone: all three hero shapes are now covered by the rule above
+ *     plus .bs-wrap, each applying exactly once. */
+.bespoke-page > section > :not(.bs-wrap, .bs-wrap-narrow, .bs-hero-media, .bs-hero-scrim, .bs-decor-orb):not(:has(> .bs-wrap, > .bs-wrap-narrow)) {
+  padding-inline: var(--bs-gutter);
 }
 
 .bs-stack { display: flex; flex-direction: column; gap: var(--bs-gap); }
@@ -108,12 +129,12 @@
 .bs-split { display: grid; gap: calc(var(--bs-gap) * 1.5); align-items: center; grid-template-columns: 1fr; }
 
 @media (min-width: 640px) {
-  .bs-wrap, .bs-wrap-narrow { padding-inline: 2rem; }
+  .bespoke-page { --bs-gutter: 2rem; }
   .bs-grid-2 { grid-template-columns: repeat(2, 1fr); }
   .bs-grid-3 { grid-template-columns: repeat(2, 1fr); }
 }
 @media (min-width: 960px) {
-  .bs-wrap, .bs-wrap-narrow { padding-inline: 2.5rem; }
+  .bespoke-page { --bs-gutter: 2.5rem; }
   .bs-grid-3 { grid-template-columns: repeat(3, 1fr); }
   .bs-grid-4 { grid-template-columns: repeat(4, 1fr); }
   .bs-split { grid-template-columns: 1.05fr 0.95fr; }

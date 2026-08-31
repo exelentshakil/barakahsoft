@@ -2,6 +2,14 @@ import type { MockupData } from "@/components/mockup/SocialLaunchMockup";
 import { Shield } from "lucide-react";
 
 export function ProposalAbout({ data }: { data: MockupData }) {
+  // The business's own about copy arrives as one string with its paragraph
+  // breaks intact; rendering it in a single <p> made a company history read
+  // as an unbroken wall of text.
+  const aboutParagraphs = (data.aboutBody ?? "")
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
   const proof = [
     data.city ? `Serving ${data.city}` : null,
     data.yearsExperience ? `${data.yearsExperience}+ years in business` : null,
@@ -18,16 +26,21 @@ export function ProposalAbout({ data }: { data: MockupData }) {
         
         <div className="order-2 lg:order-1 relative">
           <div className="absolute inset-0 bg-gradient-to-tr from-[#533afd] to-[#263477] rounded-[2.5rem] transform -rotate-3 scale-[1.02] opacity-10" />
-          <div className="relative overflow-hidden rounded-[2.5rem] border-[6px] border-white shadow-2xl bg-[#0d1738] aspect-[4/5] sm:aspect-square lg:aspect-[4/5]">
+          {/* No fixed aspect ratio on the frame. The capture is a full About
+              section, whose height varies with how much copy the business
+              wrote; a 4/5 box with object-cover cut the bottom off every
+              tall one. The frame now takes its height from the image. */}
+          <div className="relative overflow-hidden rounded-[2.5rem] border-[6px] border-white shadow-2xl bg-[#0d1738]">
             {data.aboutCaptureUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={data.aboutCaptureUrl}
                 alt={`${data.businessName} About and team section`}
-                className="h-full w-full object-cover object-top"
+                className="block h-auto w-full"
               />
             ) : (
-              <div className="flex h-full items-end bg-gradient-to-br from-[#533afd] via-[#263477] to-[#0d1738] p-10">
+              // The placeholder has no intrinsic height, so it keeps one.
+              <div className="flex aspect-[4/5] items-end bg-gradient-to-br from-[#533afd] via-[#263477] to-[#0d1738] p-10">
                 <p className="max-w-xs text-3xl font-bold leading-tight text-white">Built around the people behind the work.</p>
               </div>
             )}
@@ -70,11 +83,11 @@ export function ProposalAbout({ data }: { data: MockupData }) {
               We did not start with a template. We started with your real business, your team, and the proof customers already
               have to trust you. The redesign puts that credibility in front of the right customer before they call someone else.
             </p>
-            {data.aboutBody && (
-              <p className="text-base leading-relaxed text-[#42506a] sm:text-lg font-medium">
-                {data.aboutBody}
+            {aboutParagraphs.map((para, i) => (
+              <p key={i} className="text-base leading-relaxed text-[#42506a] sm:text-lg font-medium">
+                {para}
               </p>
-            )}
+            ))}
           </div>
 
           {proof.length > 0 && (

@@ -36,6 +36,38 @@ export function unescapeHtml(str: string | null | undefined): string {
   return res.replace(/^[—–-]\s*/, "").trim();
 }
 
+/**
+ * Decorative SVG is not copy.
+ *
+ * The generated About section carries a circular "seal" whose <textPath>
+ * repeats the town and trade twice so the text meets itself around the ring.
+ * Tag-stripping that alongside the real prose put "CHEYENNE, WY · TRUSTED
+ * LOCAL TRADE · CHEYENNE, WY · TRUSTED LOCAL TRADE ·" on the front of the
+ * client's own about copy in the portal.
+ */
+function stripDecorative(html: string): string {
+  return html.replace(/<svg[\s\S]*?<\/svg>/gi, " ");
+}
+
+/**
+ * Tag-stripped text that keeps its paragraph breaks.
+ *
+ * Collapsing every whitespace run flattened a four-paragraph company story
+ * into a single unreadable block in the proposal.
+ */
+function cleanCopy(html: string): string {
+  const text = html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(?:p|div|li|h[1-6])>/gi, "\n\n")
+    .replace(/<[^>]+>/g, " ");
+  return unescapeHtml(
+    text
+      .replace(/[^\S\n]+/g, " ")       // spaces and tabs, never newlines
+      .replace(/ *\n */g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+  ).trim();
+}
+
 export function extractMockupData({
   lead,
   artifact,
@@ -109,7 +141,7 @@ export function extractMockupData({
       bespokeHtml.match(/<div[^>]*(?:id=["']about["']|class=["'][^"']*about[^"']*["'])[^>]*>([\s\S]*?)<\/div>/i);
 
     if (aboutSectionMatch) {
-      const aboutContent = aboutSectionMatch[1];
+      const aboutContent = stripDecorative(aboutSectionMatch[1]);
 
       // Extract About eyebrow (strip any leading dashes or em-dashes and unescape)
       const eyebrowMatch =
@@ -128,9 +160,9 @@ export function extractMockupData({
       }
 
       // Extract only clean narrative body paragraphs (exclude captions, badge text, short snippets)
-      const pMatches = Array.from(aboutContent.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi));
+      const pMatches = Array.from(aboutContent.matchAll(/<p(?:\s[^>]*)?>([\s\S]*?)<\/p>/gi));
       const validParagraphs = pMatches
-        .map((m) => unescapeHtml(m[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ")))
+        .map((m) => cleanCopy(m[1]))
         .filter((p) => p.length >= 45 && !p.toLowerCase().startsWith("about ") && !p.toLowerCase().startsWith("every item is carefully packed") && !p.toLowerCase().includes("complete insurance claim support"));
 
       if (validParagraphs.length > 0) {
@@ -143,15 +175,16 @@ export function extractMockupData({
   if ((!extractedAboutHeadline || !extractedAboutBody) && Array.isArray(artifact?.bespoke_sections)) {
     const aboutSec = artifact.bespoke_sections.find((s) => s.id === "about" || s.kind === "about");
     if (aboutSec?.html) {
+      const aboutSecHtml = stripDecorative(aboutSec.html);
       if (!extractedAboutHeadline) {
-        const hMatch = aboutSec.html.match(/<h[234][^>]*>([\s\S]*?)<\/h[234]>/i);
+        const hMatch = aboutSecHtml.match(/<h[234][^>]*>([\s\S]*?)<\/h[234]>/i);
         if (hMatch) extractedAboutHeadline = unescapeHtml(hMatch[1].replace(/<[^>]+>/g, ""));
       }
 
       if (!extractedAboutBody) {
-        const pMatches = Array.from(aboutSec.html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi));
+        const pMatches = Array.from(aboutSecHtml.matchAll(/<p(?:\s[^>]*)?>([\s\S]*?)<\/p>/gi));
         const validParagraphs = pMatches
-          .map((m) => unescapeHtml(m[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ")))
+          .map((m) => cleanCopy(m[1]))
           .filter((p) => p.length >= 45 && !p.toLowerCase().includes("every item is carefully packed"));
         if (validParagraphs.length > 0) {
           extractedAboutBody = validParagraphs[0];
