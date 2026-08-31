@@ -462,6 +462,9 @@ export function SocialLaunchMockup({
             tabIndex={-1}
             className="absolute top-0 left-0 border-0 pointer-events-none"
             style={{
+              // 1280x800 matches the 16:10 laptop screen exactly, and the hero
+              // now sizes itself to the viewport minus its chrome, so this
+              // shows the complete first fold rather than clipping the form.
               width: "1280px",
               height: "800px",
               transform: `scale(${customScale})`,
@@ -533,6 +536,10 @@ export function SocialLaunchMockup({
   };
 
   {/* 3-Tier Layered 3D Floating Feature Blurb Card (Layered BEHIND the MacBook) */}
+  // The about card is laid out at its own width, so it needs its own scale
+  // rather than borrowing the laptop's.
+  const aboutScale = screenScale * 0.92;
+
   const renderFloatingAboutCard = (opts?: {
     topOffset?: string;
     rightOffset?: string;
@@ -596,15 +603,17 @@ export function SocialLaunchMockup({
         /* No capture uploaded yet: show the REAL about section from the live
            page rather than a synthetic stand-in. The laptop already shows the
            real hero this way, and a mockup pairing a real hero with an
-           invented about card is the one that gets noticed. */
-        <div className="relative w-full aspect-video bg-white overflow-hidden">
+           invented about card is the one that gets noticed. The card is 4:3,
+           matching a 1280x960 slice, so the whole about composition is visible
+           — a 16:9 card cropped it in half. */
+        <div className="relative w-full aspect-[4/3] bg-white overflow-hidden">
           <iframe
             src={`${data.previewUrl}#about`}
             title={`${businessShortName} about section`}
             tabIndex={-1}
             scrolling="no"
             className="absolute top-0 left-0 border-0 pointer-events-none"
-            style={{ width: "1280px", height: "900px", transform: "scale(0.32)", transformOrigin: "top left" }}
+            style={{ width: "1280px", height: "960px", transform: `scale(${aboutScale})`, transformOrigin: "top left" }}
           />
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/15 pointer-events-none" />
         </div>

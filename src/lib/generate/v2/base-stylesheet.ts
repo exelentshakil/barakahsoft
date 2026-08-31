@@ -211,8 +211,13 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-form [type=submit],.bespoke-page .bs-form button{width:100%}
 
 /* ---------- hero ------------------------------------------------------- */
-.bespoke-page .bs-hero{position:relative;padding:0;min-height:clamp(620px,88vh,900px);display:flex;align-items:center;overflow:hidden;background:var(--bs-ink,#16181d);color:#fff}
-.bespoke-page .bs-hero .bs-container{position:relative;z-index:3;padding-block:clamp(104px,11vh,140px) clamp(48px,6vh,80px);width:100%}
+/* The hero used to ask for 88vh while a ~106px sticky nav sat above it, so
+   hero + chrome came to 94vh + 106px and the bottom of the form fell below
+   the fold on any screen under about 880px tall — a 13" laptop, and every
+   social mockup, which is where this was first noticed. It now takes exactly
+   the screen minus the chrome, so the first fold is the whole first fold. */
+.bespoke-page .bs-hero{position:relative;padding:0;min-height:clamp(560px,calc(100svh - 112px),880px);display:flex;align-items:center;overflow:hidden;background:var(--bs-ink,#16181d);color:#fff}
+.bespoke-page .bs-hero .bs-container{position:relative;z-index:3;padding-block:clamp(48px,6vh,76px) clamp(40px,5vh,64px);width:100%}
 .bespoke-page .bs-hero__bg{position:absolute;inset:0;z-index:0;border-radius:0;aspect-ratio:auto}
 .bespoke-page .bs-hero__bg>img{width:100%;height:100%;object-fit:cover}
 .bespoke-page .bs-hero::after{
