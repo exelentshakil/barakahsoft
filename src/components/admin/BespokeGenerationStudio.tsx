@@ -82,16 +82,18 @@ export function BespokeGenerationStudio({
   // behind a login wall, so the operator reads them off the client's page.
   // Left empty, the hero shows one combined badge carrying both marks rather
   // than a real Google rating beside a hollow Facebook one.
-  const [facebookRating, setFacebookRating] = useState(
-    typeof (extracted.mockup as Record<string, unknown> | undefined)?.facebookRating === "number"
-      ? String((extracted.mockup as Record<string, number>).facebookRating)
-      : ""
-  );
-  const [facebookReviewCount, setFacebookReviewCount] = useState(
-    typeof (extracted.mockup as Record<string, unknown> | undefined)?.facebookReviewCount === "number"
-      ? String((extracted.mockup as Record<string, number>).facebookReviewCount)
-      : ""
-  );
+  // Read from what the last generate persisted, falling back to `mockup`
+  // where older leads still hold it. Before overrides were stored, these
+  // fields came back empty after every build and had to be retyped.
+  const savedOverrides = (extracted.brief_overrides ?? {}) as Record<string, unknown>;
+  const savedMockup = (extracted.mockup ?? {}) as Record<string, unknown>;
+  const savedNumber = (key: string) => {
+    const value = savedOverrides[key] ?? savedMockup[key];
+    return typeof value === "number" && value > 0 ? String(value) : "";
+  };
+
+  const [facebookRating, setFacebookRating] = useState(savedNumber("facebookRating"));
+  const [facebookReviewCount, setFacebookReviewCount] = useState(savedNumber("facebookReviewCount"));
   const [servicesText, setServicesText] = useState(defaultServices);
   const [areasText, setAreasText] = useState(defaultAreas);
   const [primaryColor, setPrimaryColor] = useState(extracted.branding?.colors?.primary || (facts.colors as any)?.primary || "#533AFD");

@@ -20,16 +20,49 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const body = (await req.json().catch(() => ({}))) as BriefOverrides & { phase?: 1 | 2 };
   const phase = body.phase === 2 ? 2 : 1;
-    // An operator's explicit model choice. Kept as free text rather than an
-  // enum so a model released after this deploy is selectable without one —
-  // the chain behind it still catches an id that no longer resolves.
-    const overrides = body;
+  const { phase: _phase, ...supplied } = body;
   const admin = createAdminClient();
 
-  const [{ data: lead }, { data: scrapeResults }] = await Promise.all([
+  const [{ data: lead }, { data: scrapeResults }, { data: priorArtifact }] = await Promise.all([
     admin.from("leads").select("*").eq("id", leadId).single<Lead>(),
     admin.from("scrape_results").select("*").eq("lead_id", leadId).single<ScrapeResults>(),
+    admin
+      .from("artifacts")
+      .select("id, extracted_assets")
+      .eq("lead_id", leadId)
+      .maybeSingle<{ id: string; extracted_assets: Record<string, unknown> | null }>(),
   ]);
+
+  // Brief overrides are operator truth, and they have to outlive the request
+  // that carried them.
+  //
+  // They were read straight off the body and thrown away afterwards. The
+  // Studio re-mounted from server state with the fields blank, so the
+  // Facebook rating and count — which no scraper can read, because Facebook
+  // hides them, and which therefore exist nowhere else — had to be retyped
+  // before every single rebuild. Worse, the phase 2 button posts `{phase:2}`
+  // and nothing else, so the deep build re-derived its brief from the scrape
+  // alone and silently discarded every correction: founder, city, services,
+  // areas, logo, hero image, along with the Facebook proof.
+  //
+  // What the operator last set is stored on the artifact and merged under
+  // whatever this request supplies. A key the request omits keeps its stored
+  // value; a key it sends as null is an operator clearing the field, and
+  // that is honoured.
+  const storedAssets = (priorArtifact?.extracted_assets ?? {}) as Record<string, unknown>;
+  const storedOverrides = (storedAssets.brief_overrides ?? {}) as Partial<BriefOverrides>;
+  const legacyMockup = (storedAssets.mockup ?? {}) as Record<string, unknown>;
+
+  const overrides: BriefOverrides = { ...storedOverrides };
+  // Facebook proof previously lived under `mockup`, where the Studio still
+  // reads it. Carry it forward once so nobody has to retype it again.
+  if (overrides.facebookRating == null && typeof legacyMockup.facebookRating === "number") {
+    overrides.facebookRating = legacyMockup.facebookRating;
+  }
+  if (overrides.facebookReviewCount == null && typeof legacyMockup.facebookReviewCount === "number") {
+    overrides.facebookReviewCount = legacyMockup.facebookReviewCount;
+  }
+  Object.assign(overrides, supplied);
 
   if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
   if (!scrapeResults) {
@@ -57,7 +90,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   // An artifact row must exist before the job starts, since every step
   // updates it in place.
-  const { data: existing } = await admin.from("artifacts").select("id").eq("lead_id", leadId).maybeSingle();
+  const existing = priorArtifact;
   if (!existing) {
     const { data: shell } = await admin.from("template_shells").select("id").limit(1).single();
     if (!shell) return NextResponse.json({ error: "No template shell found in database" }, { status: 500 });
@@ -95,6 +128,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       );
     }
   }
+
+  // Persist before handing off, so a rebuild started from anywhere — the
+  // phase 2 button, a retry, another session — inherits the same brief.
+  const { data: artifactRow } = await admin
+    .from("artifacts")
+    .select("extracted_assets")
+    .eq("lead_id", leadId)
+    .maybeSingle<{ extracted_assets: Record<string, unknown> | null }>();
+  await admin
+    .from("artifacts")
+    .update({ extracted_assets: { ...(artifactRow?.extracted_assets ?? {}), brief_overrides: overrides } })
+    .eq("lead_id", leadId);
 
   await inngest.send({
     name: "bespoke/generate.requested",
