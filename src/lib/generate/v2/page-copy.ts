@@ -2,6 +2,7 @@ import { z } from "zod";
 import { callGemini, bestGeminiChain } from "@/lib/gemini-client";
 import { parseJsonResponse } from "@/lib/parse-json-response";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
+import { trimToSentence } from "@/lib/text-trim";
 
 // The one model call left in the build.
 //
@@ -194,7 +195,7 @@ function fallbackCopy(brief: SiteBrief): PageCopy {
       headline: `Local ${trade} you can actually reach`.slice(0, 80),
       headlineMark: "actually reach",
       paragraphs: [
-        (brief.aboutContent ?? `${brief.businessName} works with homeowners and businesses across ${city}, doing ${trade.toLowerCase()} properly and explaining it in plain language.`).slice(0, 780),
+        trimToSentence(brief.aboutContent ?? `${brief.businessName} works with homeowners and businesses across ${city}, doing ${trade.toLowerCase()} properly and explaining it in plain language.`, 780),
       ],
       founderRole: brief.founder ? "Founder" : "",
       sealLine: `${city} · Trusted local trade`.slice(0, 54),
@@ -371,7 +372,7 @@ warranty, materials, payment, what happens if something goes wrong, and how to g
   if (parsed.data.about.paragraphs.some(looksLikeMarkup)) {
     console.warn("[page-copy] the about copy contained raw markup; substituting the cleaned story");
     parsed.data.about.paragraphs = story
-      ? [story.slice(0, 780)]
+      ? [trimToSentence(story, 780)]
       : [`${brief.businessName} works with homeowners and businesses across ${brief.city}, doing ${brief.industry.toLowerCase()} properly and explaining it in plain language.`];
   }
 

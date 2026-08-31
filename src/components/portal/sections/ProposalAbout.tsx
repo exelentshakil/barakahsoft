@@ -1,11 +1,18 @@
 import type { MockupData } from "@/components/mockup/SocialLaunchMockup";
 import { Shield } from "lucide-react";
+import { trimParagraphs } from "@/lib/text-trim";
 
 export function ProposalAbout({ data }: { data: MockupData }) {
   // The business's own about copy arrives as one string with its paragraph
   // breaks intact; rendering it in a single <p> made a company history read
   // as an unbroken wall of text.
-  const aboutParagraphs = (data.aboutBody ?? "")
+  //
+  // It is also budgeted here rather than shown in full. This is a two-column
+  // section balanced against a fixed-height capture on the left, and a client
+  // who wrote four paragraphs of company history ran the text column hundreds
+  // of pixels past the image. Two paragraphs ending on a full stop is the most
+  // that sits level with the artwork; the whole story is on their own page.
+  const aboutParagraphs = trimParagraphs(data.aboutBody ?? "", 420, 2)
     .split(/\n{2,}/)
     .map((p) => p.trim())
     .filter(Boolean);
