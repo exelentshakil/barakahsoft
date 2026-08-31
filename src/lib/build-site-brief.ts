@@ -181,6 +181,9 @@ export function buildSiteBrief(
     reviewCount,
     reviews,
     photos,
+    socials: ((facts.social_urls as string[] | undefined) ?? [])
+      .filter((url) => /^https?:\/\//i.test(url))
+      .slice(0, 6),
     heroImage,
     factsDigest: buildRichContext(facts, { relevantPage: findRelevantPage(facts), maxChars: 5000 }),
     licensedInsured: findLicenseInsuranceMention(facts),

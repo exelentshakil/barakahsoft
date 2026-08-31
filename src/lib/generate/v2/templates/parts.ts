@@ -73,6 +73,24 @@ export function seal(line: string, logoUrl: string | null, businessName: string)
 /** The Google "G", drawn rather than hotlinked so it cannot break or track. */
 export const GOOGLE_MARK = `<span class="bs-google" aria-label="Google review"><svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5a5.6 5.6 0 0 1-2.4 3.7v3h3.9c2.3-2.1 3.5-5.2 3.5-8.9z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.9-3c-1.1.7-2.4 1.2-4 1.2-3.1 0-5.7-2.1-6.6-4.9H1.4v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.4 14.4a7.2 7.2 0 0 1 0-4.6V6.7H1.4a12 12 0 0 0 0 10.7l4-3z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.4 6.7l4 3.1C6.3 6.9 8.9 4.8 12 4.8z"/></svg></span>`;
 
+const SOCIAL_PATHS: [RegExp, string, string][] = [
+  [/facebook\.com/i, "Facebook", `<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>`],
+  [/instagram\.com/i, "Instagram", `<rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.2"/>`],
+  [/(twitter|x)\.com/i, "X", `<path d="M4 4l16 16M20 4L4 20"/>`],
+  [/youtube\.com/i, "YouTube", `<rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9l5 3-5 3z"/>`],
+  [/linkedin\.com/i, "LinkedIn", `<rect x="2" y="2" width="20" height="20" rx="3"/><path d="M7 10v7M7 7v.01M12 17v-4a2 2 0 0 1 4 0v4"/>`],
+  [/tiktok\.com/i, "TikTok", `<path d="M15 3v9a4 4 0 1 1-4-4"/><path d="M15 6a5 5 0 0 0 5 4"/>`],
+];
+
+export function socialLabel(url: string): string {
+  return SOCIAL_PATHS.find(([pattern]) => pattern.test(url))?.[1] ?? "Social profile";
+}
+
+export function socialIcon(url: string): string {
+  const path = SOCIAL_PATHS.find(([pattern]) => pattern.test(url))?.[2] ?? ICONS.home;
+  return `<span class="bs-social" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${path}</svg></span>`;
+}
+
 export function stars(rating: number | null): string {
   const filled = Math.round(rating ?? 5);
   return `<span class="bs-stars" aria-hidden="true">${Array.from({ length: 5 }, (_, index) =>

@@ -44,6 +44,7 @@ const brief: SiteBrief = {
     { author: "Ben Whitaker", rating: 5, when: "3 weeks ago", avatar: null, text: "Quoted on Tuesday, on the roof by Friday. Price on the invoice matched the quote exactly." },
     { author: "Sarah Klein", rating: 5, when: "8 months ago", avatar: null, text: "They found storm damage two other companies missed and dealt with the insurer directly." },
   ],
+  socials: ["https://www.facebook.com/253163434551662", "https://www.instagram.com/SaddleRoofing"],
   photos: [
     "https://images.unsplash.com/photo-1632759145355-6d5dfb8c2a86?auto=format&fit=crop&w=1600&q=80",
     "https://images.unsplash.com/photo-1541889895054-47f631169c9b?auto=format&fit=crop&w=1600&q=80",

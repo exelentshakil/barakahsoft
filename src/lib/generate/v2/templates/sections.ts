@@ -22,6 +22,8 @@ export interface RenderContext {
   logoUrl: string | null;
   /** Photos in plan order; each section takes what it needs. */
   photos: string[];
+  /** Only the client's own photography, for the "our work" gallery. */
+  galleryPhotos: string[];
   /** Real routes, honouring inner_pages_built. */
   href: (path: string) => string;
   primaryHref: string;
@@ -150,7 +152,7 @@ export function aboutSection(ctx: RenderContext): string {
   })();
 
   const statBand = about.stats.length
-    ? `<div class="bs-stats">${about.stats
+    ? `<div class="bs-stats" style="--stat-count:${Math.min(about.stats.length, 4)}">${about.stats
         .slice(0, 4)
         .map((stat) => `<div class="bs-stat"><span class="bs-stat__value">${esc(stat.value)}</span><span class="bs-stat__label">${esc(stat.label)}</span></div>`)
         .join("")}</div>`
@@ -314,13 +316,13 @@ export function processSection(ctx: RenderContext): string {
  * pairing in the studio later lights this up without touching the section.
  */
 export function gallerySection(ctx: RenderContext): string {
-  const photos = ctx.photos.slice(3);
+  const photos = ctx.galleryPhotos.length >= 4 ? ctx.galleryPhotos : [];
   if (photos.length < 4) return "";
   const { copy, brief } = ctx;
   const services = copy.services.items;
 
   const tiles = photos
-    .slice(0, 12)
+    .slice(0, 8)
     .map((photo, index) => {
       const caption = copy.gallery.captions[index] ?? services[index % Math.max(services.length, 1)]?.name ?? `${brief.industry} in ${brief.city}`;
       return `<figure class="bs-gallery__tile">
@@ -410,7 +412,7 @@ export function areasSection(ctx: RenderContext): string {
   if (brief.areas.length === 0) return "";
   // A Google Maps embed rather than a static image: no API key, no quota, and
   // the sanitizer already whitelists this exact host for iframes.
-  const query = encodeURIComponent(`${brief.city} ${brief.areas.slice(0, 2).join(" ")}`.trim());
+  const query = encodeURIComponent(brief.city.trim() || brief.areas[0] || "");
   return `<section id="areas" class="bs-section bs-section--tint bs-areas--${variant(ctx.dna.seed, 7)}">
   <div class="bs-container">
     <div class="bs-split bs-split--wide-right bs-areas">
@@ -433,7 +435,7 @@ export function areasSection(ctx: RenderContext): string {
         <div class="bs-actions">${button(copy.hero.submitLabel, ctx.primaryHref)}</div>
       </div>
       <div class="bs-areas__map">
-        <iframe src="https://www.google.com/maps?q=${query}&output=embed" title="Map of the area served by ${esc(brief.businessName)}" width="600" height="450" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <iframe src="https://maps.google.com/maps?q=${query}&t=&z=9&ie=UTF8&iwloc=&output=embed" title="Map of the area served by ${esc(brief.businessName)}" width="600" height="450" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
       </div>
     </div>
   </div>
