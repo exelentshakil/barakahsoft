@@ -184,9 +184,24 @@ export function aboutSection(ctx: RenderContext): string {
     return value || founders.role;
   })();
 
-  const statBand = about.stats.length
-    ? `<div class="bs-stats" style="--stat-count:${Math.min(about.stats.length, 4)}">${about.stats
-        .slice(0, 4)
+  // The band sat half empty whenever the copy model returned two stats, so the
+  // supported facts we already hold top it up to four: the rating, the review
+  // count, how many services they run, how many towns they cover, whether they
+  // are licensed. Nothing here is invented — a fact absent from the brief
+  // simply does not appear.
+  const derived: { value: string; label: string }[] = [
+    brief.rating ? { value: String(brief.rating), label: "Average rating" } : null,
+    brief.reviewCount ? { value: `${brief.reviewCount}`, label: "Customer reviews" } : null,
+    brief.services.length >= 3 ? { value: `${brief.services.length}`, label: "Services offered" } : null,
+    brief.areas.length >= 2 ? { value: `${brief.areas.length}`, label: "Areas covered" } : null,
+    brief.licensedInsured ? { value: "100%", label: "Licensed & insured" } : null,
+  ].filter((stat): stat is { value: string; label: string } => stat !== null);
+
+  const seenLabels = new Set(about.stats.map((stat) => stat.label.toLowerCase()));
+  const stats = [...about.stats, ...derived.filter((stat) => !seenLabels.has(stat.label.toLowerCase()))].slice(0, 4);
+
+  const statBand = stats.length
+    ? `<div class="bs-stats" style="--stat-count:${Math.min(stats.length, 4)}">${stats
         .map((stat) => `<div class="bs-stat"><span class="bs-stat__value">${esc(stat.value)}</span><span class="bs-stat__label">${esc(stat.label)}</span></div>`)
         .join("")}</div>`
     : "";

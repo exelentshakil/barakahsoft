@@ -305,6 +305,20 @@ export function SocialMockupPanel({
             })}
           </div>
 
+          {(!mockupData.heroCaptureUrl || !mockupData.aboutCaptureUrl) && (
+            <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-medium text-amber-900">
+              The live preview cannot be exported. A browser will not let one page rasterise another page&apos;s
+              iframe, so any panel without an uploaded snapshot exports a vector stand-in instead of the real
+              site. Screenshot{" "}
+              {!mockupData.heroCaptureUrl && !mockupData.aboutCaptureUrl
+                ? "the hero and about sections"
+                : !mockupData.heroCaptureUrl
+                  ? "the hero section"
+                  : "the about section"}{" "}
+              from the clean preview and upload above for a pixel-accurate export.
+            </p>
+          )}
+
           {/* Vertical framing. Live, so the fit is judged by looking at it. */}
           <div className="mt-2 grid gap-2 sm:grid-cols-2">
             {(["hero", "about"] as const).map((slot) => {

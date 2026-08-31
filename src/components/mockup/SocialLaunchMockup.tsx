@@ -395,6 +395,11 @@ export function SocialLaunchMockup({
         cacheBust: true,
         pixelRatio: 3,
         filter: (node) => {
+          // Iframes cannot be rasterised: html-to-image serialises the DOM it
+          // can read, and a cross-origin document is a browser security
+          // boundary. A panel without an uploaded snapshot therefore exports
+          // its vector stand-in, which is why the panel warns before you get
+          // here rather than letting a stand-in reach a client.
           if (node.tagName && node.tagName.toUpperCase() === "IFRAME") return false;
           return true;
         },

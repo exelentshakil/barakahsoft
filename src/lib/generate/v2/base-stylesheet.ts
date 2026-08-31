@@ -217,7 +217,12 @@ export const BASE_STYLESHEET = `
    social mockup, which is where this was first noticed. It now takes exactly
    the screen minus the chrome, so the first fold is the whole first fold. */
 .bespoke-page .bs-hero{position:relative;padding:0;min-height:clamp(560px,calc(100svh - 112px),880px);display:flex;align-items:center;overflow:hidden;background:var(--bs-ink,#16181d);color:#fff}
-.bespoke-page .bs-hero .bs-container{position:relative;z-index:3;padding-block:clamp(48px,6vh,76px) clamp(40px,5vh,64px);width:100%}
+/* The application's legacy stylesheet zeroes padding-inline on every direct
+   child of a section, which strips this container's gutter and pushes the hero
+   content against the viewport edge. The room is put on the grid, where no
+   legacy selector reaches. */
+.bespoke-page .bs-hero .bs-container{position:relative;z-index:3;padding-block:clamp(48px,6vh,76px) clamp(40px,5vh,64px);padding-inline:0;width:100%}
+.bespoke-page [class*="bs-hero--"] .bs-hero__grid{padding-inline:var(--bs-gutter)}
 .bespoke-page .bs-hero__bg{position:absolute;inset:0;z-index:0;border-radius:0;aspect-ratio:auto}
 .bespoke-page .bs-hero__bg>img{width:100%;height:100%;object-fit:cover}
 .bespoke-page .bs-hero::after{

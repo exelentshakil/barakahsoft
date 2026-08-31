@@ -22,8 +22,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
 
   const admin = createAdminClient();
-  const { data: lead } = await admin.from("leads").select("industry, facts").eq("id", leadId).single();
-  if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+
+  // facts lives on scrape_results, not on leads. Selecting it here made the
+  // whole query error, and the null result was reported as "Lead not found" —
+  // so uploading a client's own photographs failed with a message that pointed
+  // at the wrong thing entirely.
+  const [{ data: lead, error: leadError }, { data: scrape }] = await Promise.all([
+    admin.from("leads").select("id, industry").eq("id", leadId).single(),
+    admin.from("scrape_results").select("id, facts").eq("lead_id", leadId).maybeSingle(),
+  ]);
+  if (leadError || !lead) {
+    return NextResponse.json({ error: leadError?.message ?? "Lead not found" }, { status: 404 });
+  }
 
   const uploaded = [];
 
@@ -50,8 +60,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   );
   await saveDescriptions(verdicts);
 
-  // Add the uploaded URLs to lead.facts.site_photos so buildSiteBrief includes them in 'realPhotos'
-  const currentFacts = (lead.facts as any) ?? {};
+  // Added to scrape_results.facts.site_photos, which is where buildSiteBrief
+  // reads real photography from.
+  const currentFacts = (scrape?.facts as Record<string, unknown> | null) ?? {};
   const sitePhotos = Array.isArray(currentFacts.site_photos) ? currentFacts.site_photos : [];
   
   const newPhotos = uploaded.filter(u => {
@@ -68,8 +79,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       site_photos: [...sitePhotos, ...newPhotos]
     };
 
-    await admin.from("leads").update({ facts: updatedFacts }).eq("id", leadId);
+    if (scrape?.id) {
+      await admin.from("scrape_results").update({ facts: updatedFacts }).eq("id", scrape.id);
+    } else {
+      await admin.from("scrape_results").insert({ lead_id: leadId, facts: updatedFacts });
+    }
   }
 
-  return NextResponse.json({ ok: true, uploaded: uploaded.length, usable: newPhotos.length });
+  return NextResponse.json({
+    ok: true,
+    uploaded: uploaded.length,
+    usable: newPhotos.length,
+    photos: newPhotos,
+  });
 }

@@ -1430,7 +1430,13 @@ Shaq`,
             </TabPanel>
 
             <TabPanel active={tab === "photos"}>
-              <ManualPhotoUpload leadId={lead.id} onUploadComplete={() => setReloadKey((k) => k + 1)} />
+              <ManualPhotoUpload
+                leadId={lead.id}
+                photos={((scrapeResults?.facts as { site_photos?: { url: string; caption?: string }[] } | undefined)?.site_photos ?? []).filter(
+                  (photo) => photo?.url
+                )}
+                onUploadComplete={() => setReloadKey((k) => k + 1)}
+              />
 
               {artifact?.bespoke_homepage_html && (
                 <RefinePanel key={`slots-${reloadKey}`} leadId={lead.id} />
