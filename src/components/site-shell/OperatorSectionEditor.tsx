@@ -332,7 +332,7 @@ export function OperatorSectionEditor({ leadId }: { leadId: string }) {
 
   if (!open) {
     return (
-      <div className="fixed bottom-5 left-5 z-[9999] flex items-center gap-2 rounded-full bg-slate-900 p-1.5 pl-2 shadow-lg">
+      <div data-operator-ui="1" className="fixed bottom-5 left-5 z-[9999] flex items-center gap-2 rounded-full bg-slate-900 p-1.5 pl-2 shadow-lg">
         <button
           type="button"
           onClick={() => setInline((v) => !v)}

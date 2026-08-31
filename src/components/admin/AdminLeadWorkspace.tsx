@@ -622,25 +622,45 @@ Shaq`,
         throw new Error("Preview frame not ready. Please wait for the preview to load or open the preview page.");
       }
 
-      let targetEl: HTMLElement | null = null;
+      // Wait for the section to EXIST before looking for it. This ran the
+      // readiness wait after the query, so a frame still on about:blank — or
+      // mid-navigation — reported "could not find the hero section" when the
+      // real answer was "not loaded yet". That is why it worked after a
+      // refresh.
+      const deadline = Date.now() + 15_000;
+      let anchor: HTMLElement | null = null;
+      while (Date.now() < deadline) {
+        anchor =
+          slot === "hero"
+            ? doc.querySelector<HTMLElement>("#hero") ?? doc.querySelector<HTMLElement>(".bs-hero")
+            : doc.querySelector<HTMLElement>("#about") ?? doc.querySelector<HTMLElement>(".bs-about");
+        if (anchor) break;
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
+
+      if (!anchor) {
+        throw new Error(
+          `The preview did not finish loading, so the ${slot} section was never there to capture. Give it a moment and try again, or open the clean preview in a tab first.`
+        );
+      }
+
+      await waitForFrame(doc, anchor);
+
+      // The hero capture is the whole first fold, navigation included — the
+      // bar is what makes a screenshot read as a website rather than a banner,
+      // and it lives in a separate wrapper from the hero section, so capturing
+      // #hero alone cut it off. Capture from the top of the document down to
+      // the hero's bottom edge instead.
+      let targetEl: HTMLElement = anchor;
+      let captureHeight: number | undefined;
+
       if (slot === "hero") {
-        targetEl =
-          doc.querySelector<HTMLElement>("#hero") ||
-          doc.querySelector<HTMLElement>("main > section:first-of-type") ||
-          doc.querySelector<HTMLElement>("section");
-      } else {
-        targetEl =
-          doc.querySelector<HTMLElement>("#about") ||
-          doc.querySelector<HTMLElement>("section[class*='about']") ||
-          doc.querySelectorAll<HTMLElement>("section")[1] ||
-          null;
+        targetEl = doc.body;
+        const heroBottom = anchor.getBoundingClientRect().bottom + (doc.defaultView?.scrollY ?? 0);
+        captureHeight = Math.ceil(heroBottom);
       }
 
-      if (!targetEl) {
-        throw new Error(`Could not find the ${slot} section element in the preview.`);
-      }
 
-      await waitForFrame(doc, targetEl);
 
       // Every image goes through our own proxy and becomes a data URI first.
       // Being on the same domain as the preview does not help: the images
@@ -653,7 +673,30 @@ Shaq`,
       // defeats the browser cache and can turn an already-loaded image into a
       // fresh cross-origin request that taints the canvas — the second reason
       // this failed at random. The wait above is what makes it unnecessary.
-      const options = { pixelRatio: 2, backgroundColor: "#ffffff" } as const;
+      const options = {
+        pixelRatio: 2,
+        backgroundColor: "#ffffff",
+        // Capturing the body for the hero means our own furniture is in scope:
+        // the operator toolbar and any support-chat bubble are position:fixed,
+        // so they float over whatever is captured. Drop them and every iframe
+        // (a nested map cannot be rasterised anyway).
+        filter: (node: HTMLElement) => {
+          if (!node.tagName) return true;
+          const tag = node.tagName.toUpperCase();
+          if (tag === "IFRAME" || tag === "SCRIPT" || tag === "NOSCRIPT") return false;
+          if (node.dataset?.operatorUi) return false;
+          if (tag === "DIV" || tag === "BUTTON" || tag === "ASIDE") {
+            const style = doc.defaultView?.getComputedStyle(node);
+            // The nav is legitimately fixed/sticky and must stay; anything else
+            // pinned to the viewport is an overlay, not part of the page.
+            if (style?.position === "fixed" && !node.closest("[data-nav]")) return false;
+          }
+          return true;
+        },
+        ...(captureHeight
+          ? { height: captureHeight, width: targetEl.scrollWidth, style: { transform: "none" } }
+          : {}),
+      };
 
       let blob = await toBlob(targetEl, options).catch(() => null);
       if (!blob) {
