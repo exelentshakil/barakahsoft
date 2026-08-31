@@ -418,13 +418,15 @@ export const BASE_STYLESHEET = `
   mask-image:radial-gradient(70% 60% at 50% 45%,#000 0%,transparent 100%);
 }
 .bespoke-page .bs-contact>.bs-container{position:relative;z-index:2}
-.bespoke-page .bs-contact__inner{display:grid;grid-template-columns:1.15fr .85fr;gap:clamp(36px,5vw,80px);align-items:center}
-.bespoke-page .bs-contact__copy{display:flex;flex-direction:column;align-items:flex-start;gap:clamp(16px,1.8vw,22px)}
-.bespoke-page .bs-contact__copy .bs-lede{margin-bottom:4px}
+.bespoke-page .bs-contact__inner{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.82fr);gap:clamp(32px,4vw,64px);align-items:center}
+.bespoke-page .bs-contact__copy{display:flex;flex-direction:column;align-items:stretch;gap:clamp(16px,1.8vw,22px)}
+.bespoke-page .bs-contact__copy>.bs-eyebrow{align-self:flex-start}
+.bespoke-page .bs-contact__copy .bs-lede{margin-bottom:4px;max-width:46ch}
+.bespoke-page .bs-contact__copy .bs-h2{max-width:16ch}
 .bespoke-page .bs-contact__form{display:flex;justify-content:flex-end}
 
 /* Channels ------------------------------------------------------------- */
-.bespoke-page .bs-channels{display:flex;flex-direction:column;gap:12px;width:100%;max-width:440px}
+.bespoke-page .bs-channels{display:flex;flex-direction:column;gap:12px;width:100%}
 .bespoke-page .bs-channel{
   display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;
   padding:15px 18px;border-radius:var(--bs-r);
@@ -450,7 +452,7 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-channel:hover .bs-channel__go{opacity:1;transform:translateX(4px)}
 
 /* Reassurance ---------------------------------------------------------- */
-.bespoke-page .bs-contact__meta{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.bespoke-page .bs-contact__meta{display:flex;flex-wrap:wrap;align-items:center;gap:10px;width:100%}
 .bespoke-page .bs-live{
   display:inline-flex;align-items:center;gap:9px;font-size:.83rem;font-weight:700;color:rgb(255 255 255 / .82);
   padding:7px 14px;border-radius:999px;background:rgb(255 255 255 / .06);border:1px solid rgb(255 255 255 / .14);
@@ -459,10 +461,13 @@ export const BASE_STYLESHEET = `
 @keyframes bs-live-pulse{70%{box-shadow:0 0 0 9px rgb(49 208 127 / 0)}100%{box-shadow:0 0 0 0 rgb(49 208 127 / 0)}}
 
 /* Areas ---------------------------------------------------------------- */
-.bespoke-page .bs-areas{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding-top:4px}
-.bespoke-page .bs-areas__label{display:inline-flex;align-items:center;gap:7px;font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.55}
-.bespoke-page .bs-areas__list{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0}
-.bespoke-page .bs-areas__list li{font-size:.82rem;font-weight:600;padding:6px 13px;border-radius:999px;background:rgb(255 255 255 / .05);border:1px solid rgb(255 255 255 / .13);color:rgb(255 255 255 / .84)}
+/* Namespaced under bs-contact__. These were .bs-areas, which the service
+   areas section already owns — the white pill colour here repainted that
+   section's cards white-on-white and its flex layout collapsed their grid. */
+.bespoke-page .bs-contact__areas{display:flex;flex-wrap:wrap;align-items:center;gap:10px;width:100%;padding-top:2px}
+.bespoke-page .bs-contact__arealabel{display:inline-flex;align-items:center;gap:7px;font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.55}
+.bespoke-page .bs-contact__arealist{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0}
+.bespoke-page .bs-contact__arealist li{font-size:.82rem;font-weight:600;padding:6px 13px;border-radius:999px;background:rgb(255 255 255 / .05);border:1px solid rgb(255 255 255 / .13);color:rgb(255 255 255 / .84)}
 
 /* The card is the destination, so it sits highest. */
 .bespoke-page .bs-contact .bs-form{box-shadow:0 44px 90px rgb(0 0 0 / .48);max-width:460px}
@@ -475,7 +480,7 @@ export const BASE_STYLESHEET = `
 @media (max-width:620px){
   .bespoke-page .bs-contact__copy{align-items:center;text-align:center}
   .bespoke-page .bs-contact .bs-eyebrow{flex-direction:column;gap:8px}
-  .bespoke-page .bs-contact__meta,.bespoke-page .bs-areas,.bespoke-page .bs-areas__list{justify-content:center}
+  .bespoke-page .bs-contact__meta,.bespoke-page .bs-contact__areas,.bespoke-page .bs-contact__arealist{justify-content:center}
   .bespoke-page .bs-channel{grid-template-columns:auto 1fr;text-align:left;padding:14px 16px;gap:13px}
   .bespoke-page .bs-channel__go{display:none}
   .bespoke-page .bs-contact .bs-form{max-width:none}

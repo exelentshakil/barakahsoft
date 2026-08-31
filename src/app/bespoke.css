@@ -91,6 +91,14 @@
 /* Content dropped straight into a band with no wrap around it still clears
    the edge. Decorative layers are excluded — they are meant to bleed.
  *
+ * Gated on the section holding no .bs-container, which is what makes it a v1
+ * band. Generated pages load this sheet alongside their own, and naming v2's
+ * classes one at a time in the exclusion list is a game this rule kept
+ * losing: .bs-container was added after v2 heroes came back with a gutter on
+ * them, and .bs-hero__bg — an inset:0 figure whose img fills it — was still
+ * being padded, insetting the hero photo and leaving a bar down each side of
+ * every generated page. One condition covers the whole vocabulary.
+ *
  * Two exclusions carry the "never doubles up" guarantee, and both were
  * missing:
  *
@@ -107,7 +115,7 @@
  *     so the hero's headline sat indented from every heading below it.
  *     It is gone: all three hero shapes are now covered by the rule above
  *     plus .bs-wrap, each applying exactly once. */
-.bespoke-page > section > :not(.bs-wrap, .bs-wrap-narrow, .bs-container, .bs-hero-media, .bs-hero-scrim, .bs-decor-orb):not(:has(> .bs-wrap, > .bs-wrap-narrow, > .bs-container)) {
+.bespoke-page > section:not(:has(.bs-container)) > :not(.bs-wrap, .bs-wrap-narrow, .bs-hero-media, .bs-hero-scrim, .bs-decor-orb):not(:has(> .bs-wrap, > .bs-wrap-narrow)) {
   padding-inline: var(--bs-page-gutter);
 }
 

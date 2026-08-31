@@ -705,9 +705,9 @@ export function contactSection(ctx: RenderContext): string {
           ${badges}
         </div>
 
-        ${areas.length ? `<div class="bs-areas">
-          <span class="bs-areas__label">${icon("pin", "bs-icon bs-icon--sm")}Serving</span>
-          <ul class="bs-areas__list">${areas.map((area) => `<li>${esc(area)}</li>`).join("")}</ul>
+        ${areas.length ? `<div class="bs-contact__areas">
+          <span class="bs-contact__arealabel">${icon("pin", "bs-icon bs-icon--sm")}Serving</span>
+          <ul class="bs-contact__arealist">${areas.map((area) => `<li>${esc(area)}</li>`).join("")}</ul>
         </div>` : ""}
       </div>
 
