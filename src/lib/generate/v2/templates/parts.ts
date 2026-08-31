@@ -20,6 +20,12 @@ export function markHeadline(headline: string, mark: string): string {
   return `${safe.slice(0, index)}<span class="bs-mark">${safe.slice(index, index + target.length)}</span>${safe.slice(index + target.length)}`;
 }
 
+/** A rating reads to one decimal. `String(5)` gives "5", which sits oddly
+ *  beside every other rating on the page. */
+export function ratingText(rating: number | null | undefined): string {
+  return typeof rating === "number" && Number.isFinite(rating) ? rating.toFixed(1) : "";
+}
+
 export function telHref(phone: string | null): string | null {
   if (!phone) return null;
   const digits = phone.replace(/[^\d+]/g, "");
@@ -153,11 +159,11 @@ export function reviewPills(args: {
     return `<div class="bs-pills">${[
       wrap(
         args.googleReviewUrl,
-        stack(GOOGLE_MARK, String(args.rating), args.reviewCount ? `${args.reviewCount} Google reviews` : "Google reviews")
+        stack(GOOGLE_MARK, ratingText(args.rating), args.reviewCount ? `${args.reviewCount} Google reviews` : "Google reviews")
       ),
       wrap(
         args.facebookUrl,
-        stack(FACEBOOK_MARK, String(args.facebookRating), `${args.facebookReviewCount} Facebook reviews`)
+        stack(FACEBOOK_MARK, ratingText(args.facebookRating), `${args.facebookReviewCount} Facebook reviews`)
       ),
     ].join("")}</div>${statRow}`;
   }
@@ -166,7 +172,7 @@ export function reviewPills(args: {
   // hollow one.
   const marks = `<span class="bs-pill__marks">${GOOGLE_MARK}${args.facebookUrl ? FACEBOOK_MARK : ""}</span>`;
   const inner = `${marks}<span class="bs-pill__body">
-    <span class="bs-pill__top"><strong>${esc(String(args.rating))}</strong>${stars(args.rating)}</span>
+    <span class="bs-pill__top"><strong>${esc(ratingText(args.rating))}</strong>${stars(args.rating)}</span>
     <span class="bs-pill__sub">${args.reviewCount ? `${esc(String(args.reviewCount))} Google reviews` : "Google reviews"}</span>
   </span>`;
 

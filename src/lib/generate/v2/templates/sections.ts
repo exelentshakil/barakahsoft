@@ -5,6 +5,7 @@ import {
   seal,
   stars,
   reviewPills,
+  ratingText,
   button,
   callLink,
   media,
@@ -163,7 +164,7 @@ export function trustSection(ctx: RenderContext): string {
   if (brief.rating && brief.reviewCount) {
     cells.push(`<div class="bs-trustbar__cell">
       ${stars(brief.rating)}
-      <span class="bs-trustbar__label"><strong>${esc(String(brief.rating))}</strong> from ${esc(String(brief.reviewCount))} Google reviews</span>
+      <span class="bs-trustbar__label"><strong>${esc(ratingText(brief.rating))}</strong> from ${esc(String(brief.reviewCount))} Google reviews</span>
     </div>`);
   }
 
@@ -549,7 +550,7 @@ export function reviewsSection(ctx: RenderContext): string {
     <div class="bs-center bs-reviews__head">
       <span class="bs-eyebrow">${esc(copy.reviews.eyebrow)}</span>
       <h2 class="bs-h2">${esc(copy.reviews.headline)}</h2>
-      ${brief.rating ? `<div class="bs-rating bs-rating--centred">${stars(brief.rating)}<span><strong>${esc(String(brief.rating))}</strong>${brief.reviewCount ? ` from ${esc(String(brief.reviewCount))} Google reviews` : ""}</span>${GOOGLE_MARK}</div>` : ""}
+      ${brief.rating ? `<div class="bs-rating bs-rating--centred">${stars(brief.rating)}<span><strong>${esc(ratingText(brief.rating))}</strong>${brief.reviewCount ? ` from ${esc(String(brief.reviewCount))} Google reviews` : ""}</span>${GOOGLE_MARK}</div>` : ""}
     </div>
     <div class="bs-reviews" data-review-slider>
       ${showArrows ? `<button class="bs-reviews__arrow bs-reviews__arrow--prev" type="button" data-review-prev aria-label="Previous reviews">${icon("arrow")}</button>` : ""}
@@ -741,7 +742,7 @@ export function contactSection(ctx: RenderContext): string {
   const badges = [
     brief.licensedInsured ? `<span class="bs-badge">${icon("shield", "bs-icon bs-icon--sm")}Licensed &amp; insured</span>` : "",
     brief.rating && brief.reviewCount
-      ? `<span class="bs-badge">${icon("star", "bs-icon bs-icon--sm")}${esc(String(brief.rating))} from ${esc(String(brief.reviewCount))} reviews</span>`
+      ? `<span class="bs-badge">${icon("star", "bs-icon bs-icon--sm")}${esc(ratingText(brief.rating))} from ${esc(String(brief.reviewCount))} reviews</span>`
       : "",
   ].filter(Boolean).join("");
 

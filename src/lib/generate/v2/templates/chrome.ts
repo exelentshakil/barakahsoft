@@ -1,4 +1,4 @@
-import { esc, icon, button, callLink, slug, telHref, socialIcon, socialLabel } from "@/lib/generate/v2/templates/parts";
+import { esc, icon, button, callLink, ratingText, slug, telHref, socialIcon, socialLabel } from "@/lib/generate/v2/templates/parts";
 import type { RenderContext } from "@/lib/generate/v2/templates/sections";
 
 // Navigation and footer, written here rather than generated.
@@ -192,7 +192,7 @@ export function footerMarkup(ctx: RenderContext): string {
         <p class="bs-body">${esc(copy.footer.blurb)}</p>
         <div class="bs-row">
           ${brief.licensedInsured ? `<span class="bs-badge">${icon("shield")}Licensed &amp; insured</span>` : ""}
-          ${brief.rating && brief.reviewCount ? `<span class="bs-badge">${icon("star")}${esc(String(brief.rating))} · ${esc(String(brief.reviewCount))} reviews</span>` : ""}
+          ${brief.rating && brief.reviewCount ? `<span class="bs-badge">${icon("star")}${esc(ratingText(brief.rating))} · ${esc(String(brief.reviewCount))} reviews</span>` : ""}
         </div>
         ${brief.phone ? `<a class="bs-phone-xl" href="${esc(telHref(brief.phone) ?? "#")}">${esc(brief.phone)}</a>` : ""}
         ${brief.email ? `<a class="bs-footer__email" href="mailto:${esc(brief.email)}">${esc(brief.email)}</a>` : ""}

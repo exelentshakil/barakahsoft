@@ -185,7 +185,7 @@ function fallbackCopy(brief: SiteBrief): PageCopy {
     },
     trust: {
       stats: [
-        brief.rating ? { value: String(brief.rating), label: "Average rating" } : { value: "100%", label: "Local team" },
+        brief.rating ? { value: brief.rating.toFixed(1), label: "Average rating" } : { value: "100%", label: "Local team" },
         { value: brief.reviewCount ? String(brief.reviewCount) : "5★", label: "Customer reviews" },
       ],
       badges: [brief.licensedInsured ? "Licensed & insured" : "Locally owned", "Free quotes"],
