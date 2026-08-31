@@ -36,21 +36,57 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
 
   const uploaded = [];
+  // Per-file reasons. "No images could be processed" told the operator
+  // nothing: an iPhone HEIC, a 200px thumbnail and a storage permission error
+  // all produced the same sentence, and only one of them is their fault.
+  const skipped: { name: string; reason: string }[] = [];
 
   for (const file of files) {
     if (!(file instanceof File)) continue;
+
+    // sharp is built without libheif here, so a HEIC throws deep inside and
+    // surfaces as an unexplained null. iPhone photos are the single most
+    // likely thing to be dragged into this box, so say so plainly.
+    const isHeic = /image\/hei[cf]/i.test(file.type) || /\.hei[cf]$/i.test(file.name);
+    if (isHeic) {
+      skipped.push({
+        name: file.name,
+        reason: "HEIC is not supported. On a Mac, open it in Preview and export as JPEG; on an iPhone, set Camera > Formats to Most Compatible.",
+      });
+      continue;
+    }
+
+    if (file.size > 25 * 1024 * 1024) {
+      skipped.push({ name: file.name, reason: `${(file.size / 1024 / 1024).toFixed(1)}MB is over the 25MB limit.` });
+      continue;
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
-    
-    // Pass fake URL so storagePath handles it nicely, using origin 'upload'
-    const result = await mirrorToStorage(leadId, `manual-${Date.now()}-${file.name}`, "upload", {
-      buffer,
-    });
-    
-    if (result) uploaded.push(result);
+
+    // Not a real URL — storagePath only uses it to build a readable filename.
+    const result = await mirrorToStorage(leadId, `manual-${Date.now()}-${file.name}`, "upload", { buffer });
+
+    if (result) {
+      uploaded.push(result);
+    } else {
+      skipped.push({
+        name: file.name,
+        reason: "Could not be read as an image, or its shortest edge is under 400px.",
+      });
+    }
   }
-  
+
   if (uploaded.length === 0) {
-    return NextResponse.json({ error: "No images could be processed. Check format and size." }, { status: 400 });
+    return NextResponse.json(
+      {
+        error:
+          skipped.length > 0
+            ? skipped.map((item) => `${item.name}: ${item.reason}`).join(" ")
+            : "No image files were received.",
+        skipped,
+      },
+      { status: 400 }
+    );
   }
 
   // Use vision to describe them so the generator uses them intelligently
@@ -91,5 +127,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     uploaded: uploaded.length,
     usable: newPhotos.length,
     photos: newPhotos,
+    skipped,
   });
 }

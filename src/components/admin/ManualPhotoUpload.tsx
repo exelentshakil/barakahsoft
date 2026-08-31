@@ -48,7 +48,12 @@ export function ManualPhotoUpload({
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Upload failed");
       
-      setSuccessMsg(`Processed ${data.uploaded} image(s) — ${data.usable} judged usable.`);
+      const skippedNote = Array.isArray(data.skipped) && data.skipped.length > 0
+        ? ` ${data.skipped.length} skipped: ${(data.skipped as { name: string; reason: string }[])
+            .map((item) => `${item.name} — ${item.reason}`)
+            .join(" ")}`
+        : "";
+      setSuccessMsg(`Processed ${data.uploaded} image(s) — ${data.usable} judged usable.${skippedNote}`);
       if (Array.isArray(data.photos)) setLibrary((prev) => [...prev, ...(data.photos as LeadPhoto[])]);
       if (onUploadComplete) onUploadComplete();
     } catch (err) {
@@ -90,9 +95,11 @@ export function ManualPhotoUpload({
             Add Original Photography
           </h3>
           <p className="text-xs text-[#42506a] max-w-2xl">
-            Upload client photos from their gallery or portfolio before generating the site. 
-            The AI will caption them, judge their quality, and place them automatically 
+            Upload client photos from their gallery or portfolio before generating the site.
+            The AI will caption them, judge their quality, and place them automatically
             during generation to make the site look premium and real.
+            JPEG, PNG, WebP or AVIF, at least 400px on the shortest edge. HEIC from an iPhone
+            will not work — export as JPEG first.
           </p>
         </div>
 
@@ -101,7 +108,7 @@ export function ManualPhotoUpload({
 
         <input
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp,image/avif"
           multiple
           className="hidden"
           ref={fileInput}

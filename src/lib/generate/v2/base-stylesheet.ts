@@ -863,6 +863,20 @@ export const BASE_STYLESHEET = `
   .bespoke-page [class*="bs-process--"] .bs-steps{grid-template-columns:1fr}
   .bespoke-page .bs-hero .bs-actions,.bespoke-page .bs-hero .bs-actions>*{width:100%;justify-content:center}
   .bespoke-page .bs-hero .bs-rating{width:100%;justify-content:center}
+
+  /* The photograph leads on a phone. Two paragraphs of story before any image
+     is a wall of text on a 390px screen, and the founders' faces are the
+     reason the section works at all. */
+  .bespoke-page [class*="bs-about--"] .bs-about__figure{order:1;margin-bottom:26px}
+  .bespoke-page [class*="bs-about--"] .bs-about__copy{order:2}
+
+  /* Actions stack full width on a phone, so a click-to-call sitting under one
+     reads as left-aligned debris unless it is centred with it. */
+  .bespoke-page .bs-actions{width:100%;justify-content:center;text-align:center}
+  .bespoke-page .bs-actions>*{width:100%;justify-content:center}
+  .bespoke-page .bs-link-call{width:100%;justify-content:center}
+  .bespoke-page .bs-footer .bs-link-call,.bespoke-page .bs-footer-cta .bs-link-call{justify-content:center}
+  .bespoke-page .bs-phone-xl{width:100%;text-align:center}
 }
 @media (max-width:620px){
   .bespoke-page [class*="bs-gallery--"] .bs-gallery{grid-template-columns:repeat(2,1fr)}
