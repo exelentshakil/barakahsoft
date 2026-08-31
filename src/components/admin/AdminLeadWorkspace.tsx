@@ -564,6 +564,47 @@ Shaq`,
   const [capturingSlot, setCapturingSlot] = useState<"hero" | "about" | null>(null);
   const [capturedSuccess, setCapturedSuccess] = useState<string | null>(null);
 
+  /**
+   * Wait until the preview frame can actually be rasterised.
+   *
+   * The capture failed intermittently and then worked after a refresh, which
+   * is the signature of a race rather than a broken feature: contentDocument
+   * exists long before the document is complete, its webfonts have loaded and
+   * its images have decoded, and html-to-image draws whatever is there at that
+   * instant — sometimes nothing, which surfaced as "Screenshot capture failed".
+   */
+  async function waitForFrame(doc: Document, target: HTMLElement) {
+    const deadline = Date.now() + 12_000;
+
+    while (doc.readyState !== "complete" && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 120));
+    }
+
+    try {
+      await (doc as Document & { fonts?: FontFaceSet }).fonts?.ready;
+    } catch {
+      // A frame without the Font Loading API still captures; it just may
+      // render a fallback face.
+    }
+
+    const images = Array.from(target.querySelectorAll("img"));
+    await Promise.all(
+      images.map((image) =>
+        image.complete
+          ? Promise.resolve()
+          : new Promise<void>((resolve) => {
+              const done = () => resolve();
+              image.addEventListener("load", done, { once: true });
+              image.addEventListener("error", done, { once: true });
+              setTimeout(done, Math.max(0, deadline - Date.now()));
+            })
+      )
+    );
+
+    // One more frame so layout settles after the last image sizes itself.
+    await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 60)));
+  }
+
   async function captureIframeSection(slot: "hero" | "about") {
     setCapturingSlot(slot);
     setCapturedSuccess(null);
@@ -592,14 +633,26 @@ Shaq`,
         throw new Error(`Could not find the ${slot} section element in the preview.`);
       }
 
-      const blob = await toBlob(targetEl, {
-        pixelRatio: 2,
-        cacheBust: true,
-        backgroundColor: "#ffffff",
-      });
+      await waitForFrame(doc, targetEl);
+
+      // cacheBust re-requests every image with a unique query string, which
+      // defeats the browser cache and can turn an already-loaded image into a
+      // fresh cross-origin request that taints the canvas — the second reason
+      // this failed at random. The wait above is what makes it unnecessary.
+      const options = { pixelRatio: 2, backgroundColor: "#ffffff" } as const;
+
+      let blob = await toBlob(targetEl, options).catch(() => null);
+      if (!blob) {
+        // One retry: the first pass primes html-to-image's internal image
+        // cache, so a second attempt usually succeeds where the first did not.
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        blob = await toBlob(targetEl, options).catch(() => null);
+      }
 
       if (!blob) {
-        throw new Error("Screenshot capture failed.");
+        throw new Error(
+          "Could not rasterise the preview. This is usually an image that will not allow cross-origin reads — open the clean preview in a tab, let it load fully, then try again."
+        );
       }
 
       const file = new File([blob], `${slot}-${Date.now()}.png`, { type: "image/png" });

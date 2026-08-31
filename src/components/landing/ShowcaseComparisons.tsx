@@ -1,5 +1,5 @@
 import { listApprovedShowcases } from "@/lib/showcase/list";
-import { BeforeAfterSlider } from "@/components/shared/BeforeAfterSlider";
+import { ShowcaseGrid } from "@/components/landing/ShowcaseGrid";
 
 // Our own delivered redesigns, shown against the client's real previous
 // site. This is the one section on the landing page that is genuinely our
@@ -26,36 +26,7 @@ export async function ShowcaseComparisons() {
         </p>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2">
-        {entries.map((entry) => (
-          <figure
-            key={entry.slug}
-            className="overflow-hidden rounded-2xl border border-[#c8ddec] bg-white shadow-[0_8px_24px_rgba(7,40,77,0.06)] transition hover:shadow-[0_20px_45px_rgba(7,40,77,0.12)]"
-          >
-            <BeforeAfterSlider
-              beforeUrl={entry.beforeUrl}
-              afterUrl={entry.afterUrl}
-              beforeLabel="Before"
-              afterLabel="After"
-              subject={`${entry.businessName} homepage`}
-            />
-            <figcaption className="flex items-center justify-between gap-3 border-t border-[#e4eef7] px-4 py-3">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-bold text-[#07284d]">{entry.businessName}</p>
-                {entry.label && <p className="truncate text-xs text-[#657c90]">{entry.label}</p>}
-              </div>
-              <a
-                href={`/s/${entry.slug}`}
-                target="_blank"
-                rel="noreferrer"
-                className="shrink-0 text-xs font-bold text-[#0c68c8] transition hover:underline"
-              >
-                View live →
-              </a>
-            </figcaption>
-          </figure>
-        ))}
-      </div>
+      <ShowcaseGrid entries={entries} />
     </div>
   );
 }

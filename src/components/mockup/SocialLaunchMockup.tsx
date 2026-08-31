@@ -465,9 +465,11 @@ export function SocialLaunchMockup({
       return (
         <div className="relative w-full h-full overflow-hidden bg-white">
           <iframe
+            key={`hero-frame-${data.previewUrl}`}
             src={data.previewUrl}
             title="Live Generated Website Mockup Preview"
             tabIndex={-1}
+            loading="lazy"
             className="absolute top-0 left-0 border-0 pointer-events-none"
             style={{
               // 1280x800 matches the 16:10 laptop screen exactly, and the hero
@@ -550,6 +552,12 @@ export function SocialLaunchMockup({
   const heroOffsetY = data.heroOffsetY ?? -20;
   const aboutOffsetY = data.aboutOffsetY ?? -80;
 
+  // The preview iframes are keyed on their URL alone. Without this they were
+  // remounting on every render — and since dragging a framing slider renders
+  // on every pointer move, each panel reloaded the whole site continuously,
+  // which is the flicker. Offsets are applied as a transform on a wrapper, so
+  // the frame itself never needs to change.
+
   const renderFloatingAboutCard = (opts?: {
     topOffset?: string;
     rightOffset?: string;
@@ -618,9 +626,11 @@ export function SocialLaunchMockup({
            — a 16:9 card cropped it in half. */
         <div className="relative w-full aspect-[4/3] bg-white overflow-hidden">
           <iframe
+            key={`about-frame-${data.previewUrl}`}
             src={`${data.previewUrl}#about`}
             title={`${businessShortName} about section`}
             tabIndex={-1}
+            loading="lazy"
             scrolling="no"
             className="absolute top-0 left-0 border-0 pointer-events-none"
             style={{ width: "1280px", height: "960px", transform: `scale(${aboutScale})`, transformOrigin: `0 ${aboutOffsetY}px` }}

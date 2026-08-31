@@ -15,6 +15,8 @@ export interface ShowcaseEntry {
   label: string | null;
   beforeUrl: string;
   afterUrl: string;
+  /** Set only when the built page may be browsed live by the public. */
+  liveUrl: string | null;
 }
 
 interface ShowcaseRow {
@@ -23,7 +25,12 @@ interface ShowcaseRow {
   showcase_label: string | null;
   showcase_before_url: string | null;
   showcase_after_url: string | null;
+  status: string | null;
 }
+
+// A build is only browsable by the public once it has cleared review. Anything
+// still in QA is a draft, and a draft is a screenshot at most.
+const APPROVED_STATUSES = new Set<string>(["qa_approved", "delivered", "paid", "live", "won"]);
 
 /**
  * Approved showcases, highest sort weight first.
@@ -41,7 +48,7 @@ export async function listApprovedShowcases(limit = 12): Promise<ShowcaseEntry[]
 
     const { data, error } = await admin
       .from("leads")
-      .select("slug, business_name, showcase_label, showcase_before_url, showcase_after_url")
+      .select("slug, business_name, showcase_label, showcase_before_url, showcase_after_url, status")
       .eq("showcase_approved", true)
       .order("showcase_sort", { ascending: false })
       .order("showcase_approved_at", { ascending: false })
@@ -58,6 +65,12 @@ export async function listApprovedShowcases(limit = 12): Promise<ShowcaseEntry[]
         label: row.showcase_label,
         beforeUrl: row.showcase_before_url as string,
         afterUrl: row.showcase_after_url as string,
+        // A live, browsable copy of a business's site carries their name,
+        // phone, logo and reviews. Approving a screenshot for the showcase is
+        // not the same act as publishing a working site in their name, so the
+        // live embed additionally requires the build to have been approved —
+        // showcase_approved alone is not enough.
+        liveUrl: APPROVED_STATUSES.has(row.status ?? "") ? `/s/${row.slug}?showcase=1` : null,
       }));
   } catch {
     return [];

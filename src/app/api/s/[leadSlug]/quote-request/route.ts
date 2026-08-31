@@ -31,6 +31,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ leadSlu
   const result = await getSiteData(leadSlug);
   if (!result) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  // The client-side guard is a courtesy; this is the boundary. A page embedded
+  // as a public demo must never be able to deliver an enquiry to a business
+  // that has not engaged us, however the request was constructed.
+  if (body?.showcase === true || new URL(req.url).searchParams.get("showcase") === "1") {
+    return NextResponse.json({ ok: true, demo: true, sent: false });
+  }
+
   const clientEmail = result.payload.nap.email;
   if (!clientEmail) {
     return NextResponse.json(

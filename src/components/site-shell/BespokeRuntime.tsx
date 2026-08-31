@@ -44,9 +44,16 @@ export function BespokeRuntime({ leadSlug }: { leadSlug: string }) {
     // writing a real form: the actual form, validation and email delivery
     // already exist (QuoteRequestModal), and generated markup cannot call a
     // React hook to open it. This is the one bridge between the two.
+    const showcaseMode = new URLSearchParams(window.location.search).get("showcase") === "1";
+
     const onQuoteClick = (event: Event) => {
       const trigger = (event.target as HTMLElement).closest<HTMLElement>("[data-open-quote-modal]");
       if (!trigger) return;
+      // Same reason as the form guard below: no real enquiry from a demo.
+      if (showcaseMode) {
+        event.preventDefault();
+        return;
+      }
       event.preventDefault();
       openQuoteModal();
     };
@@ -68,6 +75,17 @@ export function BespokeRuntime({ leadSlug }: { leadSlug: string }) {
 
       const onSubmit = async (event: Event) => {
         event.preventDefault();
+
+        // Showcase mode: this page is embedded on our own public landing page
+        // as a browsable demo. Every generated form emails the CLIENT's real
+        // address, so without this a stranger idly poking at a demo would send
+        // a genuine enquiry to a business that has never heard of us.
+        if (showcaseMode) {
+          form.setAttribute("data-state", "success");
+          if (message) message.textContent = "This is a live demo — nothing was sent.";
+          return;
+        }
+
         const data = new FormData(form);
         const name = String(data.get("name") ?? "").trim();
         const phone = String(data.get("phone") ?? "").trim();
