@@ -24,7 +24,16 @@ export function BespokeRuntime({ leadSlug }: { leadSlug: string }) {
   const openQuoteModal = useQuoteModal();
 
   useEffect(() => {
-    const root = document.querySelector<HTMLElement>(".bespoke-page");
+    // There are two .bespoke-page wrappers on a page now — the generated nav
+    // renders in one and the body in the other — and querySelector returns the
+    // FIRST, which is the nav. Everything bound here (the accordion, the lead
+    // forms, the review slider, the reveals, the counters) was therefore bound
+    // to a container that holds none of them: the FAQ did not open and the
+    // slider arrows did nothing. Pick the wrapper that actually holds the page.
+    const wrappers = Array.from(document.querySelectorAll<HTMLElement>(".bespoke-page"));
+    const root =
+      wrappers.find((wrapper) => wrapper.querySelector(".bs-section, [data-lead-form], [data-accordion]")) ??
+      wrappers[0];
     if (!root) return;
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;

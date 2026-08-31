@@ -74,7 +74,7 @@ async function main() {
 
   const page = await buildPage({
     brief,
-    logoUrl: null,
+    logoUrl: "https://img1.wsimg.com/isteam/ip/ac892ea6-4c1c-444a-8a56-c0458ee66663/Saddle%20Roofing%20Logo%20-%20White%20PNG.png/:/rs=h:100,cg:true,m/qt=q:95",
     media: brief.photos.map((url, index) => ({
       slot: index === 0 ? "hero" : index === 1 ? "about" : `service-${index - 2}`,
       url,
@@ -82,8 +82,12 @@ async function main() {
       origin: "real" as const,
     })),
     photos: brief.photos,
-    brandHex: "#E4761B",
-    design: DEFAULT_DESIGN_DNA,
+    brandHex: "#F37A1F",
+    design: {
+      ...DEFAULT_DESIGN_DNA,
+      palette: { ...DEFAULT_DESIGN_DNA.palette, primary: "#F37A1F", accent: "#A42F4E", ink: "#2C393F", inkMuted: "#6B7A84", surface: "#FFFFFF", surfaceAlt: "#F5F5F5" },
+      typography: { ...DEFAULT_DESIGN_DNA.typography, displayFamily: "Kumbh Sans", bodyFamily: "Kumbh Sans" },
+    },
     innerPagesBuilt: false,
   });
 

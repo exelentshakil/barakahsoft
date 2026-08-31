@@ -89,6 +89,37 @@ export const PageCopySchema = z.object({
 
 export type PageCopy = z.infer<typeof PageCopySchema>;
 
+/**
+ * Pull the real story out of a scraped About page.
+ *
+ * The brief carries that page as raw markdown, and most of it is the site's
+ * own navigation: repeated logo links, a hamburger label, three copies of the
+ * menu, a cookie banner, a copyright line. Handing all of it to the copy model
+ * buried four genuinely good paragraphs — the founders' names, the engineering
+ * background, why they started the company, the ten-year warranty — in noise.
+ */
+export function cleanAboutContent(raw: string | null): string {
+  if (!raw) return "";
+  const lines = raw.split(/\r?\n/);
+  const kept: string[] = [];
+
+  for (const line of lines) {
+    const text = line
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, "")          // images
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")        // links, keeping the label
+      .replace(/^[#>\-*\s]+/, "")
+      .trim();
+
+    if (text.length < 40) continue;                       // nav items, headings, labels
+    if (/^(home|about us?|residential|commercial|contact us?|careers|more)$/i.test(text)) continue;
+    if (/cookies?|copyright|all rights reserved|powered by|social link|navigation icon/i.test(text)) continue;
+    if (kept.includes(text)) continue;                    // the menu repeated three times
+    kept.push(text);
+  }
+
+  return kept.join("\n\n").slice(0, 4000);
+}
+
 function facts(brief: SiteBrief): string {
   return `- Business: ${brief.businessName}
 - Trade: ${brief.industry}
@@ -103,7 +134,7 @@ function facts(brief: SiteBrief): string {
 - Real customer reviews: ${brief.reviews.length ? brief.reviews.slice(0, 6).map((r) => `${r.author}: ${r.text.slice(0, 260)}`).join(" || ") : "none"}
 - Licensed/insured: ${brief.licensedInsured ? "SUPPORTED — may be stated" : "NOT SUPPORTED — never claim it"}
 - What the owner says is wrong with their current site: ${brief.painInstructions.join(" | ") || "not supplied"}
-- Their own about/story text: ${(brief.aboutContent ?? "none supplied").slice(0, 3000)}
+- THEIR OWN STORY, in their words (use this for the about section — the real names, the real history, the real warranty; rewrite it, never invent around it): ${cleanAboutContent(brief.aboutContent) || "none supplied"}
 - Scraped fact digest: ${brief.factsDigest.slice(0, 3000)}`;
 }
 
@@ -247,6 +278,10 @@ HOW TO WRITE
 - FAQ answers are real answers, two or three sentences, the way the owner would actually reply.
 - Service blurbs say what the customer gets, not what the trade is called.
 - The whyUs points must be things a competitor could NOT also claim, drawn from the facts above.
+- about.paragraphs must be a rewrite of THEIR OWN STORY above — the same names, the same history,
+  the same guarantee, in better prose. Two paragraphs. If they gave you a founder's background, a
+  reason the company was started, or a warranty, all three belong in it. Do not replace it with
+  generic "we are a local family business" copy.
 - Stats: only numbers supported by the facts. If none are, use "100%" style qualitative values with
   honest labels, or return an empty array.
 

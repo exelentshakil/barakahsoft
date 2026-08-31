@@ -109,11 +109,45 @@ export function rgbTriplet(hex: string): string {
   return [0, 2, 4].map((offset) => parseInt(clean.slice(offset, offset + 2), 16)).join(" ");
 }
 
-/** White or near-black, whichever is readable on the supplied colour. */
-export function readableOn(hex: string): string {
+function luminance(hex: string): number {
   const clean = hex.replace("#", "");
   const [r, g, b] = [0, 2, 4].map((offset) => parseInt(clean.slice(offset, offset + 2), 16) / 255);
   const channel = (value: number) => (value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
-  const luminance = 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
-  return luminance > 0.45 ? "#12141a" : "#ffffff";
+  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+}
+
+function contrast(a: string, b: string): number {
+  const [high, low] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (high + 0.05) / (low + 0.05);
+}
+
+/**
+ * White or near-black on the supplied colour — whichever actually reads.
+ *
+ * This compared luminance against a threshold, which is not the same thing as
+ * contrast. A mid-tone brand orange sat just under the threshold and got white
+ * text at 2.9:1, so every primary button on the page had text you could not
+ * read. Now the two candidates are measured and the better one wins.
+ */
+export function readableOn(hex: string): string {
+  return contrast(hex, "#ffffff") >= contrast(hex, "#12141a") ? "#ffffff" : "#12141a";
+}
+
+/**
+ * A version of the brand colour dark enough to carry white text at 4.5:1.
+ *
+ * Used for buttons and filled chips only. The client's actual colour still
+ * appears everywhere it is safe — headings, rules, marks — so the page is
+ * still recognisably theirs; it is just never the reason a call to action is
+ * unreadable.
+ */
+export function strongOn(hex: string, target = 4.5): string {
+  if (contrast(hex, "#ffffff") >= target) return hex;
+  let [hue, saturation, lightness] = hexToHsl(hex);
+  for (let step = 0; step < 40 && lightness > 8; step++) {
+    lightness -= 2;
+    const candidate = hslToHex(hue, saturation, lightness);
+    if (contrast(candidate, "#ffffff") >= target) return candidate;
+  }
+  return hslToHex(hue, saturation, 20);
 }

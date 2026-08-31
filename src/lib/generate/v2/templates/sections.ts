@@ -59,10 +59,8 @@ export function heroSection(ctx: RenderContext): string {
       ? `<div class="bs-rating">${stars(brief.rating)}<span><strong>${esc(String(brief.rating))}</strong> from ${esc(String(brief.reviewCount))} reviews</span></div>`
       : "";
 
-  const badges = copy.trust.badges
-    .slice(0, 3)
-    .map((badge) => `<span class="bs-badge">${icon("check")}${esc(badge)}</span>`)
-    .join("");
+  // The credential badges used to sit here AND in the trust bar, wrapping
+  // raggedly in both. They belong in one place, evenly spaced, below.
 
   return `<section id="hero" class="bs-section bs-hero bs-hero--${dna.hero.id} bs-hero--${variant(dna.seed, 1)}">
   ${photo ? `<figure class="bs-hero__bg bs-media"><img src="${esc(photo)}" alt="${esc(brief.businessName)} ${esc(brief.industry.toLowerCase())} work in ${esc(brief.city)}" width="1920" height="1280" loading="eager" fetchpriority="high" decoding="async"></figure>` : ""}
@@ -77,7 +75,7 @@ export function heroSection(ctx: RenderContext): string {
           ${button(hero.submitLabel, ctx.primaryHref)}
           ${callLink(brief.phone, "bs-link-call bs-link-call--hero")}
         </div>
-        ${badges ? `<div class="bs-row bs-row--badges">${badges}</div>` : ""}
+
       </div>
       <div class="bs-hero__form">
         ${leadForm(ctx, hero.formTitle, hero.formSubtitle, hero.submitLabel, hero.reassurance)}
@@ -87,22 +85,48 @@ export function heroSection(ctx: RenderContext): string {
 </section>`;
 }
 
+/**
+ * The credential strip under the hero.
+ *
+ * Previously a flex row of mixed stats and badges that wrapped into a ragged
+ * two-line block. It is a fixed grid now: every cell the same width, hairline
+ * dividers between them, one icon and one label each — the certification row
+ * the reference sites run directly under their hero.
+ */
 export function trustSection(ctx: RenderContext): string {
   const { copy, brief } = ctx;
-  const items: string[] = [];
+  const glyphs = ["shield", "award", "clock", "home"];
+
+  const cells: string[] = [];
 
   if (brief.rating && brief.reviewCount) {
-    items.push(`<div class="bs-trustbar__item">${stars(brief.rating)}<span><strong>${esc(String(brief.rating))}</strong> · ${esc(String(brief.reviewCount))} reviews</span></div>`);
+    cells.push(`<div class="bs-trustbar__cell">
+      ${stars(brief.rating)}
+      <span class="bs-trustbar__label"><strong>${esc(String(brief.rating))}</strong> from ${esc(String(brief.reviewCount))} Google reviews</span>
+    </div>`);
   }
-  for (const stat of copy.trust.stats.slice(0, 3)) {
-    items.push(`<div class="bs-trustbar__item bs-stat"><span class="bs-stat__value">${esc(stat.value)}</span><span class="bs-stat__label">${esc(stat.label)}</span></div>`);
-  }
-  for (const badge of copy.trust.badges.slice(0, 3)) {
-    items.push(`<div class="bs-trustbar__item"><span class="bs-badge">${icon("shield")}${esc(badge)}</span></div>`);
-  }
-  if (items.length === 0) return "";
 
-  return `<section id="trust" class="bs-trustbar"><div class="bs-container">${items.join("")}</div></section>`;
+  for (const stat of copy.trust.stats.slice(0, 2)) {
+    cells.push(`<div class="bs-trustbar__cell">
+      <span class="bs-trustbar__value">${esc(stat.value)}</span>
+      <span class="bs-trustbar__label">${esc(stat.label)}</span>
+    </div>`);
+  }
+
+  copy.trust.badges.slice(0, 3).forEach((badge, index) => {
+    cells.push(`<div class="bs-trustbar__cell">
+      ${icon(glyphs[index % glyphs.length], "bs-icon bs-trustbar__glyph")}
+      <span class="bs-trustbar__label">${esc(badge)}</span>
+    </div>`);
+  });
+
+  if (cells.length === 0) return "";
+  // Trimmed to a count that divides evenly, so the row never leaves an orphan.
+  const usable = cells.length >= 5 ? cells.slice(0, 5) : cells.slice(0, cells.length >= 4 ? 4 : 3);
+
+  return `<section id="trust" class="bs-trustbar" data-cells="${usable.length}">
+  <div class="bs-container">${usable.join("")}</div>
+</section>`;
 }
 
 export function aboutSection(ctx: RenderContext): string {
@@ -161,27 +185,35 @@ export function aboutSection(ctx: RenderContext): string {
 </section>`;
 }
 
+/**
+ * Services, with the booking widget pinned beside them.
+ *
+ * The longest section on the page was a card grid a visitor scrolled straight
+ * past. Sticking the booking form in the left column turns that scroll into a
+ * continuous conversion opportunity — the pattern every reference site uses —
+ * while the services become full rows with a real photograph each.
+ */
 export function servicesSection(ctx: RenderContext): string {
   const { copy, brief } = ctx;
   const services = copy.services;
   if (services.items.length === 0) return "";
   const pool = ctx.photos.slice(2);
 
-  const cards = services.items
+  const rows = services.items
     .map((item, index) => {
       const photo = pool[index % Math.max(pool.length, 1)] ?? null;
-      return `<article class="bs-card bs-card--photo">
-      ${photo ? `<figure class="bs-media"><img src="${esc(photo)}" alt="${esc(item.name)} in ${esc(brief.city)}" width="800" height="500" loading="lazy" decoding="async"></figure>` : ""}
-      <div class="bs-card__body">
+      return `<article class="bs-servicerow">
+      ${photo ? `<figure class="bs-media"><img src="${esc(photo)}" alt="${esc(item.name)} in ${esc(brief.city)}" width="640" height="440" loading="lazy" decoding="async"></figure>` : `<div class="bs-servicerow__glyph">${icon("wrench")}</div>`}
+      <div class="bs-servicerow__body">
         <h3 class="bs-h3">${esc(item.name)}</h3>
         <p class="bs-body">${esc(item.blurb)}</p>
-        <a class="bs-textlink" href="${esc(ctx.href(`/services/${slug(item.name)}`))}">Learn more${icon("arrow", "bs-icon bs-icon--sm")}</a>
+        <a class="bs-textlink" href="${esc(ctx.href(`/services/${slug(item.name)}`))}">See ${esc(item.name.toLowerCase())}${icon("arrow", "bs-icon bs-icon--sm")}</a>
       </div>
     </article>`;
     })
     .join("");
 
-  return `<section id="services" class="bs-section bs-section--tint bs-services--${variant(ctx.dna.seed, 3)}">
+  return `<section id="services" class="bs-section bs-section--tint bs-services bs-services--${variant(ctx.dna.seed, 3)}">
   <div class="bs-container">
     <div class="bs-sectionhead">
       <div>
@@ -189,9 +221,13 @@ export function servicesSection(ctx: RenderContext): string {
         <h2 class="bs-h2">${markHeadline(services.headline, services.headlineMark)}</h2>
         <p class="bs-lede">${esc(services.intro)}</p>
       </div>
-      ${button(copy.hero.submitLabel, ctx.primaryHref)}
     </div>
-    <div class="bs-grid-3">${cards}</div>
+    <div class="bs-services__grid">
+      <div class="bs-services__aside">
+        ${bookingWidget(ctx, "aside")}
+      </div>
+      <div class="bs-services__rows">${rows}</div>
+    </div>
   </div>
 </section>`;
 }
@@ -229,45 +265,78 @@ export function whyUsSection(ctx: RenderContext): string {
 </section>`;
 }
 
+/**
+ * How it works, as a visual sequence rather than three boxes of text.
+ *
+ * Each step gets a large ringed icon on a connector rail, the step number as a
+ * chip on the ring, and its own colour weight — so the eye follows a path
+ * instead of reading three paragraphs that happen to sit side by side.
+ */
 export function processSection(ctx: RenderContext): string {
-  const { copy } = ctx;
+  const { copy, brief } = ctx;
   const process = copy.process;
-  return `<section id="process" class="bs-section bs-process--${variant(ctx.dna.seed, 5)}">
-  <div class="bs-container bs-center">
-    <span class="bs-eyebrow">${esc(process.eyebrow)}</span>
-    <h2 class="bs-h2">${esc(process.headline)}</h2>
-    <div class="bs-grid-3 bs-steps">
+  const glyphs = ["phone", "home", "wrench", "check"];
+
+  return `<section id="process" class="bs-section bs-process bs-process--${variant(ctx.dna.seed, 5)}">
+  <div class="bs-container">
+    <div class="bs-center">
+      <span class="bs-eyebrow">${esc(process.eyebrow)}</span>
+      <h2 class="bs-h2">${esc(process.headline)}</h2>
+    </div>
+    <ol class="bs-steps">
       ${process.steps
         .map(
-          (step, index) => `<div class="bs-card bs-card--flat bs-step">
-        <span class="bs-marker">${String(index + 1).padStart(2, "0")}</span>
-        <h3 class="bs-h3">${esc(step.title)}</h3>
+          (step, index) => `<li class="bs-step">
+        <span class="bs-step__ring">
+          ${icon(glyphs[index % glyphs.length], "bs-icon bs-step__icon")}
+          <span class="bs-step__num">${index + 1}</span>
+        </span>
+        <h3 class="bs-h3">${esc(step.title.replace(/^\s*(?:step\s*)?\d+[.):\-\s]+/i, ""))}</h3>
         <p class="bs-body">${esc(step.body)}</p>
-      </div>`
+      </li>`
         )
         .join("")}
+    </ol>
+    <div class="bs-center bs-actions bs-actions--centred">
+      ${button(copy.hero.submitLabel, ctx.primaryHref)}
+      ${callLink(brief.phone)}
     </div>
-    ${button(copy.hero.submitLabel, ctx.primaryHref)}
   </div>
 </section>`;
 }
 
+/**
+ * The work gallery.
+ *
+ * Uses every photograph the plan did not spend elsewhere rather than a fixed
+ * four, and captions them with the service they show. The before/after markup
+ * is here but only renders when a photo carries a `before` partner, so adding
+ * pairing in the studio later lights this up without touching the section.
+ */
 export function gallerySection(ctx: RenderContext): string {
-  const photos = ctx.photos.slice(4, 12);
+  const photos = ctx.photos.slice(3);
   if (photos.length < 4) return "";
   const { copy, brief } = ctx;
+  const services = copy.services.items;
+
+  const tiles = photos
+    .slice(0, 12)
+    .map((photo, index) => {
+      const caption = copy.gallery.captions[index] ?? services[index % Math.max(services.length, 1)]?.name ?? `${brief.industry} in ${brief.city}`;
+      return `<figure class="bs-gallery__tile">
+      <span class="bs-media"><img src="${esc(photo)}" alt="${esc(caption)} by ${esc(brief.businessName)}" width="700" height="700" loading="lazy" decoding="async"></span>
+      <figcaption>${esc(caption)}</figcaption>
+    </figure>`;
+    })
+    .join("");
+
   return `<section id="gallery" class="bs-section bs-section--tint bs-gallery--${variant(ctx.dna.seed, 6)}">
-  <div class="bs-container bs-center">
-    <span class="bs-eyebrow">${esc(copy.gallery.eyebrow)}</span>
-    <h2 class="bs-h2">${esc(copy.gallery.headline)}</h2>
-    <div class="bs-gallery">
-      ${photos
-        .map(
-          (photo, index) =>
-            `<figure class="bs-media"><img src="${esc(photo)}" alt="${esc(copy.gallery.captions[index] ?? `${brief.industry} project in ${brief.city}`)}" width="600" height="600" loading="lazy" decoding="async"></figure>`
-        )
-        .join("")}
+  <div class="bs-container">
+    <div class="bs-center">
+      <span class="bs-eyebrow">${esc(copy.gallery.eyebrow)}</span>
+      <h2 class="bs-h2">${esc(copy.gallery.headline)}</h2>
     </div>
+    <div class="bs-gallery">${tiles}</div>
   </div>
 </section>`;
 }
@@ -349,10 +418,16 @@ export function areasSection(ctx: RenderContext): string {
         <span class="bs-eyebrow">${esc(copy.areas.eyebrow)}</span>
         <h2 class="bs-h2">${esc(copy.areas.headline)}</h2>
         <p class="bs-body">${esc(copy.areas.body)}</p>
-        <ul class="bs-row bs-areas__list">
+        <ul class="bs-areas__list">
           ${brief.areas
             .slice(0, 12)
-            .map((area) => `<li><a class="bs-chip" href="${esc(ctx.href(`/areas/${slug(area)}`))}">${icon("pin", "bs-icon bs-icon--sm")}${esc(area)}</a></li>`)
+            .map(
+              (area) => `<li><a class="bs-areapin" href="${esc(ctx.href(`/areas/${slug(area)}`))}">
+            <span class="bs-areapin__pin">${icon("pin", "bs-icon bs-icon--sm")}</span>
+            <span class="bs-areapin__name">${esc(area)}</span>
+            <span class="bs-areapin__go">${icon("arrow", "bs-icon bs-icon--sm")}</span>
+          </a></li>`
+            )
             .join("")}
         </ul>
         <div class="bs-actions">${button(copy.hero.submitLabel, ctx.primaryHref)}</div>
@@ -373,7 +448,18 @@ export function areasSection(ctx: RenderContext): string {
  * giving away, because "your new site includes online booking" is a better
  * opening line than another paragraph about design.
  */
-export function bookingSection(ctx: RenderContext): string {
+/**
+ * The booking widget.
+ *
+ * The reference site pays a third party $39 a month for this block. It is
+ * three preset days, a date field and a submit — worth building once and
+ * giving away, because "your new site includes online booking" is a better
+ * opening line than another paragraph about design.
+ *
+ * Rendered twice: pinned beside the services list, and inside the guarantee
+ * section. Both post through the same enquiry path.
+ */
+export function bookingWidget(ctx: RenderContext, context: "aside" | "full"): string {
   const { copy, brief } = ctx;
   const days = [1, 2, 3].map((offset) => {
     const date = new Date();
@@ -385,42 +471,71 @@ export function bookingSection(ctx: RenderContext): string {
       month: date.toLocaleDateString("en-US", { month: "short" }),
     };
   });
-  const photo = ctx.photos[5] ?? ctx.photos[2] ?? null;
 
-  return `<section id="booking" class="bs-section">
+  return `<form class="bs-booking" data-booking-form>
+  <span class="bs-booking__glyph">${icon("calendar")}</span>
+  <h3 class="bs-h3">${markHeadline(copy.booking.headline, copy.booking.headlineMark)}</h3>
+  <p class="bs-small">${esc(copy.booking.body)}</p>
+  <div class="bs-booking__days">
+    ${days
+      .map(
+        (day, index) => `<label class="bs-booking__day">
+      <input type="radio" name="preferred_date" value="${day.value}"${index === 0 ? " checked" : ""}>
+      <span class="bs-booking__flag">Instant</span>
+      <span class="bs-booking__weekday">${day.weekday}</span>
+      <span class="bs-booking__num">${day.day}</span>
+      <span class="bs-booking__month">${day.month}</span>
+    </label>`
+      )
+      .join("")}
+  </div>
+  <label class="bs-field"><span class="bs-sr">A different date</span><input class="bs-input" type="date" name="other_date"></label>
+  <label class="bs-field"><span class="bs-sr">Your name</span><input class="bs-input" type="text" name="name" placeholder="Your name" autocomplete="name" required></label>
+  <label class="bs-field"><span class="bs-sr">Phone number</span><input class="bs-input" type="tel" name="phone" placeholder="Phone number" autocomplete="tel" required></label>
+  ${context === "full" ? FIELD_SERVICE(brief.services.slice(0, 10)) : ""}
+  <button class="bs-btn bs-btn--wide" type="submit">Request this slot</button>
+  <p class="bs-form__note" data-lead-form-message>We confirm every booking by phone first.</p>
+</form>`;
+}
+
+/**
+ * The guarantee, with real substance rather than one paragraph beside a form.
+ *
+ * It carries the promise, the three things that back it as icon rows, a photo
+ * of the work, the phone number and the booking widget — so the section that
+ * closes the middle of the page has something to read as well as something
+ * to fill in.
+ */
+export function guaranteeSection(ctx: RenderContext): string {
+  const { copy, brief } = ctx;
+  const photo = ctx.photos[5] ?? ctx.photos[2] ?? null;
+  const points = [
+    brief.licensedInsured ? { glyph: "shield", title: "Licensed, bonded & insured", body: `Fully covered on every job in ${brief.city} and the surrounding area.` } : null,
+    { glyph: "award", title: "Workmanship stands behind it", body: "If something is not right, we come back and put it right. No argument." },
+    { glyph: "clock", title: "We turn up when we say", body: "Booked in properly, and you hear from us if anything changes." },
+  ].filter((point): point is { glyph: string; title: string; body: string } => point !== null);
+
+  return `<section id="guarantee" class="bs-section bs-guarantee">
   <div class="bs-container">
-    <div class="bs-split bs-split--wide-right">
-      <form class="bs-booking" data-booking-form>
-        <span class="bs-booking__glyph">${icon("calendar")}</span>
-        <h2 class="bs-h3">${markHeadline(copy.booking.headline, copy.booking.headlineMark)}</h2>
-        <p class="bs-small">${esc(copy.booking.body)}</p>
-        <div class="bs-booking__days">
-          ${days
+    <div class="bs-guarantee__grid">
+      <div class="bs-stack">
+        <span class="bs-eyebrow">${esc(copy.guarantee.eyebrow)}</span>
+        <h2 class="bs-h2">${esc(copy.guarantee.headline)}</h2>
+        <p class="bs-lede">${esc(copy.guarantee.body)}</p>
+        <div class="bs-guarantee__points">
+          ${points
             .map(
-              (day, index) => `<label class="bs-booking__day">
-            <input type="radio" name="preferred_date" value="${day.value}"${index === 0 ? " checked" : ""}>
-            <span class="bs-booking__flag">Instant</span>
-            <span class="bs-booking__weekday">${day.weekday}</span>
-            <span class="bs-booking__num">${day.day}</span>
-            <span class="bs-booking__month">${day.month}</span>
-          </label>`
+              (point) => `<div class="bs-point bs-point--row">
+            <span class="bs-point__icon">${icon(point.glyph)}</span>
+            <div><h3 class="bs-h4">${esc(point.title)}</h3><p class="bs-body">${esc(point.body)}</p></div>
+          </div>`
             )
             .join("")}
         </div>
-        <label class="bs-field"><span class="bs-sr">A different date</span><input class="bs-input" type="date" name="other_date"></label>
-        <label class="bs-field"><span class="bs-sr">Your name</span><input class="bs-input" type="text" name="name" placeholder="Your name" autocomplete="name" required></label>
-        <label class="bs-field"><span class="bs-sr">Phone number</span><input class="bs-input" type="tel" name="phone" placeholder="Phone number" autocomplete="tel" required></label>
-        ${FIELD_SERVICE(brief.services.slice(0, 10))}
-        <button class="bs-btn bs-btn--wide" type="submit">Request this slot</button>
-        <p class="bs-form__note" data-lead-form-message>We confirm every booking by phone first.</p>
-      </form>
-      <div class="bs-stack">
-        <span class="bs-eyebrow">${esc(copy.booking.eyebrow)}</span>
-        <h2 class="bs-h2">${esc(copy.guarantee.headline)}</h2>
-        <p class="bs-body">${esc(copy.guarantee.body)}</p>
-        ${photo ? `<figure class="bs-media bs-media--wide"><img src="${esc(photo)}" alt="${esc(brief.businessName)} at work" width="900" height="520" loading="lazy" decoding="async"></figure>` : ""}
-        <div class="bs-actions">${callLink(brief.phone)}</div>
+        ${photo ? `<figure class="bs-media bs-media--wide"><img src="${esc(photo)}" alt="${esc(brief.businessName)} completed work" width="900" height="520" loading="lazy" decoding="async"></figure>` : ""}
+        <div class="bs-actions">${button(copy.guarantee.ctaLabel, ctx.primaryHref)}${callLink(brief.phone)}</div>
       </div>
+      <div class="bs-guarantee__aside">${bookingWidget(ctx, "full")}</div>
     </div>
   </div>
 </section>`;

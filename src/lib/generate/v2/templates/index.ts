@@ -1,5 +1,5 @@
 import { layoutDnaFor, type LayoutDna } from "@/lib/generate/v2/layout-dna";
-import { derivePalette, rgbTriplet, readableOn } from "@/lib/generate/v2/palette";
+import { derivePalette, rgbTriplet, readableOn, strongOn } from "@/lib/generate/v2/palette";
 import type { DesignDna } from "@/lib/design-dna";
 import type { MediaPlan } from "@/lib/media/plan-media";
 import { generatePageCopy, type PageCopy } from "@/lib/generate/v2/page-copy";
@@ -15,7 +15,7 @@ import {
   bandSection,
   reviewsSection,
   areasSection,
-  bookingSection,
+  guaranteeSection,
   faqSection,
   contactSection,
   type RenderContext,
@@ -153,7 +153,7 @@ export async function buildPage(args: {
     { id: "cta-band", kind: "cta", label: "Conversion band", html: bandSection(ctx) },
     { id: "reviews", kind: "reviews", label: "Reviews", html: reviewsSection(ctx) },
     { id: "areas", kind: "areas", label: "Service areas", html: areasSection(ctx) },
-    { id: "booking", kind: "contact", label: "Book a visit", html: bookingSection(ctx) },
+    { id: "guarantee", kind: "contact", label: "Guarantee & booking", html: guaranteeSection(ctx) },
     { id: "faq", kind: "faq", label: "FAQ", html: faqSection(ctx) },
     { id: "contact", kind: "contact", label: "Contact", html: contactSection(ctx) },
   ].filter((section) => section.html.trim().length > 0);
@@ -164,10 +164,14 @@ export async function buildPage(args: {
   const tokens: Record<string, string> = {
     "--bs-primary": palette.primary,
     "--bs-primary-rgb": rgbTriplet(palette.primary),
-    "--bs-on-primary": readableOn(palette.primary),
+    "--bs-on-primary": readableOn(strongOn(palette.primary)),
+    // Buttons and filled chips use the strengthened colour so their text is
+    // always readable; everything decorative keeps the client's exact hue.
+    "--bs-primary-strong": strongOn(palette.primary),
+    "--bs-accent-strong": strongOn(palette.accent),
     "--bs-accent": palette.accent,
     "--bs-accent-rgb": rgbTriplet(palette.accent),
-    "--bs-on-accent": readableOn(palette.accent),
+    "--bs-on-accent": readableOn(strongOn(palette.accent)),
     "--bs-ink": palette.ink,
     "--bs-ink-rgb": rgbTriplet(palette.ink),
     "--bs-surface": palette.surface,
