@@ -1,5 +1,7 @@
 import { layoutDnaFor, type LayoutDna } from "@/lib/generate/v2/layout-dna";
 import { derivePalette, rgbTriplet, readableOn } from "@/lib/generate/v2/palette";
+import type { DesignDna } from "@/lib/design-dna";
+import type { MediaPlan } from "@/lib/media/plan-media";
 import { generatePageCopy, type PageCopy } from "@/lib/generate/v2/page-copy";
 import { navMarkup, footerMarkup } from "@/lib/generate/v2/templates/chrome";
 import {
@@ -68,15 +70,37 @@ const TYPE_PAIRS = [
 export async function buildPage(args: {
   brief: SiteBrief;
   logoUrl: string | null;
+  /** Slot-matched client photography, in plan order. Always used first. */
+  media: MediaPlan;
+  /** Stock top-up, used only where the plan has no real photo. */
   photos: string[];
   brandHex: string | null;
+  /** The operator's design direction from the brief screen. */
+  design: DesignDna | null;
   innerPagesBuilt: boolean;
 }): Promise<BuiltPage> {
-  const { brief, logoUrl, photos, brandHex, innerPagesBuilt } = args;
+  const { brief, logoUrl, media, photos, brandHex, design, innerPagesBuilt } = args;
 
   const dna = layoutDnaFor(`${brief.leadSlug}|${brief.businessName}|${brief.industry}|${brief.city}`);
-  const palette = derivePalette(brandHex, dna.seed);
-  const type = TYPE_PAIRS[dna.seed % TYPE_PAIRS.length];
+
+  // The operator picked a design direction on the brief screen — palette,
+  // typefaces, geometry. Deriving our own from a scraped hex ignored that and
+  // produced a yellow page for a business whose brief said #F37A1F. The brief
+  // wins; the derived harmony only fills in what it does not specify.
+  const derived = derivePalette(design?.palette.primary ?? brandHex, dna.seed);
+  const palette = {
+    primary: design?.palette.primary ?? derived.primary,
+    accent: design?.palette.accent ?? derived.accent,
+    ink: design?.palette.ink ?? derived.ink,
+    surface: design?.palette.surface ?? derived.surface,
+    surfaceAlt: design?.palette.surfaceAlt ?? derived.surfaceAlt,
+    inkMuted: design?.palette.inkMuted ?? null,
+    onPrimary: design?.palette.onPrimary ?? null,
+    scheme: design ? "from the operator's design direction" : derived.scheme,
+  };
+  const type = design?.typography.displayFamily
+    ? { display: design.typography.displayFamily, body: design.typography.bodyFamily || design.typography.displayFamily }
+    : TYPE_PAIRS[dna.seed % TYPE_PAIRS.length];
   const copy = await generatePageCopy(brief, TONES[dna.seed % TONES.length]);
 
   // Before phase 2 the inner routes genuinely do not exist, so linking at them
@@ -92,12 +116,28 @@ export async function buildPage(args: {
     return "#hero";
   };
 
+  // Photography comes from the plan the operator can see and edit on the brief
+  // screen — hero, about, proof, then one per service — before any stock is
+  // considered. The previous build ignored all nine of a client's own photos
+  // and shipped stock instead, which is the fastest way to lose the sale.
+  const bySlot = new Map(media.map((item) => [item.slot, item.url]));
+  const ordered = [
+    bySlot.get("hero"),
+    bySlot.get("about"),
+    bySlot.get("proof"),
+    ...media.filter((item) => item.slot.startsWith("service-")).map((item) => item.url),
+    ...media.map((item) => item.url),
+    ...photos,
+  ].filter((url): url is string => Boolean(url));
+  const resolvedPhotos = [...new Set(ordered)];
+  console.log(`[build-page] ${media.length} planned photo(s) from the brief, ${resolvedPhotos.length} usable in total`);
+
   const ctx: RenderContext = {
     brief,
     copy,
     dna,
     logoUrl,
-    photos,
+    photos: resolvedPhotos,
     href,
     primaryHref: href("/contact"),
   };
@@ -118,6 +158,9 @@ export async function buildPage(args: {
     { id: "contact", kind: "contact", label: "Contact", html: contactSection(ctx) },
   ].filter((section) => section.html.trim().length > 0);
 
+  const radius = { sharp: "2px", soft: "12px", rounded: "20px", pill: "999px" }[design?.geometry.radius ?? "soft"];
+  const rhythm = { tight: "68px", generous: "104px", cinematic: "132px" }[design?.layout.sectionRhythm ?? "generous"];
+
   const tokens: Record<string, string> = {
     "--bs-primary": palette.primary,
     "--bs-primary-rgb": rgbTriplet(palette.primary),
@@ -131,7 +174,13 @@ export async function buildPage(args: {
     "--bs-surface-alt": palette.surfaceAlt,
     "--bs-font-display": `"${type.display}", ui-sans-serif, system-ui, sans-serif`,
     "--bs-font-body": `"${type.body}", ui-sans-serif, system-ui, sans-serif`,
-    "--bs-display-weight": "900",
+    "--bs-display-weight": design?.typography.displayWeight ?? "900",
+    "--bs-heading-transform": design?.typography.headingCase === "upper" ? "uppercase" : "none",
+    "--bs-r": radius,
+    "--bs-r-lg": design?.geometry.radius === "sharp" ? "4px" : "20px",
+    "--bs-section-y": rhythm,
+    ...(palette.inkMuted ? { "--bs-muted": palette.inkMuted } : {}),
+    ...(palette.onPrimary ? { "--bs-on-primary": palette.onPrimary } : {}),
   };
 
   return {
@@ -143,6 +192,6 @@ export async function buildPage(args: {
     dna,
     tokens,
     fontHref: fontHrefFor(type.display, type.body),
-    rationale: `${dna.hero.name} hero, ${dna.about.name} about, ${dna.chrome.name} chrome. ${palette.scheme} palette derived from the client's brand colour, ${type.display} over ${type.body}. ${built.length} sections, markup owned by the application, copy written for this business.`,
+    rationale: `${dna.hero.name} hero, ${dna.about.name} about, ${dna.chrome.name} chrome. ${palette.scheme} palette, ${type.display} over ${type.body}. ${built.length} sections, markup owned by the application, copy written for this business.`,
   };
 }

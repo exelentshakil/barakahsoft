@@ -36,6 +36,10 @@ export const BASE_STYLESHEET = `
   -webkit-font-smoothing:antialiased;
 }
 .bespoke-page *,.bespoke-page *::before,.bespoke-page *::after{box-sizing:border-box}
+/* Explicit, and not negotiable: an overflow guard here clips the mega-menu
+   panel, which is absolutely positioned and must escape the nav's box. The
+   page is kept inside the viewport by sizing individual elements instead. */
+.bespoke-page{overflow:visible}
 .bespoke-page p,.bespoke-page h1,.bespoke-page h2,.bespoke-page h3,.bespoke-page h4,.bespoke-page ul,.bespoke-page ol,.bespoke-page figure{margin:0}
 .bespoke-page ul,.bespoke-page ol{padding:0;list-style:none}
 .bespoke-page img,.bespoke-page svg{max-width:100%}
@@ -119,7 +123,7 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-btn--light{background:#fff;color:var(--bs-ink,#16181d)}
 .bespoke-page .bs-btn--wide{width:100%}
 .bespoke-page .bs-actions{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
-.bespoke-page .bs-link-call{display:inline-flex;align-items:center;gap:9px;font-weight:800;font-size:1.02rem}
+.bespoke-page .bs-link-call{display:inline-flex;align-items:center;gap:9px;font-weight:800;font-size:1.02rem;white-space:nowrap}
 .bespoke-page .bs-link-call:hover{color:var(--bs-primary,#e4761b)}
 
 /* ---------- surfaces --------------------------------------------------- */
@@ -478,6 +482,78 @@ export const BASE_STYLESHEET = `
   .bespoke-page .bs-seal{width:96px;height:96px;top:-22px;right:-8px}
   .bespoke-page .bs-sectionhead{flex-direction:column;align-items:flex-start}
   .bespoke-page .bs-areas__map{min-height:280px}
+}
+
+/* ---------- per-lead layout variants ------------------------------------ */
+/* The anatomy of these pages is fixed on purpose — it is the order a buyer's
+   questions arrive in, and every reference site in this market uses it. What
+   varies is the composition, and it varies structurally rather than by
+   reshuffling sections: each variant below changes column ratios, sides,
+   shapes and emphasis, and a lead's DNA seed picks one per section. With four
+   hero archetypes crossed with these, no two clients get the same page. */
+
+/* hero */
+.bespoke-page .bs-hero--v1 .bs-hero__grid{grid-template-columns:1.1fr .9fr}
+.bespoke-page .bs-hero--v2 .bs-hero__grid{grid-template-columns:.9fr 1.05fr}
+.bespoke-page .bs-hero--v2 .bs-hero__form{order:-1;justify-self:start}
+.bespoke-page .bs-hero--v3 .bs-hero__grid{grid-template-columns:1fr;max-width:1040px}
+.bespoke-page .bs-hero--v3 .bs-hero__copy{align-items:center;text-align:center}
+.bespoke-page .bs-hero--v3 .bs-hero__form{max-width:none}
+.bespoke-page .bs-hero--v3 .bs-form__body{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:end}
+.bespoke-page .bs-hero--v3 .bs-form__body>button,.bespoke-page .bs-hero--v3 .bs-form__note{grid-column:1/-1}
+
+/* about */
+.bespoke-page .bs-about--v1 .bs-about__grid{grid-template-columns:.95fr 1.05fr}
+.bespoke-page .bs-about--v2 .bs-about__grid{grid-template-columns:1.05fr .95fr}
+.bespoke-page .bs-about--v2 .bs-about__figure{order:2}
+.bespoke-page .bs-about--v2 .bs-seal{right:auto;left:-28px}
+.bespoke-page .bs-about--v3 .bs-about__grid{grid-template-columns:1fr;gap:32px}
+.bespoke-page .bs-about--v3 .bs-about__figure .bs-media{aspect-ratio:21/9}
+.bespoke-page .bs-about--v3 .bs-about__copy{max-width:none}
+.bespoke-page .bs-about--v3 .bs-about__copy .bs-body{columns:2;column-gap:48px}
+
+/* services */
+.bespoke-page .bs-services--v2 .bs-grid-3{grid-template-columns:repeat(2,1fr)}
+.bespoke-page .bs-services--v2 .bs-card--photo{flex-direction:row;align-items:stretch}
+.bespoke-page .bs-services--v2 .bs-card--photo .bs-media{width:42%;aspect-ratio:auto}
+.bespoke-page .bs-services--v3 .bs-card--photo .bs-media{aspect-ratio:1/1}
+.bespoke-page .bs-services--v3 .bs-grid-3{grid-template-columns:repeat(4,1fr)}
+
+/* why us */
+.bespoke-page .bs-whyus--v2 .bs-whyus__media{inset:0 0 0 42%}
+.bespoke-page .bs-whyus--v2 .bs-whyus__panel{margin-left:0;margin-right:auto}
+.bespoke-page .bs-whyus--v2 .bs-whyus__media .bs-seal{left:auto;right:34px}
+.bespoke-page .bs-whyus--v3 .bs-whyus__media{position:relative;inset:auto;height:min(420px,44vh)}
+.bespoke-page .bs-whyus--v3 .bs-whyus__panel{width:100%;margin:-72px auto 0}
+.bespoke-page .bs-whyus--v3 .bs-whyus__points{grid-template-columns:repeat(4,1fr)}
+
+/* process */
+.bespoke-page .bs-process--v2 .bs-grid-3{grid-template-columns:1fr;max-width:760px;margin-inline:auto}
+.bespoke-page .bs-process--v2 .bs-step{display:grid;grid-template-columns:auto 1fr;column-gap:24px;text-align:left}
+.bespoke-page .bs-process--v2 .bs-marker{grid-row:span 2;font-size:3rem;opacity:.5}
+.bespoke-page .bs-process--v3 .bs-steps{counter-reset:none}
+.bespoke-page .bs-process--v3 .bs-step{border:0;background:transparent;box-shadow:none;border-top:3px solid var(--bs-primary,#e4761b);border-radius:0;padding-inline:0}
+
+/* gallery */
+.bespoke-page .bs-gallery--v2 .bs-gallery{grid-template-columns:repeat(3,1fr)}
+.bespoke-page .bs-gallery--v2 .bs-gallery .bs-media{aspect-ratio:4/3}
+.bespoke-page .bs-gallery--v3 .bs-gallery{grid-template-columns:repeat(6,1fr)}
+.bespoke-page .bs-gallery--v3 .bs-gallery .bs-media:nth-child(1),.bespoke-page .bs-gallery--v3 .bs-gallery .bs-media:nth-child(6){grid-column:span 2;grid-row:span 2}
+
+/* areas */
+.bespoke-page .bs-areas--v2 .bs-areas{direction:rtl}
+.bespoke-page .bs-areas--v2 .bs-areas>*{direction:ltr}
+.bespoke-page .bs-areas--v3 .bs-areas{grid-template-columns:1fr}
+.bespoke-page .bs-areas--v3 .bs-areas__map{min-height:440px}
+
+@media (max-width:900px){
+  .bespoke-page .bs-hero--v3 .bs-form__body,.bespoke-page .bs-whyus--v3 .bs-whyus__points,
+  .bespoke-page .bs-services--v2 .bs-grid-3,.bespoke-page .bs-services--v3 .bs-grid-3,
+  .bespoke-page .bs-gallery--v3 .bs-gallery{grid-template-columns:1fr}
+  .bespoke-page .bs-services--v2 .bs-card--photo{flex-direction:column}
+  .bespoke-page .bs-services--v2 .bs-card--photo .bs-media{width:100%;aspect-ratio:16/10}
+  .bespoke-page .bs-about--v3 .bs-about__copy .bs-body{columns:1}
+  .bespoke-page .bs-whyus--v3 .bs-whyus__panel{margin-top:-40px}
 }
 
 `;

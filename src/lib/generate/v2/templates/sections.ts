@@ -3,6 +3,18 @@ import type { PageCopy } from "@/lib/generate/v2/page-copy";
 import type { LayoutDna } from "@/lib/generate/v2/layout-dna";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
 
+/**
+ * Which structural variant this lead gets for a given section.
+ *
+ * Deterministic per lead and independent per section, so the combinations
+ * multiply: three variants across six sections is 729 distinct compositions
+ * before the four hero archetypes, the palette and the photography are
+ * counted. Two clients in the same trade do not get the same page.
+ */
+export function variant(seed: number, salt: number): string {
+  return `v${((seed + salt * 2654435761) % 3) + 1}`;
+}
+
 export interface RenderContext {
   brief: SiteBrief;
   copy: PageCopy;
@@ -52,7 +64,7 @@ export function heroSection(ctx: RenderContext): string {
     .map((badge) => `<span class="bs-badge">${icon("check")}${esc(badge)}</span>`)
     .join("");
 
-  return `<section id="hero" class="bs-section bs-hero bs-hero--${dna.hero.id}">
+  return `<section id="hero" class="bs-section bs-hero bs-hero--${dna.hero.id} bs-hero--${variant(dna.seed, 1)}">
   ${photo ? `<figure class="bs-hero__bg bs-media"><img src="${esc(photo)}" alt="${esc(brief.businessName)} ${esc(brief.industry.toLowerCase())} work in ${esc(brief.city)}" width="1920" height="1280" loading="eager" fetchpriority="high" decoding="async"></figure>` : ""}
   <div class="bs-container">
     <div class="bs-hero__grid">
@@ -120,7 +132,7 @@ export function aboutSection(ctx: RenderContext): string {
         .join("")}</div>`
     : "";
 
-  return `<section id="about" class="bs-section bs-about bs-about--${dna.about.id}">
+  return `<section id="about" class="bs-section bs-about bs-about--${dna.about.id} bs-about--${variant(dna.seed, 2)}">
   <div class="bs-container">
     <div class="bs-about__grid">
       <div class="bs-about__figure">
@@ -169,7 +181,7 @@ export function servicesSection(ctx: RenderContext): string {
     })
     .join("");
 
-  return `<section id="services" class="bs-section bs-section--tint">
+  return `<section id="services" class="bs-section bs-section--tint bs-services--${variant(ctx.dna.seed, 3)}">
   <div class="bs-container">
     <div class="bs-sectionhead">
       <div>
@@ -190,7 +202,7 @@ export function whyUsSection(ctx: RenderContext): string {
   const photo = ctx.photos[3] ?? ctx.photos[0] ?? null;
   const glyphs = ["shield", "award", "clock", "wrench"];
 
-  return `<section id="why-us" class="bs-section bs-whyus">
+  return `<section id="why-us" class="bs-section bs-whyus bs-whyus--${variant(ctx.dna.seed, 4)}">
   <div class="bs-whyus__media">
     ${photo ? `<figure class="bs-media"><img src="${esc(photo)}" alt="The ${esc(brief.businessName)} team at work" width="1200" height="1400" loading="lazy" decoding="async"></figure>` : ""}
     ${seal(copy.about.sealLine, logoUrl, brief.businessName)}
@@ -220,7 +232,7 @@ export function whyUsSection(ctx: RenderContext): string {
 export function processSection(ctx: RenderContext): string {
   const { copy } = ctx;
   const process = copy.process;
-  return `<section id="process" class="bs-section">
+  return `<section id="process" class="bs-section bs-process--${variant(ctx.dna.seed, 5)}">
   <div class="bs-container bs-center">
     <span class="bs-eyebrow">${esc(process.eyebrow)}</span>
     <h2 class="bs-h2">${esc(process.headline)}</h2>
@@ -244,7 +256,7 @@ export function gallerySection(ctx: RenderContext): string {
   const photos = ctx.photos.slice(4, 12);
   if (photos.length < 4) return "";
   const { copy, brief } = ctx;
-  return `<section id="gallery" class="bs-section bs-section--tint">
+  return `<section id="gallery" class="bs-section bs-section--tint bs-gallery--${variant(ctx.dna.seed, 6)}">
   <div class="bs-container bs-center">
     <span class="bs-eyebrow">${esc(copy.gallery.eyebrow)}</span>
     <h2 class="bs-h2">${esc(copy.gallery.headline)}</h2>
@@ -306,7 +318,7 @@ export function areasSection(ctx: RenderContext): string {
   // A Google Maps embed rather than a static image: no API key, no quota, and
   // the sanitizer already whitelists this exact host for iframes.
   const query = encodeURIComponent(`${brief.city} ${brief.areas.slice(0, 2).join(" ")}`.trim());
-  return `<section id="areas" class="bs-section bs-section--tint">
+  return `<section id="areas" class="bs-section bs-section--tint bs-areas--${variant(ctx.dna.seed, 7)}">
   <div class="bs-container">
     <div class="bs-split bs-split--wide-right bs-areas">
       <div class="bs-stack">

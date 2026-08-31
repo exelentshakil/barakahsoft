@@ -334,8 +334,12 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
       return buildPage({
         brief,
         logoUrl,
+        // The plan the operator sees and edits on the brief screen. Its real
+        // photography is placed first; the pool only tops up what it leaves.
+        media,
         photos: pool.map((photo) => photo.url),
         brandHex: clientBrandHex,
+        design: dna,
         innerPagesBuilt: Boolean(loaded.artifact?.inner_pages_built),
       });
     })) as Awaited<ReturnType<typeof import("@/lib/generate/v2/templates").buildPage>>;

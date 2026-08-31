@@ -73,8 +73,15 @@ async function main() {
   const page = await buildPage({
     brief,
     logoUrl: null,
+    media: brief.photos.map((url, index) => ({
+      slot: index === 0 ? "hero" : index === 1 ? "about" : `service-${index - 2}`,
+      url,
+      caption: "smoke test photo",
+      origin: "real" as const,
+    })),
     photos: brief.photos,
     brandHex: "#E4761B",
+    design: DEFAULT_DESIGN_DNA,
     innerPagesBuilt: false,
   });
 
