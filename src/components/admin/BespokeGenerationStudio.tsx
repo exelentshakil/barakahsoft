@@ -92,6 +92,56 @@ export function BespokeGenerationStudio({
     return typeof value === "number" && value > 0 ? String(value) : "";
   };
 
+  // The Google Business Profile this lead is pinned to.
+  //
+  // It resolves automatically during the scrape and is refused now when it
+  // cannot be verified, but a wrong or missing match is invisible until it is
+  // already on the client's homepage — which is how a Wyoming roofer shipped a
+  // Florida company's rating, reviews and town. Shown here so it is checked
+  // before generating rather than discovered afterwards.
+  const placesRaw = (scrapeResults?.places_raw ?? null) as {
+    name?: string; website?: string; formatted_address?: string;
+    formatted_phone_number?: string; rating?: number; review_count?: number; user_ratings_total?: number;
+  } | null;
+
+  const leadHost = (() => {
+    try { return new URL(lead.source_url).hostname.replace(/^www\./, "").toLowerCase(); } catch { return null; }
+  })();
+  const placeHost = (() => {
+    try { return placesRaw?.website ? new URL(placesRaw.website).hostname.replace(/^www\./, "").toLowerCase() : null; } catch { return null; }
+  })();
+  const placeVerified = Boolean(leadHost && placeHost && leadHost === placeHost);
+
+  const [placeIdInput, setPlaceIdInput] = useState(lead.place_id ?? "");
+  const [placeBusy, setPlaceBusy] = useState(false);
+  const [placeMsg, setPlaceMsg] = useState<string | null>(null);
+
+  async function applyPlaceId() {
+    // A Maps URL is what an operator actually has to hand, so take the id out
+    // of it rather than making them find it.
+    const raw = placeIdInput.trim();
+    const fromUrl = raw.match(/placeid=([A-Za-z0-9_-]+)/) || raw.match(/place_id[=:]([A-Za-z0-9_-]+)/);
+    const placeId = fromUrl ? fromUrl[1] : raw;
+    if (!placeId) return;
+
+    setPlaceBusy(true);
+    setPlaceMsg(null);
+    try {
+      const res = await fetch(`/api/leads/${lead.id}/places`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ place_id: placeId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not load that profile");
+      setPlaceMsg(`Now pinned to ${data.place.name} — ${data.place.rating} from ${data.place.reviewCount}, ${data.place.reviewsPulled} reviews pulled. Reload to see it.`);
+    } catch (err) {
+      setPlaceMsg(err instanceof Error ? err.message : "Could not load that profile");
+    } finally {
+      setPlaceBusy(false);
+    }
+  }
+
   const [facebookRating, setFacebookRating] = useState(savedNumber("facebookRating"));
   const [facebookReviewCount, setFacebookReviewCount] = useState(savedNumber("facebookReviewCount"));
   const [servicesText, setServicesText] = useState(defaultServices);
@@ -423,6 +473,68 @@ export function BespokeGenerationStudio({
                 placeholder="e.g. Pinnacle Restoration"
                 required
               />
+            </div>
+
+            <div className="sm:col-span-2 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <Label className="text-xs font-bold text-slate-800">Google Business Profile</Label>
+                {placesRaw ? (
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                      placeVerified
+                        ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                        : "bg-amber-100 text-amber-900 border border-amber-300"
+                    }`}
+                  >
+                    {placeVerified ? "Domain verified" : "Unverified match"}
+                  </span>
+                ) : (
+                  <span className="rounded-full border border-slate-300 bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                    No profile matched
+                  </span>
+                )}
+              </div>
+
+              {placesRaw ? (
+                <div className="mt-2.5 space-y-1 text-xs">
+                  <p className="font-bold text-slate-900">{placesRaw.name}</p>
+                  <p className="text-slate-600">{placesRaw.formatted_address}</p>
+                  <p className={placeVerified ? "text-slate-600" : "font-bold text-amber-800"}>
+                    {placesRaw.website || "no website on the listing"}
+                    {!placeVerified && leadHost ? ` — this lead is ${leadHost}` : ""}
+                  </p>
+                  <p className="font-bold text-slate-900">
+                    {placesRaw.rating ?? "—"} from {placesRaw.review_count ?? placesRaw.user_ratings_total ?? "—"} reviews
+                  </p>
+                </div>
+              ) : (
+                <p className="mt-2 text-xs text-slate-600">
+                  No verified listing, so this build carries no rating, reviews or review link. Paste the right one below.
+                </p>
+              )}
+
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Input
+                  value={placeIdInput}
+                  onChange={(e) => setPlaceIdInput(e.target.value)}
+                  placeholder="Paste a place id or a Google reviews URL"
+                  className="h-9 flex-1 min-w-[240px] border-slate-300 text-xs"
+                />
+                <Button
+                  type="button"
+                  onClick={applyPlaceId}
+                  disabled={placeBusy || !placeIdInput.trim()}
+                  className="h-9 rounded-lg bg-slate-900 px-4 text-xs font-bold text-white hover:bg-slate-700"
+                >
+                  {placeBusy ? "Pulling…" : "Pin this profile"}
+                </Button>
+              </div>
+              <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">
+                Pulls the rating, review count, latest reviews, hours and town from that listing and repoints the
+                &ldquo;read all reviews&rdquo; link. Find it by searching the business on Google Maps and copying
+                the URL.
+              </p>
+              {placeMsg && <p className="mt-2 text-xs font-bold text-slate-800">{placeMsg}</p>}
             </div>
 
             <div className="sm:col-span-2">
