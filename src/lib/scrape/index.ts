@@ -70,7 +70,13 @@ export async function scrapeBusiness(
   const font = homepage ? extractFont(homepage) : { googleFontFamily: null, googleFontStylesheetUrl: null };
 
   const siteName = deriveSiteName(pageInventory[0]?.title ?? null) || firecrawlData?.title;
-  const places = await callPlacesApi(siteName ?? new URL(sourceUrl).hostname, contactInfo.phones[0]);
+  // The lead's own domain, phone and name, so a wrong candidate is refused
+  // rather than quietly adopted.
+  const places = await callPlacesApi(siteName ?? new URL(sourceUrl).hostname, contactInfo.phones[0], {
+    domain: new URL(sourceUrl).hostname,
+    phone: contactInfo.phones[0] ?? null,
+    name: siteName ?? null,
+  });
   const gbpPhotoUrls = (places?.photo_refs ?? [])
     .map((ref) => resolvePlacesPhotoUrl(ref))
     .filter((url): url is string => !!url);

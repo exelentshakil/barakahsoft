@@ -20,7 +20,63 @@ export interface PlacesResult {
   types: string[];
 }
 
-export async function callPlacesApi(name: string, addressHint?: string): Promise<PlacesResult | null> {
+/**
+ * Is this Places record actually the business we asked about?
+ *
+ * findplacefromtext always returns its best guess and never says "no". Taking
+ * candidates[0] on faith matched Saddle Roofing of Cheyenne, Wyoming to Expert
+ * Roofing Services of Stuart, Florida, and shipped that company's 4.9 rating,
+ * its 299 review count, its town and five of its customers' testimonials onto
+ * a stranger's homepage.
+ *
+ * So a match must now prove itself against something the lead already owns.
+ * The website domain is decisive — two businesses do not share one. A phone
+ * match is decisive for the same reason. Failing both, the name has to line up
+ * closely enough that a different company cannot slip through.
+ */
+function matchesLead(
+  place: { name?: string; website?: string; formatted_phone_number?: string },
+  expect: { domain?: string | null; phone?: string | null; name?: string | null }
+): boolean {
+  const host = (url?: string | null) => {
+    try {
+      return new URL(url!).hostname.replace(/^www\./, "").toLowerCase();
+    } catch {
+      return null;
+    }
+  };
+
+  const placeHost = host(place.website);
+  const leadHost = expect.domain ? expect.domain.replace(/^www\./, "").toLowerCase() : null;
+  if (placeHost && leadHost) return placeHost === leadHost;
+
+  const digits = (value?: string | null) => (value ?? "").replace(/\D/g, "").slice(-10);
+  const placePhone = digits(place.formatted_phone_number);
+  const leadPhone = digits(expect.phone);
+  if (placePhone.length === 10 && placePhone === leadPhone) return true;
+
+  // Last resort. Compared on words rather than characters so "Saddle Roofing"
+  // does not pass as "Expert Roofing Services" on the strength of one shared
+  // word — every roofer shares that word.
+  const words = (value?: string | null) =>
+    new Set((value ?? "").toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter((w) => w.length > 2));
+  const placeWords = words(place.name);
+  const leadWords = words(expect.name);
+  if (placeWords.size === 0 || leadWords.size === 0) return false;
+  const generic = new Set(["roofing", "roofers", "plumbing", "electric", "electrical", "hvac", "heating",
+    "cooling", "services", "service", "company", "inc", "llc", "contractors", "contracting", "construction",
+    "painting", "painters", "the", "and"]);
+  const distinctive = [...leadWords].filter((w) => !generic.has(w));
+  if (distinctive.length === 0) return false;
+  return distinctive.every((w) => placeWords.has(w));
+}
+
+export async function callPlacesApi(
+  name: string,
+  addressHint?: string,
+  /** What the lead already tells us, so a wrong match can be refused. */
+  expect?: { domain?: string | null; phone?: string | null; name?: string | null }
+): Promise<PlacesResult | null> {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey) {
     console.error("[places] GOOGLE_PLACES_API_KEY is not set");
@@ -63,6 +119,20 @@ export async function callPlacesApi(name: string, addressHint?: string): Promise
     const result = detailsData.result;
     if (!result) {
       console.error("[places] no result from details call", { status: detailsData.status, error_message: detailsData.error_message, placeId });
+      return null;
+    }
+
+    // Refuse a mismatch rather than shipping another company's proof. No
+    // rating at all is recoverable; a stranger's reviews on a client's
+    // homepage is not.
+    if (expect && !matchesLead(result, expect)) {
+      console.error("[places] candidate rejected — does not match the lead", {
+        asked: expect.name ?? name,
+        expectedDomain: expect.domain ?? null,
+        got: result.name,
+        gotWebsite: result.website ?? null,
+        gotAddress: result.formatted_address ?? null,
+      });
       return null;
     }
 

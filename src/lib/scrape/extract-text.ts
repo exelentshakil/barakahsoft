@@ -29,7 +29,25 @@ export interface ExtractedContactInfo {
 const SOCIAL_HOST_PATTERNS = [/facebook\.com/, /instagram\.com/, /twitter\.com/, /x\.com/, /tiktok\.com/, /youtube\.com/, /linkedin\.com/];
 
 function extractContactInfo($: cheerio.CheerioAPI, bodyText: string): ExtractedContactInfo {
-  const phones = Array.from(new Set(bodyText.match(/(?:\+?\d[\d\s().-]{7,}\d)/g) || []));
+  // A phone has at least ten digits.
+  //
+  // The old pattern started at `\d`, so it clipped the opening bracket off
+  // "(307) 475-6088" and handed "307) 475-6088" on as the number — and it
+  // matched any run of digits and dots, which meant the latitude and
+  // longitude in a map embed ("41.160885", "104.705409") were collected as
+  // phone numbers too. The first of those was then passed to Places as this
+  // business's phone, which is how a Wyoming roofer was matched to a company
+  // in Stuart, Florida and shipped that company's rating and reviews.
+  const phones = Array.from(
+    new Set(
+      (bodyText.match(/\+?\d{0,3}[\s.-]?\(?\d{2,4}\)?[\s.-]?\d{3,4}[\s.-]?\d{3,4}/g) || [])
+        .map((candidate) => candidate.trim())
+        .filter((candidate) => {
+          const digits = candidate.replace(/\D/g, "");
+          return digits.length >= 10 && digits.length <= 15;
+        })
+    )
+  );
   const emails = Array.from(new Set(bodyText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || []));
   const socialUrls: string[] = [];
   $("a[href]").each((_, el) => {
