@@ -577,7 +577,9 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-about--v1 .bs-about__grid{grid-template-columns:.95fr 1.05fr}
 .bespoke-page .bs-about--v2 .bs-about__grid{grid-template-columns:1.05fr .95fr}
 .bespoke-page .bs-about--v2 .bs-about__figure{order:2}
-.bespoke-page .bs-about--v2 .bs-seal{right:auto;left:-28px}
+/* The mirrored variant puts the photograph on the right, so a seal pinned to
+   its left edge hangs over the copy column. It stays on the outer edge. */
+.bespoke-page .bs-about--v2 .bs-seal{left:auto;right:-28px}
 .bespoke-page .bs-about--v3 .bs-about__grid{grid-template-columns:1fr;gap:32px}
 .bespoke-page .bs-about--v3 .bs-about__figure .bs-media{aspect-ratio:21/9}
 .bespoke-page .bs-about--v3 .bs-about__copy{max-width:none}
