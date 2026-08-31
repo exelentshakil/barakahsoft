@@ -30,6 +30,11 @@ interface Section {
 type Tab = "sections" | "css" | "chrome";
 
 export function OperatorSectionEditor({ leadId }: { leadId: string }) {
+  // Hidden entirely in clean mode. The toolbar is fixed-position operator
+  // furniture, so it lands in any capture of the whole page and in every
+  // showcase embed — neither of which should show our own controls to a
+  // client. ?clean=1 removes it without signing the operator out.
+  const [clean, setClean] = useState(false);
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("sections");
   const [sections, setSections] = useState<Section[]>([]);
@@ -38,6 +43,11 @@ export function OperatorSectionEditor({ leadId }: { leadId: string }) {
   const [draft, setDraft] = useState("");
   const [cssDraft, setCssDraft] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setClean(params.get("clean") === "1" || params.get("showcase") === "1");
+  }, []);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -318,6 +328,8 @@ export function OperatorSectionEditor({ leadId }: { leadId: string }) {
   // Closed, the panel collapses to a bar so inline editing can be used with
   // the whole page visible — a side panel covering half the site is the
   // wrong shape for "fix this heading".
+  if (clean) return null;
+
   if (!open) {
     return (
       <div className="fixed bottom-5 left-5 z-[9999] flex items-center gap-2 rounded-full bg-slate-900 p-1.5 pl-2 shadow-lg">

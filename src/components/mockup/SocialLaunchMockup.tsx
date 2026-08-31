@@ -256,15 +256,13 @@ function unescapeText(str: string | null | undefined): string {
 
 async function urlToBase64(url: string): Promise<string | null> {
   try {
-    const response = await fetch(url);
+    // Through our own proxy: fetching a CDN image directly from the browser
+    // fails the same CORS check that made the capture unreliable.
+    const response = await fetch(`/api/image-proxy?url=${encodeURIComponent(url)}`);
     if (!response.ok) return null;
-    const blob = await response.blob();
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(blob);
-    });
+    const payload = (await response.json().catch(() => null)) as { dataUri?: string } | null;
+    if (payload?.dataUri?.startsWith("data:")) return payload.dataUri;
+    return null;
   } catch {
     return null;
   }

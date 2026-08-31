@@ -197,6 +197,9 @@ export function AdminLeadWorkspace({
         return lead.source_url;
       }
     })();
+  // Clean mode strips our own operator furniture from the preview.
+  const [cleanPreview, setCleanPreview] = useState(false);
+
   const facts = (scrapeResults?.facts ?? {}) as Record<string, unknown>;
   const contact = resolveBusinessContact(scrapeResults, { phone: lead.phone, email: lead.email }, { forceFallback: lead.source === "outreach" || lead.source === "manual" });
   const phone = displayPhone(contact.phone) || "No phone on file";
@@ -204,7 +207,11 @@ export function AdminLeadWorkspace({
   const portalUrl = `https://portal.barakahsoft.com/s/${lead.slug}`;
   const portalAdminUrl = `https://portal.barakahsoft.com/s/${lead.slug}?admin=true`;
   
-  const previewUrl = `/s/${lead.slug}${previewPath}?view=preview`;
+  // Clean mode strips our own operator furniture from the preview — the
+  // fixed "Edit on page / Code" toolbar is position:fixed, so it lands in any
+  // capture of the page and in every showcase embed. Off by default so the
+  // editor is there when you are working; on when you want a clean shot.
+  const previewUrl = `/s/${lead.slug}${previewPath}?view=preview${cleanPreview ? "&clean=1" : ""}`;
 
   const colors = (facts.colors as { primary?: string; accent?: string } | undefined) || {};
   const primaryColor = colors.primary || (artifact?.extracted_assets as any)?.branding?.colors?.primary || "#533AFD";
@@ -635,6 +642,13 @@ Shaq`,
 
       await waitForFrame(doc, targetEl);
 
+      // Every image goes through our own proxy and becomes a data URI first.
+      // Being on the same domain as the preview does not help: the images
+      // inside it come from the client's CDN and stock hosts that send no CORS
+      // headers, and html-to-image has to read their bytes to draw them.
+      const { inlineImagesForCapture } = await import("@/lib/capture/inline-images");
+      const inlined = await inlineImagesForCapture(targetEl);
+
       // cacheBust re-requests every image with a unique query string, which
       // defeats the browser cache and can turn an already-loaded image into a
       // fresh cross-origin request that taints the canvas — the second reason
@@ -643,15 +657,20 @@ Shaq`,
 
       let blob = await toBlob(targetEl, options).catch(() => null);
       if (!blob) {
-        // One retry: the first pass primes html-to-image's internal image
-        // cache, so a second attempt usually succeeds where the first did not.
+        // One retry: the first pass primes html-to-image's internal cache, so
+        // a second attempt often succeeds where the first did not.
         await new Promise((resolve) => setTimeout(resolve, 400));
         blob = await toBlob(targetEl, options).catch(() => null);
       }
 
+      // The live page keeps its real URLs; data URIs are for the capture only.
+      inlined.restore();
+
       if (!blob) {
         throw new Error(
-          "Could not rasterise the preview. This is usually an image that will not allow cross-origin reads — open the clean preview in a tab, let it load fully, then try again."
+          inlined.failed.length > 0
+            ? `Could not rasterise the preview. ${inlined.failed.length} image(s) could not be fetched, starting with ${inlined.failed[0].slice(0, 80)}.`
+            : "Could not rasterise the preview. Reload the preview frame and try again."
         );
       }
 
@@ -1582,6 +1601,15 @@ Shaq`,
                         <p className="mt-0.5 text-xs text-slate-500">Review the real responsive page before approval.</p>
                       </div>
                     </div>
+                    <label className="mr-1 flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-[#0d1738]">
+                      <input
+                        type="checkbox"
+                        checked={cleanPreview}
+                        onChange={(event) => setCleanPreview(event.target.checked)}
+                        className="h-3 w-3 accent-[#533afd]"
+                      />
+                      Clean preview
+                    </label>
                     <div className="flex flex-wrap items-center gap-2">
                       <details className="group relative">
                         <summary className="flex cursor-pointer list-none items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700 shadow-2xs">
