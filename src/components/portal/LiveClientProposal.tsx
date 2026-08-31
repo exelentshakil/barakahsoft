@@ -21,6 +21,7 @@ import { SocialLaunchMockup } from "@/components/mockup/SocialLaunchMockup";
 import { extractMockupData } from "@/lib/mockup-data";
 import { buildOfferOptions, type OfferOption } from "@/lib/audit/lead-value";
 import { CrispChat } from "@/components/CrispChat";
+import { trackPixelEvent } from "@/lib/meta-pixel";
 
 interface LiveClientProposalProps {
   lead: Lead;
@@ -39,13 +40,25 @@ export function LiveClientProposal({
   isOperator = false,
 }: LiveClientProposalProps) {
   useEffect(() => {
-    if (!isOperator) {
-      fetch(`/api/s/${lead.slug}/events`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ event: "proposal_view", path: window.location.pathname }),
-      }).catch(() => {});
-    }
+    if (isOperator) return;
+
+    // A prospect opening their own rebuilt homepage is the warmest audience
+    // this business can assemble, and until now Meta never heard about it.
+    // The root layout fires a bare PageView here, which is indistinguishable
+    // from marketing-site traffic and cannot be built into an audience worth
+    // having. ViewContent names the lead, and the same id goes to the server
+    // so the Pixel and CAPI copies dedupe into one event.
+    const eventId = crypto.randomUUID();
+    trackPixelEvent("ViewContent", eventId, {
+      content_name: lead.slug,
+      content_category: "proposal_view",
+    });
+
+    fetch(`/api/s/${lead.slug}/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: "proposal_view", path: window.location.pathname, event_id: eventId }),
+    }).catch(() => {});
   }, [isOperator, lead.slug]);
 
   const [showCheckout, setShowCheckout] = useState(false);

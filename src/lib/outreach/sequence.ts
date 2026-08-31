@@ -57,21 +57,20 @@ export const OUTREACH_SEQUENCE: OutreachStage[] = [
     label: "Value Drop Gift",
     purpose: "Rebuilt concept and speed audit, no charge",
     dueAfterHours: 0,
-    subject: (ctx) => `${ctx.businessName} homepage rebuild (no charge)`,
+    subject: (ctx) => `${ctx.businessName} on a phone`,
     body: (ctx) =>
       [
         `Hi,`,
         ``,
-        `We analysed ${ctx.businessName} and noticed a few mobile speed bottlenecks costing you local customer calls.
-We went ahead and rebuilt a clean, high-speed homepage concept for ${ctx.businessName} (no charge).
+        `I was looking at ${ctx.businessName} and your site is slow enough on a phone that people are leaving before it loads.
 
-Your concept is ready to review below:`,
+So I rebuilt the homepage to show what it looks like fixed. It is live now, nothing to sign:`,
         ``,
         ctx.previewUrl,
         ``,
         ctx.headlineFinding
-          ? `You will find a full breakdown of what is slowing down your current site and costing you local visibility inside the portal.`
-          : `You will find a full breakdown of what is slowing down your current site and costing you local visibility inside the portal.`,
+          ? ctx.headlineFinding
+          : `There is a full breakdown of what is slowing the current site down inside the portal.`,
         ``,
         `It is yours to explore, no strings attached.`,
       ].join("\n") + footer(ctx),
@@ -127,21 +126,20 @@ export const INBOUND_SEQUENCE: OutreachStage[] = [
     label: "Initial Delivery",
     purpose: "Their requested 48h rebuild is ready",
     dueAfterHours: 0,
-    subject: (ctx) => `${ctx.businessName} homepage rebuild (no charge)`,
+    subject: (ctx) => `${ctx.businessName} on a phone`,
     body: (ctx) =>
       [
         `Hi,`,
         ``,
-        `We analysed ${ctx.businessName} and noticed a few mobile speed bottlenecks costing you local customer calls.
-We went ahead and rebuilt a clean, high-speed homepage concept for ${ctx.businessName} (no charge).
+        `I was looking at ${ctx.businessName} and your site is slow enough on a phone that people are leaving before it loads.
 
-Your concept is ready to review below:`,
+So I rebuilt the homepage to show what it looks like fixed. It is live now, nothing to sign:`,
         ``,
         ctx.previewUrl,
         ``,
         ctx.headlineFinding
-          ? `You will find a full breakdown of what is slowing down your current site and costing you local visibility inside the portal.`
-          : `You will find a full breakdown of what is slowing down your current site and costing you local visibility inside the portal.`,
+          ? ctx.headlineFinding
+          : `There is a full breakdown of what is slowing the current site down inside the portal.`,
         ``,
         `It is yours to explore, no strings attached.`,
       ].join("\n") + footer(ctx, "inbound"),

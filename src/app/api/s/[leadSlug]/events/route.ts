@@ -1,6 +1,9 @@
-export const runtime = "edge";
+// Node rather than edge: the CAPI half of this hits meta-pixel-server, which
+// hashes with node:crypto. This is a fire-and-forget beacon, so the few extra
+// milliseconds cost nothing that matters.
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { fireMetaCapiEvent } from "@/lib/meta-pixel-server";
 
 export async function POST(req: Request, { params }: { params: Promise<{ leadSlug: string }> }) {
   const { leadSlug } = await params;
@@ -19,6 +22,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ leadSlu
       .from("leads")
       .update({ last_viewed_at: new Date().toISOString() })
       .eq("id", lead.id);
+
+    // Server half of the pair. Carries the same event id as the browser's
+    // ViewContent so Meta counts one event, and lands even where an ad
+    // blocker ate the client-side pixel — which on a cold prospect's laptop
+    // is a large share of them.
+    if (typeof body.event_id === "string") {
+      await fireMetaCapiEvent({
+        eventName: "ViewContent",
+        eventId: body.event_id,
+        sourceUrl: req.headers.get("referer") || `https://portal.barakahsoft.com/s/${leadSlug}`,
+      }).catch(() => {});
+    }
   }
 
   const city = req.headers.get("x-vercel-ip-city") || req.headers.get("x-real-ip-city");
