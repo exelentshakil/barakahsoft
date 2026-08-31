@@ -254,6 +254,15 @@ export const BASE_STYLESHEET = `
    the hero copy, every band and the form all pull in together rather than
    each being tightened one rule at a time. */
 .bespoke-page{--bs-gutter:15px}
+/* The card-stack hero insets its container to frame the copy as a card. That
+   is a desktop device, and its clamp floors at 28px, so on a phone it never
+   shrank — it just stacked on top of the grid's own gutter and pushed the
+   headline 48px off the edge of a 390px screen. The frame is worth nothing
+   at this width; the grid's gutter is the whole margin. */
+.bespoke-page .bs-hero--card-stack .bs-container{padding-inline:0}
+/* align-self beats align-items, so the eyebrow kept the flex-start it is
+   given on desktop while the heading, lede and pills around it all centred. */
+.bespoke-page .bs-contact__copy>.bs-eyebrow{align-self:center}
   .bespoke-page .bs-pills{width:100%}
   .bespoke-page .bs-pill{flex:1 1 100%;justify-content:center;min-width:0}
 }

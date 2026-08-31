@@ -10,7 +10,8 @@
     "visual-qa:install": "playwright install chromium",
     "visual-qa:worker": "tsx --env-file=.env.local scripts/visual-qa-worker.ts",
     "visual-qa:once": "tsx --env-file=.env.local scripts/visual-qa-worker.ts --once",
-    "sell-this-site": "tsx --env-file=.env.local scripts/sell-this-site.ts"
+    "sell-this-site": "tsx --env-file=.env.local scripts/sell-this-site.ts",
+    "restyle": "tsx --env-file=.env.local scripts/restyle-lead.ts"
   },
   "dependencies": {
     "@radix-ui/react-collapsible": "^1.1.20",
