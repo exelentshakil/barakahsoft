@@ -354,13 +354,14 @@ export function gallerySection(ctx: RenderContext): string {
   const { copy, brief } = ctx;
   const services = copy.services.items;
 
-  // A ragged last row is the loudest "unfinished" signal a grid can send, so
-  // the tile count is trimmed to something the column count divides exactly.
-  const columns = photos.length % 4 === 0 ? 4 : photos.length % 3 === 0 ? 3 : photos.length >= 8 ? 4 : 3;
-  const usable = Math.max(columns, Math.floor(Math.min(photos.length, 12) / columns) * columns);
+  // Every photograph is shown; the COLUMN COUNT is chosen to suit how many
+  // there are. Eight goes four-up, six and seven go three-up (seven simply
+  // leaves one on the last row, which reads fine), four goes two-up. Throwing
+  // a client's photographs away to make a grid tidy is the wrong trade.
+  const shown = photos.slice(0, 12);
+  const columns = shown.length % 4 === 0 ? 4 : shown.length >= 5 ? 3 : 2;
 
-  const tiles = photos
-    .slice(0, usable)
+  const tiles = shown
     .map((photo, index) => {
       const caption = copy.gallery.captions[index] ?? services[index % Math.max(services.length, 1)]?.name ?? `${brief.industry} in ${brief.city}`;
       return `<figure class="bs-gallery__tile">

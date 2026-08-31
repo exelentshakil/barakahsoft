@@ -440,7 +440,7 @@ export function SocialLaunchMockup({
           <img
             src={data.heroCaptureUrl}
             alt="Hero Section Screenshot"
-            className="w-full h-auto origin-top"
+            className="w-full h-full object-cover object-top origin-top"
             style={{ 
               imageRendering: "high-quality" as any, 
               transform: "translateZ(0)", 
@@ -590,6 +590,22 @@ export function SocialLaunchMockup({
             }}
           />
           {/* Subtle Glass Glare */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/15 pointer-events-none" />
+        </div>
+      ) : data.previewUrl && !opts?.isExport ? (
+        /* No capture uploaded yet: show the REAL about section from the live
+           page rather than a synthetic stand-in. The laptop already shows the
+           real hero this way, and a mockup pairing a real hero with an
+           invented about card is the one that gets noticed. */
+        <div className="relative w-full aspect-video bg-white overflow-hidden">
+          <iframe
+            src={`${data.previewUrl}#about`}
+            title={`${businessShortName} about section`}
+            tabIndex={-1}
+            scrolling="no"
+            className="absolute top-0 left-0 border-0 pointer-events-none"
+            style={{ width: "1280px", height: "900px", transform: "scale(0.32)", transformOrigin: "top left" }}
+          />
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/15 pointer-events-none" />
         </div>
       ) : (

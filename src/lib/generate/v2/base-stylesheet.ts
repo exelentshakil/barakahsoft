@@ -40,6 +40,10 @@ export const BASE_STYLESHEET = `
    panel, which is absolutely positioned and must escape the nav's box. The
    page is kept inside the viewport by sizing individual elements instead. */
 .bespoke-page{overflow:visible}
+/* The application's legacy stylesheet paints every strong element with the ink
+   token, which turned the "4.9" inside the hero rating near-black on a dark
+   photograph. Emphasis inherits its context's colour, everywhere. */
+.bespoke-page [class*="bs-"] strong,.bespoke-page [class*="bs-"] b{color:inherit}
 /* The closed mobile drawer is translated off-screen right, which on mobile
    browsers extends the scrollable area and gives the whole site a horizontal
    scrollbar. Taking it out of layout entirely while closed fixes that without
@@ -525,7 +529,16 @@ export const BASE_STYLESHEET = `
   .bespoke-page .bs-whyus__panel{width:100%;margin-top:-60px}
 }
 @media (max-width:900px){
-  .bespoke-page .bs-hero__grid,.bespoke-page .bs-about__grid{grid-template-columns:1fr}
+  /* Written at variant specificity on purpose: .bs-hero--v2 .bs-hero__grid is
+     three classes and beat the two-class breakpoint rule, so the hero stayed
+     two-column on a phone with the form pushed off-screen. */
+  .bespoke-page .bs-hero__grid,
+  .bespoke-page [class*="bs-hero--"] .bs-hero__grid,
+  .bespoke-page .bs-about__grid,
+  .bespoke-page [class*="bs-about--"] .bs-about__grid{grid-template-columns:1fr}
+  .bespoke-page [class*="bs-hero--"] .bs-hero__form{order:2;justify-self:stretch;max-width:none}
+  .bespoke-page [class*="bs-hero--"] .bs-hero__copy{align-items:flex-start;text-align:left;background:none;padding:0;backdrop-filter:none}
+  .bespoke-page .bs-hero__grid{gap:28px}
   .bespoke-page .bs-about__figure{margin-bottom:24px}
   .bespoke-page .bs-seal{width:96px;height:96px;top:-22px;right:-8px}
   .bespoke-page .bs-sectionhead{flex-direction:column;align-items:flex-start}
@@ -702,6 +715,7 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-gallery{display:grid;grid-template-columns:repeat(var(--gallery-cols,4),1fr);gap:14px;margin-top:clamp(28px,3.4vw,44px)}
 .bespoke-page .bs-gallery[data-columns="3"]{--gallery-cols:3}
 .bespoke-page .bs-gallery[data-columns="4"]{--gallery-cols:4}
+.bespoke-page .bs-gallery[data-columns="2"]{--gallery-cols:2}
 .bespoke-page .bs-gallery__tile{display:flex;flex-direction:column;gap:8px}
 .bespoke-page .bs-gallery__tile .bs-media{display:block;position:relative;overflow:hidden;border-radius:var(--bs-r);aspect-ratio:1/1;background:var(--bs-surface-alt,#eee)}
 .bespoke-page .bs-gallery__tile img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
@@ -817,6 +831,31 @@ export const BASE_STYLESHEET = `
   .bespoke-page .bs-sectionhead .bs-btn{width:100%}
   .bespoke-page .bs-footer-cta{flex-direction:column;align-items:flex-start;text-align:left}
   .bespoke-page .bs-guarantee__points{gap:14px}
+}
+
+/* ---------- mobile, last word ------------------------------------------- */
+/* This block is deliberately the LAST thing in the stylesheet. The per-lead
+   variants (.bs-hero--v2 .bs-hero__grid and friends) carry the same
+   specificity as the breakpoint rules above and are declared after them, so
+   they were winning inside the media query too and the hero stayed
+   two-column on a phone with its form pushed off-screen. Same specificity,
+   last position, no !important needed. */
+@media (max-width:900px){
+  .bespoke-page [class*="bs-hero--"] .bs-hero__grid,
+  .bespoke-page [class*="bs-about--"] .bs-about__grid,
+  .bespoke-page [class*="bs-services--"] .bs-services__grid,
+  .bespoke-page [class*="bs-gallery--"] .bs-gallery{grid-template-columns:1fr}
+  .bespoke-page [class*="bs-hero--"] .bs-hero__form{order:2;justify-self:stretch;max-width:none;width:100%}
+  .bespoke-page [class*="bs-hero--"] .bs-hero__copy{order:1;align-items:flex-start;text-align:left;background:none;padding:0;backdrop-filter:none;gap:16px}
+  .bespoke-page [class*="bs-hero--"] .bs-hero__grid{gap:26px}
+  .bespoke-page [class*="bs-about--"] .bs-about__copy .bs-body{columns:1}
+  .bespoke-page [class*="bs-services--"] .bs-services__aside{order:0;position:static;max-width:none}
+  .bespoke-page [class*="bs-process--"] .bs-steps{grid-template-columns:1fr}
+  .bespoke-page .bs-hero .bs-actions,.bespoke-page .bs-hero .bs-actions>*{width:100%;justify-content:center}
+  .bespoke-page .bs-hero .bs-rating{width:100%;justify-content:center}
+}
+@media (max-width:620px){
+  .bespoke-page [class*="bs-gallery--"] .bs-gallery{grid-template-columns:repeat(2,1fr)}
 }
 
 `;
