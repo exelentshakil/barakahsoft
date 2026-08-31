@@ -202,21 +202,34 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-section--ink .bs-stat,.bespoke-page .bs-section--brand .bs-stat{background:rgb(255 255 255 / .06);border-color:rgb(255 255 255 / .16)}
 .bespoke-page .bs-section--ink .bs-stat__icon,.bespoke-page .bs-section--brand .bs-stat__icon{background:rgb(255 255 255 / .12);color:#fff}
 .bespoke-page .bs-rating{display:inline-flex;align-items:center;gap:10px;font-weight:700;font-size:.92rem}
-/* Review proof pills */
-.bespoke-page .bs-pills{display:flex;flex-wrap:wrap;gap:10px}
+/* Review proof pills.
+   Two platforms, one shape. They carry different information — Google has a
+   rating we can verify, Facebook does not — so the balance has to come from
+   the frame rather than from inventing a number to fill the gap: identical
+   height, identical minimum width, identical internal rhythm, and a top line
+   that reserves its space whether or not it has stars in it. */
+.bespoke-page .bs-pills{display:flex;flex-wrap:wrap;gap:12px;align-items:stretch}
 .bespoke-page .bs-pill{
-  display:inline-flex;align-items:center;gap:10px;padding:9px 15px;border-radius:var(--bs-r);
-  background:#fff;color:var(--bs-ink,#16181d);border:1px solid var(--bs-line);
-  box-shadow:0 4px 14px rgb(0 0 0 / .10);text-decoration:none;
-  transition:transform .16s ease,box-shadow .16s ease;
+  display:inline-flex;align-items:center;gap:11px;
+  min-width:186px;min-height:58px;padding:10px 16px;
+  border-radius:var(--bs-r);background:#fff;color:var(--bs-ink,#16181d);
+  border:1px solid var(--bs-line);box-shadow:0 6px 18px rgb(0 0 0 / .14);
+  text-decoration:none;transition:transform .16s ease,box-shadow .16s ease;
 }
-.bespoke-page a.bs-pill:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgb(0 0 0 / .16)}
-.bespoke-page .bs-pill__body{display:flex;flex-direction:column;line-height:1.15}
-.bespoke-page .bs-pill__top{display:inline-flex;align-items:center;gap:6px;font-size:.95rem;font-weight:800}
-.bespoke-page .bs-pill__top .bs-stars svg{width:13px;height:13px}
-.bespoke-page .bs-pill__sub{font-size:.7rem;font-weight:600;color:var(--bs-muted);text-decoration:underline;text-underline-offset:2px}
-.bespoke-page .bs-fbmark{display:inline-flex;flex:none}
-.bespoke-page .bs-fbmark svg,.bespoke-page .bs-google svg{width:22px;height:22px}
+.bespoke-page a.bs-pill:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgb(0 0 0 / .2)}
+.bespoke-page .bs-pill__body{display:flex;flex-direction:column;justify-content:center;gap:2px;line-height:1.2}
+/* min-height, so the Facebook pill's single-line top sits at the same optical
+   position as Google's number-plus-stars rather than drifting upward. */
+.bespoke-page .bs-pill__top{display:flex;align-items:center;gap:6px;min-height:20px;font-size:1rem;font-weight:900;letter-spacing:-.01em}
+.bespoke-page .bs-pill__top .bs-stars{display:inline-flex;gap:1px}
+.bespoke-page .bs-pill__top .bs-stars svg{width:14px;height:14px}
+.bespoke-page .bs-pill__sub{font-size:.72rem;font-weight:700;color:var(--bs-muted);text-decoration:underline;text-underline-offset:2px;white-space:nowrap}
+.bespoke-page .bs-fbmark,.bespoke-page .bs-google{display:inline-flex;flex:none;align-items:center}
+.bespoke-page .bs-fbmark svg,.bespoke-page .bs-google svg{width:26px;height:26px}
+@media (max-width:620px){
+  .bespoke-page .bs-pills{width:100%}
+  .bespoke-page .bs-pill{flex:1 1 100%;justify-content:center;min-width:0}
+}
 .bespoke-page .bs-rating svg{color:#f5b301;fill:#f5b301}
 .bespoke-page .bs-icon{display:inline-flex;width:24px;height:24px;flex:none;align-items:center;justify-content:center}
 .bespoke-page .bs-icon svg{width:100%;height:100%}
