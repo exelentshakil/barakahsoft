@@ -335,7 +335,6 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-hero--split-form .bs-split{grid-template-columns:1.15fr .85fr}
 .bespoke-page .bs-hero--offset-slab .bs-split{grid-template-columns:1fr .8fr}
 .bespoke-page .bs-hero--stat-anchored .bs-split{grid-template-columns:1fr .85fr}
-.bespoke-page .bs-hero--centered-editorial .bs-container{text-align:center}
 .bespoke-page .bs-hero--centered-editorial .bs-stack{align-items:center}
 .bespoke-page .bs-hero--centered-editorial .bs-form{max-width:960px;margin-inline:auto}
 /* This archetype wants one wide form bar under a centred headline, so its body
@@ -365,7 +364,7 @@ export const BASE_STYLESHEET = `
    block for its position:fixed descendants — which made the mobile drawer
    resolve against the 105px-tall nav instead of the viewport and vanish
    behind the hero. Measured: 330x105 at x=375 before this. */
-.bespoke-page .bs-nav{position:sticky;top:0;z-index:100;background:var(--bs-ink,#16181d);color:#fff;box-shadow:0 2px 20px rgb(0 0 0 / .2);backdrop-filter:none;-webkit-backdrop-filter:none;filter:none;border-bottom:0}
+.bespoke-page .bs-nav{--bs-nav-bg:var(--bs-ink,#16181d);position:sticky;top:0;z-index:100;background:var(--bs-nav-bg);color:#fff;box-shadow:0 2px 20px rgb(0 0 0 / .2);backdrop-filter:none;-webkit-backdrop-filter:none;filter:none;border-bottom:0}
 .bespoke-page .bs-nav__bar{display:flex;align-items:center;justify-content:space-between;gap:24px;width:100%;max-width:var(--bs-max);margin-inline:auto;padding:14px var(--bs-gutter)}
 .bespoke-page .bs-nav__logo{display:flex;align-items:center;gap:10px;font-family:var(--bs-font-display,inherit);font-weight:900;font-size:1.15rem;letter-spacing:-.01em}
 .bespoke-page .bs-nav__logo img{max-height:52px;width:auto;object-fit:contain}
@@ -529,10 +528,13 @@ export const BASE_STYLESHEET = `
 /* Nav edge ------------------------------------------------------------- */
 .bespoke-page .bs-nav{position:relative}
 .bespoke-page .bs-nav__edge{
-  position:absolute;left:0;right:0;top:100%;width:100%;height:30px;display:block;z-index:3;
+  position:absolute;left:0;right:0;top:100%;width:100%;height:18px;display:block;z-index:3;
   filter:drop-shadow(0 6px 10px rgb(0 0 0 / .16));
 }
-.bespoke-page .bs-nav__edge path{fill:var(--bs-surface,#fff)}
+/* The wedge is the bar's own edge, so it wears the bar's own colour. It was
+   filled with --bs-surface, which painted a near-white triangle across a dark
+   nav sitting over a dark hero photograph. */
+.bespoke-page .bs-nav__edge path{fill:var(--bs-nav-bg,var(--bs-ink,#16181d))}
 .bespoke-page .bs-nav--edge-plinth .bs-nav__plinth{
   position:absolute;left:50%;top:100%;transform:translate(-50%,-1px);z-index:4;
   padding:14px 34px 17px;border-radius:0 0 14px 14px;background:var(--bs-surface,#fff);
@@ -599,7 +601,7 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-form--solid-brand{background:var(--bs-primary,#e4761b)}
 .bespoke-page .bs-form--solid-brand .bs-form__head{background:var(--bs-primary-strong,#c2410c)}
 .bespoke-page .bs-form--solid-brand .bs-form__head::after{border-top-color:var(--bs-primary-strong,#c2410c)}
-.bespoke-page .bs-form--solid-brand .bs-input{background:rgb(255 255 255 / .95);border-color:transparent}
+.bespoke-page .bs-form--solid-brand .bs-input,.bespoke-page .bs-form--solid-brand .bs-select{background:rgb(255 255 255 / .95);border-color:transparent}
 .bespoke-page .bs-form--solid-brand .bs-btn{background:var(--bs-accent,#c1273c);color:#fff}
 .bespoke-page .bs-form--solid-brand .bs-form__note{color:rgb(255 255 255 / .78)}
 
@@ -617,10 +619,14 @@ export const BASE_STYLESHEET = `
 }
 .bespoke-page .bs-form--dark-glass .bs-form__head{background:rgb(255 255 255 / .12)}
 .bespoke-page .bs-form--dark-glass .bs-form__head::after{border-top-color:rgb(255 255 255 / .12)}
-.bespoke-page .bs-form--dark-glass .bs-input{
+.bespoke-page .bs-form--dark-glass .bs-input,
+.bespoke-page .bs-form--dark-glass .bs-select{
   background:rgb(255 255 255 / .09);border-color:rgb(255 255 255 / .18);color:#fff;
 }
+/* The option list is drawn by the OS against its own background. */
+.bespoke-page .bs-form--dark-glass .bs-select option{background:#14171c;color:#fff}
 .bespoke-page .bs-form--dark-glass .bs-input::placeholder{color:rgb(255 255 255 / .5)}
+.bespoke-page .bs-form--solid-brand .bs-select,.bespoke-page .bs-form--white-header .bs-select,.bespoke-page .bs-form--offer-banner .bs-select{color:var(--bs-ink,#16181d)}
 .bespoke-page .bs-form--dark-glass .bs-form__note{color:rgb(255 255 255 / .6)}
 
 /* About surface -------------------------------------------------------- */
@@ -773,8 +779,11 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-row--badges{gap:10px}
 .bespoke-page .bs-link-call--hero{color:#fff}
 .bespoke-page .bs-link-call--invert:hover{color:#fff;opacity:.85}
-.bespoke-page .bs-hero--centered-editorial .bs-hero__grid{grid-template-columns:1fr;justify-items:center;text-align:center}
-.bespoke-page .bs-hero--centered-editorial .bs-hero__copy{align-items:center}
+/* The hero arrangement is locked. centered-editorial used to drop this to one
+   centred column, which pushed the lead form below the fold — the one element
+   on the page whose position is worth more than any amount of variety. It
+   keeps its centred type; the form stays in the right-hand column. */
+.bespoke-page .bs-hero--centered-editorial .bs-hero__copy{align-items:center;text-align:center}
 .bespoke-page .bs-hero--offset-slab .bs-hero__copy{background:rgb(var(--bs-ink-rgb,16 18 26) / .72);padding:clamp(26px,3vw,46px);border-radius:var(--bs-r-lg);backdrop-filter:blur(3px)}
 .bespoke-page .bs-hero--card-stack .bs-container{padding-inline:clamp(28px,5vw,72px)}
 
@@ -930,9 +939,12 @@ export const BASE_STYLESHEET = `
    its archetype; it does not get to overrule the archetype's own geometry. */
 .bespoke-page .bs-hero--v1:not(.bs-hero--centered-editorial) .bs-hero__grid{grid-template-columns:1.1fr .9fr}
 .bespoke-page .bs-hero--v2:not(.bs-hero--centered-editorial) .bs-hero__grid{grid-template-columns:.9fr 1.05fr}
-.bespoke-page .bs-hero--v2:not(.bs-hero--centered-editorial) .bs-hero__form{order:-1;justify-self:start}
-.bespoke-page .bs-hero--v3 .bs-hero__grid{grid-template-columns:1fr;max-width:1040px}
+.bespoke-page .bs-hero--v3 .bs-hero__grid{max-width:1180px}
 .bespoke-page .bs-hero--v3 .bs-hero__copy{align-items:center;text-align:center}
+/* Never order:-1 and never a single column — see the note above. */
+/* Copy left, form right, on every archetype and every variant. This is the
+   one piece of hero geometry that is not a design decision. */
+.bespoke-page [class*="bs-hero--"] .bs-hero__form{order:2;justify-self:end}
 .bespoke-page .bs-hero--v3 .bs-hero__form{max-width:none}
 .bespoke-page .bs-hero--v3 .bs-form__body{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:end}
 .bespoke-page .bs-hero--v3 .bs-form__body>button,.bespoke-page .bs-hero--v3 .bs-form__note{grid-column:1/-1}
