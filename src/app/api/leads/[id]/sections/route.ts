@@ -62,7 +62,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
 
     await saveSections(id, sections, { css, editedBy: await operatorAccountId() });
-    return NextResponse.json({ ok: true });
+
+    // Hand back what was actually stored. The editor applies edits to the
+    // live page instead of reloading it, so it needs the canonical copy to
+    // sync to — otherwise the page keeps showing the draft and quietly
+    // disagrees with the database the moment anything is normalised on the
+    // way in.
+    const stored = await loadSections(id);
+    return NextResponse.json({ ok: true, sections: stored.sections, css: stored.css });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

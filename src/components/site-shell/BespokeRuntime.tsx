@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuoteModal } from "@/components/site-shell/QuoteModalProvider";
 
 // The interaction layer for generated pages.
@@ -22,6 +22,20 @@ import { useQuoteModal } from "@/components/site-shell/QuoteModalProvider";
 
 export function BespokeRuntime({ leadSlug }: { leadSlug: string }) {
   const openQuoteModal = useQuoteModal();
+
+  // The operator editor replaces section markup in place now instead of
+  // reloading the page, and a replaced node loses everything held per
+  // element: its reveal observer, its counter, its slider. The delegated
+  // click handling survives a swap because it is bound to the page root,
+  // which is exactly why the loss was easy to miss — the FAQ still opened
+  // while the section above it stayed invisible at opacity 0, still waiting
+  // to be observed. Bumping this re-runs the whole effect, cleanups first.
+  const [arm, setArm] = useState(0);
+  useEffect(() => {
+    const rearm = () => setArm((n) => n + 1);
+    window.addEventListener("bespoke:rearm", rearm);
+    return () => window.removeEventListener("bespoke:rearm", rearm);
+  }, []);
 
   useEffect(() => {
     // There are two .bespoke-page wrappers on a page now — the generated nav
@@ -292,7 +306,7 @@ export function BespokeRuntime({ leadSlug }: { leadSlug: string }) {
     cleanups.push(() => window.removeEventListener("scroll", onScroll));
 
     return () => cleanups.forEach((fn) => fn());
-  }, [leadSlug, openQuoteModal]);
+  }, [leadSlug, openQuoteModal, arm]);
 
   return null;
 }
