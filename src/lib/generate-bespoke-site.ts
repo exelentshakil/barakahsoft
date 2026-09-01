@@ -41,6 +41,16 @@ export interface SiteBrief {
   /** Resolved once per lead so no two leads ship the same composition. */
   layoutSalt: number;
   /**
+   * Where the business actually is, from the verified Google listing.
+   *
+   * Without it the service-area map geocoded bare town names against the
+   * whole planet: "Jackson" for a Wyoming roofer resolved near Rajshahi and
+   * the client's map section rendered Bangladesh.
+   */
+  geo: { lat: number; lng: number } | null;
+  /** "WY, USA" — qualifies a town name so it cannot resolve continents away. */
+  regionHint: string | null;
+  /**
    * Manufacturer and trade accreditations — GAF Master Elite, Owens Corning
    * Preferred, BBB. The credential this trade cares most about, and the one
    * most of their own sites bury in the footer.

@@ -36,11 +36,29 @@ function normaliseHex(hex: string | null | undefined): string {
  * Build the request URL. Kept separate so it is never accidentally the thing
  * that gets written into markup.
  */
-function staticMapUrl(areas: string[], brandHex: string | null, apiKey: string): string {
+function staticMapUrl(
+  areas: string[],
+  brandHex: string | null,
+  apiKey: string,
+  /** "WY, USA". A bare town name is geocoded against the whole planet. */
+  regionHint: string | null,
+  /** The verified business location, so the frame cannot drift off it. */
+  origin: { lat: number; lng: number } | null
+): string {
+  const qualify = (area: string) =>
+    regionHint && !area.includes(",") ? `${area}, ${regionHint}` : area;
+
   const markers = areas
-    .map((area, index) => `markers=${encodeURIComponent(`color:${normaliseHex(brandHex)}|label:${LABELS[index]}|${area}`)}`)
+    .map((area, index) => `markers=${encodeURIComponent(`color:${normaliseHex(brandHex)}|label:${LABELS[index]}|${qualify(area)}`)}`)
     .join("&");
-  return `https://maps.googleapis.com/maps/api/staticmap?size=640x420&scale=2&maptype=roadmap&${markers}&key=${apiKey}`;
+
+  // The business itself, so the map is anchored on somewhere we have verified
+  // rather than on wherever the pins happened to land.
+  const home = origin
+    ? `&markers=${encodeURIComponent(`color:0x111111|label:H|${origin.lat},${origin.lng}`)}`
+    : "";
+
+  return `https://maps.googleapis.com/maps/api/staticmap?size=640x420&scale=2&maptype=roadmap&region=us&${markers}${home}&key=${apiKey}`;
 }
 
 /**
@@ -52,7 +70,9 @@ function staticMapUrl(areas: string[], brandHex: string | null, apiKey: string):
 export async function renderServiceMap(
   leadId: string,
   areas: string[],
-  brandHex: string | null
+  brandHex: string | null,
+  regionHint: string | null = null,
+  origin: { lat: number; lng: number } | null = null
 ): Promise<ServiceMapResult | null> {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey) return null;
@@ -64,7 +84,7 @@ export async function renderServiceMap(
   if (shortlist.length === 0) return null;
 
   try {
-    const response = await fetch(staticMapUrl(shortlist, brandHex, apiKey));
+    const response = await fetch(staticMapUrl(shortlist, brandHex, apiKey, regionHint, origin));
     if (!response.ok) {
       console.error("[service-map] static maps returned", response.status);
       return null;

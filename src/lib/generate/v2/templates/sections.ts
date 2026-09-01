@@ -566,7 +566,17 @@ export function areasSection(ctx: RenderContext): string {
   if (brief.areas.length === 0) return "";
   // A Google Maps embed rather than a static image: no API key, no quota, and
   // the sanitizer already whitelists this exact host for iframes.
-  const query = encodeURIComponent(brief.city.trim() || brief.areas[0] || "");
+  //
+  // Coordinates first, and a town name only as a last resort. This used to
+  // pass the bare town — "Jackson" for a Wyoming roofer — which Google
+  // geocoded against the whole planet and answered with a village in
+  // Bangladesh, so the section that tells someone whether they are covered
+  // showed them the wrong continent. A verified lat/lng cannot be misread,
+  // and where there is none the town is at least qualified with its state.
+  const place = brief.geo
+    ? `${brief.geo.lat},${brief.geo.lng}`
+    : [brief.city.trim() || brief.areas[0] || "", brief.regionHint].filter(Boolean).join(", ");
+  const query = encodeURIComponent(place);
   return `<section id="areas" class="bs-section bs-section--tint bs-areas--${variant(ctx.dna.seed, 7)}">
   <div class="bs-container">
     <div class="bs-split bs-split--wide-right bs-areas">

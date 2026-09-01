@@ -196,6 +196,21 @@ export function buildSiteBrief(
     facebookRating: overrides.facebookRating ?? null,
     facebookReviewCount: overrides.facebookReviewCount ?? null,
     layoutSalt: overrides.layoutSalt ?? 0,
+    geo: (() => {
+      const loc = (scrapeResults.places_raw as { geometry?: { location?: { lat?: number; lng?: number } } } | null)
+        ?.geometry?.location;
+      return typeof loc?.lat === "number" && typeof loc?.lng === "number" ? { lat: loc.lat, lng: loc.lng } : null;
+    })(),
+    regionHint: (() => {
+      // "4585 WY-22, Wilson, WY 83014, USA" -> "WY, USA"
+      const address = (scrapeResults.places_raw as { formatted_address?: string } | null)?.formatted_address;
+      if (!address) return null;
+      const parts = address.split(",").map((x) => x.trim()).filter(Boolean);
+      if (parts.length < 2) return null;
+      const country = parts[parts.length - 1];
+      const state = (parts[parts.length - 2] ?? "").replace(/\s*\d{4,}\s*$/, "").trim();
+      return state ? `${state}, ${country}` : country;
+    })(),
     certifications: (overrides.certifications ?? (facts?.certifications as string[] | undefined) ?? [])
       .filter((name): name is string => typeof name === "string" && name.trim().length > 0)
       .slice(0, 3),
