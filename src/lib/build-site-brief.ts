@@ -201,6 +201,9 @@ export function buildSiteBrief(
         ?.geometry?.location;
       return typeof loc?.lat === "number" && typeof loc?.lng === "number" ? { lat: loc.lat, lng: loc.lng } : null;
     })(),
+    address:
+      (scrapeResults.places_raw as { formatted_address?: string } | null)?.formatted_address ??
+      ((facts.nap as { address?: string } | undefined)?.address ?? null),
     regionHint: (() => {
       // "4585 WY-22, Wilson, WY 83014, USA" -> "WY, USA"
       const address = (scrapeResults.places_raw as { formatted_address?: string } | null)?.formatted_address;

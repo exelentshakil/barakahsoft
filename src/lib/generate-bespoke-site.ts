@@ -50,6 +50,8 @@ export interface SiteBrief {
   geo: { lat: number; lng: number } | null;
   /** "WY, USA" — qualifies a town name so it cannot resolve continents away. */
   regionHint: string | null;
+  /** The verified street address, from the Google listing. */
+  address: string | null;
   /**
    * Manufacturer and trade accreditations — GAF Master Elite, Owens Corning
    * Preferred, BBB. The credential this trade cares most about, and the one

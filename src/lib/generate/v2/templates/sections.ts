@@ -573,7 +573,14 @@ export function areasSection(ctx: RenderContext): string {
   // Bangladesh, so the section that tells someone whether they are covered
   // showed them the wrong continent. A verified lat/lng cannot be misread,
   // and where there is none the town is at least qualified with its state.
-  const place = brief.geo
+  // The verified street address first. Coordinates fixed the wrong-continent
+  // problem but the embed cannot resolve place info for a bare lat/lng, so it
+  // drew a "Place info couldn't load" box across the map. A full address is
+  // just as unambiguous and resolves to the real listing, so the pin carries
+  // the business's own card.
+  const place = brief.address
+    ? `${brief.businessName}, ${brief.address}`
+    : brief.geo
     ? `${brief.geo.lat},${brief.geo.lng}`
     : [brief.city.trim() || brief.areas[0] || "", brief.regionHint].filter(Boolean).join(", ");
   const query = encodeURIComponent(place);

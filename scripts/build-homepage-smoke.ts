@@ -67,6 +67,7 @@ const brief: SiteBrief = {
   certifications: [],
   geo: null,
   regionHint: null,
+  address: null,
   intent: conversionIntentFor("Roofing contractor", true),
 };
 
