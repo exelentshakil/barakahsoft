@@ -335,17 +335,12 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-hero--split-form .bs-split{grid-template-columns:1.15fr .85fr}
 .bespoke-page .bs-hero--offset-slab .bs-split{grid-template-columns:1fr .8fr}
 .bespoke-page .bs-hero--stat-anchored .bs-split{grid-template-columns:1fr .85fr}
-.bespoke-page .bs-hero--centered-editorial .bs-stack{align-items:center}
-.bespoke-page .bs-hero--centered-editorial .bs-form{max-width:960px;margin-inline:auto}
 /* This archetype wants one wide form bar under a centred headline, so its body
    is a two-up grid with the button and the note spanning — the same shape v3
    uses. It used to say flex:1 1 180px on the fields, written for a .bs-row
    the form markup no longer has; inside the column flex body that basis
    applied to HEIGHT and every field rendered 180px tall, which stretched the
    form to 965px and pushed it off the fold. */
-.bespoke-page .bs-hero--centered-editorial .bs-form__body{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;align-items:start}
-.bespoke-page .bs-hero--centered-editorial .bs-form__body>button,
-.bespoke-page .bs-hero--centered-editorial .bs-form__body>.bs-form__note{grid-column:1/-1}
 .bespoke-page .bs-hero--centered-editorial .bs-field{margin-bottom:0}
 .bespoke-page .bs-hero__proofbar{position:relative;z-index:3;background:rgb(0 0 0 / .55);border-top:1px solid rgb(255 255 255 / .14);backdrop-filter:blur(6px)}
 .bespoke-page .bs-hero__proofbar .bs-container{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding-block:20px;text-align:center;font-size:.83rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
@@ -783,7 +778,6 @@ export const BASE_STYLESHEET = `
    centred column, which pushed the lead form below the fold — the one element
    on the page whose position is worth more than any amount of variety. It
    keeps its centred type; the form stays in the right-hand column. */
-.bespoke-page .bs-hero--centered-editorial .bs-hero__copy{align-items:center;text-align:center}
 .bespoke-page .bs-hero--offset-slab .bs-hero__copy{background:rgb(var(--bs-ink-rgb,16 18 26) / .72);padding:clamp(26px,3vw,46px);border-radius:var(--bs-r-lg);backdrop-filter:blur(3px)}
 .bespoke-page .bs-hero--card-stack .bs-container{padding-inline:clamp(28px,5vw,72px)}
 
@@ -940,14 +934,17 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-hero--v1:not(.bs-hero--centered-editorial) .bs-hero__grid{grid-template-columns:1.1fr .9fr}
 .bespoke-page .bs-hero--v2:not(.bs-hero--centered-editorial) .bs-hero__grid{grid-template-columns:.9fr 1.05fr}
 .bespoke-page .bs-hero--v3 .bs-hero__grid{max-width:1180px}
-.bespoke-page .bs-hero--v3 .bs-hero__copy{align-items:center;text-align:center}
 /* Never order:-1 and never a single column — see the note above. */
-/* Copy left, form right, on every archetype and every variant. This is the
-   one piece of hero geometry that is not a design decision. */
+/* Copy left, form right, one field per row, copy ranged left. None of this is
+   a design decision — it is the arrangement every high-performing site in
+   this market converges on, and identity comes from treatment instead. */
 .bespoke-page [class*="bs-hero--"] .bs-hero__form{order:2;justify-self:end}
+.bespoke-page [class*="bs-hero--"] .bs-hero__copy{align-items:flex-start;text-align:left}
+.bespoke-page [class*="bs-hero--"] .bs-form__body{display:flex;flex-direction:column;gap:10px}
+.bespoke-page [class*="bs-hero--"] .bs-field,
+.bespoke-page [class*="bs-hero--"] .bs-input,
+.bespoke-page [class*="bs-hero--"] .bs-select{width:100%}
 .bespoke-page .bs-hero--v3 .bs-hero__form{max-width:none}
-.bespoke-page .bs-hero--v3 .bs-form__body{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:end}
-.bespoke-page .bs-hero--v3 .bs-form__body>button,.bespoke-page .bs-hero--v3 .bs-form__note{grid-column:1/-1}
 
 /* about */
 .bespoke-page .bs-about--v1:not(.bs-about--editorial-column) .bs-about__grid{grid-template-columns:.95fr 1.05fr}
