@@ -152,6 +152,21 @@ export function selectorFor(el: HTMLElement): { selector: string; matches: numbe
   return { selector, matches };
 }
 
+/**
+ * The same selector, widened to every element that looks like this one.
+ *
+ * Drops the id anchor and the positional steps and keeps the class list, so
+ * `#services … div.bs-card:nth-of-type(2)` becomes `.bespoke-page .bs-card`.
+ * Fixing one card and then hunting its five siblings by hand is what makes a
+ * tool like this tiring on the second day.
+ */
+export function broadSelector(selector: string): string {
+  const last = selector.trim().split(/\s+/).pop() ?? "";
+  const classes = last.replace(/:nth-of-type\(\d+\)/g, "").match(/\.[A-Za-z0-9_-]+/g);
+  if (!classes?.length) return selector;
+  return `.bespoke-page ${classes.join("")}`;
+}
+
 export interface Override {
   selector: string;
   declarations: Record<string, string>;

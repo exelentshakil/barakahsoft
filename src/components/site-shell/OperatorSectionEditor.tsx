@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Code2, Loader2, X, Check, RefreshCw, AlertTriangle, Wand2, Image as ImageIcon, MousePointerClick, Paintbrush, Undo2 } from "lucide-react";
+import { Code2, Loader2, X, Check, RefreshCw, AlertTriangle, Wand2, Image as ImageIcon, MousePointerClick, Paintbrush, Undo2, Stethoscope, ChevronRight } from "lucide-react";
+import { scanPage, inspect, colourFixes, type Finding, type Fix } from "@/components/site-shell/style-doctor";
 import {
   applyLiveCss,
   clearLiveCss,
@@ -9,6 +10,7 @@ import {
   rearmRuntime,
   serialiseElement,
   selectorFor,
+  broadSelector,
   withOverrides,
   readOverrides,
   type Override,
@@ -100,8 +102,17 @@ export function OperatorSectionEditor({ leadId }: { leadId: string }) {
 
   // The style inspector: one element at a time, and the rules clicking it
   // has produced so far.
-  const [picked, setPicked] = useState<{ selector: string; matches: number; label: string } | null>(null);
+  const [picked, setPicked] = useState<{ selector: string; matches: number; label: string; crumbs: { label: string; el: HTMLElement }[] } | null>(null);
   const [overrides, setOverrides] = useState<Override[]>([]);
+
+  // What the doctor found: on the picked element, and across the page.
+  // "This one" vs "everything that looks like it". Fixing one card and then
+  // hunting down its five siblings by hand is the difference between a tool
+  // you reach for and one you avoid.
+  const [scopeAll, setScopeAll] = useState(false);
+  const [findings, setFindings] = useState<Finding[]>([]);
+  const [pageFindings, setPageFindings] = useState<Finding[] | null>(null);
+  const [scanning, setScanning] = useState(false);
 
   // The stylesheet as the page is currently showing it. Kept in a ref as
   // well as state because the live-apply effect must not re-run on every
@@ -195,15 +206,7 @@ export function OperatorSectionEditor({ leadId }: { leadId: string }) {
         prev.style.removeProperty("outline");
         prev.style.removeProperty("outline-offset");
       });
-      el.setAttribute("data-op-picked", "1");
-      outline(el, "rgba(251,191,36,1)");
-      const { selector, matches } = selectorFor(el);
-      const classes = Array.from(el.classList).filter((c) => !c.startsWith("op-"));
-      setPicked({
-        selector,
-        matches,
-        label: `${el.tagName.toLowerCase()}${classes.length ? `.${classes[0]}` : ""}`,
-      });
+      selectElement(el);
     };
 
     document.addEventListener("mouseover", onOver, true);
@@ -215,6 +218,56 @@ export function OperatorSectionEditor({ leadId }: { leadId: string }) {
       stopInline();
     };
   }, [mode, stopInline]);
+
+  /**
+   * Pick an element: outline it, work out its address, and diagnose it.
+   *
+   * The crumbs matter more than they look. Clicking a headline usually lands
+   * on the <span> inside it rather than the <h1> you meant, and hunting for
+   * the right node by clicking around is the thing that would make this
+   * tiring to use every day.
+   */
+  const selectElement = useCallback((el: HTMLElement) => {
+    document.querySelectorAll<HTMLElement>("[data-op-picked]").forEach((prev) => {
+      prev.removeAttribute("data-op-picked");
+      prev.style.removeProperty("outline");
+      prev.style.removeProperty("outline-offset");
+    });
+    el.setAttribute("data-op-picked", "1");
+    el.style.setProperty("outline", "2px solid rgba(251,191,36,1)");
+    el.style.setProperty("outline-offset", "-2px");
+
+    const crumbs: { label: string; el: HTMLElement }[] = [];
+    let node: HTMLElement | null = el;
+    while (node && node !== document.body && crumbs.length < 5) {
+      const cls = Array.from(node.classList).filter((c) => !c.startsWith("op-"))[0];
+      crumbs.unshift({
+        label: node.id ? `#${node.id}` : `${node.tagName.toLowerCase()}${cls ? `.${cls}` : ""}`,
+        el: node,
+      });
+      if (node.id) break;
+      node = node.parentElement;
+    }
+
+    const { selector, matches } = selectorFor(el);
+    const classes = Array.from(el.classList).filter((c) => !c.startsWith("op-"));
+    setPicked({ selector, matches, label: `${el.tagName.toLowerCase()}${classes.length ? `.${classes[0]}` : ""}`, crumbs });
+
+    const root = document.querySelector<HTMLElement>(".bespoke-page");
+    setFindings(root ? inspect(el, root) : []);
+  }, []);
+
+  /** Sweep the whole page. Deferred a frame so the button paints as pressed. */
+  const runScan = useCallback(() => {
+    setScanning(true);
+    setPageFindings(null);
+    requestAnimationFrame(() => {
+      const wrappers = Array.from(document.querySelectorAll<HTMLElement>(".bespoke-page"));
+      const root = wrappers.find((w) => w.querySelector("section[id]")) ?? wrappers[0];
+      setPageFindings(root ? scanPage(root, cssRef.current || css) : []);
+      setScanning(false);
+    });
+  }, [css]);
 
   /** The computed value of one property on the currently picked element. */
   const computed = useCallback((prop: string): string => {
@@ -231,19 +284,56 @@ export function OperatorSectionEditor({ leadId }: { leadId: string }) {
    * the Stylesheet tab always shows the truth and one save covers both. An
    * empty value removes the declaration again.
    */
-  const setDeclaration = useCallback((prop: string, value: string) => {
-    if (!picked) return;
-    const existing = overrides.find((o) => o.selector === picked.selector)?.declarations ?? {};
+  const writeRule = useCallback((selector: string, patch: Record<string, string>) => {
+    const existing = overrides.find((o) => o.selector === selector)?.declarations ?? {};
     const declarations = { ...existing };
-    if (value.trim()) declarations[prop] = value.trim();
-    else delete declarations[prop];
-
-    const rest = overrides.filter((o) => o.selector !== picked.selector);
-    const merged = Object.keys(declarations).length ? [...rest, { selector: picked.selector, declarations }] : rest;
+    for (const [prop, value] of Object.entries(patch)) {
+      if (value.trim()) declarations[prop] = value.trim();
+      else delete declarations[prop];
+    }
+    const rest = overrides.filter((o) => o.selector !== selector);
+    const merged = Object.keys(declarations).length ? [...rest, { selector, declarations }] : rest;
     setOverrides(merged);
     setCssDraft(withOverrides(cssRef.current, merged));
     setSaved(false);
-  }, [overrides, picked]);
+  }, [overrides]);
+
+  const setDeclaration = useCallback((prop: string, value: string) => {
+    if (!picked) return;
+    writeRule(scopeAll && picked.matches > 1 ? broadSelector(picked.selector) : picked.selector, { [prop]: value });
+  }, [picked, scopeAll, writeRule]);
+
+  /**
+   * Take a fix the doctor offered.
+   *
+   * Token fixes land on .bespoke-page because that is where a custom
+   * property has to be declared to reach the rules that read it; everything
+   * else lands on the element that was diagnosed. Afterwards the element is
+   * re-diagnosed rather than the finding being assumed away, so a fix that
+   * did not actually clear the problem still says so.
+   */
+  const applyFix = useCallback((fix: Fix, finding: Finding) => {
+    const isToken = Object.keys(fix.declarations).every((k) => k.startsWith("--"));
+    // A grouped finding fixes all of its places at once: the row already
+    // says "6 places", so fixing the first and leaving five behind would be
+    // the opposite of what it just promised.
+    const target = isToken
+      ? ".bespoke-page"
+      : finding.element
+        ? finding.siblings?.length
+          ? broadSelector(selectorFor(finding.element).selector)
+          : selectorFor(finding.element).selector
+        : picked?.selector;
+    if (!target) return;
+    writeRule(target, fix.declarations);
+
+    const root = document.querySelector<HTMLElement>(".bespoke-page");
+    // A frame for the live sheet to land before measuring the result.
+    setTimeout(() => {
+      if (finding.element && root) setFindings(inspect(finding.element, root));
+      if (pageFindings) runScan();
+    }, 220);
+  }, [picked, writeRule, pageFindings, runScan]);
 
   // ---- Live stylesheet --------------------------------------------------
   //
@@ -527,20 +617,71 @@ export function OperatorSectionEditor({ leadId }: { leadId: string }) {
 
   const dirtyCss = cssDraft !== css;
 
+  // The swatches are this page's own tokens, ranked by how readable each one
+  // is on the picked element's actual backdrop — so the first swatch is
+  // almost always the right answer and picking a literal colour is the
+  // exception rather than the default.
+  const palette: Fix[] = (() => {
+    const el = picked ? document.querySelector<HTMLElement>("[data-op-picked]") : null;
+    const root = document.querySelector<HTMLElement>(".bespoke-page");
+    if (!el || !root) return [];
+    return colourFixes(el, root);
+  })();
+
   const toolbar = (
     <div data-operator-ui="1" className="fixed bottom-5 left-5 z-[9999] flex max-w-[min(28rem,calc(100vw-2.5rem))] flex-col items-start gap-2">
+      {pageFindings && mode === "style" && (
+        <div className="max-h-[46vh] w-[20rem] overflow-y-auto rounded-xl border border-slate-700 bg-slate-900/95 p-3 shadow-2xl backdrop-blur">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-[11px] font-bold text-slate-100">
+              {pageFindings.length === 0 ? "Nothing to fix — this one is ready" : `${pageFindings.length} thing${pageFindings.length > 1 ? "s" : ""} to look at`}
+            </span>
+            <button type="button" onClick={() => setPageFindings(null)} className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-white">
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          <div className="space-y-1.5">
+            {pageFindings.map((finding, i) => (
+              <FindingCard
+                key={`${finding.id}-${i}`}
+                finding={finding}
+                onFix={(fix) => applyFix(fix, finding)}
+                onGo={
+                  finding.element
+                    ? () => {
+                        finding.element!.scrollIntoView({ behavior: "smooth", block: "center" });
+                        selectElement(finding.element!);
+                      }
+                    : undefined
+                }
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {picked && mode === "style" && (
         <StyleInspector
           picked={picked}
+          findings={findings}
           computed={computed}
           onSet={setDeclaration}
+          onFix={applyFix}
+          onSelect={selectElement}
+          scopeAll={scopeAll}
+          onScope={setScopeAll}
+          palette={palette}
           onClear={() => {
-            const rest = overrides.filter((o) => o.selector !== picked.selector);
+            const rest = overrides.filter(
+              (o) => o.selector !== picked.selector && o.selector !== broadSelector(picked.selector)
+            );
             setOverrides(rest);
             setCssDraft(withOverrides(cssRef.current, rest));
           }}
           onClose={() => setPicked(null)}
-          changed={Boolean(overrides.find((o) => o.selector === picked.selector))}
+          changed={overrides.some(
+            (o) => o.selector === picked.selector || o.selector === broadSelector(picked.selector)
+          )}
         />
       )}
 
@@ -568,6 +709,18 @@ export function OperatorSectionEditor({ leadId }: { leadId: string }) {
           <Paintbrush className="h-3.5 w-3.5" />
           Style
         </button>
+
+        {mode === "style" && (
+          <button
+            type="button"
+            onClick={runScan}
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold text-slate-200 transition hover:bg-slate-800"
+            title="Sweep the page for anything that would stop you sending it"
+          >
+            {scanning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Stethoscope className="h-3.5 w-3.5" />}
+            Check page
+          </button>
+        )}
 
         {mode === "text" && touched.length > 0 && (
           <button
@@ -807,118 +960,212 @@ function toHex(value: string): string {
   return /^#[0-9a-f]{6}$/i.test(value.trim()) ? value.trim() : "#000000";
 }
 
-/** "17.6px" → 17.6, for the sliders. */
 function toNumber(value: string): number {
   const n = parseFloat(value);
   return Number.isFinite(n) ? n : 0;
 }
 
-const SLIDERS: { prop: string; label: string; min: number; max: number; step: number }[] = [
-  { prop: "font-size", label: "Size", min: 8, max: 96, step: 1 },
-  { prop: "letter-spacing", label: "Tracking", min: -3, max: 12, step: 0.1 },
-  { prop: "line-height", label: "Leading", min: 0.8, max: 2.4, step: 0.02 },
-  { prop: "padding-top", label: "Pad top", min: 0, max: 160, step: 2 },
-  { prop: "padding-bottom", label: "Pad bottom", min: 0, max: 160, step: 2 },
-  { prop: "border-radius", label: "Radius", min: 0, max: 80, step: 1 },
-];
+/** A number you can type, arrow-key, or leave alone. */
+function NumberField({
+  label,
+  value,
+  suffix = "px",
+  onChange,
+}: {
+  label: string;
+  value: number;
+  suffix?: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</span>
+      <div className="mt-1 flex items-center rounded-md border border-slate-700 bg-slate-950 focus-within:border-sky-400">
+        <input
+          type="number"
+          value={Number.isFinite(value) ? Math.round(value * 100) / 100 : ""}
+          onChange={(e) => onChange(e.target.value ? `${e.target.value}${suffix}` : "")}
+          className="w-full bg-transparent px-2 py-1 font-mono text-[12px] font-semibold text-slate-100 outline-none"
+        />
+        <span className="pr-2 text-[10px] text-slate-500">{suffix}</span>
+      </div>
+    </label>
+  );
+}
 
 /**
- * The clicked element's properties, editable.
+ * One problem, and the buttons that fix it.
  *
- * Deliberately a short list. This is the tool for the fix you can see and
- * describe in four words — a heading two sizes too big, a colour that
- * vanished — and every control it grows past that is one more thing to scan
- * past on the way to those. Anything larger belongs in the stylesheet, which
- * is one click away and is where these rules end up anyway.
+ * The fix is a button rather than an instruction on purpose: the point of
+ * this panel is that noticing and repairing are the same gesture, so nobody
+ * has to work out which property to reach for.
+ */
+function FindingCard({
+  finding,
+  onFix,
+  onGo,
+}: {
+  finding: Finding;
+  onFix: (fix: Fix) => void;
+  onGo?: () => void;
+}) {
+  const bad = finding.severity === "bad";
+  return (
+    <div className={`rounded-lg border p-2 ${bad ? "border-red-500/40 bg-red-500/10" : "border-amber-400/30 bg-amber-400/10"}`}>
+      <button
+        type="button"
+        onClick={onGo}
+        disabled={!onGo}
+        className="flex w-full items-start gap-1.5 text-left disabled:cursor-default"
+      >
+        <AlertTriangle className={`mt-0.5 h-3 w-3 shrink-0 ${bad ? "text-red-300" : "text-amber-300"}`} />
+        <span className="flex-1">
+          <span className={`block text-[11px] font-bold ${bad ? "text-red-100" : "text-amber-100"}`}>{finding.title}</span>
+          <span className="block text-[10px] leading-snug text-slate-300">{finding.detail}</span>
+        </span>
+        {onGo && <ChevronRight className="mt-0.5 h-3 w-3 shrink-0 text-slate-500" />}
+      </button>
+      {finding.fixes.length > 0 && (
+        <div className="mt-1.5 flex flex-wrap gap-1">
+          {finding.fixes.map((fix) => (
+            <button
+              key={fix.label}
+              type="button"
+              onClick={() => onFix(fix)}
+              className="inline-flex items-center gap-1 rounded border border-slate-500/60 bg-slate-900/70 px-1.5 py-0.5 text-[10px] font-bold text-slate-100 transition hover:border-sky-400 hover:text-sky-200"
+            >
+              {fix.label}
+              {fix.note && <span className="font-mono text-[9px] text-slate-400">{fix.note}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The clicked element: what is wrong with it, then what you can change.
+ *
+ * Findings come first because they are the reason the panel is open. The
+ * controls below are deliberately four things — colour, size, radius,
+ * spacing — since anything more is a stylesheet edit wearing a costume, and
+ * the Stylesheet tab is one click away for that.
  */
 function StyleInspector({
   picked,
+  findings,
   computed,
   onSet,
+  onFix,
+  onSelect,
   onClear,
   onClose,
+  scopeAll,
+  onScope,
   changed,
+  palette,
 }: {
-  picked: { selector: string; matches: number; label: string };
+  picked: { selector: string; matches: number; label: string; crumbs: { label: string; el: HTMLElement }[] };
+  findings: Finding[];
   computed: (prop: string) => string;
   onSet: (prop: string, value: string) => void;
+  onFix: (fix: Fix, finding: Finding) => void;
+  onSelect: (el: HTMLElement) => void;
   onClear: () => void;
   onClose: () => void;
+  scopeAll: boolean;
+  onScope: (all: boolean) => void;
   changed: boolean;
+  palette: Fix[];
 }) {
-  const colour = toHex(computed("color"));
-  const background = toHex(computed("background-color"));
-
   return (
-    <div className="w-[19rem] rounded-xl border border-slate-700 bg-slate-900/95 p-3 text-slate-100 shadow-2xl backdrop-blur">
+    <div className="max-h-[70vh] w-[20rem] overflow-y-auto rounded-xl border border-slate-700 bg-slate-900/95 p-3 text-slate-100 shadow-2xl backdrop-blur">
       <div className="mb-2 flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="truncate font-mono text-[11px] font-bold text-sky-300">{picked.label}</p>
-          <p className="truncate font-mono text-[10px] text-slate-500" title={picked.selector}>
-            {picked.selector}
-          </p>
+        <div className="flex min-w-0 flex-wrap items-center gap-0.5">
+          {picked.crumbs.map((crumb, i) => (
+            <span key={`${crumb.label}-${i}`} className="flex items-center gap-0.5">
+              {i > 0 && <span className="text-[9px] text-slate-600">›</span>}
+              <button
+                type="button"
+                onClick={() => onSelect(crumb.el)}
+                className={`rounded px-1 py-0.5 font-mono text-[9.5px] transition ${
+                  i === picked.crumbs.length - 1
+                    ? "bg-sky-400 font-bold text-slate-900"
+                    : "bg-slate-800 text-slate-400 hover:text-white"
+                }`}
+              >
+                {crumb.label}
+              </button>
+            </span>
+          ))}
         </div>
         <button type="button" onClick={onClose} className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-white">
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
 
-      {picked.matches > 1 && (
-        <p className="mb-2 rounded border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[10px] text-amber-200">
-          This selector matches {picked.matches} elements — the change applies to all of them.
-        </p>
+      {findings.length > 0 && (
+        <div className="mb-2.5 space-y-1.5">
+          {findings.map((finding) => (
+            <FindingCard key={finding.id} finding={finding} onFix={(fix) => onFix(fix, finding)} />
+          ))}
+        </div>
       )}
 
-      <div className="mb-2 grid grid-cols-2 gap-2">
-        {([
-          ["color", "Text", colour],
-          ["background-color", "Background", background],
-        ] as const).map(([prop, label, value]) => (
-          <label key={prop} className="flex items-center gap-2 rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5">
-            <input
-              type="color"
-              value={value}
-              onChange={(e) => onSet(prop, e.target.value)}
-              className="h-5 w-5 shrink-0 cursor-pointer rounded border-0 bg-transparent p-0"
-            />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</span>
-          </label>
+      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Colour</span>
+      <div className="mb-2.5 mt-1 flex gap-1">
+        {palette.map((fix) => (
+          <button
+            key={fix.label}
+            type="button"
+            title={`${fix.label} — ${fix.note ?? ""}`}
+            onClick={() => onSet("color", fix.declarations.color)}
+            className="h-7 flex-1 rounded-md border-2 border-slate-700 transition hover:border-sky-400"
+            style={{ background: fix.declarations.color }}
+          />
         ))}
+        <label className="h-7 w-7 shrink-0 cursor-pointer rounded-md border-2 border-slate-700 bg-slate-950 p-0.5 transition hover:border-sky-400">
+          <input
+            type="color"
+            value={toHex(computed("color"))}
+            onChange={(e) => onSet("color", e.target.value)}
+            className="h-full w-full cursor-pointer border-0 bg-transparent p-0"
+          />
+        </label>
       </div>
 
-      <div className="space-y-1.5">
-        {SLIDERS.map(({ prop, label, min, max, step }) => {
-          const raw = computed(prop);
-          const unitless = prop === "line-height";
-          const value = toNumber(raw);
-          return (
-            <label key={prop} className="flex items-center gap-2">
-              <span className="w-[4.5rem] shrink-0 text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</span>
-              <input
-                type="range"
-                min={min}
-                max={max}
-                step={step}
-                value={Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : min}
-                onChange={(e) => onSet(prop, unitless ? e.target.value : `${e.target.value}px`)}
-                className="h-1 flex-1 cursor-pointer accent-sky-400"
-              />
-              <span className="w-12 shrink-0 text-right font-mono text-[10px] text-slate-400">
-                {value ? `${Math.round(value * 100) / 100}${unitless ? "" : "px"}` : "—"}
-              </span>
-            </label>
-          );
-        })}
+      <div className="mb-2.5 grid grid-cols-3 gap-2">
+        <NumberField label="Size" value={toNumber(computed("font-size"))} onChange={(v) => onSet("font-size", v)} />
+        <NumberField label="Radius" value={toNumber(computed("border-radius"))} onChange={(v) => onSet("border-radius", v)} />
+        <NumberField label="Space" value={toNumber(computed("padding-top"))} onChange={(v) => onSet("padding-block", v)} />
       </div>
+
+      {picked.matches > 1 && (
+        <div className="mb-2 flex gap-1">
+          {([false, true] as const).map((all) => (
+            <button
+              key={String(all)}
+              type="button"
+              onClick={() => onScope(all)}
+              className={`flex-1 rounded-md px-2 py-1 text-[10px] font-bold transition ${
+                scopeAll === all ? "bg-sky-400 text-slate-900" : "bg-slate-800 text-slate-400 hover:text-white"
+              }`}
+            >
+              {all ? `All ${picked.matches} like it` : "This one"}
+            </button>
+          ))}
+        </div>
+      )}
 
       {changed && (
         <button
           type="button"
           onClick={onClear}
-          className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-slate-600 px-2 py-1 text-[10px] font-bold text-slate-300 transition hover:border-red-400/50 hover:text-red-300"
+          className="inline-flex items-center gap-1.5 rounded-md border border-slate-600 px-2 py-1 text-[10px] font-bold text-slate-300 transition hover:border-red-400/50 hover:text-red-300"
         >
           <Undo2 className="h-3 w-3" />
-          Reset this element
+          Undo my changes here
         </button>
       )}
     </div>
