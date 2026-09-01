@@ -8,6 +8,7 @@ import { conversionIntentFor } from "@/lib/conversion-intent";
 import { displayPhone } from "@/lib/phone";
 import { resolveBusinessContact } from "@/lib/business-contact";
 import { findLicenseInsuranceMention } from "@/lib/trust-signals";
+import { resolveLogoUrl, resolveFooterLogoUrl } from "@/lib/brand-assets";
 
 // render_shell atom — resolves an artifact + its lead/scrape context into
 // the flat SitePayload every shell component renders from. This is the
@@ -183,8 +184,11 @@ export function renderShell(
       ? `https://search.google.com/local/reviews?placeid=${lead.place_id}`
       : null,
     brandColorHsl: (facts.brand_color_hsl as string) ?? null,
-    logoUrl: (facts.logo_url as string) ?? null,
-    footerLogoUrl: (artifact.extracted_assets?.footer_logo_url as string) || (facts.logo_url as string) || null,
+    // Both through the shared resolver. The nav logo read facts.logo_url
+    // directly, which is the SCRAPED logo — so a logo replaced in the Studio
+    // was still the old one in the header of the delivered site.
+    logoUrl: resolveLogoUrl(artifact.extracted_assets as Record<string, unknown> | null, facts),
+    footerLogoUrl: resolveFooterLogoUrl(artifact.extracted_assets as Record<string, unknown> | null, facts),
     // Keep the delivered system visually consistent. Client fonts are useful
     // as research signals, but arbitrary scraped font imports made pages feel
     // inconsistent and occasionally broke the intended hierarchy.

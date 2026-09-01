@@ -18,6 +18,7 @@ import { ingestRealPhotos, buildSlots, planMedia, type MediaPlan } from "@/lib/m
 import { buildChromeSpec } from "@/lib/chrome-spec";
 import { writeLivePage, HOME_KEY } from "@/lib/page-versions";
 import { sanitizeBespokeHtml } from "@/lib/sanitize-generated-html";
+import { resolveLogoUrl } from "@/lib/brand-assets";
 import { verifyHomepage } from "@/lib/audit/quality-gate";
 import { setUsageContext } from "@/lib/cost/record-usage";
 import { parseJsonResponse } from "@/lib/parse-json-response";
@@ -313,8 +314,10 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     //
     // The split has a second benefit: a failure in the last stage no longer
     // discards the art direction and the stylesheet that already succeeded.
-    const logoUrl =
-      (loaded.artifact?.extracted_assets as any)?.brand_logo_url ?? (facts.logo_url as string) ?? null;
+    // `brand_logo_url` was read here and written nowhere in the codebase, so
+    // this always fell through to the scraped logo and every build ignored
+    // the one the operator had chosen in the Studio.
+    const logoUrl = resolveLogoUrl(loaded.artifact?.extracted_assets as Record<string, unknown> | null, facts);
 
     // The logo is not a photograph. Passing it in the photo list is exactly
     // how a previous build ended up rendering a 900px-tall wordmark as its

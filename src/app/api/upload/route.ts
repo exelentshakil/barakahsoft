@@ -17,7 +17,11 @@ export async function POST(req: Request) {
   const formData = await req.formData().catch(() => null);
   const file = formData?.get("file");
   const leadId = formData?.get("lead_id") as string | null;
-  const slotHint = (formData?.get("slot_hint") as string) || null;
+  // The Studio sends "slot"; the reference-image and asset pickers send
+  // "slot_hint". Only the second was read, so every logo, hero and footer
+  // upload from the Studio landed in media_assets with a null slot and no
+  // record of what it was uploaded to be.
+  const slotHint = (formData?.get("slot_hint") as string) || (formData?.get("slot") as string) || null;
   if (!(file instanceof File)) return NextResponse.json({ error: "No file provided" }, { status: 400 });
   if (!leadId) return NextResponse.json({ error: "lead_id is required" }, { status: 400 });
   if (!ALLOWED_TYPES.includes(file.type)) return NextResponse.json({ error: "Unsupported file type — use PNG, JPEG, WebP, GIF, or SVG" }, { status: 400 });

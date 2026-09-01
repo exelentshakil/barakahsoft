@@ -26,7 +26,19 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { InspirationPanel } from "@/components/admin/InspirationPanel";
+import { resolveLogoUrl, resolveHeroImage } from "@/lib/brand-assets";
 import type { Lead, Artifact, ScrapeResults } from "@/types/database";
+
+// The footer field is the one place that must NOT fall back to the header
+// logo: this is the box the operator types the transparent version into, and
+// pre-filling it with the header logo would save that as the footer mark the
+// moment anything else on the form changed.
+function operatorFooterLogo(assets: Record<string, unknown>): string | null {
+  const stored = assets.footer_logo_url;
+  if (typeof stored === "string") return stored;
+  const override = (assets.brief_overrides as Record<string, unknown> | undefined)?.footerLogoUrl;
+  return typeof override === "string" ? override : null;
+}
 
 interface BespokeGenerationStudioProps {
   lead: Lead;
@@ -55,9 +67,13 @@ export function BespokeGenerationStudio({
 
   const defaultBusinessName = extracted.business_name || schema.name || (typeof facts.business_name === "string" ? facts.business_name : null) || lead.business_name || "";
   const defaultFounder = extracted.founder_name || schema.founder?.name || lead.contact_name || "";
-  const defaultLogo = extracted.branding?.logo || schema.logo || (typeof facts.logo_url === "string" ? facts.logo_url : "") || "";
-  const defaultFooterLogo = extracted.footer_logo_url || "";
-  const defaultHero = extracted.hero_cutout || primaryScrapedPhoto || "";
+  // Through resolveLogoUrl rather than reading a key directly: this field
+  // wrote to extracted_assets.logo_url and read back from
+  // extracted_assets.branding.logo, so an uploaded logo saved correctly and
+  // then vanished on the next render, replaced by the scraped one.
+  const defaultLogo = resolveLogoUrl(extracted, facts, schema.logo) ?? "";
+  const defaultFooterLogo = operatorFooterLogo(extracted) ?? "";
+  const defaultHero = resolveHeroImage(extracted, primaryScrapedPhoto) ?? "";
   const defaultCity = extracted.city || (schema.address?.addressLocality ? `${schema.address.addressLocality}, ${schema.address.addressRegion || ""}`.trim() : typeof facts.town === "string" ? facts.town : "");
   const defaultIndustry = extracted.industry || lead.industry || (typeof facts.industry === "string" ? facts.industry : "");
   const defaultAboutContent = extracted.about_content || (typeof facts.about_content === "string" ? facts.about_content : "") || "";
@@ -366,6 +382,15 @@ export function BespokeGenerationStudio({
 
   useEffect(() => {
     if (briefSaved === "saving") return;
+    // Nothing is written until the operator actually changes something.
+    //
+    // This effect also runs on mount, so simply OPENING a lead wrote the
+    // scraped defaults into extracted_assets as though an operator had typed
+    // them — which is why logo_url held the scraped logo on leads nobody had
+    // edited, and why an empty stored value could not be told apart from a
+    // field deliberately cleared. `touched` already existed for exactly this
+    // and the autosave was the one place not consulting it.
+    if (!touched.current) return;
     const timer = setTimeout(saveBrief, 1200);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
