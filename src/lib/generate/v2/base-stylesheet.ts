@@ -338,8 +338,16 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-hero--centered-editorial .bs-container{text-align:center}
 .bespoke-page .bs-hero--centered-editorial .bs-stack{align-items:center}
 .bespoke-page .bs-hero--centered-editorial .bs-form{max-width:960px;margin-inline:auto}
-.bespoke-page .bs-hero--centered-editorial .bs-form .bs-row{gap:12px}
-.bespoke-page .bs-hero--centered-editorial .bs-field{flex:1 1 180px;margin-bottom:0}
+/* This archetype wants one wide form bar under a centred headline, so its body
+   is a two-up grid with the button and the note spanning — the same shape v3
+   uses. It used to say flex:1 1 180px on the fields, written for a .bs-row
+   the form markup no longer has; inside the column flex body that basis
+   applied to HEIGHT and every field rendered 180px tall, which stretched the
+   form to 965px and pushed it off the fold. */
+.bespoke-page .bs-hero--centered-editorial .bs-form__body{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;align-items:start}
+.bespoke-page .bs-hero--centered-editorial .bs-form__body>button,
+.bespoke-page .bs-hero--centered-editorial .bs-form__body>.bs-form__note{grid-column:1/-1}
+.bespoke-page .bs-hero--centered-editorial .bs-field{margin-bottom:0}
 .bespoke-page .bs-hero__proofbar{position:relative;z-index:3;background:rgb(0 0 0 / .55);border-top:1px solid rgb(255 255 255 / .14);backdrop-filter:blur(6px)}
 .bespoke-page .bs-hero__proofbar .bs-container{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding-block:20px;text-align:center;font-size:.83rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
 
@@ -907,9 +915,14 @@ export const BASE_STYLESHEET = `
    hero archetypes crossed with these, no two clients get the same page. */
 
 /* hero */
-.bespoke-page .bs-hero--v1 .bs-hero__grid{grid-template-columns:1.1fr .9fr}
-.bespoke-page .bs-hero--v2 .bs-hero__grid{grid-template-columns:.9fr 1.05fr}
-.bespoke-page .bs-hero--v2 .bs-hero__form{order:-1;justify-self:start}
+/* Both classes sit on the same section and both were (0,3,0), so whichever
+   came last in the file won. centered-editorial asks for one centred column
+   and v2 asked for two with the form first, which is how this hero rendered
+   as two columns of centred text with the form on the left. A variant tunes
+   its archetype; it does not get to overrule the archetype's own geometry. */
+.bespoke-page .bs-hero--v1:not(.bs-hero--centered-editorial) .bs-hero__grid{grid-template-columns:1.1fr .9fr}
+.bespoke-page .bs-hero--v2:not(.bs-hero--centered-editorial) .bs-hero__grid{grid-template-columns:.9fr 1.05fr}
+.bespoke-page .bs-hero--v2:not(.bs-hero--centered-editorial) .bs-hero__form{order:-1;justify-self:start}
 .bespoke-page .bs-hero--v3 .bs-hero__grid{grid-template-columns:1fr;max-width:1040px}
 .bespoke-page .bs-hero--v3 .bs-hero__copy{align-items:center;text-align:center}
 .bespoke-page .bs-hero--v3 .bs-hero__form{max-width:none}
@@ -926,7 +939,11 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-about--v3 .bs-about__grid{grid-template-columns:1fr;gap:32px}
 .bespoke-page .bs-about--v3 .bs-about__figure .bs-media{aspect-ratio:21/9}
 .bespoke-page .bs-about--v3 .bs-about__copy{max-width:none}
-.bespoke-page .bs-about--v3 .bs-about__copy .bs-body{columns:2;column-gap:48px}
+/* .bs-body caps its measure for single-column reading. Left on, two columns
+   split that one measure into two ~290px ribbons with half the section empty
+   beside them, so the multicolumn variant lifts the cap and each column gets
+   a measure of its own. */
+.bespoke-page .bs-about--v3 .bs-about__copy .bs-body{columns:2;column-gap:48px;max-width:none}
 
 /* services */
 .bespoke-page .bs-services--v2 .bs-grid-3{grid-template-columns:repeat(2,1fr)}
@@ -1033,12 +1050,12 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-servicerow:hover{transform:translateX(4px);box-shadow:var(--bs-shadow)}
 .bespoke-page .bs-servicerow .bs-media{aspect-ratio:4/3;height:100%;border-radius:0}
 .bespoke-page .bs-servicerow__glyph{display:grid;place-items:center;height:100%;min-height:150px;background:var(--bs-surface-alt,#f4f5f7);color:var(--bs-primary-strong,#e4761b)}
-.bespoke-page .bs-servicerow__body{padding:22px 26px 22px 0;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.bespoke-page .bs-servicerow__body{padding:22px 26px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 .bespoke-page .bs-services--v2 .bs-services__grid{grid-template-columns:1fr 380px}
 .bespoke-page .bs-services--v2 .bs-services__aside{order:2}
 .bespoke-page .bs-services--v3 .bs-servicerow{grid-template-columns:1fr 210px}
 .bespoke-page .bs-services--v3 .bs-servicerow .bs-media{order:2}
-.bespoke-page .bs-services--v3 .bs-servicerow__body{padding:22px 0 22px 26px}
+.bespoke-page .bs-services--v3 .bs-servicerow__body{padding:22px 26px}
 
 /* ---------- process rail -------------------------------------------------- */
 .bespoke-page .bs-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(24px,3vw,44px);position:relative;margin-block:clamp(36px,4vw,60px);list-style:none;counter-reset:none}
