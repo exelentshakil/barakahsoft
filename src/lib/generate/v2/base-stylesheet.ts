@@ -791,12 +791,16 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-form[data-state=error] [data-lead-form-message]{color:#b3261e;font-weight:700}
 
 /* about */
-.bespoke-page .bs-about__grid{display:grid;grid-template-columns:.95fr 1.05fr;gap:clamp(36px,5vw,80px);align-items:center}
+/* The about is a full-width photograph over a two-column story, on every
+   lead. It used to sit beside its picture on v1 and v2 and only go wide on
+   v3, so the same section read as two different sections depending on which
+   variant a lead drew — and this is the one that goes into the launch post
+   beside the hero, where it is worth being the strong one every time. */
+.bespoke-page .bs-about__grid{display:grid;grid-template-columns:1fr;gap:32px;align-items:start}
 .bespoke-page .bs-about__figure{position:relative}
-.bespoke-page .bs-about__figure .bs-media{border-radius:var(--bs-r-lg);box-shadow:var(--bs-shadow-lg)}
-.bespoke-page .bs-about__copy{display:flex;flex-direction:column;align-items:flex-start;gap:18px}
-.bespoke-page .bs-about--editorial-column .bs-about__grid{grid-template-columns:1fr 1fr}
-.bespoke-page .bs-about--portrait-quote .bs-about__figure .bs-media{border-radius:var(--bs-r-lg) 0 0 var(--bs-r-lg)}
+.bespoke-page .bs-about__figure .bs-media{aspect-ratio:21/9;border-radius:var(--bs-r-lg);box-shadow:var(--bs-shadow-lg)}
+.bespoke-page .bs-about__copy{display:flex;flex-direction:column;align-items:flex-start;gap:18px;max-width:none}
+.bespoke-page .bs-about__copy .bs-body{columns:2;column-gap:48px;max-width:none}
 .bespoke-page .bs-about .bs-stats{margin-top:clamp(36px,4vw,64px);padding-top:clamp(28px,3vw,44px);border-top:1px solid var(--bs-line)}
 .bespoke-page .bs-founder-badge{left:0;bottom:0;right:0;max-width:none;border-radius:0 0 var(--bs-r-lg) var(--bs-r-lg)}
 .bespoke-page .bs-founder-badge__logo{flex:none}
@@ -947,20 +951,13 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-hero--v3 .bs-hero__form{max-width:none}
 
 /* about */
-.bespoke-page .bs-about--v1:not(.bs-about--editorial-column) .bs-about__grid{grid-template-columns:.95fr 1.05fr}
-.bespoke-page .bs-about--v2:not(.bs-about--editorial-column) .bs-about__grid{grid-template-columns:1.05fr .95fr}
-.bespoke-page .bs-about--v2 .bs-about__figure{order:2}
 /* The mirrored variant puts the photograph on the right, so a seal pinned to
    its left edge hangs over the copy column. It stays on the outer edge. */
 .bespoke-page .bs-about--v2 .bs-seal{left:auto;right:-28px}
-.bespoke-page .bs-about--v3:not(.bs-about--editorial-column) .bs-about__grid{grid-template-columns:1fr;gap:32px}
-.bespoke-page .bs-about--v3 .bs-about__figure .bs-media{aspect-ratio:21/9}
-.bespoke-page .bs-about--v3 .bs-about__copy{max-width:none}
 /* .bs-body caps its measure for single-column reading. Left on, two columns
    split that one measure into two ~290px ribbons with half the section empty
    beside them, so the multicolumn variant lifts the cap and each column gets
    a measure of its own. */
-.bespoke-page .bs-about--v3 .bs-about__copy .bs-body{columns:2;column-gap:48px;max-width:none}
 
 /* services */
 .bespoke-page .bs-services--v2 .bs-grid-3{grid-template-columns:repeat(2,1fr)}
@@ -1002,7 +999,7 @@ export const BASE_STYLESHEET = `
   .bespoke-page .bs-gallery--v3 .bs-gallery{grid-template-columns:1fr}
   .bespoke-page .bs-services--v2 .bs-card--photo{flex-direction:column}
   .bespoke-page .bs-services--v2 .bs-card--photo .bs-media{width:100%;aspect-ratio:16/10}
-  .bespoke-page .bs-about--v3 .bs-about__copy .bs-body{columns:1}
+  .bespoke-page .bs-about__copy .bs-body{columns:1}
   .bespoke-page .bs-whyus--v3 .bs-whyus__panel{margin-top:-40px}
 }
 
@@ -1237,6 +1234,7 @@ export const BASE_STYLESHEET = `
   .bespoke-page [class*="bs-hero--"] .bs-hero__form{order:2;justify-self:stretch;max-width:none;width:100%}
   .bespoke-page [class*="bs-hero--"] .bs-hero__copy{order:1;align-items:flex-start;text-align:left;background:none;padding:0;backdrop-filter:none;gap:16px}
   .bespoke-page [class*="bs-hero--"] .bs-hero__grid{gap:26px}
+  .bespoke-page .bs-about__copy .bs-body,
   .bespoke-page [class*="bs-about--"] .bs-about__copy .bs-body{columns:1}
   .bespoke-page [class*="bs-services--"] .bs-services__aside{order:0;position:static;max-width:none}
   .bespoke-page [class*="bs-process--"] .bs-steps{grid-template-columns:1fr}
