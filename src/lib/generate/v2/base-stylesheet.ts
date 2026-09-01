@@ -949,18 +949,16 @@ export const BASE_STYLESHEET = `
 /* about */
 .bespoke-page .bs-about--v1:not(.bs-about--editorial-column) .bs-about__grid{grid-template-columns:.95fr 1.05fr}
 .bespoke-page .bs-about--v2:not(.bs-about--editorial-column) .bs-about__grid{grid-template-columns:1.05fr .95fr}
+/* The one about variation: which side the founder's photograph sits on. */
 .bespoke-page .bs-about--v2 .bs-about__figure{order:2}
+.bespoke-page .bs-about--v3:not(.bs-about--editorial-column) .bs-about__grid{grid-template-columns:1fr 1.1fr}
 /* The mirrored variant puts the photograph on the right, so a seal pinned to
    its left edge hangs over the copy column. It stays on the outer edge. */
 .bespoke-page .bs-about--v2 .bs-seal{left:auto;right:-28px}
-.bespoke-page .bs-about--v3:not(.bs-about--editorial-column) .bs-about__grid{grid-template-columns:1fr;gap:32px}
-.bespoke-page .bs-about--v3 .bs-about__figure .bs-media{aspect-ratio:21/9}
-.bespoke-page .bs-about--v3 .bs-about__copy{max-width:none}
 /* .bs-body caps its measure for single-column reading. Left on, two columns
    split that one measure into two ~290px ribbons with half the section empty
    beside them, so the multicolumn variant lifts the cap and each column gets
    a measure of its own. */
-.bespoke-page .bs-about--v3 .bs-about__copy .bs-body{columns:2;column-gap:48px;max-width:none}
 
 /* services */
 .bespoke-page .bs-services--v2 .bs-grid-3{grid-template-columns:repeat(2,1fr)}
@@ -1002,7 +1000,6 @@ export const BASE_STYLESHEET = `
   .bespoke-page .bs-gallery--v3 .bs-gallery{grid-template-columns:1fr}
   .bespoke-page .bs-services--v2 .bs-card--photo{flex-direction:column}
   .bespoke-page .bs-services--v2 .bs-card--photo .bs-media{width:100%;aspect-ratio:16/10}
-  .bespoke-page .bs-about--v3 .bs-about__copy .bs-body{columns:1}
   .bespoke-page .bs-whyus--v3 .bs-whyus__panel{margin-top:-40px}
 }
 
