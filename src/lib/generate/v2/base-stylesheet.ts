@@ -914,6 +914,14 @@ export const BASE_STYLESHEET = `
    shapes and emphasis, and a lead's DNA seed picks one per section. With four
    hero archetypes crossed with these, no two clients get the same page. */
 
+/* Archetype geometry outranks variant geometry.
+ *
+ * Both class families land on the same section and both weigh (0,3,0), so
+ * before these :not() guards the winner was simply whichever sat lower in this
+ * file — and a lead that drew centered-editorial + v2 rendered as two columns
+ * of centred text with its form on the left. A variant tunes an archetype. Any
+ * new variant rule that sets grid-template-columns, order or justify-self has
+ * to exclude the archetypes that set their own. */
 /* hero */
 /* Both classes sit on the same section and both were (0,3,0), so whichever
    came last in the file won. centered-editorial asks for one centred column
@@ -930,13 +938,13 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-hero--v3 .bs-form__body>button,.bespoke-page .bs-hero--v3 .bs-form__note{grid-column:1/-1}
 
 /* about */
-.bespoke-page .bs-about--v1 .bs-about__grid{grid-template-columns:.95fr 1.05fr}
-.bespoke-page .bs-about--v2 .bs-about__grid{grid-template-columns:1.05fr .95fr}
+.bespoke-page .bs-about--v1:not(.bs-about--editorial-column) .bs-about__grid{grid-template-columns:.95fr 1.05fr}
+.bespoke-page .bs-about--v2:not(.bs-about--editorial-column) .bs-about__grid{grid-template-columns:1.05fr .95fr}
 .bespoke-page .bs-about--v2 .bs-about__figure{order:2}
 /* The mirrored variant puts the photograph on the right, so a seal pinned to
    its left edge hangs over the copy column. It stays on the outer edge. */
 .bespoke-page .bs-about--v2 .bs-seal{left:auto;right:-28px}
-.bespoke-page .bs-about--v3 .bs-about__grid{grid-template-columns:1fr;gap:32px}
+.bespoke-page .bs-about--v3:not(.bs-about--editorial-column) .bs-about__grid{grid-template-columns:1fr;gap:32px}
 .bespoke-page .bs-about--v3 .bs-about__figure .bs-media{aspect-ratio:21/9}
 .bespoke-page .bs-about--v3 .bs-about__copy{max-width:none}
 /* .bs-body caps its measure for single-column reading. Left on, two columns
