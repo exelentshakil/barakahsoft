@@ -18,6 +18,12 @@ const ALLOWED_TAGS = [
   "div", "section", "main", "article", "aside", "header", "footer", "nav",
   "h1", "h2", "h3", "h4", "h5", "h6", "p", "span", "a", "img",
   "svg", "path", "circle", "polyline", "polygon", "rect", "line", "g", "defs", "linearGradient", "stop", "clipPath",
+  // SVG text. Omitting these silently broke the rotating seal on every
+  // generated page: disallowedTagsMode is "discard", which drops the tag
+  // but KEEPS its text, so <text><textPath>…</textPath></text> became a
+  // bare text node inside <svg> — markup SVG does not render at all. The
+  // seal shipped as a spinning ring with no words on it.
+  "text", "textPath", "tspan",
   "ul", "ol", "li", "button", "strong", "em", "br", "hr", "figure", "figcaption",
   "blockquote", "cite", "time", "small", "dl", "dt", "dd",
   // Interactive Google Maps / OpenStreetMap territory embeds
@@ -97,6 +103,11 @@ const ALLOWED_ATTRIBUTES = {
   linearGradient: ["id", "x1", "y1", "x2", "y2", "gradientUnits"],
   stop: ["offset", "stop-color", "stop-opacity", "style"],
   clipPath: ["id"],
+  // startOffset/href are what put the seal's words on its circle; without
+  // href the textPath has no path to follow and renders as a flat line.
+  text: ["x", "y", "dx", "dy", "fill", "stroke", "stroke-width", "font-size", "font-weight", "font-family", "letter-spacing", "text-anchor", "dominant-baseline", "opacity", "transform", "class", "style"],
+  textPath: ["href", "xlink:href", "startOffset", "startoffset", "side", "spacing", "method", "class", "style"],
+  tspan: ["x", "y", "dx", "dy", "fill", "font-size", "font-weight", "letter-spacing", "opacity", "class", "style"],
   time: ["datetime"],
   iframe: ["src", "width", "height", "style", "loading", "title", "class", "aria-label", "tabindex", "allowfullscreen", "referrerpolicy"],
   // No action/method anywhere here by construction — see FORM_TARGET_ATTRS.

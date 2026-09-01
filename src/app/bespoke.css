@@ -21,6 +21,60 @@
  * the same vocabulary from looking like the same template.
  */
 
+/*
+ * TOKEN BRIDGE — the reason text went invisible.
+ *
+ * This file and sanitize-css.ts were written against the v1 token names
+ * compiled by src/lib/design-tokens.ts. The v2 generator
+ * (src/lib/generate/v2/templates/index.ts) emits a different, smaller set,
+ * so names like --bs-primary-on-surface resolved to NOTHING on every page
+ * built by the current pipeline. An unresolvable var() in `color` is
+ * invalid at computed-value time, which means the declaration is dropped
+ * and the element inherits its parent's colour instead — white text on a
+ * white card. sanitize-css.ts rewrites every literal colour a model writes
+ * into exactly these names, so the failure hit whichever sections happened
+ * to contain a hex code.
+ *
+ * Declared in :where() so it carries zero specificity: a generated page
+ * that does define one of these still wins, and this only ever fills a gap.
+ * It is deliberately in the app stylesheet rather than the generator so it
+ * repairs the sites already in the database, which ship their own frozen
+ * copy of the generated CSS.
+ */
+:where(.bespoke-page) {
+  /* Brand colour dark enough to read as text on the light surface. The
+     generator's --bs-primary-strong is contrast-checked at 4.5:1; raw
+     --bs-primary is only the last resort. */
+  --bs-primary-on-surface: var(--bs-primary-strong, var(--bs-primary, #14325c));
+  --bs-accent-on-surface: var(--bs-accent-strong, var(--bs-accent, #b4441c));
+
+  --bs-ink-muted: var(--bs-muted, rgb(var(--bs-ink-rgb, 22 24 29) / 0.66));
+  --bs-surface-rgb: 255 255 255;
+
+  /* Dark bands. Ink is the brand hue at near-black, so an inverted band
+     still belongs to the scheme. */
+  --bs-invert-surface: var(--bs-ink, #16181d);
+  --bs-invert-ink: #ffffff;
+
+  --bs-border-color: var(--bs-line, rgb(0 0 0 / 0.1));
+  --bs-border-width: 1px;
+
+  --bs-shadow-card: var(--bs-shadow, 0 18px 48px rgb(0 0 0 / 0.13));
+  --bs-shadow-lift: var(--bs-shadow-lg, 0 32px 80px rgb(0 0 0 / 0.22));
+
+  --bs-radius-sm: calc(var(--bs-r, 12px) / 2);
+  --bs-radius-md: var(--bs-r, 12px);
+  --bs-radius-lg: var(--bs-r-lg, 20px);
+  --bs-radius-pill: 999px;
+
+  --bs-gap: clamp(16px, 2vw, 28px);
+  --bs-heading-tracking: -0.01em;
+  --bs-text-body: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
+  --bs-text-h3: clamp(1.15rem, 1.05rem + 0.5vw, 1.45rem);
+  --bs-text-h2: clamp(1.75rem, 1.4rem + 1.6vw, 2.75rem);
+  --bs-text-display: clamp(2.4rem, 1.6rem + 3.6vw, 4.25rem);
+}
+
 .bespoke-page {
   /* One source of truth for edge clearance. Both .bs-wrap and the no-wrap
      fallback below read this, so a child that falls through to the fallback

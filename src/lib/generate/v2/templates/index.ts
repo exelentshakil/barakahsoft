@@ -202,7 +202,24 @@ export async function buildPage(args: {
     "--bs-ink": palette.ink,
     "--bs-ink-rgb": rgbTriplet(palette.ink),
     "--bs-surface": palette.surface,
+    "--bs-surface-rgb": rgbTriplet(palette.surface),
     "--bs-surface-alt": palette.surfaceAlt,
+    // The names sanitize-css.ts rewrites literal colours into. They were
+    // never emitted here, so `color: var(--bs-primary-on-surface)` resolved
+    // to nothing, the declaration was dropped as invalid, and the text
+    // inherited its parent's colour — white on white on a light card. There
+    // is a zero-specificity fallback for these in src/app/bespoke.css that
+    // repairs already-built sites; these are the real, palette-derived values.
+    //
+    // primary-on-surface is the STRENGTHENED primary, not the raw one: the
+    // raw brand hue is chosen to look right as a fill and routinely fails
+    // 4.5:1 as text on white.
+    "--bs-primary-on-surface": strongOn(palette.primary),
+    "--bs-accent-on-surface": strongOn(palette.accent),
+    "--bs-ink-muted": palette.inkMuted ?? `rgb(${rgbTriplet(palette.ink)} / 0.66)`,
+    // Dark bands stay inside the scheme: ink is the brand hue at near-black.
+    "--bs-invert-surface": palette.ink,
+    "--bs-invert-ink": readableOn(palette.ink),
     "--bs-font-display": `"${type.display}", ui-sans-serif, system-ui, sans-serif`,
     "--bs-font-body": `"${type.body}", ui-sans-serif, system-ui, sans-serif`,
     "--bs-display-weight": design?.typography.displayWeight ?? "900",
