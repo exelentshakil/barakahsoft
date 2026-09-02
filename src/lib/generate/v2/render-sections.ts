@@ -81,6 +81,13 @@ it change, and nothing you write can restyle it. Your job is to produce the exac
  * photograph with a plate carrying the logo and their name and role. Left to
  * a description it came out as a text chip, or with an invented job title, or
  * missing entirely — so the exact markup and the exact facts are supplied.
+ *
+ * The classes here are the ones base-stylesheet.ts actually styles. They were
+ * previously a bare <div><span>/<span class="bs-small">, which the stylesheet
+ * has no rules for — so the builds that DID produce a badge got an undressed
+ * one, with the name in body type instead of the display face.
+ *
+ * This is still only a request. founder-badge.ts is what guarantees it.
  */
 function aboutBadgeBrief(brief: SiteBrief, logoUrl: string | null, imageUrl: string | null): string {
   const founder = brief.founder?.trim();
@@ -89,8 +96,8 @@ THE FOUNDER BADGE — mandatory in this section, built exactly like this:
   <figure class="bs-media bs-media--wide">
     <img src="${imageUrl ?? "USE THE PHOTOGRAPH ASSIGNED ABOVE"}" alt="…" width="1200" height="800" loading="lazy">
     <div class="bs-founder-badge">
-      ${logoUrl ? `<div><img src="${logoUrl}" alt="${brief.businessName} logo" width="120" height="48"></div>` : `<div><strong>${brief.businessName}</strong></div>`}
-      <div><span>${founder ?? brief.businessName}</span><span class="bs-small">${founder ? "Founder" : "Local, family owned"}</span></div>
+      ${logoUrl ? `<div class="bs-founder-badge__logo"><img src="${logoUrl}" alt="${brief.businessName} logo" width="120" height="48"></div>` : `<div class="bs-founder-badge__logo"><strong>${brief.businessName}</strong></div>`}
+      <div class="bs-founder-badge__name"><strong>${founder ?? brief.businessName}</strong><span>${founder ? "Founder" : "Local, family owned"}</span></div>
     </div>
   </figure>
 The badge sits INSIDE the photograph's frame (the stylesheet positions it) and never over body copy.

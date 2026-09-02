@@ -9,6 +9,7 @@ import { displayPhone } from "@/lib/phone";
 import { resolveBusinessContact } from "@/lib/business-contact";
 import { findLicenseInsuranceMention } from "@/lib/trust-signals";
 import { resolveLogoUrl, resolveFooterLogoUrl } from "@/lib/brand-assets";
+import { ensureFounderBadge } from "@/lib/founder-badge";
 
 // render_shell atom — resolves an artifact + its lead/scrape context into
 // the flat SitePayload every shell component renders from. This is the
@@ -126,6 +127,9 @@ export function renderShell(
 
   const META_COPY = /no research|research was provided|unable to confirm|cannot confirm|not available/i;
   const businessName = (facts.business_name as string) || new URL(lead.source_url).hostname;
+  // Resolved once: the nav reads it, and so does the founder badge, which
+  // must carry the same mark the header does.
+  const brandLogoUrl = resolveLogoUrl(artifact.extracted_assets as Record<string, unknown> | null, facts);
   const headline = heroSection?.h2 && !META_COPY.test(heroSection.h2)
     ? heroSection.h2
     : `${businessName} provides trusted local service`;
@@ -187,7 +191,7 @@ export function renderShell(
     // Both through the shared resolver. The nav logo read facts.logo_url
     // directly, which is the SCRAPED logo — so a logo replaced in the Studio
     // was still the old one in the header of the delivered site.
-    logoUrl: resolveLogoUrl(artifact.extracted_assets as Record<string, unknown> | null, facts),
+    logoUrl: brandLogoUrl,
     footerLogoUrl: resolveFooterLogoUrl(artifact.extracted_assets as Record<string, unknown> | null, facts),
     // Keep the delivered system visually consistent. Client fonts are useful
     // as research signals, but arbitrary scraped font imports made pages feel
@@ -197,7 +201,14 @@ export function renderShell(
     innerPagesBuilt: artifact.inner_pages_built,
     fullSiteBuilt: (artifact.generation_phase ?? 0) >= 2,
     leadSlug: lead.slug,
-    bespokeHomepageHtml: artifact.bespoke_homepage_html,
+    // Applied on the way OUT rather than at generation, so the pages already
+    // in the database get their badge on the next request instead of on a
+    // rebuild that costs eight minutes and re-rolls the whole design.
+    bespokeHomepageHtml: ensureFounderBadge(artifact.bespoke_homepage_html, {
+      founder: lead.contact_name,
+      businessName,
+      logoUrl: brandLogoUrl,
+    }),
     bespokeCss: artifact.bespoke_css ?? null,
     bespokeChromeHtml: artifact.bespoke_chrome_html ?? null,
     bespokeFooterHtml: artifact.bespoke_footer_html ?? null,

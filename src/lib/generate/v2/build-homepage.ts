@@ -11,6 +11,7 @@ import {
 import { enforceChromeHrefs } from "@/lib/generate/v2/chrome-data";
 import { repairPage } from "@/lib/generate/v2/visual-repair";
 import { buildPhotoPool } from "@/lib/generate/v2/photo-pool";
+import { ensureFounderBadge } from "@/lib/founder-badge";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
 
 // The whole homepage build, in one place.
@@ -200,8 +201,26 @@ export async function buildHomepage(args: {
     finalSections = result.sections;
     finalFooter = result.footer;
     notes = result.notes;
-    composed = compose(finalSections, finalFooter);
   }
+
+  // Last, after repair. The about section is asked for a founder badge in its
+  // prompt and does not always produce one — and the repair pass rewrites
+  // whole sections, so a badge stamped before it can be written straight back
+  // out. Stamping the stored markup as well as render-shell's copy matters
+  // because the zip export, the social mockup and the operator editor all
+  // read what is stored, not what the page route hands out.
+  for (const section of finalSections) {
+    const withBadge = ensureFounderBadge(section.html, {
+      founder: brief.founder,
+      businessName: brief.businessName,
+      logoUrl,
+    });
+    if (withBadge && withBadge !== section.html) {
+      console.log(`[build-homepage] founder badge stamped into "${section.id}"`);
+      section.html = withBadge;
+    }
+  }
+  composed = compose(finalSections, finalFooter);
 
   return {
     html: composed.html,
