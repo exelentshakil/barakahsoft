@@ -279,11 +279,12 @@ export const BASE_STYLESHEET = `
   position:absolute;left:0;bottom:0;z-index:5;
   display:flex;align-items:stretch;box-shadow:var(--bs-shadow-lg);border-radius:8px;overflow:hidden;max-width:calc(100% - 36px);
 }
-.bespoke-page .bs-founder-badge>*:first-child{background:var(--bs-ink,#16181d);color:#fff;display:flex;align-items:center;justify-content:center;padding:12px 16px;font-weight:800;font-size:.85rem}
-/* Scraped logos are usually the white-on-dark variant, and a white PNG on a
-   white tile is an empty box. Forcing the mark to white on an ink tile is
-   legible for every logo, light or dark. */
-.bespoke-page .bs-founder-badge>*:first-child img{max-height:38px;width:auto;object-fit:contain;filter:brightness(0) invert(1)}
+.bespoke-page .bs-founder-badge>*:first-child{background:#fff;color:var(--bs-ink,#16181d);display:flex;align-items:center;justify-content:center;padding:12px 16px;font-weight:800;font-size:.85rem}
+/* A forced brightness(0) invert(1) here used to flatten every logo to a
+   white silhouette — invisible whenever the source image isn't a clean
+   transparent-alpha mark (a JPEG, or a PNG with a baked-in white background),
+   which is most scraped logos. A white tile shows the logo as it actually is. */
+.bespoke-page .bs-founder-badge>*:first-child img{max-height:38px;width:auto;object-fit:contain}
 .bespoke-page .bs-founder-badge>*:last-child{background:var(--bs-primary-strong,var(--bs-primary,#e4761b));color:var(--bs-on-primary,#fff);padding:12px 20px;display:flex;flex-direction:column;justify-content:center;line-height:1.25}
 
 /* ---------- lead form -------------------------------------------------- */
@@ -866,7 +867,6 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-about--editorial-column .bs-about__grid{grid-template-columns:1fr 1fr}
 .bespoke-page .bs-about--portrait-quote .bs-about__figure .bs-media{border-radius:var(--bs-r-lg) 0 0 var(--bs-r-lg)}
 .bespoke-page .bs-about .bs-stats{margin-top:clamp(36px,4vw,64px);padding-top:clamp(28px,3vw,44px);border-top:1px solid var(--bs-line)}
-.bespoke-page .bs-founder-badge{left:0;bottom:0;right:0;max-width:none;border-radius:0 0 var(--bs-r-lg) var(--bs-r-lg)}
 .bespoke-page .bs-founder-badge__logo{flex:none}
 .bespoke-page .bs-founder-badge__name strong{display:block;font-family:var(--bs-font-display,inherit);font-size:1.05rem;line-height:1.2}
 .bespoke-page .bs-founder-badge__name span{font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;opacity:.9}
@@ -939,7 +939,11 @@ export const BASE_STYLESHEET = `
 
 /* footer */
 .bespoke-page .bs-footer__brand .bs-body{margin-block:14px;color:rgb(255 255 255 / .78);max-width:44ch;overflow:visible;display:block;-webkit-line-clamp:none}
-.bespoke-page .bs-footer__brand img{filter:brightness(0) invert(1);opacity:.95}
+/* A forced brightness(0) invert(1) here used to flatten every logo to a
+   white silhouette — invisible whenever the source image isn't a clean
+   transparent-alpha mark, which is most scraped logos. A white plate behind
+   the mark shows it as it actually is against the dark footer. */
+.bespoke-page .bs-footer__brand img{background:#fff;padding:8px 12px;border-radius:8px}
 .bespoke-page .bs-footer .bs-badge{color:#fff;border-color:rgb(255 255 255 / .28)}
 .bespoke-page .bs-footer__col li a{color:rgb(255 255 255 / .78)}
 .bespoke-page .bs-footer__brand .bs-badge{margin-block:4px}
