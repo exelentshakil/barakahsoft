@@ -642,6 +642,74 @@ export const BASE_STYLESHEET = `
 }
 .bespoke-page .bs-about--surface-ink .bs-founder-badge--overlap{background:#fff;color:var(--bs-ink,#16181d)}
 
+/* Badge finishes ------------------------------------------------------- */
+/* One shape, five materials. The badge is the only element every page in
+   this system carries in the identical form, so two builds seen side by side
+   kept giving away the template. The structure below never changes — a logo
+   tile, then a name tile — and only the material does, which is the whole
+   point: variation a client reads as a different studio, not as a different
+   layout they now have to relearn. */
+
+/* plate — the original: flat brand tile, hard shadow. */
+.bespoke-page .bs-founder-badge--plate>*:last-child{background:var(--bs-primary-strong,var(--bs-primary,#e4761b))}
+
+/* glass — frosted over the photograph.
+   The fills are DARK on purpose. A white scrim is the obvious way to build
+   this and it is unreadable: white text on rgb(255 255 255 / .16) over a
+   blown-out sky measures 1.0:1, and the badge sits at the bottom of a
+   photograph nobody has cropped for it. Dark glass over a bright patch is
+   4.9:1, and backdrop-filter plus the inset sheen is what sells the material
+   anyway — the transparency was never what made it read as glass. */
+.bespoke-page .bs-founder-badge--glass{
+  box-shadow:0 8px 32px rgb(0 0 0 / .28),inset 0 1px 0 rgb(255 255 255 / .3);
+  border:1px solid rgb(255 255 255 / .22);
+}
+.bespoke-page .bs-founder-badge--glass>*:first-child{
+  background:rgb(0 0 0 / .66);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);
+}
+.bespoke-page .bs-founder-badge--glass>*:last-child{
+  background:rgb(0 0 0 / .56);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);
+  color:#fff;text-shadow:0 1px 2px rgb(0 0 0 / .45);
+}
+
+/* emboss — a physical plate: lit top edge, dark underside, seated shadow. */
+.bespoke-page .bs-founder-badge--emboss{
+  box-shadow:0 1px 0 rgb(255 255 255 / .34) inset,0 -2px 0 rgb(0 0 0 / .34) inset,0 14px 28px rgb(0 0 0 / .34);
+}
+.bespoke-page .bs-founder-badge--emboss>*:first-child{
+  background:linear-gradient(180deg,#2b2f38 0%,var(--bs-ink,#16181d) 62%,#0c0e12 100%);
+}
+.bespoke-page .bs-founder-badge--emboss>*:last-child{
+  background:linear-gradient(180deg,color-mix(in srgb,var(--bs-primary,#e4761b) 82%,#fff) 0%,var(--bs-primary-strong,var(--bs-primary,#e4761b)) 58%,color-mix(in srgb,var(--bs-primary,#e4761b) 78%,#000) 100%);
+  text-shadow:0 1px 1px rgb(0 0 0 / .3);
+}
+
+/* outline — no fill at all: a hairline frame on the photograph. Reads as
+   restraint on a busy picture, where another filled slab reads as clutter. */
+.bespoke-page .bs-founder-badge--outline{
+  background:rgb(0 0 0 / .56);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  border:1px solid rgb(255 255 255 / .55);box-shadow:0 10px 30px rgb(0 0 0 / .3);
+}
+.bespoke-page .bs-founder-badge--outline>*:first-child{background:none;border-right:1px solid rgb(255 255 255 / .4)}
+.bespoke-page .bs-founder-badge--outline>*:last-child{background:none;color:#fff;text-shadow:0 1px 2px rgb(0 0 0 / .4)}
+
+/* ribbon — the name tile runs past the logo tile like a stitched label. */
+.bespoke-page .bs-founder-badge--ribbon{box-shadow:0 16px 34px rgb(0 0 0 / .3)}
+.bespoke-page .bs-founder-badge--ribbon>*:last-child{
+  background:var(--bs-primary-strong,var(--bs-primary,#e4761b));
+  box-shadow:inset 0 0 0 1px rgb(255 255 255 / .22);
+  clip-path:polygon(0 0,100% 0,calc(100% - 14px) 100%,0 100%);padding-right:34px;
+}
+.bespoke-page .bs-founder-badge--ribbon>*:first-child{box-shadow:inset -1px 0 0 rgb(255 255 255 / .12)}
+
+/* A badge set below the picture carries no fill, so a material on it would
+   be a plate floating under a photo it is no longer attached to. */
+.bespoke-page .bs-founder-badge--below{box-shadow:none;border:0;background:none}
+.bespoke-page .bs-founder-badge--below>*:first-child,
+.bespoke-page .bs-founder-badge--below>*:last-child{
+  background:none;color:inherit;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none;clip-path:none;text-shadow:none;
+}
+
 /* Stat band ------------------------------------------------------------ */
 .bespoke-page .bs-statband{background:var(--bs-primary-strong,#c2410c);color:#fff;padding-block:clamp(26px,3vw,42px);margin-top:clamp(36px,4vw,64px)}
 .bespoke-page .bs-statband .bs-stat{background:none;border:0}

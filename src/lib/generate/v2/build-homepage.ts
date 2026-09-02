@@ -214,6 +214,7 @@ export async function buildHomepage(args: {
       founder: brief.founder,
       businessName: brief.businessName,
       logoUrl,
+      finish: dna.treatment.badgeFinish,
     });
     if (withBadge && withBadge !== section.html) {
       console.log(`[build-homepage] founder badge stamped into "${section.id}"`);

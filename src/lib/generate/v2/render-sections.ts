@@ -89,13 +89,13 @@ it change, and nothing you write can restyle it. Your job is to produce the exac
  *
  * This is still only a request. founder-badge.ts is what guarantees it.
  */
-function aboutBadgeBrief(brief: SiteBrief, logoUrl: string | null, imageUrl: string | null): string {
+function aboutBadgeBrief(brief: SiteBrief, logoUrl: string | null, imageUrl: string | null, finish: string): string {
   const founder = brief.founder?.trim();
   return `
 THE FOUNDER BADGE — mandatory in this section, built exactly like this:
   <figure class="bs-media bs-media--wide">
     <img src="${imageUrl ?? "USE THE PHOTOGRAPH ASSIGNED ABOVE"}" alt="…" width="1200" height="800" loading="lazy">
-    <div class="bs-founder-badge">
+    <div class="bs-founder-badge bs-founder-badge--${finish}">
       ${logoUrl ? `<div class="bs-founder-badge__logo"><img src="${logoUrl}" alt="${brief.businessName} logo" width="120" height="48"></div>` : `<div class="bs-founder-badge__logo"><strong>${brief.businessName}</strong></div>`}
       <div class="bs-founder-badge__name"><strong>${founder ?? brief.businessName}</strong><span>${founder ? "Founder" : "Local, family owned"}</span></div>
     </div>
@@ -182,7 +182,7 @@ ${archetypeOverride ? `- Section-specific brief from the art director: ${spec.ar
 - Photograph for this section: ${spec.imageUrl ?? "NONE. Do not emit a .bs-media or .bs-collage frame at all — an empty frame renders as a large grey rectangle. Compose with colour, type, inline SVG and the motif instead. Never invent an image URL, never use a placeholder path, never use the logo as a photograph."}
 
 
-${isAbout ? aboutBadgeBrief(brief, logoUrl, spec.imageUrl) : ""}
+${isAbout ? aboutBadgeBrief(brief, logoUrl, spec.imageUrl, dna.treatment.badgeFinish) : ""}
 ${neighbourNote(system.sections, index)}
 
 BUSINESS FACTS

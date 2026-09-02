@@ -32,10 +32,34 @@ function clean(value: string | null | undefined): string {
   return (value ?? "").replace(/[​-‏﻿]/g, "").trim();
 }
 
+/** Mirrors BadgeFinish in layout-dna.ts, restated so the edge path stays free
+ *  of that module's 25KB of archetypes. */
+export type BadgeFinish = "plate" | "glass" | "emboss" | "outline" | "ribbon";
+
+const FINISHES: BadgeFinish[] = ["plate", "glass", "emboss", "outline", "ribbon"];
+
 export interface FounderBadgeFacts {
   founder: string | null;
   businessName: string;
   logoUrl: string | null;
+  /**
+   * The material, from layout DNA. Omitted on the retrofit path, which has
+   * no DNA to consult: a page built before the badge was guaranteed stores
+   * no treatment, so one is derived from the business name instead. That is
+   * not a second source of truth — a page built after this change already
+   * carries its badge, so ensureFounderBadge leaves it alone and never
+   * reaches the fallback.
+   */
+  finish?: BadgeFinish;
+}
+
+/** djb2, matching the spirit of layout-dna's hash: stable across runs. */
+function finishFor(facts: FounderBadgeFacts): BadgeFinish {
+  if (facts.finish) return facts.finish;
+  const key = clean(facts.businessName) || "badge";
+  let h = 5381;
+  for (let i = 0; i < key.length; i++) h = ((h << 5) + h + key.charCodeAt(i)) >>> 0;
+  return FINISHES[h % FINISHES.length];
 }
 
 /**
@@ -57,7 +81,7 @@ export function founderBadgeMarkup(facts: FounderBadgeFacts): string {
     ? `<div class="bs-founder-badge__logo"><img src="${escapeHtml(facts.logoUrl)}" alt="${escapeHtml(business)} logo" width="120" height="48" loading="lazy" decoding="async"></div>`
     : `<div class="bs-founder-badge__logo"><strong>${escapeHtml(business)}</strong></div>`;
 
-  return `<div class="bs-founder-badge">${logo}<div class="bs-founder-badge__name"><strong>${escapeHtml(name)}</strong><span>${role}</span></div></div>`;
+  return `<div class="bs-founder-badge bs-founder-badge--${finishFor(facts)}">${logo}<div class="bs-founder-badge__name"><strong>${escapeHtml(name)}</strong><span>${role}</span></div></div>`;
 }
 
 /** The about section's bounds, or null when the page has no about section. */

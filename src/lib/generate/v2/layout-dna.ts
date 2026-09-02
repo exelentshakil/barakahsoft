@@ -53,6 +53,23 @@ export type ProofMode = "combined" | "two-pills" | "pills-stats";
 export type DecorMotif = "none" | "slab" | "stripes" | "corner";
 export type AboutSurface = "ink" | "white" | "tint";
 export type FounderBadge = "overlap" | "below" | "none";
+/**
+ * The badge's material, independent of where it sits.
+ *
+ * `founderBadge` above decides placement; this decides finish. Two axes
+ * because they are genuinely independent — an overlapped badge can be glass
+ * or embossed, and so can one set below the picture — and because the badge
+ * is the one element every page in this system shares in the same shape. Two
+ * builds side by side were reading as the same template with a new colour,
+ * which is the exact failure layout DNA exists to prevent.
+ *
+ * The structure never changes: a logo tile, then a name tile. Only the
+ * material does.
+ */
+export type BadgeFinish = "plate" | "glass" | "emboss" | "outline" | "ribbon";
+// Tones exclude rather than rank — a shorter list is how every other axis
+// here says "not for this character". Frosted glass on a heritage roofer and
+// a stitched ribbon on an industrial contractor are the two that read wrong.
 export type StatBand = "fused" | "standalone" | "none";
 
 export interface Treatment {
@@ -66,6 +83,7 @@ export interface Treatment {
   decorMotif: DecorMotif;
   aboutSurface: AboutSurface;
   founderBadge: FounderBadge;
+  badgeFinish: BadgeFinish;
   statBand: StatBand;
 }
 
@@ -95,6 +113,7 @@ export interface Tone {
   decorMotif: DecorMotif[];
   aboutSurface: AboutSurface[];
   founderBadge: FounderBadge[];
+  badgeFinish: BadgeFinish[];
   statBand: StatBand[];
 }
 
@@ -111,6 +130,7 @@ export const TONES: Tone[] = [
     decorMotif: ["slab", "stripes", "corner", "none"],
     aboutSurface: ["ink", "white", "tint"],
     founderBadge: ["overlap", "below", "none"],
+    badgeFinish: ["plate", "emboss", "outline", "ribbon", "glass"],
     statBand: ["standalone", "fused", "none"],
   },
   {
@@ -125,6 +145,7 @@ export const TONES: Tone[] = [
     decorMotif: ["none", "corner", "slab"],
     aboutSurface: ["ink", "tint", "white"],
     founderBadge: ["overlap", "none", "below"],
+    badgeFinish: ["emboss", "ribbon", "plate", "outline"],
     statBand: ["fused", "none", "standalone"],
   },
   {
@@ -139,6 +160,7 @@ export const TONES: Tone[] = [
     decorMotif: ["corner", "slab", "stripes", "none"],
     aboutSurface: ["ink", "tint"],
     founderBadge: ["below", "none", "overlap"],
+    badgeFinish: ["emboss", "plate", "outline", "glass"],
     statBand: ["fused", "standalone", "none"],
   },
   {
@@ -153,6 +175,7 @@ export const TONES: Tone[] = [
     decorMotif: ["none", "corner", "slab"],
     aboutSurface: ["white", "tint", "ink"],
     founderBadge: ["below", "overlap", "none"],
+    badgeFinish: ["glass", "outline", "plate", "emboss"],
     statBand: ["standalone", "fused", "none"],
   },
   {
@@ -167,6 +190,7 @@ export const TONES: Tone[] = [
     decorMotif: ["stripes", "none", "corner", "slab"],
     aboutSurface: ["tint", "white", "ink"],
     founderBadge: ["overlap", "below", "none"],
+    badgeFinish: ["ribbon", "plate", "glass", "emboss"],
     statBand: ["standalone", "fused", "none"],
   },
 ];
@@ -508,6 +532,33 @@ function pick<T>(list: T[], seed: number, salt: number): T {
 }
 
 /**
+ * pick(), decorrelated.
+ *
+ * pick() offsets the seed by a CONSTANT (salt * 7919), so two axes whose
+ * lists are the same length move in lockstep: `(seed + a) % n` and
+ * `(seed + b) % n` differ by a fixed rotation for every lead alive. With
+ * five tones and five badge finishes that made the pairing a bijection —
+ * measured across 400 synthetic leads, three finishes ever appeared and 5
+ * of the 25 tone/finish combinations were reachable. Every Civic page in
+ * the world would have carried the same badge material.
+ *
+ * Mixing the salt into the seed instead gives 5/5 finishes and 25/25 pairs
+ * on the same sample, and stays deterministic.
+ *
+ * Only badgeFinish uses this. The same flaw couples the existing
+ * three-value axes to each other — aboutSurface, founderBadge, proofMode
+ * and statBand are all length 3 — and moving them onto this picker would
+ * re-roll the layout of every lead on its next build, which is a decision
+ * to take deliberately rather than as a side effect of adding a badge.
+ */
+function pickIndependent<T>(list: T[], seed: number, salt: number): T {
+  let value = (seed ^ Math.imul(salt + 1, 2654435761)) >>> 0;
+  value = Math.imul(value ^ (value >>> 15), 2246822507) >>> 0;
+  value = Math.imul(value ^ (value >>> 13), 3266489909) >>> 0;
+  return list[((value ^ (value >>> 16)) >>> 0) % list.length];
+}
+
+/**
  * @param salt advances the whole composition to the next one. Zero for almost
  *   every lead; raised only by the collision check, so that a lead whose hash
  *   happens to land on a composition already in use moves off it instead of
@@ -532,6 +583,7 @@ export function layoutDnaFor(identity: string, salt = 0): LayoutDna {
     decorMotif: pick(tone.decorMotif, seed, 28),
     aboutSurface: pick(tone.aboutSurface, seed, 29),
     founderBadge: pick(tone.founderBadge, seed, 30),
+    badgeFinish: pickIndependent(tone.badgeFinish, seed, 31),
     statBand: pick(tone.statBand, seed, 31),
   };
 
@@ -587,6 +639,7 @@ export function layoutDnaFor(identity: string, salt = 0): LayoutDna {
       treatment.decorMotif,
       treatment.aboutSurface,
       treatment.founderBadge,
+      treatment.badgeFinish,
       treatment.statBand,
       recipe.id,
       hero.id,
