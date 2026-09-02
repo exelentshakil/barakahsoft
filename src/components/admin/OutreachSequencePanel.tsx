@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Loader2, Send, Gift, Bell, DoorClosed, AlertTriangle, Check } from "lucide-react";
+import { Loader2, Send, Gift, Bell, DoorClosed, AlertTriangle, Check, Sparkles, Mail } from "lucide-react";
 import type { Lead } from "@/types/database";
 import { sequenceFor, isDue, type SequenceTrack } from "@/lib/outreach/sequence";
 
@@ -34,7 +34,12 @@ export function OutreachSequencePanel({
   const [stage, setStage] = useState<1 | 2 | 3>(1);
   const [selected, setSelected] = useState<string[]>([]);
   const [sending, setSending] = useState(false);
-  const [result, setResult] = useState<{ sent: number; skipped: { business: string; reason: string }[] } | null>(null);
+  // Written copy is reviewed before it is sent, so the drafts live here until
+  // the operator has actually read one. Cold email is the only thing in this
+  // product that reaches a stranger with nobody in between.
+  const [writing, setWriting] = useState(false);
+  const [drafts, setDrafts] = useState<Record<string, { subject: string; hook: string }>>({});
+  const [result, setResult] = useState<{ sent: number; wrote?: number; skipped: { business: string; reason: string }[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const buckets = useMemo(() => {
@@ -53,6 +58,32 @@ export function OutreachSequencePanel({
   // cannot keep.
   const sendable = inStage.filter((l) => l.email && isDue(l, track));
   const allSelected = sendable.length > 0 && selected.length === sendable.length;
+
+  async function write() {
+    if (selected.length === 0) return;
+    setWriting(true);
+    setError(null);
+    setResult(null);
+    try {
+      const res = await fetch("/api/outreach/personalise", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leadIds: selected }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) { setError(data?.error ?? "Could not write the emails."); return; }
+      const next: Record<string, { subject: string; hook: string }> = {};
+      for (const d of data.drafts ?? []) next[d.id] = { subject: d.subject, hook: d.hook };
+      setDrafts((prev) => ({ ...prev, ...next }));
+      if ((data.skipped ?? []).length > 0) {
+        setResult({ sent: 0, skipped: data.skipped, wrote: data.written ?? 0 });
+      }
+    } catch {
+      setError("Could not reach the server.");
+    } finally {
+      setWriting(false);
+    }
+  }
 
   async function send() {
     if (selected.length === 0) return;
@@ -126,15 +157,29 @@ export function OutreachSequencePanel({
             />
             Select all ready ({sendable.length})
           </label>
+          <div className="flex items-center gap-1.5">
+          {stage === 1 && (
+            <button
+              type="button"
+              disabled={writing || sending || selected.length === 0}
+              onClick={() => void write()}
+              title="Write a different email for each one, from what was actually measured about their business"
+              className="inline-flex items-center gap-1.5 rounded-md border border-[#533afd] px-2.5 py-1.5 text-[11px] font-bold text-[#533afd] transition hover:bg-[#f0f3ff] disabled:opacity-40"
+            >
+              {writing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+              {writing ? "Writing…" : `Write ${selected.length || ""}`.trim()}
+            </button>
+          )}
           <button
             type="button"
-            disabled={sending || selected.length === 0}
+            disabled={sending || writing || selected.length === 0}
             onClick={() => void send()}
             className="inline-flex items-center gap-1.5 rounded-md bg-[#533afd] px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-[#432bd9] disabled:opacity-40"
           >
             {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
             {sending ? "Sending…" : `Send to ${selected.length}`}
           </button>
+          </div>
         </div>
 
         <div className="max-h-64 overflow-y-auto">
@@ -145,6 +190,10 @@ export function OutreachSequencePanel({
               const cleanEmail = sanitizeEmail(lead.email);
               const ready = Boolean(cleanEmail) && isDue(lead, track);
               const why = !cleanEmail ? "no email on file" : !isDue(lead, track) ? "not due yet" : null;
+              const stored = lead.outreach_draft as { subject?: string; hook?: string } | null | undefined;
+              const draft =
+                drafts[lead.id] ??
+                (stored?.subject ? { subject: stored.subject, hook: stored.hook ?? "" } : null);
               return (
                 <label
                   key={lead.id}
@@ -162,8 +211,25 @@ export function OutreachSequencePanel({
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-bold text-[#0d1738]">{lead.business_name || lead.source_url}</span>
-                    <span className="block truncate text-[10px] text-slate-500">{cleanEmail || lead.source_url}</span>
+                    {/* The written subject replaces the address once there is
+                        one, because the subject is the thing worth reading
+                        before you send it and the address never was. */}
+                    {draft ? (
+                      <span className="block truncate text-[10px] font-semibold text-[#533afd]">
+                        “{draft.subject}”
+                      </span>
+                    ) : (
+                      <span className="block truncate text-[10px] text-slate-500">{cleanEmail || lead.source_url}</span>
+                    )}
                   </span>
+                  {draft && (
+                    <span
+                      className="shrink-0 rounded-full bg-[#f0f3ff] px-1.5 py-0.5 text-[9px] font-bold text-[#533afd]"
+                      title={`Led on: ${draft.hook}`}
+                    >
+                      {draft.hook}
+                    </span>
+                  )}
                   {why && <span className="shrink-0 text-[10px] font-semibold text-amber-600">{why}</span>}
                 </label>
               );
@@ -182,7 +248,11 @@ export function OutreachSequencePanel({
       {result && (
         <div className="space-y-1 rounded-lg border border-emerald-200 bg-emerald-50 p-2.5">
           <p className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-800">
-            <Check className="h-3.5 w-3.5" /> Sent to {result.sent}
+            {result.sent > 0 ? (
+              <><Check className="h-3.5 w-3.5" /> Sent to {result.sent}</>
+            ) : (
+              <><Mail className="h-3.5 w-3.5" /> Wrote {result.wrote ?? 0}</>
+            )}
           </p>
           {result.skipped.length > 0 && (
             <ul className="space-y-0.5 text-[10px] text-emerald-900/70">

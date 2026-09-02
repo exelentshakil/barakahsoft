@@ -39,7 +39,7 @@ export interface OutreachContext {
  * omitting that is both unlawful under CAN-SPAM and the fastest way to be
  * marked as spam by the recipient.
  */
-function footer(ctx: OutreachContext, track: SequenceTrack = "outreach"): string {
+export function signOff(ctx: OutreachContext, track: SequenceTrack = "outreach"): string {
   // The reason line has to be true for the track it is sent on. Telling
   // someone who filled in the form that they "came up while I was looking at
   // local businesses" is both wrong and the fastest way to lose them.
@@ -73,7 +73,7 @@ So I rebuilt the homepage to show what it looks like fixed. It is live now, noth
           : `There is a full breakdown of what is slowing the current site down inside the portal.`,
         ``,
         `It is yours to explore, no strings attached.`,
-      ].join("\n") + footer(ctx),
+      ].join("\n") + signOff(ctx),
   },
   {
     stage: 2,
@@ -91,7 +91,7 @@ So I rebuilt the homepage to show what it looks like fixed. It is live now, noth
         ctx.previewUrl,
         ``,
         `If a section is wrong I will fix it today. If it is not for you, say so and I will close the file.`,
-      ].join("\n") + footer(ctx),
+      ].join("\n") + signOff(ctx),
   },
   {
     stage: 3,
@@ -111,7 +111,7 @@ So I rebuilt the homepage to show what it looks like fixed. It is live now, noth
         `If you want the actual files — the whole site as a folder your own developer can host anywhere — reply and I will send them across at no cost. Otherwise I will leave you to it, and I will not chase this again.`,
         ``,
         `Genuinely no hard feelings either way.`,
-      ].join("\n") + footer(ctx),
+      ].join("\n") + signOff(ctx),
   },
 ];
 
@@ -142,7 +142,7 @@ So I rebuilt the homepage to show what it looks like fixed. It is live now, noth
           : `There is a full breakdown of what is slowing the current site down inside the portal.`,
         ``,
         `It is yours to explore, no strings attached.`,
-      ].join("\n") + footer(ctx, "inbound"),
+      ].join("\n") + signOff(ctx, "inbound"),
   },
   {
     stage: 2,
@@ -160,7 +160,7 @@ So I rebuilt the homepage to show what it looks like fixed. It is live now, noth
         ctx.previewUrl,
         ``,
         `If something is off I will fix it today — it is usually a ten-minute job. If the timing is wrong, tell me and I will leave it with you.`,
-      ].join("\n") + footer(ctx, "inbound"),
+      ].join("\n") + signOff(ctx, "inbound"),
   },
   {
     stage: 3,
@@ -180,7 +180,7 @@ So I rebuilt the homepage to show what it looks like fixed. It is live now, noth
         `I am going to archive it shortly to keep things tidy. If you want it kept, or you want the files handed over to your own developer, just reply — both are free and take me a minute.`,
         ``,
         `No reply is a fine answer.`,
-      ].join("\n") + footer(ctx, "inbound"),
+      ].join("\n") + signOff(ctx, "inbound"),
   },
 ];
 

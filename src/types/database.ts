@@ -87,6 +87,8 @@ export interface Lead {
   outreach_stage: number;
   outreach_last_sent_at: string | null;
   outreach_stopped_at: string | null;
+  /** Model-written stage-1 copy awaiting operator review. Cleared on send. */
+  outreach_draft?: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 }

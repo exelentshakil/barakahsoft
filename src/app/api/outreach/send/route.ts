@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminSession } from "@/lib/is-admin-session";
 import { sendEmail } from "@/lib/notifications";
-import { stageFor, isDue, type OutreachContext, type SequenceTrack } from "@/lib/outreach/sequence";
-import type { Lead } from "@/types/database";
+import { stageFor, isDue, signOff, type OutreachContext, type SequenceTrack } from "@/lib/outreach/sequence";
+import { signalsFor, type OutreachDraft } from "@/lib/outreach/personalise";
+import type { Lead, ScrapeResults } from "@/types/database";
 
 // Send one touch of the cold sequence to a selected set of prospects.
 //
@@ -37,6 +38,18 @@ function asHtml(text: string): string {
     '<a href="$1" style="color:#0c68c8">$1</a>'
   );
   return `<div style="font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#111">${linked.replace(/\n/g, "<br />")}</div>`;
+}
+
+/**
+ * The one measured sentence the generic sequence has a slot for.
+ *
+ * Used when no personal draft was written — a lead sent straight from the
+ * list still says something true about that business rather than falling
+ * back to the paragraph about a portal breakdown.
+ */
+function headlineFindingFor(lead: Lead, scrape: ScrapeResults | null): string | null {
+  const top = signalsFor(lead, scrape)[0];
+  return top ? top.detail : null;
 }
 
 function portalOrigin(): string {
@@ -75,6 +88,20 @@ export async function POST(req: Request) {
   const { data: leads, error } = await admin.from("leads").select("*").in("id", ids).returns<Lead[]>();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  // The town and the headline finding were passed as null on every send, so
+  // the two slots the sequence has for saying something specific were always
+  // empty. They are filled from the same scrape the report is built from.
+  const { data: scrapes } = await admin
+    .from("scrape_results")
+    .select("*")
+    .in("lead_id", ids)
+    .returns<ScrapeResults[]>();
+  const scrapeFor = new Map<string, ScrapeResults>();
+  for (const row of scrapes ?? []) {
+    const held = scrapeFor.get(row.lead_id);
+    if (!held || new Date(row.scraped_at) > new Date(held.scraped_at)) scrapeFor.set(row.lead_id, row);
+  }
+
   const sent: string[] = [];
   const skipped: { id: string; business: string; reason: string }[] = [];
 
@@ -100,12 +127,25 @@ export async function POST(req: Request) {
       continue;
     }
 
+    const scrape = scrapeFor.get(lead.id) ?? null;
+    const facts = (scrape?.facts ?? {}) as Record<string, unknown>;
+    const previewUrl = `${portalOrigin()}/s/${lead.slug}?view=preview`;
     const ctx: OutreachContext = {
       businessName: lead.business_name ?? "your business",
-      previewUrl: `${portalOrigin()}/s/${lead.slug}?view=preview`,
-      city: null,
-      headlineFinding: null,
+      previewUrl,
+      city: (facts.town as string) ?? null,
+      headlineFinding: headlineFindingFor(lead, scrape),
     };
+
+    // A reviewed personal draft beats the sequence copy, but only for the
+    // first touch: it was written as an opener and reads as a non-sequitur
+    // sent as a follow-up. Stages 2 and 3 stay on the sequence, which is
+    // what they are for.
+    const draft = stage.stage === 1 ? ((lead.outreach_draft ?? null) as OutreachDraft | null) : null;
+    const subject = draft?.subject ?? stage.subject(ctx);
+    const text = draft
+      ? [draft.body, "", previewUrl].join("\n") + signOff(ctx, track)
+      : stage.body(ctx);
 
     // sendEmail reports failure by returning false rather than throwing, so
     // both paths have to be handled or a bounced send would still advance
@@ -114,8 +154,8 @@ export async function POST(req: Request) {
     try {
       delivered = await sendEmail({
         to: sanitizeEmail(lead.email) || lead.email,
-        subject: stage.subject(ctx),
-        html: asHtml(stage.body(ctx)),
+        subject,
+        html: asHtml(text),
       });
     } catch (err) {
       skipped.push({ id: lead.id, business: name, reason: err instanceof Error ? err.message : "send failed" });
@@ -130,7 +170,13 @@ export async function POST(req: Request) {
     // the prospect owed the same touch rather than silently skipped forever.
     await admin
       .from("leads")
-      .update({ outreach_stage: stage.stage, outreach_last_sent_at: new Date().toISOString() })
+      .update({
+        outreach_stage: stage.stage,
+        outreach_last_sent_at: new Date().toISOString(),
+        // Cleared once used, so a draft written for this send is never
+        // silently re-sent to someone who already received it.
+        ...(draft ? { outreach_draft: null } : {}),
+      })
       .eq("id", lead.id);
 
     sent.push(lead.id);
