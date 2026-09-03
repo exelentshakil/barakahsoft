@@ -97,6 +97,13 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-h4{font-size:1.05rem;line-height:1.25;letter-spacing:-.01em}
 .bespoke-page .bs-mark{color:var(--bs-primary,#e4761b)}
 .bespoke-page .bs-section--ink .bs-mark{color:var(--bs-accent,#e4761b)}
+/* The hero mark sits on a photograph under a near-black scrim, not on a
+   card. A raw --bs-primary can be any brand colour a client brings,
+   including a dark navy or forest green that goes muddy against that scrim.
+   --bs-mark-hero is computed in design-tokens.ts against that same dark
+   ground, so this holds for every palette without ever muting a colour that
+   was already legible. */
+.bespoke-page .bs-hero .bs-mark{color:var(--bs-mark-hero,var(--bs-primary,#e4761b))}
 .bespoke-page .bs-lede{font-size:clamp(1.05rem,1.3vw,1.22rem);line-height:1.6;color:var(--bs-muted);max-width:62ch}
 .bespoke-page .bs-body{color:var(--bs-muted);max-width:66ch}
 .bespoke-page .bs-small{font-size:.83rem;color:var(--bs-muted)}

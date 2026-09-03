@@ -267,6 +267,18 @@ export function compileDesignTokens(
     "--bs-invert-surface": relativeLuminance(surface) > 0.4 ? "#0B0F19" : "#FFFFFF",
     "--bs-invert-ink": relativeLuminance(surface) > 0.4 ? "#FFFFFF" : "#0B0F19",
 
+    // The hero mark sits on a photograph under a near-black scrim, not on
+    // --bs-surface. A raw --bs-primary reads fine on a white card and
+    // disappears there whenever a client's brand colour is itself dark (navy,
+    // forest green, maroon) — the failure mode a screenshot caught: "Colorado
+    // Springs" in <span class="bs-mark"> going muddy against the hero photo.
+    // Computed once here, against the actual dark ground the hero scrim
+    // renders (#0B0F19, matching --bs-invert-surface's dark branch) at the
+    // WCAG large-text minimum (hero marks are always big, bold display type),
+    // so the fix holds for every brand colour a lead can bring, not just this
+    // one, without ever muting a primary that was already legible.
+    "--bs-mark-hero": ensureContrast(p.primary, "#0B0F19", 3),
+
     "--bs-font-display": `"${dna.typography.displayFamily}", ui-sans-serif, system-ui, sans-serif`,
     "--bs-font-body": `"${dna.typography.bodyFamily}", ui-sans-serif, system-ui, sans-serif`,
     "--bs-display-weight": dna.typography.displayWeight,
