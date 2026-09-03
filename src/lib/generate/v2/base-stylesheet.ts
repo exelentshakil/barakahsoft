@@ -276,8 +276,8 @@ export const BASE_STYLESHEET = `
 
 /* ---------- founder badge ---------------------------------------------- */
 .bespoke-page .bs-founder-badge{
-  position:absolute;left:0;bottom:0;z-index:5;
-  display:flex;align-items:stretch;box-shadow:var(--bs-shadow-lg);border-radius:8px;overflow:hidden;max-width:calc(100% - 36px);
+  position:absolute;left:0;bottom:0;right:0;z-index:5;
+  display:flex;align-items:stretch;box-shadow:var(--bs-shadow-lg);border-radius:8px;overflow:hidden;max-width:fit-content;
 }
 .bespoke-page .bs-founder-badge>*:first-child{background:#fff;color:var(--bs-ink,#16181d);display:flex;align-items:center;justify-content:center;padding:12px 16px;font-weight:800;font-size:.85rem}
 /* A forced brightness(0) invert(1) here used to flatten every logo to a
