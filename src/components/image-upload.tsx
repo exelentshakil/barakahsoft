@@ -40,18 +40,43 @@ export function ImageUpload({
     onChange(data.url);
   }
 
+  const openPicker = () => {
+    if (uploading) return;
+    inputRef.current?.click();
+  };
+
+  const removeImage = () => {
+    if (uploading) return;
+    onChange("");
+  };
+
+  const handlePrimaryKeyDown = (event: React.KeyboardEvent<HTMLButtonElement | HTMLDivElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openPicker();
+    }
+  };
+
+  const handleRemoveKeyDown = (event: React.KeyboardEvent<HTMLButtonElement | HTMLDivElement>) => {
+    if (event.key === "Backspace" || event.key === "Delete") {
+      event.preventDefault();
+      removeImage();
+    }
+  };
+
   const previewClass = shape === "square" ? "h-20 w-20 rounded-lg object-cover" : "h-24 w-full max-w-xs rounded-lg object-cover";
   const emptyClass = shape === "square" ? "h-20 w-20" : "h-24 w-full max-w-xs";
 
   return (
     <div className="space-y-1.5">
       {value ? (
-        <div className="relative inline-block">
+        <div className="relative inline-block" tabIndex={0} onKeyDown={handleRemoveKeyDown} aria-label="Image preview">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={value} alt="" className={previewClass} />
           <button
             type="button"
-            onClick={() => onChange("")}
+            onClick={removeImage}
+            onKeyDown={handleRemoveKeyDown}
             className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-foreground text-background shadow"
             aria-label="Remove image"
           >
@@ -61,7 +86,8 @@ export function ImageUpload({
       ) : (
         <button
           type="button"
-          onClick={() => inputRef.current?.click()}
+          onClick={openPicker}
+          onKeyDown={handlePrimaryKeyDown}
           disabled={uploading}
           className={cn("flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-input text-xs text-muted-foreground hover:bg-accent disabled:opacity-60", emptyClass)}
         >
@@ -81,7 +107,7 @@ export function ImageUpload({
         }}
       />
       {value && (
-        <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="block text-xs text-primary hover:underline">
+        <button type="button" onClick={openPicker} onKeyDown={handlePrimaryKeyDown} disabled={uploading} className="block text-xs text-primary hover:underline">
           {uploading ? "Uploading..." : "Replace image"}
         </button>
       )}
