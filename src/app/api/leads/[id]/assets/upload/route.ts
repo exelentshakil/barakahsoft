@@ -71,7 +71,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     } else {
       skipped.push({
         name: file.name,
-        reason: "Could not be read as an image, or its shortest edge is under 400px.",
+        reason: "Could not be read as an image, or its shortest edge is under 200px.",
       });
     }
   }

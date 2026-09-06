@@ -126,7 +126,7 @@ export function ManualPhotoUpload({
             Upload client photos from their gallery or portfolio before generating the site.
             The AI will caption them, judge their quality, and place them automatically
             during generation to make the site look premium and real.
-            JPEG, PNG, WebP or AVIF, at least 400px on the shortest edge. HEIC from an iPhone
+            JPEG, PNG, WebP or AVIF, at least 200px on the shortest edge. HEIC from an iPhone
             will not work — export as JPEG first.
           </p>
         </div>

@@ -46,7 +46,7 @@ export interface IngestedMedia {
 }
 
 const MAX_WIDTH = 1800;
-const MIN_USABLE_EDGE = 400;
+const MIN_USABLE_EDGE = 200;
 
 function storagePath(leadId: string, source: string, seed: string): string {
   const safe = seed.replace(/[^a-z0-9]+/gi, "-").slice(-40).toLowerCase();
