@@ -254,8 +254,84 @@ function verifyTokenPairs(css: string): QualityFinding[] {
   return findings;
 }
 
-function verifyStylesheet(css: string): QualityFinding[] {
-  return [];
+/**
+ * Resolve a var() chain down to a literal colour.
+ *
+ * Tokens routinely reference other tokens (--bs-primary-strong falls back to
+ * --bs-primary, which falls back to a literal), so a single lookup is not
+ * enough. Depth is capped because a malformed sheet can define a cycle.
+ */
+function resolveColour(value: string, vars: Record<string, string>, depth = 0): string | null {
+  if (depth > 6) return null;
+  const raw = value.trim();
+  if (HEX.test(raw)) return raw.toLowerCase();
+
+  const shorthand = raw.match(/^#([0-9a-fA-F]{3})$/);
+  if (shorthand) {
+    return `#${shorthand[1].split("").map((c) => c + c).join("")}`.toLowerCase();
+  }
+
+  const reference = raw.match(/^var\(\s*(--[a-z0-9-]+)\s*(?:,([\s\S]+))?\)$/i);
+  if (reference) {
+    const [, name, fallback] = reference;
+    const defined = vars[name];
+    if (defined !== undefined) {
+      const resolved = resolveColour(defined, vars, depth + 1);
+      if (resolved) return resolved;
+    }
+    if (fallback) return resolveColour(fallback, vars, depth + 1);
+  }
+
+  return null;
+}
+
+// Text this size or larger is scored against WCAG's large-text floor of 3:1
+// rather than 4.5:1. Eyebrows and body copy are never large text; display
+// headings usually are.
+const LARGE_TEXT_SELECTOR = /\.bs-(h1|h2|display|hero__title|stat__value)\b/;
+
+/**
+ * Measure every rule that pairs a background with a text colour.
+ *
+ * verifyTokenPairs above judges token NAMES against an allow-list, which
+ * catches a fill token used as text but cannot see that two differently named
+ * tokens resolve to nearly the same colour. This resolves both sides to real
+ * hex and measures the ratio, which is what actually decides whether a human
+ * can read the page.
+ */
+function verifyComputedContrast(css: string, vars: Record<string, string>): QualityFinding[] {
+  const findings: QualityFinding[] = [];
+  const seen = new Set<string>();
+
+  for (const block of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const selector = block[1].trim().split(/\s*,\s*/)[0].slice(0, 70);
+    const body = block[2];
+    if (selector.startsWith("@")) continue;
+
+    const bgRaw = body.match(/background(?:-color)?\s*:\s*([^;]+)/i)?.[1];
+    const fgRaw = body.match(/(?<![-a-z])color\s*:\s*([^;]+)/i)?.[1];
+    if (!bgRaw || !fgRaw) continue;
+
+    const background = resolveColour(bgRaw, vars);
+    const foreground = resolveColour(fgRaw, vars);
+    if (!background || !foreground) continue;
+
+    const target = LARGE_TEXT_SELECTOR.test(selector) ? 3 : 4.5;
+    const ratio = contrast(foreground, background);
+    if (ratio >= target) continue;
+
+    const key = `${foreground}|${background}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    findings.push({
+      severity: "blocker",
+      check: "computed-contrast",
+      detail: `\`${selector}\` renders ${foreground} on ${background} at ${ratio.toFixed(2)}:1, under the ${target}:1 this text size needs. Nobody reading the page on a phone in daylight will make this out.`,
+    });
+  }
+
+  return findings;
 }
 
 export function verifyHomepage(
@@ -264,10 +340,29 @@ export function verifyHomepage(
   tokens: DesignTokens,
   css?: string | null
 ): QualityReport {
+  const sheet = css ?? "";
+  // The two checks carry different weight on purpose.
+  //
+  // verifyComputedContrast resolves both colours to hex and measures the
+  // ratio, so a finding is a fact about what the page renders — that blocks.
+  // verifyTokenPairs matches token NAMES against an allow-list; it cannot see
+  // that --bs-primary-strong on --bs-surface-alt is comfortably readable, so
+  // it reports rules that are numerically fine. Useful to an operator's eye,
+  // not grounds for failing a build.
+  const vars = tokens.vars ?? {};
+  const findings: QualityFinding[] = sheet
+    ? [
+        ...verifyComputedContrast(sheet, vars),
+        ...verifyTokenPairs(sheet).map((finding) => ({ ...finding, severity: "warning" as const })),
+      ]
+    : [];
+
+  const blockers = findings.filter((finding) => finding.severity === "blocker");
+
   return {
-    passes: true,
-    blockers: [],
-    findings: [],
-    constraints: ""
+    passes: blockers.length === 0,
+    blockers,
+    findings,
+    constraints: blockers.map((blocker) => `- ${blocker.detail}`).join("\n"),
   };
 }

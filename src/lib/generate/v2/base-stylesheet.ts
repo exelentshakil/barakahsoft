@@ -96,7 +96,7 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-h3{font-size:clamp(1.3rem,1.8vw,1.65rem);line-height:1.15}
 .bespoke-page .bs-h4{font-size:1.05rem;line-height:1.25;letter-spacing:-.01em}
 .bespoke-page .bs-mark{color:var(--bs-primary,#e4761b)}
-.bespoke-page .bs-section--ink .bs-mark{color:var(--bs-accent,#e4761b)}
+.bespoke-page .bs-section--ink .bs-mark{color:var(--bs-on-ink-accent,#e4761b)}
 /* The hero mark sits on a photograph under a near-black scrim, not on a
    card. A raw --bs-primary can be any brand colour a client brings,
    including a dark navy or forest green that goes muddy against that scrim.
@@ -117,7 +117,7 @@ export const BASE_STYLESHEET = `
   background:var(--bs-accent-strong,var(--bs-accent,#c1273c));color:var(--bs-on-accent,#fff);padding:9px 16px;border-radius:4px;letter-spacing:.12em;
 }
 .bespoke-page .bs-eyebrow--chip::before{display:none}
-.bespoke-page .bs-section--ink .bs-eyebrow{color:var(--bs-accent,#e4761b)}
+.bespoke-page .bs-section--ink .bs-eyebrow{color:var(--bs-on-ink-accent,#e4761b)}
 .bespoke-page .bs-quote{
   font-family:var(--bs-font-display,serif);font-size:clamp(1.5rem,2.6vw,2.35rem);line-height:1.22;
   letter-spacing:-.02em;border-left:4px solid var(--bs-primary,#e4761b);padding-left:clamp(20px,2vw,32px);
@@ -392,7 +392,7 @@ export const BASE_STYLESHEET = `
 }
 .bespoke-page [data-nav-panel][data-open=true]{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(-50%) translateY(0)}
 .bespoke-page [data-nav-panel] a{display:flex;gap:10px;padding:10px;border-radius:8px;font-weight:600;color:inherit}
-.bespoke-page [data-nav-panel] a:hover{background:var(--bs-surface-alt,#f4f5f7);color:var(--bs-primary,#e4761b)}
+.bespoke-page [data-nav-panel] a:hover{background:var(--bs-surface-alt,#f4f5f7);color:var(--bs-primary-on-surface,#b65e16)}
 .bespoke-page [data-nav-toggle]{display:none;background:none;border:0;color:inherit;padding:10px;cursor:pointer}
 .bespoke-page [data-nav-drawer]{
   position:fixed;inset:0 0 0 auto;width:min(400px,88vw);z-index:200;background:var(--bs-ink,#16181d);color:#fff;
@@ -520,12 +520,12 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-utility--split{padding:0;background:none}
 .bespoke-page .bs-utility--split .bs-container{gap:0;padding-inline:0}
 .bespoke-page .bs-utility--split span{padding:9px var(--bs-gutter);background:var(--bs-ink,#16181d)}
-.bespoke-page .bs-utility--split span:last-child{background:var(--bs-accent,#c1273c);color:#fff}
+.bespoke-page .bs-utility--split span:last-child{background:var(--bs-accent-strong,var(--bs-accent,#c1273c));color:var(--bs-on-accent,#fff)}
 .bespoke-page .bs-utility--striped{
   background:repeating-linear-gradient(115deg,var(--bs-ink,#16181d) 0 26px,var(--bs-primary-strong,#c2410c) 26px 52px);
 }
 .bespoke-page .bs-utility--striped span{background:rgb(0 0 0 / .62);padding:4px 12px;border-radius:4px}
-.bespoke-page .bs-utility--offer{background:var(--bs-accent,#c1273c);color:#fff;font-weight:700}
+.bespoke-page .bs-utility--offer{background:var(--bs-accent-strong,var(--bs-accent,#c1273c));color:var(--bs-on-accent,#fff);font-weight:700}
 .bespoke-page .bs-utility--offer .bs-container{justify-content:center;text-align:center}
 
 /* Nav edge ------------------------------------------------------------- */
@@ -605,10 +605,10 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-form--solid-brand .bs-form__head{background:var(--bs-primary-strong,#c2410c)}
 .bespoke-page .bs-form--solid-brand .bs-form__head::after{border-top-color:var(--bs-primary-strong,#c2410c)}
 .bespoke-page .bs-form--solid-brand .bs-input,.bespoke-page .bs-form--solid-brand .bs-select{background:rgb(255 255 255 / .95);border-color:transparent}
-.bespoke-page .bs-form--solid-brand .bs-btn{background:var(--bs-accent,#c1273c);color:#fff}
+.bespoke-page .bs-form--solid-brand .bs-btn{background:var(--bs-accent-strong,var(--bs-accent,#c1273c));color:var(--bs-on-accent,#fff)}
 .bespoke-page .bs-form--solid-brand .bs-form__note{color:rgb(255 255 255 / .78)}
 
-.bespoke-page .bs-form--offer-banner .bs-form__head{background:var(--bs-accent,#c1273c);color:#fff}
+.bespoke-page .bs-form--offer-banner .bs-form__head{background:var(--bs-accent-strong,var(--bs-accent,#c1273c));color:var(--bs-on-accent,#fff)}
 .bespoke-page .bs-form--offer-banner .bs-form__head::after{border-top-color:var(--bs-accent,#c1273c)}
 
 /* Glass loses its edges over a bright photograph, so it earns a deeper floor
@@ -637,7 +637,7 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-about--surface-ink .bs-h2,
 .bespoke-page .bs-about--surface-ink .bs-founder-badge strong{color:#fff}
 .bespoke-page .bs-about--surface-ink .bs-body{color:rgb(255 255 255 / .8)}
-.bespoke-page .bs-about--surface-ink .bs-eyebrow{color:var(--bs-accent,#e4761b)}
+.bespoke-page .bs-about--surface-ink .bs-eyebrow{color:var(--bs-on-brand-accent,#fff)}
 .bespoke-page .bs-about--surface-tint{background:var(--bs-surface-alt,#f4f6f8)}
 .bespoke-page .bs-about--surface-white{background:var(--bs-surface,#fff)}
 
@@ -822,7 +822,7 @@ export const BASE_STYLESHEET = `
 /* ---------- review cards ------------------------------------------------ */
 .bespoke-page .bs-review{background:#fff;border:1px solid var(--bs-line);border-radius:var(--bs-r);padding:26px;box-shadow:var(--bs-shadow);display:flex;flex-direction:column;gap:14px}
 .bespoke-page .bs-review__author{display:flex;align-items:center;gap:12px;font-weight:800;margin-top:auto}
-.bespoke-page .bs-review__avatar{width:44px;height:44px;border-radius:999px;flex:none;display:grid;place-items:center;background:var(--bs-primary,#e4761b);color:var(--bs-on-primary,#fff);font-family:var(--bs-font-display,inherit);font-weight:900}
+.bespoke-page .bs-review__avatar{width:44px;height:44px;border-radius:999px;flex:none;display:grid;place-items:center;background:var(--bs-primary-strong,#e4761b);color:var(--bs-on-primary,#fff);font-family:var(--bs-font-display,inherit);font-weight:900}
 
 @media (max-width:900px){
   .bespoke-page .bs-gallery{grid-template-columns:repeat(2,1fr)}
@@ -1111,7 +1111,7 @@ export const BASE_STYLESHEET = `
   display:grid;place-items:center;cursor:pointer;box-shadow:var(--bs-shadow);
   transition:transform .16s ease,background .16s ease;
 }
-.bespoke-page .bs-reviews__arrow:hover{background:var(--bs-primary,#e4761b);color:var(--bs-on-primary,#fff);border-color:transparent}
+.bespoke-page .bs-reviews__arrow:hover{background:var(--bs-primary-strong,#e4761b);color:var(--bs-on-primary,#fff);border-color:transparent}
 .bespoke-page .bs-reviews__arrow--prev{left:-22px}
 .bespoke-page .bs-reviews__arrow--prev .bs-icon{transform:rotate(180deg)}
 .bespoke-page .bs-reviews__arrow--next{right:-22px}
@@ -1142,7 +1142,7 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-servicerow{display:grid;grid-template-columns:210px 1fr;gap:24px;align-items:center;background:var(--bs-surface,#fff);border:1px solid var(--bs-line);border-radius:var(--bs-r);overflow:hidden;transition:transform .2s ease,box-shadow .2s ease}
 .bespoke-page .bs-servicerow:hover{transform:translateX(4px);box-shadow:var(--bs-shadow)}
 .bespoke-page .bs-servicerow .bs-media{aspect-ratio:4/3;height:100%;border-radius:0}
-.bespoke-page .bs-servicerow__glyph{display:grid;place-items:center;height:100%;min-height:150px;background:var(--bs-surface-alt,#f4f5f7);color:var(--bs-primary-strong,#e4761b)}
+.bespoke-page .bs-servicerow__glyph{display:grid;place-items:center;height:100%;min-height:150px;background:var(--bs-surface-alt,#f4f5f7);color:var(--bs-primary-on-surface,#b65e16)}
 .bespoke-page .bs-servicerow__body{padding:22px 26px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 .bespoke-page .bs-services--v2 .bs-services__grid{grid-template-columns:1fr 380px}
 .bespoke-page .bs-services--v2 .bs-services__aside{order:2}

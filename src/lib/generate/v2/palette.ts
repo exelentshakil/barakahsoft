@@ -151,3 +151,41 @@ export function strongOn(hex: string, target = 4.5): string {
   }
   return hslToHex(hue, saturation, 20);
 }
+
+/** The WCAG contrast ratio between two hex colours, 1:1 to 21:1. */
+export function contrastRatio(a: string, b: string): number {
+  return contrast(a, b);
+}
+
+/**
+ * The supplied foreground, walked until it actually reads on `background`.
+ *
+ * `strongOn` only ever darkens towards white text, which is the wrong move
+ * when the background is itself the brand colour: a red accent on a red band
+ * darkens into a slightly different red and still cannot be read. This walks
+ * whichever direction the background demands — lighter on a dark band, darker
+ * on a light one — so the brand hue survives wherever it can, and falls back
+ * to plain white or near-black only when the hue genuinely cannot reach the
+ * target at any lightness.
+ *
+ * 4.5:1 is the WCAG AA floor for body text; pass 3 for large or bold display
+ * text, which AA scores more leniently.
+ */
+export function contrastOn(foreground: string, background: string, target = 4.5): string {
+  if (contrast(foreground, background) >= target) return foreground;
+
+  const [hue, saturation] = hexToHsl(foreground);
+  const backgroundIsDark = luminance(background) < 0.18;
+
+  // Walk away from the background: lighten on a dark band, darken on a light
+  // one. Saturation eases off as we approach the extremes, because a fully
+  // saturated near-white reads as a stain rather than a colour.
+  for (let step = 1; step <= 48; step++) {
+    const lightness = backgroundIsDark ? Math.min(98, 50 + step) : Math.max(4, 50 - step);
+    const eased = Math.max(12, saturation - step * 0.9);
+    const candidate = hslToHex(hue, eased, lightness);
+    if (contrast(candidate, background) >= target) return candidate;
+  }
+
+  return readableOn(background);
+}

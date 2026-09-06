@@ -1,5 +1,5 @@
 import { layoutDnaFor, type LayoutDna } from "@/lib/generate/v2/layout-dna";
-import { derivePalette, rgbTriplet, readableOn, strongOn } from "@/lib/generate/v2/palette";
+import { derivePalette, rgbTriplet, readableOn, strongOn, contrastOn } from "@/lib/generate/v2/palette";
 import type { DesignDna } from "@/lib/design-dna";
 import type { MediaPlan } from "@/lib/media/plan-media";
 import { generatePageCopy, type PageCopy } from "@/lib/generate/v2/page-copy";
@@ -201,6 +201,15 @@ export async function buildPage(args: {
     "--bs-on-accent": readableOn(strongOn(palette.accent)),
     "--bs-ink": palette.ink,
     "--bs-ink-rgb": rgbTriplet(palette.ink),
+    // The accent, resolved against the two dark bands it actually lands on.
+    //
+    // A single --bs-accent was used on both, which is only safe when the band
+    // is neutral charcoal. .bs-about--surface-ink is filled with the brand
+    // colour, so a red client got a red eyebrow on a red band at 1.2:1 —
+    // legible in the mockup only because the designer's brand happened to be
+    // dark. These are solved per band instead of assumed.
+    "--bs-on-brand-accent": contrastOn(palette.accent, strongOn(palette.primary)),
+    "--bs-on-ink-accent": contrastOn(palette.accent, palette.ink),
     "--bs-surface": palette.surface,
     "--bs-surface-rgb": rgbTriplet(palette.surface),
     "--bs-surface-alt": palette.surfaceAlt,
@@ -214,8 +223,8 @@ export async function buildPage(args: {
     // primary-on-surface is the STRENGTHENED primary, not the raw one: the
     // raw brand hue is chosen to look right as a fill and routinely fails
     // 4.5:1 as text on white.
-    "--bs-primary-on-surface": strongOn(palette.primary),
-    "--bs-accent-on-surface": strongOn(palette.accent),
+    "--bs-primary-on-surface": contrastOn(palette.primary, palette.surfaceAlt),
+    "--bs-accent-on-surface": contrastOn(palette.accent, palette.surfaceAlt),
     "--bs-ink-muted": palette.inkMuted ?? `rgb(${rgbTriplet(palette.ink)} / 0.66)`,
     // Dark bands stay inside the scheme: ink is the brand hue at near-black.
     "--bs-invert-surface": palette.ink,
