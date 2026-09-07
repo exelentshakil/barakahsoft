@@ -1,0 +1,1308 @@
+<!-- ======================================================================= -->
+<!-- BARAKAHSOFT LIGHTWEIGHT LANDING PAGE WIDGET FOR ELEMENTOR / WORDPRESS  -->
+<!-- High-speed, high-converting lead engine for Free Homepage Redesign     -->
+<!-- Connected to: https://redesign.barakahsoft.com/api/intake              -->
+<!-- ======================================================================= -->
+
+<div id="bk-landing-root">
+  <style>
+    /* Reset & Base Scoping */
+    #bk-landing-root {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      color: #07284d;
+      background-color: #ffffff;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      width: 100%;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+    }
+    #bk-landing-root *,
+    #bk-modal-overlay,
+    #bk-modal-overlay * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Typography & Utilities */
+    #bk-landing-root a {
+      text-decoration: none;
+      color: inherit;
+    }
+    #bk-landing-root .bk-container {
+      width: 100%;
+      max-width: 1160px;
+      margin-left: auto;
+      margin-right: auto;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+
+    /* Header */
+    #bk-landing-root .bk-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid #e2e8f0;
+      padding: 14px 0;
+    }
+    #bk-landing-root .bk-header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    #bk-landing-root .bk-logo img {
+      height: 28px;
+      width: auto;
+      display: block;
+    }
+    #bk-landing-root .bk-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    #bk-landing-root .bk-header-phone {
+      font-size: 14px;
+      font-weight: 700;
+      color: #07284d;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+    #bk-landing-root .bk-header-phone:hover {
+      color: #0c68c8;
+    }
+    #bk-landing-root .bk-btn-gold-sm {
+      background: #ffd12d;
+      color: #07284d;
+      font-size: 13px;
+      font-weight: 800;
+      padding: 9px 18px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid #f0c420;
+      cursor: pointer;
+    }
+    #bk-landing-root .bk-btn-gold-sm:hover {
+      background: #f5c400;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(255, 209, 45, 0.4);
+    }
+
+    /* Hero Section */
+    #bk-landing-root .bk-hero {
+      position: relative;
+      background: linear-gradient(180deg, #f0f6fc 0%, #f9fbfd 60%, #ffffff 100%);
+      padding: 60px 0 80px 0;
+      text-align: center;
+      border-bottom: 1px solid #d9e8f4;
+    }
+    #bk-landing-root .bk-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff8d6;
+      border: 1px solid #ffd12d;
+      color: #07284d;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 10px rgba(255, 209, 45, 0.2);
+    }
+    #bk-landing-root .bk-hero h1 {
+      font-size: clamp(32px, 5vw, 62px);
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+      color: #07284d;
+      max-width: 920px;
+      margin: 0 auto 20px auto;
+    }
+    #bk-landing-root .bk-hero h1 span.bk-highlight {
+      background: linear-gradient(90deg, #0c68c8, #07284d);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      border-bottom: 4px solid #ffd12d;
+    }
+    #bk-landing-root .bk-hero-desc {
+      font-size: clamp(15px, 2vw, 18px);
+      color: #5c7186;
+      max-width: 680px;
+      margin: 0 auto 34px auto;
+      line-height: 1.6;
+    }
+
+    /* Form Container */
+    #bk-landing-root .bk-intake-bar {
+      max-width: 640px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 8px;
+      border-radius: 14px;
+      border: 1px solid #c8ddec;
+      box-shadow: 0 16px 36px rgba(7, 40, 77, 0.09);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    @media (min-width: 640px) {
+      #bk-landing-root .bk-intake-bar {
+        flex-direction: row;
+      }
+    }
+    #bk-landing-root .bk-intake-input {
+      flex: 1;
+      height: 52px;
+      border: none;
+      outline: none;
+      padding: 0 18px;
+      font-size: 15px;
+      color: #07284d;
+      background: transparent;
+    }
+    #bk-landing-root .bk-intake-input::placeholder {
+      color: #8da2b5;
+    }
+    #bk-landing-root .bk-intake-btn {
+      height: 52px;
+      background: #ffd12d;
+      color: #07284d;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 800;
+      padding: 0 24px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    #bk-landing-root .bk-intake-btn:hover {
+      background: #f5c400;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(255, 209, 45, 0.45);
+    }
+    #bk-landing-root .bk-hero-subtext {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #7b91a5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    #bk-landing-root .bk-trust-chips {
+      margin-top: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      font-weight: 700;
+      color: #07284d;
+    }
+    #bk-landing-root .bk-trust-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    #bk-landing-root .bk-trust-chip svg {
+      color: #0c68c8;
+    }
+
+    /* 3-Value Dark Strip */
+    #bk-landing-root .bk-evidence-strip {
+      background: #07284d;
+      color: #ffffff;
+      padding: 44px 0;
+      border-bottom: 1px solid #133a68;
+    }
+    #bk-landing-root .bk-evidence-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    @media (min-width: 768px) {
+      #bk-landing-root .bk-evidence-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    #bk-landing-root .bk-evidence-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    #bk-landing-root .bk-evidence-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: #ffd12d;
+    }
+    #bk-landing-root .bk-evidence-text h4 {
+      font-size: 16px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+    #bk-landing-root .bk-evidence-text p {
+      font-size: 13px;
+      color: #b1c7dc;
+      line-height: 1.5;
+    }
+
+    /* 4-Step Process Section */
+    #bk-landing-root .bk-steps-section {
+      padding: 70px 0;
+      background: #ffffff;
+      border-bottom: 1px solid #eef3f8;
+    }
+    #bk-landing-root .bk-section-heading {
+      text-align: center;
+      margin-bottom: 46px;
+    }
+    #bk-landing-root .bk-section-tag {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #0c68c8;
+      margin-bottom: 8px;
+    }
+    #bk-landing-root .bk-section-title {
+      font-size: clamp(26px, 3.5vw, 40px);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: #07284d;
+      margin-bottom: 12px;
+    }
+    #bk-landing-root .bk-section-subtitle {
+      font-size: 15px;
+      color: #60778d;
+      max-width: 580px;
+      margin: 0 auto;
+    }
+    #bk-landing-root .bk-steps-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    @media (min-width: 640px) {
+      #bk-landing-root .bk-steps-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (min-width: 1024px) {
+      #bk-landing-root .bk-steps-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+    #bk-landing-root .bk-step-card {
+      background: #f8fbfe;
+      border: 1px solid #d9e8f4;
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s ease;
+    }
+    #bk-landing-root .bk-step-card:hover {
+      transform: translateY(-3px);
+      border-color: #0c68c8;
+      box-shadow: 0 12px 28px rgba(12, 104, 200, 0.08);
+    }
+    #bk-landing-root .bk-step-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    #bk-landing-root .bk-step-num {
+      font-size: 24px;
+      font-weight: 900;
+      color: #c4d7e8;
+    }
+    #bk-landing-root .bk-step-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: #e9f2fb;
+      color: #0c68c8;
+    }
+    #bk-landing-root .bk-step-card h3 {
+      font-size: 17px;
+      font-weight: 800;
+      color: #07284d;
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+    #bk-landing-root .bk-step-card p {
+      font-size: 13px;
+      color: #5c7186;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    #bk-landing-root .bk-step-bullets {
+      list-style: none;
+      padding: 0;
+      margin-top: auto;
+      border-top: 1px solid #e5edf5;
+      padding-top: 14px;
+    }
+    #bk-landing-root .bk-step-bullets li {
+      font-size: 12px;
+      color: #07284d;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    /* FAQ Section */
+    #bk-landing-root .bk-faq-section {
+      padding: 70px 0;
+      background: #fbfcfe;
+      border-bottom: 1px solid #e8eff6;
+    }
+    #bk-landing-root .bk-faq-list {
+      max-width: 760px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    #bk-landing-root .bk-faq-item {
+      background: #ffffff;
+      border: 1px solid #d9e8f4;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    #bk-landing-root .bk-faq-item[open] {
+      border-color: #0c68c8;
+      box-shadow: 0 4px 16px rgba(12, 104, 200, 0.06);
+    }
+    #bk-landing-root .bk-faq-question {
+      padding: 18px 20px;
+      font-size: 15px;
+      font-weight: 800;
+      color: #07284d;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+    #bk-landing-root .bk-faq-question::-webkit-details-marker {
+      display: none;
+    }
+    #bk-landing-root .bk-faq-arrow {
+      transition: transform 0.2s ease;
+      color: #0c68c8;
+    }
+    #bk-landing-root .bk-faq-item[open] .bk-faq-arrow {
+      transform: rotate(180deg);
+    }
+    #bk-landing-root .bk-faq-answer {
+      padding: 0 20px 20px 20px;
+      font-size: 14px;
+      color: #5c7186;
+      line-height: 1.6;
+      border-top: 1px solid #f0f4f9;
+      padding-top: 14px;
+    }
+
+    /* Bottom CTA Section */
+    #bk-landing-root .bk-bottom-cta {
+      background: #07284d;
+      color: #ffffff;
+      text-align: center;
+      padding: 70px 20px;
+    }
+    #bk-landing-root .bk-bottom-cta h2 {
+      font-size: clamp(26px, 4vw, 42px);
+      font-weight: 900;
+      margin-bottom: 14px;
+      color: #ffffff;
+    }
+    #bk-landing-root .bk-bottom-cta p {
+      font-size: 16px;
+      color: #b8cde2;
+      max-width: 600px;
+      margin: 0 auto 30px auto;
+    }
+
+    /* Footer */
+    #bk-landing-root .bk-footer {
+      background: #ffffff;
+      border-top: 1px solid #eef2f7;
+      padding: 50px 0 30px 0;
+      font-size: 13px;
+      color: #60778d;
+    }
+    #bk-landing-root .bk-footer-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 30px;
+      border-bottom: 1px solid #edf2f7;
+      padding-bottom: 36px;
+    }
+    @media (min-width: 768px) {
+      #bk-landing-root .bk-footer-grid {
+        grid-template-columns: 1.4fr 1fr 1fr;
+      }
+    }
+    #bk-landing-root .bk-footer h5 {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: #07284d;
+      margin-bottom: 14px;
+    }
+    #bk-landing-root .bk-footer p {
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+    #bk-landing-root .bk-footer-links a {
+      display: block;
+      color: #5c7186;
+      margin-bottom: 8px;
+      transition: color 0.2s;
+    }
+    #bk-landing-root .bk-footer-links a:hover {
+      color: #0c68c8;
+    }
+    #bk-landing-root .bk-footer-bottom {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 24px;
+      font-size: 12px;
+    }
+    @media (min-width: 640px) {
+      #bk-landing-root .bk-footer-bottom {
+        flex-direction: row;
+      }
+    }
+
+    /* Modal Overlay & Dialog */
+    #bk-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(7, 40, 77, 0.7);
+      backdrop-filter: blur(6px);
+      z-index: 999999;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    #bk-modal-overlay.bk-active {
+      display: flex;
+    }
+    #bk-modal-box {
+      background: #ffffff;
+      width: 100%;
+      max-width: 480px;
+      border-radius: 18px;
+      box-shadow: 0 24px 60px rgba(7, 40, 77, 0.35);
+      border: 1px solid #d9e8f4;
+      overflow: hidden;
+      animation: bkSlideUp 0.25s ease-out forwards;
+      max-height: 94vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    @keyframes bkSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    #bk-modal-header {
+      background: #f8fbfe;
+      border-bottom: 1px solid #e5edf5;
+      padding: 20px 24px 16px 24px;
+      position: relative;
+    }
+    #bk-modal-close {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      line-height: 1;
+      color: #7b91a5;
+      cursor: pointer;
+      padding: 4px;
+    }
+    #bk-modal-close:hover {
+      color: #07284d;
+    }
+    #bk-modal-badge {
+      font-size: 11px;
+      font-weight: 800;
+      color: #0c68c8;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
+      display: inline-block;
+    }
+    #bk-modal-title {
+      font-size: 20px;
+      font-weight: 900;
+      color: #07284d;
+      margin-bottom: 4px;
+    }
+    #bk-modal-desc {
+      font-size: 12px;
+      color: #60778d;
+    }
+    #bk-modal-body {
+      padding: 24px;
+    }
+
+    /* Form Fields */
+    .bk-field-group {
+      margin-bottom: 16px;
+    }
+    .bk-field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      color: #07284d;
+      margin-bottom: 6px;
+    }
+    .bk-field-label span {
+      font-weight: 500;
+      color: #7b91a5;
+    }
+    .bk-text-input {
+      width: 100%;
+      height: 44px;
+      border: 1px solid #ccdbe8;
+      border-radius: 8px;
+      padding: 0 14px;
+      font-size: 14px;
+      color: #07284d;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .bk-text-input:focus {
+      border-color: #0c68c8;
+      box-shadow: 0 0 0 3px rgba(12, 104, 200, 0.12);
+    }
+
+    /* Problem Selector Pills */
+    .bk-pills-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .bk-pill-btn {
+      background: #f0f4f9;
+      border: 1px solid #d4e2ed;
+      color: #425567;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .bk-pill-btn:hover {
+      background: #e4ecf4;
+      border-color: #b7cede;
+    }
+    .bk-pill-btn.bk-selected {
+      background: #0c68c8;
+      border-color: #0c68c8;
+      color: #ffffff;
+    }
+
+    /* Legal Checkbox */
+    .bk-consent-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 11px;
+      color: #5c7186;
+      line-height: 1.4;
+      margin-top: 18px;
+      cursor: pointer;
+    }
+    .bk-consent-label input {
+      margin-top: 2px;
+      accent-color: #0c68c8;
+      cursor: pointer;
+    }
+
+    /* Submit Button */
+    .bk-submit-btn {
+      width: 100%;
+      height: 48px;
+      background: #0c68c8;
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .bk-submit-btn:hover {
+      background: #0852a1;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(12, 104, 200, 0.35);
+    }
+    .bk-submit-btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Feedback Alert Boxes */
+    .bk-alert-error {
+      background: #fdf2f2;
+      border: 1px solid #f8b4b4;
+      color: #9b1c1c;
+      font-size: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-top: 12px;
+      display: none;
+    }
+    .bk-state-box {
+      padding: 30px 24px;
+      text-align: center;
+      display: none;
+    }
+    .bk-state-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      margin: 0 auto 16px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .bk-state-success .bk-state-icon {
+      background: #def7ec;
+      color: #046c4e;
+    }
+    .bk-state-duplicate .bk-state-icon {
+      background: #e1effe;
+      color: #1e429f;
+    }
+    .bk-state-title {
+      font-size: 19px;
+      font-weight: 900;
+      color: #07284d;
+      margin-bottom: 8px;
+    }
+    .bk-state-desc {
+      font-size: 13px;
+      color: #5c7186;
+      line-height: 1.5;
+    }
+
+    /* Spinner */
+    .bk-spinner {
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid #ffffff;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      animation: bkSpin 0.6s linear infinite;
+      display: none;
+    }
+    @keyframes bkSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+
+  <!-- 1. LIGHTWEIGHT HEADER -->
+  <header class="bk-header">
+    <div class="bk-container bk-header-inner">
+      <a href="https://barakahsoft.com" class="bk-logo" aria-label="BarakahSoft Home">
+        <img src="https://barakahsoft.com/wp-content/uploads/2026/01/Logo1.png" alt="BarakahSoft" width="140" height="28" />
+      </a>
+      <div class="bk-header-actions">
+        <a href="tel:+13075336678" class="bk-header-phone">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span>(307) 533-6678</span>
+        </a>
+        <button type="button" class="bk-btn-gold-sm" onclick="document.getElementById('bk-hero-url-input').focus(); document.getElementById('bk-hero-url-input').scrollIntoView({behavior: 'smooth', block: 'center'});">
+          <span>Free Redesign</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 2. HIGH-CONVERTING HERO -->
+  <section class="bk-hero" id="bk-hero-section">
+    <div class="bk-container">
+      <div class="bk-badge">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        <span>Free 48-Hour Homepage Redesign & AI Audit</span>
+      </div>
+
+      <h1>
+        GET YOUR HOMEPAGE <br />
+        REDESIGNED <span class="bk-highlight">FOR FREE</span>
+      </h1>
+
+      <p class="bk-hero-desc">
+        See exactly how your homepage could look. We'll build a custom concept around your real business and deliver it in 48 hours — equipped with AI chat and lead capture. Free, no strings attached.
+      </p>
+
+      <!-- URL Input Bar (Step 1) -->
+      <form class="bk-intake-bar" id="bk-step1-form" onsubmit="bkHandleStep1(event)">
+        <input
+          type="text"
+          id="bk-hero-url-input"
+          class="bk-intake-input"
+          placeholder="Enter your website address (e.g., yourcompany.com)"
+          required
+          autocomplete="url"
+        />
+        <button type="submit" class="bk-intake-btn">
+          <span>See My New Homepage (Free)</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+      </form>
+
+      <div class="bk-hero-subtext">
+        <span>🔒 We only look at your public website</span>
+        <span>•</span>
+        <span>Free · No credit card · Yours to keep forever</span>
+      </div>
+
+      <!-- Micro Trust Badges -->
+      <div class="bk-trust-chips">
+        <div class="bk-trust-chip">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          <span>No payment · No obligation</span>
+        </div>
+        <div class="bk-trust-chip">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          <span>AI Chat & Callback Ready</span>
+        </div>
+        <div class="bk-trust-chip">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          <span>Limited daily spots available</span>
+        </div>
+        <div class="bk-trust-chip">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          <span>100% Client-owned</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. EVIDENCE & PROMISES STRIP -->
+  <section class="bk-evidence-strip">
+    <div class="bk-container">
+      <div class="bk-evidence-grid">
+        <div class="bk-evidence-item">
+          <div class="bk-evidence-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </div>
+          <div class="bk-evidence-text">
+            <h4>Built Around Your Real Business</h4>
+            <p>We extract your real services, real reviews, and brand assets. Zero generic template filler.</p>
+          </div>
+        </div>
+
+        <div class="bk-evidence-item">
+          <div class="bk-evidence-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+          </div>
+          <div class="bk-evidence-text">
+            <h4>Engineered For Mobile Speed</h4>
+            <p>Sub-second load times on real 4G/5G mobile connections with one obvious way to call on every screen.</p>
+          </div>
+        </div>
+
+        <div class="bk-evidence-item">
+          <div class="bk-evidence-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </div>
+          <div class="bk-evidence-text">
+            <h4>See It Live Before You Decide</h4>
+            <p>You review a working, interactive concept on our secure staging server before committing to anything.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. 4-STEP VISUAL JOURNEY -->
+  <section class="bk-steps-section">
+    <div class="bk-container">
+      <div class="bk-section-heading">
+        <div class="bk-section-tag">How It Works</div>
+        <h2 class="bk-section-title">From Current Site To Live Concept in 48 Hours</h2>
+        <p class="bk-section-subtitle">No endless meetings, no retainers, and zero upfront investment required.</p>
+      </div>
+
+      <div class="bk-steps-grid">
+        <!-- Step 1 -->
+        <div class="bk-step-card">
+          <div>
+            <div class="bk-step-top">
+              <span class="bk-step-num">01</span>
+              <span class="bk-step-badge">Instant</span>
+            </div>
+            <h3>Submit URL & Friction Audit</h3>
+            <p>We analyze your public site, diagnose page speed bottlenecks, and pinpoint why current traffic isn't calling.</p>
+          </div>
+          <ul class="bk-step-bullets">
+            <li>✓ Speed baseline test</li>
+            <li>✓ Review & trust extraction</li>
+            <li>✓ Competitor gap scan</li>
+          </ul>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="bk-step-card">
+          <div>
+            <div class="bk-step-top">
+              <span class="bk-step-num">02</span>
+              <span class="bk-step-badge">100% Free</span>
+            </div>
+            <h3>AI Smart Concept & Rebuild</h3>
+            <p>Our engineers craft a modern, high-contrast homepage featuring dedicated service silos and instant callback capture.</p>
+          </div>
+          <ul class="bk-step-bullets">
+            <li>✓ High mobile conversion</li>
+            <li>✓ AI chat assistant ready</li>
+            <li>✓ 1-Tap call floating bar</li>
+          </ul>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="bk-step-card">
+          <div>
+            <div class="bk-step-top">
+              <span class="bk-step-num">03</span>
+              <span class="bk-step-badge">Zero Risk</span>
+            </div>
+            <h3>Review Your Interactive X-Ray</h3>
+            <p>Access your private portal to see a live working preview of your new homepage alongside local search rankings.</p>
+          </div>
+          <ul class="bk-step-bullets">
+            <li>✓ Live interactive preview</li>
+            <li>✓ Local ranking grid</li>
+            <li>✓ Conversion comparison</li>
+          </ul>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="bk-step-card">
+          <div>
+            <div class="bk-step-top">
+              <span class="bk-step-num">04</span>
+              <span class="bk-step-badge">Your Choice</span>
+            </div>
+            <h3>Launch On Your Domain</h3>
+            <p>Love the new design? We connect your domain and launch within 2-4 weeks. Not ready? Keep the concept free.</p>
+          </div>
+          <ul class="bk-step-bullets">
+            <li>✓ Connected to your domain</li>
+            <li>✓ 100% client-owned code</li>
+            <li>✓ Zero ongoing lock-in</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. FREQUENTLY ASKED QUESTIONS -->
+  <section class="bk-faq-section">
+    <div class="bk-container">
+      <div class="bk-section-heading">
+        <div class="bk-section-tag">Clear Answers</div>
+        <h2 class="bk-section-title">Frequently Asked Questions</h2>
+        <p class="bk-section-subtitle">Everything you need to know about our free redesign process.</p>
+      </div>
+
+      <div class="bk-faq-list">
+        <details class="bk-faq-item" open>
+          <summary class="bk-faq-question">
+            <span>Is this really 100% free? What's the catch?</span>
+            <svg class="bk-faq-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </summary>
+          <div class="bk-faq-answer">
+            Yes, it is 100% free. There is no catch, no credit card required, and no high-pressure sales pitch. We believe in demonstrating our value first by building a real, working concept for your business. If you love it and want to launch it live, we can discuss taking it live. If not, you walk away with zero hard feelings and keep the audit insights.
+          </div>
+        </details>
+
+        <details class="bk-faq-item">
+          <summary class="bk-faq-question">
+            <span>Will this affect my current website or cause downtime?</span>
+            <svg class="bk-faq-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </summary>
+          <div class="bk-faq-answer">
+            Not at all. We only inspect your public website pages from the outside. Your live website remains completely untouched and uninterrupted. We host your redesign concept on our private staging environment for your eyes only.
+          </div>
+        </details>
+
+        <details class="bk-faq-item">
+          <summary class="bk-faq-question">
+            <span>How can you deliver a custom concept in just 48 hours?</span>
+            <svg class="bk-faq-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </summary>
+          <div class="bk-faq-answer">
+            We use specialized extraction tools and our pre-built high-performance component library. We immediately pull your real reviews, service offerings, business hours, and phone numbers, allowing our design team to focus entirely on conversion psychology and mobile speed.
+          </div>
+        </details>
+
+        <details class="bk-faq-item">
+          <summary class="bk-faq-question">
+            <span>What happens after I receive my concept link?</span>
+            <svg class="bk-faq-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </summary>
+          <div class="bk-faq-answer">
+            You will receive a private link to your Interactive X-Ray and live prototype. You can test it on your smartphone, review the speed scores, and see how it converts visitors. You decide if and when you want to proceed.
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. FINAL BOTTOM CALL TO ACTION -->
+  <section class="bk-bottom-cta">
+    <div class="bk-container">
+      <h2>Ready to See Your Website at Full Power?</h2>
+      <p>Stop losing phone calls and leads to outdated design. Get your custom concept in 48 hours.</p>
+      <button type="button" class="bk-intake-btn" style="margin: 0 auto; display: inline-flex;" onclick="document.getElementById('bk-hero-url-input').focus(); document.getElementById('bk-hero-url-input').scrollIntoView({behavior: 'smooth', block: 'center'});">
+        <span>Claim My Free Redesign Now</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- 7. LIGHTWEIGHT FOOTER -->
+  <footer class="bk-footer">
+    <div class="bk-container">
+      <div class="bk-footer-grid">
+        <div>
+          <img src="https://barakahsoft.com/wp-content/uploads/2026/01/Logo1.png" alt="BarakahSoft" width="130" height="26" style="margin-bottom: 14px;" />
+          <p>BarakahSoft creates human-reviewed homepage redesigns for businesses that want to look as good online as they do in real life.</p>
+        </div>
+        <div class="bk-footer-links">
+          <h5>The Offer</h5>
+          <p>Free homepage redesign</p>
+          <p>Built around your real business</p>
+          <p>No obligation to continue</p>
+        </div>
+        <div class="bk-footer-links">
+          <h5>Contact</h5>
+          <a href="tel:+13075336678">+1 (307) 533-6678</a>
+          <a href="mailto:hello@barakahsoft.com">hello@barakahsoft.com</a>
+          <p style="margin-top: 6px;">30 N. Gould St. Ste R, Sheridan, WY 82801</p>
+        </div>
+      </div>
+      <div class="bk-footer-bottom">
+        <span>Copyright © 2026 BarakahSoft LLC. All Rights Reserved.</span>
+        <div style="display: flex; gap: 16px;">
+          <a href="https://barakahsoft.com/terms-and-conditions/">Terms</a>
+          <a href="https://barakahsoft.com/privacy-policy/">Privacy</a>
+          <a href="https://barakahsoft.com/refund-policy/">Refund policy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- ======================================================================= -->
+<!-- STEP 2 INTAKE MODAL (PORTALED DIRECTLY TO BODY FOR RELIABLE OVERLAY)    -->
+<!-- ======================================================================= -->
+<div id="bk-modal-overlay">
+  <div id="bk-modal-box">
+    <div id="bk-modal-header">
+      <button type="button" id="bk-modal-close" onclick="bkCloseModal()" aria-label="Close dialog">&times;</button>
+      <span id="bk-modal-badge">Free Lead-Machine Audit</span>
+      <h3 id="bk-modal-title">Where should we send your plan?</h3>
+      <p id="bk-modal-desc">We'll build a custom concept for <strong id="bk-modal-domain-name">your site</strong> and email it in 48 hours.</p>
+    </div>
+
+    <!-- Active Form View -->
+    <div id="bk-modal-body">
+      <form id="bk-step2-form" onsubmit="bkHandleStep2(event)">
+        <!-- Problem Selection -->
+        <div class="bk-field-group">
+          <label class="bk-field-label">
+            What is not working right now?
+            <span>(Pick any — it shapes what we build)</span>
+          </label>
+          <div class="bk-pills-wrap" id="bk-problem-pills">
+            <button type="button" class="bk-pill-btn" onclick="bkToggleProblem(this, 'Not enough leads or enquiries')">Not enough leads or enquiries</button>
+            <button type="button" class="bk-pill-btn" onclick="bkToggleProblem(this, 'Nobody finds us on Google')">Nobody finds us on Google</button>
+            <button type="button" class="bk-pill-btn" onclick="bkToggleProblem(this, 'Invisible in AI search')">Invisible in AI search</button>
+            <button type="button" class="bk-pill-btn" onclick="bkToggleProblem(this, 'Outdated design / looks wrong on phones')">Outdated design / looks wrong on phones</button>
+            <button type="button" class="bk-pill-btn" onclick="bkToggleProblem(this, 'Visitors don\'t convert into calls')">Visitors don't convert into calls</button>
+            <button type="button" class="bk-pill-btn" onclick="bkToggleProblem(this, 'Other issue — we\'ll check for you')">Other issue — we'll check for you</button>
+          </div>
+        </div>
+
+        <!-- Name -->
+        <div class="bk-field-group">
+          <label class="bk-field-label" for="bk-input-name">First name *</label>
+          <input type="text" id="bk-input-name" class="bk-text-input" placeholder="e.g. Alex" required />
+        </div>
+
+        <!-- Email -->
+        <div class="bk-field-group">
+          <label class="bk-field-label" for="bk-input-email">Email address *</label>
+          <input type="email" id="bk-input-email" class="bk-text-input" placeholder="alex@company.com" required />
+        </div>
+
+        <!-- Phone -->
+        <div class="bk-field-group">
+          <label class="bk-field-label" for="bk-input-phone">Phone number <span>(for 1-tap call confirmation)</span></label>
+          <input type="tel" id="bk-input-phone" class="bk-text-input" placeholder="(555) 000-0000" />
+        </div>
+
+        <!-- TCPA Consent -->
+        <label class="bk-consent-label">
+          <input type="checkbox" id="bk-input-consent" required />
+          <span>I agree to be contacted by email, call, or text about this redesign. Consent is not a condition of purchase.</span>
+        </label>
+
+        <!-- Error alert -->
+        <div class="bk-alert-error" id="bk-form-error"></div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="bk-submit-btn" id="bk-submit-btn">
+          <span class="bk-spinner" id="bk-submit-spinner"></span>
+          <span id="bk-submit-text">Start My Free Audit →</span>
+        </button>
+      </form>
+
+      <!-- Success State -->
+      <div class="bk-state-box bk-state-success" id="bk-success-box">
+        <div class="bk-state-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <h4 class="bk-state-title">Your Audit Is In Motion!</h4>
+        <p class="bk-state-desc">
+          We've received your submission for <strong id="bk-success-domain">your site</strong>.<br />
+          Our engineering team is mapping your call opportunities and building your private 48-hour preview. Check your inbox shortly for confirmation!
+        </p>
+      </div>
+
+      <!-- Duplicate State -->
+      <div class="bk-state-box bk-state-duplicate" id="bk-duplicate-box">
+        <div class="bk-state-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        </div>
+        <h4 class="bk-state-title">Already Under Review</h4>
+        <p class="bk-state-desc">
+          This website has already been submitted to BarakahSoft and is currently in our design queue.<br /><br />
+          If you need to submit a different business, please try another URL.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- LIGHTWEIGHT CLIENT CONTROLLER JAVASCRIPT                                -->
+<!-- ======================================================================= -->
+<script>
+  (function() {
+    // Target Next.js endpoint on Vercel
+    var API_ENDPOINT = 'https://redesign.barakahsoft.com/api/intake';
+
+    var currentUrl = '';
+    var selectedProblems = [];
+
+    // Step 1 Submission: Validate URL and open Step 2 Modal
+    window.bkHandleStep1 = function(event) {
+      if (event) event.preventDefault();
+      var input = document.getElementById('bk-hero-url-input');
+      var raw = (input ? input.value : '').trim();
+
+      if (!raw) return;
+
+      // Clean display domain for modal header
+      var cleanedDomain = raw.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0];
+      currentUrl = raw;
+
+      document.getElementById('bk-modal-domain-name').textContent = cleanedDomain;
+      document.getElementById('bk-modal-overlay').classList.add('bk-active');
+      document.body.style.overflow = 'hidden';
+
+      // Reset any previous form states
+      document.getElementById('bk-step2-form').style.display = 'block';
+      document.getElementById('bk-success-box').style.display = 'none';
+      document.getElementById('bk-duplicate-box').style.display = 'none';
+      document.getElementById('bk-form-error').style.display = 'none';
+
+      setTimeout(function() {
+        var nameInput = document.getElementById('bk-input-name');
+        if (nameInput) nameInput.focus();
+      }, 100);
+    };
+
+    // Close Modal
+    window.bkCloseModal = function() {
+      document.getElementById('bk-modal-overlay').classList.remove('bk-active');
+      document.body.style.overflow = '';
+    };
+
+    // Close modal if user clicks outside box
+    document.getElementById('bk-modal-overlay').addEventListener('click', function(e) {
+      if (e.target === this) {
+        bkCloseModal();
+      }
+    });
+
+    // Toggle problem pills
+    window.bkToggleProblem = function(btn, problemText) {
+      var idx = selectedProblems.indexOf(problemText);
+      if (idx > -1) {
+        selectedProblems.splice(idx, 1);
+        btn.classList.remove('bk-selected');
+      } else {
+        selectedProblems.push(problemText);
+        btn.classList.add('bk-selected');
+      }
+    };
+
+    // Step 2 Submission: POST to /api/intake
+    window.bkHandleStep2 = async function(event) {
+      if (event) event.preventDefault();
+
+      var name = document.getElementById('bk-input-name').value.trim();
+      var email = document.getElementById('bk-input-email').value.trim();
+      var phone = document.getElementById('bk-input-phone').value.trim();
+      var consent = document.getElementById('bk-input-consent').checked;
+
+      var errorBox = document.getElementById('bk-form-error');
+      var submitBtn = document.getElementById('bk-submit-btn');
+      var spinner = document.getElementById('bk-submit-spinner');
+      var submitText = document.getElementById('bk-submit-text');
+
+      errorBox.style.display = 'none';
+      errorBox.textContent = '';
+
+      if (!currentUrl || !name || !email || !consent) {
+        errorBox.textContent = 'Please fill out all required fields and accept terms.';
+        errorBox.style.display = 'block';
+        return;
+      }
+
+      // UI Loading state
+      submitBtn.disabled = true;
+      spinner.style.display = 'inline-block';
+      submitText.textContent = 'Mapping Your Lead Flow...';
+
+      var eventId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('ev_' + Date.now());
+
+      var payload = {
+        source_url: currentUrl,
+        source: 'home',
+        help_needed: selectedProblems.length > 0 ? selectedProblems : ["Other issue — we'll check for you"],
+        anything_else: '',
+        name: name,
+        email: email,
+        phone: phone,
+        tcpa_consent: consent,
+        event_id: eventId
+      };
+
+      try {
+        var res = await fetch(API_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        var data = await res.json().catch(function() { return {}; });
+
+        if (res.status === 409 || data.duplicate) {
+          document.getElementById('bk-step2-form').style.display = 'none';
+          document.getElementById('bk-duplicate-box').style.display = 'block';
+          return;
+        }
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Unable to submit website. Please check details and try again.');
+        }
+
+        // Fire Meta Pixel if installed on WordPress
+        if (typeof window.fbq === 'function') {
+          window.fbq('track', 'Lead', {
+            content_name: 'free_homepage_redesign',
+            source_url: currentUrl
+          }, { eventID: eventId });
+        }
+
+        // Success View
+        var cleanedDomain = currentUrl.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0];
+        document.getElementById('bk-success-domain').textContent = cleanedDomain;
+        document.getElementById('bk-step2-form').style.display = 'none';
+        document.getElementById('bk-success-box').style.display = 'block';
+
+      } catch (err) {
+        errorBox.textContent = err.message || 'Something went wrong. Please try again.';
+        errorBox.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        spinner.style.display = 'none';
+        submitText.textContent = 'Start My Free Audit →';
+      }
+    };
+  })();
+</script>

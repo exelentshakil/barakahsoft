@@ -7,10 +7,37 @@ import { isLeadProblem } from "@/lib/lead-problems";
 import { inngest } from "@/inngest/client";
 import { generateUniqueDomainSlug, normaliseWebsiteHost } from "@/lib/domain-slug";
 
+function getCorsHeaders(req: Request): HeadersInit {
+  const origin = req.headers.get("origin") || "";
+  const isAllowed =
+    origin === "https://barakahsoft.com" ||
+    origin === "https://www.barakahsoft.com" ||
+    origin.endsWith(".barakahsoft.com") ||
+    origin === "http://localhost:3000";
+
+  return {
+    "Access-Control-Allow-Origin": isAllowed ? origin : "https://barakahsoft.com",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Max-Age": "86400",
+  };
+}
+
+export async function OPTIONS(req: Request) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: getCorsHeaders(req),
+  });
+}
+
 export async function POST(req: Request) {
+  const corsHeaders = getCorsHeaders(req);
   const body = await req.json().catch(() => null);
   if (!body?.source_url || !body?.name || !body?.email || !body?.tcpa_consent) {
-    return NextResponse.json({ error: "source_url, name, email, and consent are required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "source_url, name, email, and consent are required" },
+      { status: 400, headers: corsHeaders }
+    );
   }
 
   try {
@@ -26,7 +53,7 @@ export async function POST(req: Request) {
       if (duplicate) {
         return NextResponse.json(
           { error: "You have already submitted this website. We are reviewing it now. Please try a different website.", duplicate: true },
-          { status: 409 }
+          { status: 409, headers: corsHeaders }
         );
       }
     }
@@ -53,7 +80,7 @@ export async function POST(req: Request) {
       .single();
 
     if (error || !lead) {
-      return NextResponse.json({ error: error?.message ?? "Could not create lead" }, { status: 500 });
+      return NextResponse.json({ error: error?.message ?? "Could not create lead" }, { status: 500, headers: corsHeaders });
     }
 
     // Best-effort side effects — a flaky notification provider
@@ -77,9 +104,9 @@ export async function POST(req: Request) {
       if (r.status === "rejected") console.error("[intake] side effect failed", r.reason);
     });
 
-    return NextResponse.json({ lead_id: lead.id, slug: lead.slug });
+    return NextResponse.json({ lead_id: lead.id, slug: lead.slug }, { status: 200, headers: corsHeaders });
   } catch (err) {
     console.error("[intake] unhandled error", err);
-    return NextResponse.json({ error: "Something went wrong — please try again" }, { status: 500 });
+    return NextResponse.json({ error: "Something went wrong — please try again" }, { status: 500, headers: corsHeaders });
   }
 }
