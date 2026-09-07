@@ -200,13 +200,13 @@ const VISUAL_JOURNEY = [
 
 function ConceptBrowserCard({ concept }: { concept: typeof ROW_1_CONCEPTS[0] }) {
   return (
-    <div className="group w-[360px] sm:w-[420px] overflow-hidden rounded-2xl border border-[#c8ddec] bg-white/90 backdrop-blur-sm shadow-[0_12px_36px_rgba(7,40,77,0.08)] transition duration-300 hover:-translate-y-2 hover:border-[#0c68c8] hover:shadow-[0_24px_60px_rgba(7,40,77,0.16)]">
+    <div className="group w-[340px] sm:w-[380px] overflow-hidden rounded-2xl border border-[#c8ddec] bg-white shadow-[0_8px_24px_rgba(7,40,77,0.06)] transition duration-200 hover:-translate-y-1 hover:border-[#0c68c8]">
       {/* Browser Window Header */}
-      <div className="flex items-center justify-between border-b border-[#e5e7f2] bg-[#f4f7fb]/90 px-4 py-2.5 text-[11px] text-[#777588]">
+      <div className="flex items-center justify-between border-b border-[#e5e7f2] bg-[#f4f7fb] px-4 py-2 text-[11px] text-[#777588]">
         <div className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f56]" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#ffbd2e]" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#27c93f]" />
+          <span className="h-2 w-2 rounded-full bg-[#ff5f56]" />
+          <span className="h-2 w-2 rounded-full bg-[#ffbd2e]" />
+          <span className="h-2 w-2 rounded-full bg-[#27c93f]" />
           <span className="ml-2 truncate font-mono text-[10px] text-[#42506a]">{concept.url}</span>
         </div>
         <span className="rounded bg-white px-2 py-0.5 text-[10px] font-bold text-[#0c68c8] border border-[#d9e8f4]">
@@ -219,12 +219,16 @@ function ConceptBrowserCard({ concept }: { concept: typeof ROW_1_CONCEPTS[0] }) 
         <img
           src={concept.image}
           alt={concept.title}
-          className="h-full w-full object-cover object-top transition duration-700 group-hover:scale-105"
+          loading="lazy"
+          decoding="async"
+          width="380"
+          height="238"
+          className="h-full w-full object-cover object-top"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#07284d]/60 via-transparent to-transparent opacity-60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#07284d]/50 via-transparent to-transparent opacity-60 pointer-events-none" />
       </div>
 
-      <div className="p-4 space-y-0.5">
+      <div className="p-3.5 space-y-0.5">
         <h3 className="font-bold text-sm text-[#07284d]">{concept.title}</h3>
         <p className="text-xs text-[#60778d] truncate">{concept.headline}</p>
       </div>
@@ -246,13 +250,9 @@ export function LeadEngineLanding() {
           aria-hidden="true"
         />
 
-        {/* Ambient Sparkles & Glowing Orbs */}
-        <div className="pointer-events-none absolute -right-24 -top-32 h-[34rem] w-[34rem] rounded-full bg-[#dff0ff] blur-3xl opacity-80" />
-        <div className="pointer-events-none absolute -left-24 top-48 h-[32rem] w-[32rem] rounded-full bg-[#fff5c0]/60 blur-3xl opacity-70" />
-
-        {/* Floating Sparkle Micro-Accents */}
-        <div className="pointer-events-none absolute left-[12%] top-28 hidden h-2.5 w-2.5 rounded-full bg-[#ffd12d] shadow-[0_0_0_8px_rgba(255,209,45,0.18)] lg:block animate-pulse" />
-        <div className="pointer-events-none absolute right-[15%] top-40 hidden h-2 w-2 rounded-full bg-[#0c68c8] shadow-[0_0_0_8px_rgba(12,104,200,0.15)] lg:block" />
+        {/* Floating Sparkle Micro-Accents (Zero blur/GPU cost) */}
+        <div className="pointer-events-none absolute left-[12%] top-28 hidden h-2 w-2 rounded-full bg-[#ffd12d] shadow-[0_0_0_6px_rgba(255,209,45,0.2)] lg:block" />
+        <div className="pointer-events-none absolute right-[15%] top-40 hidden h-2 w-2 rounded-full bg-[#0c68c8] shadow-[0_0_0_6px_rgba(12,104,200,0.15)] lg:block" />
         <div className="pointer-events-none absolute bottom-16 left-[20%] hidden h-2 w-2 rounded-full bg-[#07284d] shadow-[0_0_0_6px_rgba(7,40,77,0.12)] lg:block" />
 
         <div className="relative mx-auto max-w-4xl px-6 text-center space-y-3 lg:space-y-6">
@@ -293,11 +293,7 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 3. TEAM SHOWCASE */}
-      <LandingTeamShowcase />
-      <LandingIndustries />
-
-      {/* 4. 3-STEP EVIDENCE VALUE BANNER (High-Contrast Navy & Gold) */}
+      {/* 3. 3-STEP EVIDENCE VALUE BANNER (High-Contrast Navy & Gold) */}
       <section className="relative overflow-hidden border-b border-[#d9e8f4] bg-[#07284d] py-10 text-white shadow-inner">
         {/* Subtle grid on dark */}
         <div
@@ -388,7 +384,7 @@ export function LeadEngineLanding() {
 
         {/* The standard behind everything above. */}
         <div className="relative mx-auto max-w-5xl px-6">
-          <div className="rounded-2xl border border-[#c8ddec] bg-white/80 p-6 backdrop-blur-sm sm:p-8">
+          <div className="rounded-2xl border border-[#c8ddec] bg-white p-6 sm:p-8">
             <div className="grid gap-6 sm:grid-cols-[1.1fr_0.9fr] sm:items-center">
               <div className="space-y-2">
                 <h3 className="font-sans text-xl font-extrabold tracking-tight text-[#07284d] sm:text-2xl">
@@ -439,7 +435,7 @@ export function LeadEngineLanding() {
               return (
                 <div
                   key={item.step}
-                  className="group relative flex flex-col justify-between rounded-2xl border border-[#c8ddec] bg-white/90 backdrop-blur-sm p-6 shadow-[0_8px_24px_rgba(7,40,77,0.05)] transition duration-300 hover:-translate-y-2 hover:border-[#0c68c8] hover:shadow-[0_20px_45px_rgba(7,40,77,0.12)]"
+                  className="group relative flex flex-col justify-between rounded-2xl border border-[#c8ddec] bg-white p-6 shadow-[0_8px_24px_rgba(7,40,77,0.05)] transition duration-300 hover:-translate-y-2 hover:border-[#0c68c8] hover:shadow-[0_20px_45px_rgba(7,40,77,0.12)]"
                 >
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -503,8 +499,7 @@ export function LeadEngineLanding() {
           </div>
 
           <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-b from-[#0a325e] to-[#07284d] p-8 sm:p-10 shadow-[0_24px_60px_rgba(7,40,77,0.25)] text-white space-y-6">
-            {/* Ambient gold glow in card corner */}
-            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#ffd12d]/15 blur-2xl" />
+
 
             <div className="relative flex items-center justify-between border-b border-white/15 pb-4">
               <span className="font-bold text-base text-white">48-Hour Free Deliverable Scope</span>
@@ -547,7 +542,13 @@ export function LeadEngineLanding() {
         </div>
       </section>
 
-      {/* 8. FAQ ACCORDION */}
+      {/* 7. INDUSTRIES COVERAGE */}
+      <LandingIndustries />
+
+      {/* 8. TEAM SHOWCASE */}
+      <LandingTeamShowcase />
+
+      {/* 9. FAQ ACCORDION */}
       <FAQAccordion />
 
       {/* 9. BOTTOM CALL-TO-ACTION BANNER (High-Tech Navy Glow) */}

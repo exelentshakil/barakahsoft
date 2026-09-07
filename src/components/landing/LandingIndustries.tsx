@@ -1,90 +1,48 @@
 import { Briefcase, Building, HeartPulse, Home, Scale, Store } from "lucide-react";
 
 const INDUSTRIES = [
-  { icon: Home, label: "Home Services", orbit: "orbit-1", color: "text-emerald-500", bg: "bg-emerald-50" },
-  { icon: Store, label: "Franchise", orbit: "orbit-2", color: "text-amber-500", bg: "bg-amber-50" },
-  { icon: Scale, label: "Legal & Finance", orbit: "orbit-3", color: "text-indigo-500", bg: "bg-indigo-50" },
-  { icon: HeartPulse, label: "Healthcare", orbit: "orbit-2", color: "text-rose-500", bg: "bg-rose-50" },
-  { icon: Building, label: "Business to Business", orbit: "orbit-4", color: "text-blue-500", bg: "bg-blue-50" },
-  { icon: Briefcase, label: "Small Business", orbit: "orbit-3", color: "text-cyan-500", bg: "bg-cyan-50" },
+  { icon: Home, label: "Home Services", description: "Roofing, HVAC, Plumbing, Electrical & Remodeling", color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
+  { icon: Store, label: "Franchises & Retail", description: "Multi-location storefronts & specialty local brands", color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
+  { icon: Scale, label: "Legal & Professional", description: "Attorneys, CPA firms & financial advisory practices", color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-100" },
+  { icon: HeartPulse, label: "Healthcare & Med", description: "Private clinics, dental practices & therapy centers", color: "text-rose-600", bg: "bg-rose-50", border: "border-rose-100" },
+  { icon: Building, label: "B2B & Commercial", description: "Logistics, industrial equipment & enterprise contractors", color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-100" },
+  { icon: Briefcase, label: "High-Ticket Services", description: "Luxury moving, custom builders & high-value sales", color: "text-cyan-600", bg: "bg-cyan-50", border: "border-cyan-100" },
 ];
 
 export function LandingIndustries() {
   return (
-    <>
-      <style suppressHydrationWarning>{
-        `
-        @keyframes spin-reverse {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(-360deg); }
-        }
-        `
-      }</style>
-      <section className="relative overflow-hidden border-t border-[#d9e8f4] bg-white py-24 lg:py-32">
-      <div className="mx-auto max-w-6xl px-6 relative z-10">
-        <div className="text-center mb-16">
-          <p className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Global Coverage</p>
-          <h2 className="font-sans text-4xl font-semibold leading-tight tracking-[-0.04em] text-[#07284d] sm:text-5xl">
-            Industries We Serve
+    <section className="border-t border-[#d9e8f4] bg-white py-16 lg:py-24">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="text-center mb-12">
+          <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">Proven Vertical Coverage</p>
+          <h2 className="font-sans text-3xl font-extrabold tracking-tight text-[#07284d] sm:text-4xl">
+            Industries We Build & Optimize For
           </h2>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-[#60778d]">
-            We deploy bespoke AI-driven websites and conversion systems across every major vertical,
-            tailoring the strategy, design, and structure to your specific industry.
+          <p className="mx-auto mt-3 max-w-2xl text-sm text-[#60778d] sm:text-base">
+            Every trade has unique conversion triggers. We build bespoke layouts tailored to your exact buyers, search intents, and local market.
           </p>
         </div>
 
-        <div className="relative mx-auto h-[500px] max-w-[800px] overflow-hidden sm:h-[650px]">
-          {/* Sun / Core */}
-          <div className="absolute left-1/2 top-1/2 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-none z-20 overflow-hidden border border-[#e2e8f0]">
-            <img src="https://redesign.barakahsoft.com/icon.png" alt="BarakahSoft" className="h-16 w-16 object-contain" />
-          </div>
-
-          {/* Orbit Rings */}
-          <div className="absolute left-1/2 top-1/2 h-[200px] w-[200px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#e2e8f0]" />
-          <div className="absolute left-1/2 top-1/2 h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#e2e8f0] opacity-70" />
-          <div className="absolute left-1/2 top-1/2 h-[460px] w-[460px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#e2e8f0] opacity-40 hidden sm:block" />
-          <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#e2e8f0] opacity-20 hidden sm:block" />
-
-          {/* Orbits */}
-          <div className="absolute inset-0">
-            {INDUSTRIES.map((ind, index) => {
-              // Radiuses match the rings: 100px, 160px, 230px, 300px
-              const radius = ind.orbit === 'orbit-1' ? 100 : ind.orbit === 'orbit-2' ? 160 : ind.orbit === 'orbit-3' ? 230 : 300;
-              const duration = ind.orbit === 'orbit-1' ? '15s' : ind.orbit === 'orbit-2' ? '25s' : ind.orbit === 'orbit-3' ? '35s' : '45s';
-              // Distribute evenly around the circle initially (360 degrees / 6 items = 60 degrees apart)
-              const startAngle = (360 / INDUSTRIES.length) * index;
-
-              return (
-                <div
-                  key={ind.label}
-                  className="absolute left-1/2 top-1/2 flex h-0 w-0 items-center justify-center"
-                  style={{ transform: `rotate(${startAngle}deg)` }}
-                >
-                  <div
-                    className="flex h-0 w-0 items-center justify-center"
-                    style={{ animation: `spin ${duration} linear infinite` }}
-                  >
-                    <div style={{ transform: `translateX(${radius}px)` }}>
-                      <div style={{ transform: `rotate(-${startAngle}deg)` }}>
-                        <div
-                          className="flex h-[80px] w-[80px] flex-col items-center justify-center gap-1.5 rounded-full border border-white bg-white/90 shadow-md backdrop-blur-sm"
-                          style={{ animation: `spin-reverse ${duration} linear infinite` }}
-                        >
-                          <div className={`flex h-8 w-8 items-center justify-center rounded-full ${ind.bg} ${ind.color}`}>
-                            <ind.icon className="h-4 w-4 animate-[spin_12s_linear_infinite]" />
-                          </div>
-                          <span className="text-center text-[9px] font-bold leading-tight text-[#07284d] px-2">{ind.label}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {INDUSTRIES.map((ind) => {
+            const Icon = ind.icon;
+            return (
+              <div
+                key={ind.label}
+                className="flex items-start gap-4 rounded-2xl border border-[#d9e8f4] bg-[#f8fbfe] p-5 transition hover:border-[#0c68c8] hover:bg-white hover:shadow-[0_8px_24px_rgba(7,40,77,0.06)]"
+              >
+                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${ind.bg} ${ind.color} ${ind.border} border`}>
+                  <Icon className="h-5 w-5" />
                 </div>
-              );
-            })}
-          </div>
+                <div>
+                  <h3 className="font-bold text-base text-[#07284d]">{ind.label}</h3>
+                  <p className="mt-1 text-xs leading-relaxed text-[#60778d]">{ind.description}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
-    </>
   );
 }
