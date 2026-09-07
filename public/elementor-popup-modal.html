@@ -1,0 +1,703 @@
+<!-- ==========================================================================
+     BARAKAHSOFT POPUP MODAL (STANDALONE ELEMENTOR / WORDPRESS WIDGET)
+     - 100% Isolated CSS with !important guards against WordPress theme bleed
+     - Can be triggered anywhere on the page:
+         * Via JS: bkOpenModal('example.com') or bkOpenModal()
+         * Via HTML: <button class="bk-open-modal" data-bk-url="example.com">
+         * Via Selector: <button class="bk-open-modal" data-bk-target="#my-url-input">
+     - Submits leads directly to https://redesign.barakahsoft.com/api/intake
+     - Supports Meta Pixel (fbq) tracking with unique event_id deduplication
+     - Zero external libraries or jQuery required (Pure Vanilla JS + CSS)
+     ========================================================================== -->
+<div id="bk-modal-overlay" class="bk-portal-modal" aria-hidden="true" role="dialog" aria-modal="true">
+  <style>
+    /* ==========================================================================
+       SUPER SPECIFIC SCOPED CSS: 100% IMMUNE TO ASTRA / ELEMENTOR / DIVI STYLES
+       ========================================================================== */
+    #bk-modal-overlay,
+    #bk-modal-overlay * {
+      box-sizing: border-box !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+      -webkit-font-smoothing: antialiased !important;
+      -moz-osx-font-smoothing: grayscale !important;
+      letter-spacing: normal !important;
+      line-height: 1.5 !important;
+    }
+
+    /* Overlay Backdrop */
+    #bk-modal-overlay {
+      display: none !important;
+      position: fixed !important;
+      inset: 0 !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      background: rgba(7, 40, 77, 0.76) !important;
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
+      z-index: 99999999 !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 16px !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+    }
+    #bk-modal-overlay.bk-active {
+      display: flex !important;
+    }
+
+    /* Modal Box */
+    #bk-modal-overlay #bk-modal-box {
+      background: #ffffff !important;
+      background-color: #ffffff !important;
+      width: 100% !important;
+      max-width: 520px !important;
+      border-radius: 20px !important;
+      box-shadow: 0 25px 65px -10px rgba(7, 40, 77, 0.45), 0 0 0 1px rgba(12, 104, 200, 0.18) !important;
+      border: 1px solid #d9e8f4 !important;
+      overflow: hidden !important;
+      animation: bkModalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+      max-height: 94vh !important;
+      overflow-y: auto !important;
+      position: relative !important;
+      margin: auto !important;
+    }
+    @keyframes bkModalIn {
+      from {
+        opacity: 0;
+        transform: translateY(22px) scale(0.96);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* Modal Header */
+    #bk-modal-overlay #bk-modal-header {
+      background: linear-gradient(180deg, #f8fbfe 0%, #ffffff 100%) !important;
+      border-bottom: 1px solid #e2edf7 !important;
+      padding: 24px 28px 18px 28px !important;
+      position: relative !important;
+      text-align: left !important;
+    }
+
+    /* Close Button */
+    #bk-modal-overlay button#bk-modal-close {
+      position: absolute !important;
+      top: 18px !important;
+      right: 18px !important;
+      background: #f1f5f9 !important;
+      background-color: #f1f5f9 !important;
+      border: 1px solid #cbd5e1 !important;
+      font-size: 20px !important;
+      font-weight: 400 !important;
+      line-height: 1 !important;
+      color: #64748b !important;
+      cursor: pointer !important;
+      border-radius: 50% !important;
+      width: 34px !important;
+      height: 34px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-shadow: none !important;
+      text-transform: none !important;
+      transition: all 0.15s ease !important;
+      outline: none !important;
+    }
+    #bk-modal-overlay button#bk-modal-close:hover {
+      background: #e2e8f0 !important;
+      color: #07284d !important;
+      transform: scale(1.05) !important;
+    }
+
+    /* Badge & Titles */
+    #bk-modal-overlay #bk-modal-badge {
+      font-size: 11px !important;
+      font-weight: 800 !important;
+      color: #0c68c8 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.12em !important;
+      margin-bottom: 8px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      background: #eef6fd !important;
+      padding: 4px 11px !important;
+      border-radius: 9999px !important;
+      border: 1px solid #d9eaf7 !important;
+    }
+    #bk-modal-overlay #bk-modal-title {
+      font-size: 22px !important;
+      font-weight: 800 !important;
+      color: #07284d !important;
+      line-height: 1.25 !important;
+      margin-bottom: 6px !important;
+      text-transform: none !important;
+    }
+    #bk-modal-overlay #bk-modal-desc {
+      font-size: 13.5px !important;
+      color: #60778d !important;
+      line-height: 1.45 !important;
+    }
+    #bk-modal-overlay #bk-modal-desc strong {
+      color: #07284d !important;
+      font-weight: 700 !important;
+    }
+
+    /* Modal Body */
+    #bk-modal-overlay #bk-modal-body {
+      padding: 24px 28px 28px 28px !important;
+      background: #ffffff !important;
+    }
+
+    /* Form Fields */
+    #bk-modal-overlay .bk-field-group {
+      margin-bottom: 18px !important;
+      text-align: left !important;
+    }
+    #bk-modal-overlay .bk-field-label {
+      display: block !important;
+      font-size: 13px !important;
+      font-weight: 700 !important;
+      color: #07284d !important;
+      margin-bottom: 7px !important;
+      text-transform: none !important;
+      line-height: 1.3 !important;
+    }
+    #bk-modal-overlay .bk-field-label span {
+      font-weight: 500 !important;
+      color: #64748b !important;
+      font-size: 12px !important;
+      display: inline-block !important;
+    }
+    #bk-modal-overlay input.bk-text-input {
+      width: 100% !important;
+      height: 46px !important;
+      border: 1.5px solid #cbd5e1 !important;
+      border-radius: 10px !important;
+      padding: 0 14px !important;
+      font-size: 14px !important;
+      color: #07284d !important;
+      background: #ffffff !important;
+      background-color: #ffffff !important;
+      outline: none !important;
+      box-shadow: none !important;
+      line-height: normal !important;
+      transition: all 0.15s ease !important;
+    }
+    #bk-modal-overlay input.bk-text-input::placeholder {
+      color: #94a3b8 !important;
+      opacity: 1 !important;
+    }
+    #bk-modal-overlay input.bk-text-input:focus {
+      border-color: #0c68c8 !important;
+      box-shadow: 0 0 0 3px rgba(12, 104, 200, 0.15) !important;
+      background: #ffffff !important;
+    }
+
+    /* Problem Selector Pills */
+    #bk-modal-overlay .bk-pills-wrap {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      gap: 7px !important;
+      margin-top: 6px !important;
+    }
+    #bk-modal-overlay button.bk-pill-btn,
+    #bk-modal-overlay .bk-pill-btn {
+      background: #f1f5f9 !important;
+      background-color: #f1f5f9 !important;
+      border: 1.5px solid #cbd5e1 !important;
+      color: #334155 !important;
+      padding: 7px 13px !important;
+      border-radius: 9999px !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      text-transform: none !important;
+      letter-spacing: normal !important;
+      line-height: 1.35 !important;
+      cursor: pointer !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      text-align: left !important;
+      margin: 0 !important;
+      box-shadow: none !important;
+      outline: none !important;
+      user-select: none !important;
+      transition: all 0.15s ease !important;
+    }
+    #bk-modal-overlay button.bk-pill-btn:hover,
+    #bk-modal-overlay .bk-pill-btn:hover {
+      background: #e2e8f0 !important;
+      background-color: #e2e8f0 !important;
+      border-color: #94a3b8 !important;
+      color: #07284d !important;
+    }
+    #bk-modal-overlay button.bk-pill-btn.bk-selected,
+    #bk-modal-overlay .bk-pill-btn.bk-selected {
+      background: #0c68c8 !important;
+      background-color: #0c68c8 !important;
+      border-color: #0c68c8 !important;
+      color: #ffffff !important;
+      box-shadow: 0 2px 8px rgba(12, 104, 200, 0.28) !important;
+    }
+
+    /* Consent Checkbox */
+    #bk-modal-overlay .bk-consent-label {
+      display: flex !important;
+      align-items: flex-start !important;
+      gap: 10px !important;
+      font-size: 12px !important;
+      color: #5c7186 !important;
+      line-height: 1.45 !important;
+      margin-top: 20px !important;
+      cursor: pointer !important;
+      text-align: left !important;
+    }
+    #bk-modal-overlay .bk-consent-label input {
+      margin-top: 3px !important;
+      width: 16px !important;
+      height: 16px !important;
+      accent-color: #0c68c8 !important;
+      cursor: pointer !important;
+      flex-shrink: 0 !important;
+    }
+
+    /* Submit Button */
+    #bk-modal-overlay button.bk-submit-btn,
+    #bk-modal-overlay #bk-submit-btn {
+      width: 100% !important;
+      height: 50px !important;
+      background: #ffd12d !important;
+      background-color: #ffd12d !important;
+      background-image: linear-gradient(135deg, #ffd12d 0%, #f7bc00 100%) !important;
+      color: #07284d !important;
+      border: none !important;
+      border-radius: 12px !important;
+      font-size: 15px !important;
+      font-weight: 800 !important;
+      text-transform: none !important;
+      letter-spacing: normal !important;
+      cursor: pointer !important;
+      margin-top: 20px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      box-shadow: 0 6px 20px rgba(255, 209, 45, 0.35) !important;
+      transition: all 0.2s ease !important;
+    }
+    #bk-modal-overlay button.bk-submit-btn:hover,
+    #bk-modal-overlay #bk-submit-btn:hover {
+      background: #f7bc00 !important;
+      background-color: #f7bc00 !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 8px 24px rgba(255, 209, 45, 0.45) !important;
+    }
+    #bk-modal-overlay button.bk-submit-btn:disabled,
+    #bk-modal-overlay #bk-submit-btn:disabled {
+      opacity: 0.7 !important;
+      cursor: not-allowed !important;
+      transform: none !important;
+    }
+
+    /* Alert / Error Box */
+    #bk-modal-overlay .bk-alert-error {
+      background: #fdf2f2 !important;
+      border: 1px solid #f8b4b4 !important;
+      color: #9b1c1c !important;
+      font-size: 13px !important;
+      padding: 10px 14px !important;
+      border-radius: 8px !important;
+      margin-top: 14px !important;
+      display: none;
+      text-align: left !important;
+    }
+
+    /* State Boxes (Success & Duplicate) */
+    #bk-modal-overlay .bk-state-box {
+      padding: 36px 24px !important;
+      text-align: center !important;
+      display: none;
+    }
+    #bk-modal-overlay .bk-state-icon {
+      width: 56px !important;
+      height: 56px !important;
+      border-radius: 50% !important;
+      margin: 0 auto 16px auto !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    #bk-modal-overlay .bk-state-success .bk-state-icon {
+      background: #def7ec !important;
+      color: #046c4e !important;
+    }
+    #bk-modal-overlay .bk-state-duplicate .bk-state-icon {
+      background: #e1effe !important;
+      color: #1e429f !important;
+    }
+    #bk-modal-overlay .bk-state-title {
+      font-size: 20px !important;
+      font-weight: 800 !important;
+      color: #07284d !important;
+      margin-bottom: 8px !important;
+      text-transform: none !important;
+    }
+    #bk-modal-overlay .bk-state-desc {
+      font-size: 13.5px !important;
+      color: #60778d !important;
+      line-height: 1.5 !important;
+    }
+    #bk-modal-overlay .bk-state-desc strong {
+      color: #07284d !important;
+      font-weight: 700 !important;
+    }
+
+    /* Loading Spinner */
+    #bk-modal-overlay .bk-spinner {
+      border: 2px solid rgba(7, 40, 77, 0.25) !important;
+      border-top: 2px solid #07284d !important;
+      border-radius: 50% !important;
+      width: 16px !important;
+      height: 16px !important;
+      animation: bkSpin 0.6s linear infinite !important;
+      display: none;
+    }
+    @keyframes bkSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+
+  <div id="bk-modal-box">
+    <!-- Header -->
+    <div id="bk-modal-header">
+      <button type="button" id="bk-modal-close" onclick="bkCloseModal()" aria-label="Close dialog">&times;</button>
+      <span id="bk-modal-badge">Free Lead-Machine Audit</span>
+      <h3 id="bk-modal-title">Where should we send your plan?</h3>
+      <p id="bk-modal-desc">
+        We'll build a custom concept for <strong id="bk-modal-domain-name">your site</strong> and email it in 48 hours.
+      </p>
+    </div>
+
+    <!-- Active Form View -->
+    <div id="bk-modal-body">
+      <form id="bk-step2-form" onsubmit="bkHandleModalSubmit(event)">
+        <!-- Website URL Input (Shows if opened without pre-filled URL) -->
+        <div class="bk-field-group" id="bk-url-field-group">
+          <label class="bk-field-label" for="bk-input-site-url">
+            Your website address *
+            <span>(We analyze public pages only)</span>
+          </label>
+          <input
+            type="text"
+            id="bk-input-site-url"
+            class="bk-text-input"
+            placeholder="e.g. yourcompany.com"
+            required
+            autocomplete="url"
+            oninput="bkUpdateDomainHeading(this.value)"
+          />
+        </div>
+
+        <!-- Problem Selection -->
+        <div class="bk-field-group">
+          <label class="bk-field-label">
+            What is not working right now?
+            <span>(Pick any — it shapes what we build)</span>
+          </label>
+          <div class="bk-pills-wrap" id="bk-problem-pills">
+            <button type="button" class="bk-pill-btn" onclick="bkToggleModalProblem(this, 'Not enough leads or enquiries')">Not enough leads or enquiries</button>
+            <button type="button" class="bk-pill-btn" onclick="bkToggleModalProblem(this, 'Nobody finds us on Google')">Nobody finds us on Google</button>
+            <button type="button" class="bk-pill-btn" onclick="bkToggleModalProblem(this, 'Invisible in AI search')">Invisible in AI search</button>
+            <button type="button" class="bk-pill-btn" onclick="bkToggleModalProblem(this, 'Outdated design / looks wrong on phones')">Outdated design / looks wrong on phones</button>
+            <button type="button" class="bk-pill-btn" onclick="bkToggleModalProblem(this, 'Visitors don\'t convert into calls')">Visitors don't convert into calls</button>
+            <button type="button" class="bk-pill-btn" onclick="bkToggleModalProblem(this, 'Other issue — we\'ll check for you')">Other issue — we'll check for you</button>
+          </div>
+        </div>
+
+        <!-- Name -->
+        <div class="bk-field-group">
+          <label class="bk-field-label" for="bk-input-name">First name *</label>
+          <input type="text" id="bk-input-name" class="bk-text-input" placeholder="e.g. Alex" required />
+        </div>
+
+        <!-- Email -->
+        <div class="bk-field-group">
+          <label class="bk-field-label" for="bk-input-email">Email address *</label>
+          <input type="email" id="bk-input-email" class="bk-text-input" placeholder="alex@company.com" required />
+        </div>
+
+        <!-- Phone -->
+        <div class="bk-field-group">
+          <label class="bk-field-label" for="bk-input-phone">Phone number <span>(for 1-tap call confirmation)</span></label>
+          <input type="tel" id="bk-input-phone" class="bk-text-input" placeholder="(555) 000-0000" />
+        </div>
+
+        <!-- TCPA Consent -->
+        <label class="bk-consent-label">
+          <input type="checkbox" id="bk-input-consent" required />
+          <span>I agree to be contacted by email, call, or text about this redesign. Consent is not a condition of purchase.</span>
+        </label>
+
+        <!-- Error alert -->
+        <div class="bk-alert-error" id="bk-form-error"></div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="bk-submit-btn" id="bk-submit-btn">
+          <span class="bk-spinner" id="bk-submit-spinner"></span>
+          <span id="bk-submit-text">Start My Free Audit &rarr;</span>
+        </button>
+      </form>
+
+      <!-- Success State -->
+      <div class="bk-state-box bk-state-success" id="bk-success-box">
+        <div class="bk-state-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <h4 class="bk-state-title">Your Audit Is In Motion!</h4>
+        <p class="bk-state-desc">
+          We've received your submission for <strong id="bk-success-domain">your site</strong>.<br />
+          Our engineering team is mapping your call opportunities and building your private 48-hour preview. Check your inbox shortly for confirmation!
+        </p>
+      </div>
+
+      <!-- Duplicate State -->
+      <div class="bk-state-box bk-state-duplicate" id="bk-duplicate-box">
+        <div class="bk-state-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        </div>
+        <h4 class="bk-state-title">Already Under Review</h4>
+        <p class="bk-state-desc">
+          This website has already been submitted to BarakahSoft and is currently in our design queue.<br /><br />
+          If you need to submit a different business, please try another URL.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    var API_ENDPOINT = 'https://redesign.barakahsoft.com/api/intake';
+    var currentUrl = '';
+    var selectedProblems = [];
+
+    // Helper: clean raw URL to domain
+    function extractDomain(url) {
+      if (!url) return 'your site';
+      return url.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0] || 'your site';
+    }
+
+    // Public API: open modal with optional URL
+    window.bkOpenModal = function(initialUrl) {
+      var modal = document.getElementById('bk-modal-overlay');
+      if (!modal) return;
+
+      var urlInput = document.getElementById('bk-input-site-url');
+      var domainHeading = document.getElementById('bk-modal-domain-name');
+      var urlGroup = document.getElementById('bk-url-field-group');
+
+      if (initialUrl && typeof initialUrl === 'string' && initialUrl.trim() !== '') {
+        currentUrl = initialUrl.trim();
+        if (urlInput) urlInput.value = currentUrl;
+        if (domainHeading) domainHeading.textContent = extractDomain(currentUrl);
+      } else {
+        currentUrl = urlInput ? urlInput.value.trim() : '';
+        if (domainHeading) domainHeading.textContent = currentUrl ? extractDomain(currentUrl) : 'your site';
+      }
+
+      // Reset views
+      document.getElementById('bk-step2-form').style.display = 'block';
+      document.getElementById('bk-success-box').style.display = 'none';
+      document.getElementById('bk-duplicate-box').style.display = 'none';
+      document.getElementById('bk-form-error').style.display = 'none';
+
+      modal.classList.add('bk-active');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+
+      setTimeout(function() {
+        if (!currentUrl && urlInput) {
+          urlInput.focus();
+        } else {
+          var nameInput = document.getElementById('bk-input-name');
+          if (nameInput) nameInput.focus();
+        }
+      }, 100);
+    };
+
+    // Public API: close modal
+    window.bkCloseModal = function() {
+      var modal = document.getElementById('bk-modal-overlay');
+      if (!modal) return;
+      modal.classList.remove('bk-active');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    };
+
+    // Live heading updater when user types in URL field
+    window.bkUpdateDomainHeading = function(val) {
+      currentUrl = val.trim();
+      var domainHeading = document.getElementById('bk-modal-domain-name');
+      if (domainHeading) {
+        domainHeading.textContent = extractDomain(currentUrl);
+      }
+    };
+
+    // Toggle problem pills
+    window.bkToggleModalProblem = function(btn, text) {
+      var idx = selectedProblems.indexOf(text);
+      if (idx > -1) {
+        selectedProblems.splice(idx, 1);
+        btn.classList.remove('bk-selected');
+      } else {
+        selectedProblems.push(text);
+        btn.classList.add('bk-selected');
+      }
+    };
+
+    // Close on outside click or ESC key
+    document.addEventListener('DOMContentLoaded', function() {
+      var modal = document.getElementById('bk-modal-overlay');
+      if (modal) {
+        modal.addEventListener('click', function(e) {
+          if (e.target === this) {
+            bkCloseModal();
+          }
+        });
+      }
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+          bkCloseModal();
+        }
+      });
+
+      // Auto-bind any button on the page with .bk-open-modal or [data-bk-open-modal]
+      document.addEventListener('click', function(e) {
+        var trigger = e.target.closest('.bk-open-modal, [data-bk-open-modal]');
+        if (trigger) {
+          e.preventDefault();
+          var targetSelector = trigger.getAttribute('data-bk-target');
+          var explicitUrl = trigger.getAttribute('data-bk-url');
+          var detectedUrl = '';
+
+          if (explicitUrl) {
+            detectedUrl = explicitUrl;
+          } else if (targetSelector) {
+            var targetInput = document.querySelector(targetSelector);
+            if (targetInput) detectedUrl = targetInput.value;
+          }
+
+          bkOpenModal(detectedUrl);
+        }
+      });
+    });
+
+    // Form submission handler
+    window.bkHandleModalSubmit = async function(event) {
+      if (event) event.preventDefault();
+
+      var urlInput = document.getElementById('bk-input-site-url');
+      var nameInput = document.getElementById('bk-input-name');
+      var emailInput = document.getElementById('bk-input-email');
+      var phoneInput = document.getElementById('bk-input-phone');
+      var consentInput = document.getElementById('bk-input-consent');
+
+      var siteUrl = (urlInput ? urlInput.value.trim() : '') || currentUrl;
+      var name = nameInput ? nameInput.value.trim() : '';
+      var email = emailInput ? emailInput.value.trim() : '';
+      var phone = phoneInput ? phoneInput.value.trim() : '';
+      var consent = consentInput ? consentInput.checked : false;
+
+      var errorBox = document.getElementById('bk-form-error');
+      var submitBtn = document.getElementById('bk-submit-btn');
+      var spinner = document.getElementById('bk-submit-spinner');
+      var submitText = document.getElementById('bk-submit-text');
+
+      errorBox.style.display = 'none';
+      errorBox.textContent = '';
+
+      if (!siteUrl) {
+        errorBox.textContent = 'Please provide your website address.';
+        errorBox.style.display = 'block';
+        if (urlInput) urlInput.focus();
+        return;
+      }
+
+      if (!name || !email || !consent) {
+        errorBox.textContent = 'Please fill out all required fields and accept terms.';
+        errorBox.style.display = 'block';
+        return;
+      }
+
+      // Loading state
+      submitBtn.disabled = true;
+      spinner.style.display = 'inline-block';
+      submitText.textContent = 'Mapping Your Lead Flow...';
+
+      var eventId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('ev_' + Date.now());
+
+      var payload = {
+        source_url: siteUrl,
+        source: 'modal_widget',
+        help_needed: selectedProblems.length > 0 ? selectedProblems : ["Other issue — we'll check for you"],
+        anything_else: '',
+        name: name,
+        email: email,
+        phone: phone,
+        tcpa_consent: consent,
+        event_id: eventId
+      };
+
+      try {
+        var res = await fetch(API_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        var data = await res.json().catch(function() { return {}; });
+
+        if (res.status === 409 || data.duplicate) {
+          document.getElementById('bk-step2-form').style.display = 'none';
+          document.getElementById('bk-duplicate-box').style.display = 'block';
+          return;
+        }
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Unable to submit website. Please check details and try again.');
+        }
+
+        // Meta Pixel tracking
+        if (typeof window.fbq === 'function') {
+          window.fbq('track', 'Lead', {
+            content_name: 'free_homepage_redesign',
+            source_url: siteUrl
+          }, { eventID: eventId });
+        }
+
+        // Success state
+        document.getElementById('bk-success-domain').textContent = extractDomain(siteUrl);
+        document.getElementById('bk-step2-form').style.display = 'none';
+        document.getElementById('bk-success-box').style.display = 'block';
+
+      } catch (err) {
+        errorBox.textContent = err.message || 'Something went wrong. Please try again.';
+        errorBox.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        spinner.style.display = 'none';
+        submitText.textContent = 'Start My Free Audit →';
+      }
+    };
+  })();
+</script>

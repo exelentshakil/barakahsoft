@@ -1,0 +1,444 @@
+<!-- ==========================================================================
+     BARAKAHSOFT PREMIUM SAAS HEADER (STANDALONE ELEMENTOR / WORDPRESS WIDGET)
+     - 100% Isolated CSS (#bk-header-root) with !important guards
+     - Glassmorphism sticky navigation bar with blur(16px)
+     - Full mobile responsiveness with animated hamburger drawer
+     - Zero external dependencies (Pure HTML + CSS + Vanilla JS)
+     ========================================================================== -->
+<div id="bk-header-root">
+  <style>
+    /* Reset & Isolation */
+    #bk-header-root,
+    #bk-header-root * {
+      box-sizing: border-box !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+      -webkit-font-smoothing: antialiased !important;
+      -moz-osx-font-smoothing: grayscale !important;
+      letter-spacing: normal !important;
+    }
+
+    #bk-header-root {
+      position: sticky !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      z-index: 999999 !important;
+      width: 100% !important;
+      background: rgba(255, 255, 255, 0.92) !important;
+      backdrop-filter: blur(16px) !important;
+      -webkit-backdrop-filter: blur(16px) !important;
+      border-bottom: 1px solid rgba(217, 232, 244, 0.85) !important;
+      box-shadow: 0 4px 24px -2px rgba(7, 40, 77, 0.04) !important;
+      transition: background-color 0.2s ease, box-shadow 0.2s ease !important;
+    }
+
+    #bk-header-root .bk-nav-container {
+      max-width: 1200px !important;
+      margin: 0 auto !important;
+      padding: 0 20px !important;
+      height: 72px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+    }
+
+    /* Brand Logo */
+    #bk-header-root .bk-brand {
+      display: flex !important;
+      align-items: center !important;
+      gap: 12px !important;
+      text-decoration: none !important;
+      cursor: pointer !important;
+    }
+    #bk-header-root .bk-brand-icon {
+      width: 38px !important;
+      height: 38px !important;
+      background: linear-gradient(135deg, #07284d 0%, #0c68c8 100%) !important;
+      border-radius: 10px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-shadow: 0 4px 12px rgba(12, 104, 200, 0.25) !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      flex-shrink: 0 !important;
+    }
+    #bk-header-root .bk-brand-icon svg {
+      width: 22px !important;
+      height: 22px !important;
+      fill: none !important;
+      stroke: #ffffff !important;
+      stroke-width: 2.2 !important;
+      stroke-linecap: round !important;
+      stroke-linejoin: round !important;
+    }
+    #bk-header-root .bk-brand-text {
+      display: flex !important;
+      flex-direction: column !important;
+      line-height: 1 !important;
+    }
+    #bk-header-root .bk-brand-name {
+      font-size: 18px !important;
+      font-weight: 900 !important;
+      color: #07284d !important;
+      letter-spacing: -0.02em !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+    }
+    #bk-header-root .bk-brand-name span {
+      color: #0c68c8 !important;
+    }
+    #bk-header-root .bk-brand-badge {
+      font-size: 10px !important;
+      font-weight: 700 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.1em !important;
+      color: #60778d !important;
+      margin-top: 3px !important;
+    }
+
+    /* Desktop Navigation Links */
+    #bk-header-root .bk-nav-menu {
+      display: none !important;
+      align-items: center !important;
+      gap: 6px !important;
+      list-style: none !important;
+    }
+    @media (min-width: 960px) {
+      #bk-header-root .bk-nav-menu {
+        display: flex !important;
+      }
+    }
+    #bk-header-root .bk-nav-item a {
+      display: inline-flex !important;
+      align-items: center !important;
+      padding: 8px 14px !important;
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      color: #425567 !important;
+      text-decoration: none !important;
+      border-radius: 8px !important;
+      transition: all 0.15s ease !important;
+    }
+    #bk-header-root .bk-nav-item a:hover {
+      color: #07284d !important;
+      background: #f1f6fb !important;
+    }
+
+    /* Header Right Actions */
+    #bk-header-root .bk-nav-actions {
+      display: flex !important;
+      align-items: center !important;
+      gap: 12px !important;
+    }
+    #bk-header-root .bk-phone-link {
+      display: none !important;
+      align-items: center !important;
+      gap: 8px !important;
+      padding: 8px 14px !important;
+      font-size: 13px !important;
+      font-weight: 700 !important;
+      color: #07284d !important;
+      text-decoration: none !important;
+      border-radius: 10px !important;
+      border: 1px solid #d9e8f4 !important;
+      background: #f8fbfe !important;
+      transition: all 0.15s ease !important;
+    }
+    @media (min-width: 1100px) {
+      #bk-header-root .bk-phone-link {
+        display: inline-flex !important;
+      }
+    }
+    #bk-header-root .bk-phone-link:hover {
+      background: #ffffff !important;
+      border-color: #0c68c8 !important;
+      color: #0c68c8 !important;
+      box-shadow: 0 2px 10px rgba(12, 104, 200, 0.1) !important;
+    }
+    #bk-header-root .bk-status-dot {
+      width: 7px !important;
+      height: 7px !important;
+      background: #10b981 !important;
+      border-radius: 50% !important;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25) !important;
+      animation: bkPulse 2s infinite !important;
+    }
+    @keyframes bkPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.9); }
+    }
+
+    /* Primary CTA Button */
+    #bk-header-root .bk-cta-btn {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      height: 44px !important;
+      padding: 0 18px !important;
+      background: #ffd12d !important;
+      background-image: linear-gradient(135deg, #ffd12d 0%, #f7bc00 100%) !important;
+      color: #07284d !important;
+      font-size: 13.5px !important;
+      font-weight: 800 !important;
+      text-decoration: none !important;
+      border-radius: 10px !important;
+      border: none !important;
+      cursor: pointer !important;
+      box-shadow: 0 4px 14px rgba(255, 209, 45, 0.35) !important;
+      transition: all 0.18s ease !important;
+      white-space: nowrap !important;
+      text-transform: none !important;
+    }
+    #bk-header-root .bk-cta-btn:hover {
+      background: #f7bc00 !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 6px 18px rgba(255, 209, 45, 0.45) !important;
+    }
+
+    /* Mobile Hamburger Toggle */
+    #bk-header-root .bk-hamburger {
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      align-items: center !important;
+      width: 42px !important;
+      height: 42px !important;
+      background: #f1f6fb !important;
+      border: 1px solid #d9e8f4 !important;
+      border-radius: 10px !important;
+      cursor: pointer !important;
+      padding: 0 !important;
+      gap: 5px !important;
+      transition: all 0.15s ease !important;
+    }
+    @media (min-width: 960px) {
+      #bk-header-root .bk-hamburger {
+        display: none !important;
+      }
+    }
+    #bk-header-root .bk-hamburger span {
+      display: block !important;
+      width: 18px !important;
+      height: 2px !important;
+      background: #07284d !important;
+      border-radius: 2px !important;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      transform-origin: center !important;
+    }
+    #bk-header-root.bk-menu-open .bk-hamburger {
+      background: #e2edf8 !important;
+      border-color: #0c68c8 !important;
+    }
+    #bk-header-root.bk-menu-open .bk-hamburger span:nth-child(1) {
+      transform: translateY(7px) rotate(45deg) !important;
+    }
+    #bk-header-root.bk-menu-open .bk-hamburger span:nth-child(2) {
+      opacity: 0 !important;
+      transform: scaleX(0) !important;
+    }
+    #bk-header-root.bk-menu-open .bk-hamburger span:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg) !important;
+    }
+
+    /* Mobile Drawer */
+    #bk-header-root .bk-mobile-drawer {
+      display: none !important;
+      position: absolute !important;
+      top: 72px !important;
+      left: 0 !important;
+      right: 0 !important;
+      background: rgba(255, 255, 255, 0.98) !important;
+      backdrop-filter: blur(20px) !important;
+      -webkit-backdrop-filter: blur(20px) !important;
+      border-bottom: 1px solid #d9e8f4 !important;
+      box-shadow: 0 20px 40px rgba(7, 40, 77, 0.15) !important;
+      padding: 20px 24px 28px 24px !important;
+      flex-direction: column !important;
+      gap: 12px !important;
+      animation: bkDrawerDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    }
+    @keyframes bkDrawerDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    #bk-header-root.bk-menu-open .bk-mobile-drawer {
+      display: flex !important;
+    }
+    #bk-header-root .bk-mobile-link {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      padding: 12px 16px !important;
+      font-size: 16px !important;
+      font-weight: 700 !important;
+      color: #07284d !important;
+      text-decoration: none !important;
+      background: #f8fbfe !important;
+      border: 1px solid #e5edf5 !important;
+      border-radius: 12px !important;
+      transition: all 0.15s ease !important;
+    }
+    #bk-header-root .bk-mobile-link:hover {
+      background: #eef6fd !important;
+      border-color: #0c68c8 !important;
+      color: #0c68c8 !important;
+    }
+    #bk-header-root .bk-mobile-actions {
+      margin-top: 12px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 10px !important;
+    }
+    #bk-header-root .bk-mobile-phone {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      height: 48px !important;
+      font-size: 15px !important;
+      font-weight: 700 !important;
+      color: #07284d !important;
+      background: #ffffff !important;
+      border: 1.5px solid #d9e8f4 !important;
+      border-radius: 12px !important;
+      text-decoration: none !important;
+    }
+    #bk-header-root .bk-mobile-cta {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      height: 50px !important;
+      font-size: 15px !important;
+      font-weight: 800 !important;
+      color: #07284d !important;
+      background: linear-gradient(135deg, #ffd12d 0%, #f7bc00 100%) !important;
+      border-radius: 12px !important;
+      text-decoration: none !important;
+      box-shadow: 0 4px 16px rgba(255, 209, 45, 0.4) !important;
+    }
+  </style>
+
+  <div class="bk-nav-container">
+    <!-- Brand -->
+    <a href="https://barakahsoft.com" class="bk-brand" aria-label="BarakahSoft Home">
+      <div class="bk-brand-icon">
+        <svg viewBox="0 0 24 24">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+      </div>
+      <div class="bk-brand-text">
+        <div class="bk-brand-name">Barakah<span>Soft</span></div>
+        <span class="bk-brand-badge">AI Web Systems</span>
+      </div>
+    </a>
+
+    <!-- Desktop Navigation -->
+    <ul class="bk-nav-menu">
+      <li class="bk-nav-item"><a href="#design-quality">Quality Bar</a></li>
+      <li class="bk-nav-item"><a href="#how-it-works">How It Works</a></li>
+      <li class="bk-nav-item"><a href="#what-you-get">What You Get</a></li>
+      <li class="bk-nav-item"><a href="#team">Our Team</a></li>
+      <li class="bk-nav-item"><a href="#faq">FAQ</a></li>
+    </ul>
+
+    <!-- Header Actions -->
+    <div class="bk-nav-actions">
+      <a href="tel:+13075336678" class="bk-phone-link">
+        <span class="bk-status-dot"></span>
+        <span>+1 (307) 533-6678</span>
+      </a>
+
+      <a href="#top" class="bk-cta-btn" onclick="bkScrollToTop(event)">
+        <span>Get Free Redesign</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </a>
+
+      <!-- Mobile Hamburger Toggle -->
+      <button type="button" class="bk-hamburger" id="bk-mobile-toggle" aria-label="Toggle navigation" onclick="bkToggleNav()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Drawer Menu -->
+  <div class="bk-mobile-drawer" id="bk-mobile-drawer">
+    <a href="#design-quality" class="bk-mobile-link" onclick="bkCloseNav()">
+      <span>Quality Bar &amp; Showcase</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0c68c8" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </a>
+    <a href="#how-it-works" class="bk-mobile-link" onclick="bkCloseNav()">
+      <span>How It Works (4 Steps)</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0c68c8" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </a>
+    <a href="#what-you-get" class="bk-mobile-link" onclick="bkCloseNav()">
+      <span>Everything You Get (100% Free)</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0c68c8" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </a>
+    <a href="#team" class="bk-mobile-link" onclick="bkCloseNav()">
+      <span>Small Hands-On Team</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0c68c8" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </a>
+    <a href="#faq" class="bk-mobile-link" onclick="bkCloseNav()">
+      <span>Common Questions (FAQ)</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0c68c8" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </a>
+
+    <div class="bk-mobile-actions">
+      <a href="tel:+13075336678" class="bk-mobile-phone">
+        <span class="bk-status-dot"></span>
+        <span>Call +1 (307) 533-6678</span>
+      </a>
+      <a href="#top" class="bk-mobile-cta" onclick="bkCloseNav(); bkScrollToTop(event);">
+        <span>Claim 48-Hour Free Redesign →</span>
+      </a>
+    </div>
+  </div>
+
+  <script>
+    function bkToggleNav() {
+      var header = document.getElementById('bk-header-root');
+      if (header) {
+        header.classList.toggle('bk-menu-open');
+      }
+    }
+    function bkCloseNav() {
+      var header = document.getElementById('bk-header-root');
+      if (header) {
+        header.classList.remove('bk-menu-open');
+      }
+    }
+    function bkScrollToTop(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      var topEl = document.getElementById('top') || document.getElementById('bk-landing-root') || document.querySelector('input[type="text"]');
+      if (topEl) {
+        topEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+    // Close mobile menu if clicked outside
+    document.addEventListener('click', function(e) {
+      var header = document.getElementById('bk-header-root');
+      if (header && header.classList.contains('bk-menu-open')) {
+        if (!header.contains(e.target)) {
+          header.classList.remove('bk-menu-open');
+        }
+      }
+    });
+  </script>
+</div>
