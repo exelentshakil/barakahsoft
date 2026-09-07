@@ -8,6 +8,7 @@ import type { SiteBrief } from "@/lib/generate-bespoke-site";
 import type { PageInventory } from "@/lib/scrape/extract-text";
 import type { Lead, ScrapeResults } from "@/types/database";
 import { resolveBusinessContact } from "@/lib/business-contact";
+import { cleanAboutContent } from "@/lib/clean-about-content";
 
 // Assembles the single source of truth a generation runs against.
 //
@@ -183,7 +184,13 @@ export function buildSiteBrief(
     founder: overrides.founder?.trim() || lead.contact_name || null,
     phone: displayPhone(overrides.phone?.trim() || contact.phone),
     email: overrides.email?.trim() || contact.email,
-    aboutContent: overrides.aboutContent?.trim() || (typeof facts.about_content === "string" ? facts.about_content : null),
+    // Cleaned HERE, at the source, rather than in the one consumer that
+    // remembered to call it. Every other reader of aboutContent — the section
+    // renderer, the design-system prompt, the site plan, the no-model fallback
+    // — was being handed raw scraped markdown, which is how "### Who we are
+    // [Read more](https://...)" ended up rendered on a client's about section.
+    aboutContent:
+      cleanAboutContent(overrides.aboutContent?.trim() || (typeof facts.about_content === "string" ? facts.about_content : null)) || null,
     services,
     areas,
     rating,
