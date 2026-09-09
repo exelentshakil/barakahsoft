@@ -178,6 +178,40 @@ function rendererFor(kind: string, nearest: string | null): SectionId | null {
   return hit ?? null;
 }
 
+/**
+ * The vertical's own section list, plus anything the client's facts earn.
+ *
+ * No curated profile lists `pricing` or `people` — they were written before
+ * either renderer existed, and rewriting six profiles to add sections most of
+ * their businesses cannot fill would put an empty table on every page in the
+ * vertical. So the evidence adds them instead: a client with real priced tiers
+ * gets a price table whether or not a reference asked for one, and a client
+ * without them sees no difference at all.
+ */
+function fromVertical(vertical: VerticalProfile, capability: Capability): ComposedSection[] {
+  const sections: ComposedSection[] = vertical.sections
+    .filter((section) => section.enabled)
+    .map((section) => ({ id: section.id, kind: section.id, purpose: "" }));
+
+  const have = availableStems(capability);
+  const insertAfter = (id: SectionId, after: SectionId[], kind: string) => {
+    if (sections.some((section) => section.id === id)) return;
+    const at = after
+      .map((target) => sections.findIndex((section) => section.id === target))
+      .filter((index) => index >= 0)
+      .pop();
+    const position = at === undefined ? sections.length - 1 : at + 1;
+    sections.splice(Math.max(position, 1), 0, { id, kind, purpose: "" });
+  };
+
+  // Prices belong straight after what they are prices for.
+  if (have.has("price")) insertAfter("pricing", ["services"], "pricing");
+  // The team reads best once the business has introduced itself.
+  if (have.has("person")) insertAfter("people", ["about", "why-us"], "people");
+
+  return sections;
+}
+
 export function composePage(args: {
   vertical: VerticalProfile;
   design: DesignDna | null;
@@ -190,13 +224,7 @@ export function composePage(args: {
   // compose from than the vertical's own list. This is the pre-blueprint
   // behaviour exactly, and it stays correct.
   if (!blueprint || blueprint.sections.length === 0) {
-    return {
-      sections: vertical.sections
-        .filter((section) => section.enabled)
-        .map((section) => ({ id: section.id, kind: section.id, purpose: "" })),
-      notes: [],
-      source: "vertical",
-    };
+    return { sections: fromVertical(vertical, capability), notes: [], source: "vertical" };
   }
 
   const have = availableStems(capability);
@@ -247,13 +275,7 @@ export function composePage(args: {
     notes.push(
       `[blueprint] only ${sections.length} section(s) survived; using the ${vertical.slug} section list instead`
     );
-    return {
-      sections: vertical.sections
-        .filter((section) => section.enabled)
-        .map((section) => ({ id: section.id, kind: section.id, purpose: "" })),
-      notes,
-      source: "vertical",
-    };
+    return { sections: fromVertical(vertical, capability), notes, source: "vertical" };
   }
 
   return { sections, notes, source: "blueprint" };

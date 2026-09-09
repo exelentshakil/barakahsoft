@@ -1340,4 +1340,55 @@ export const BASE_STYLESHEET = `
   .bespoke-page [class*="bs-gallery--"] .bs-gallery{grid-template-columns:repeat(2,1fr)}
 }
 
+/* ---------- price table --------------------------------------------------- */
+/* Every colour here is a token pair the compiler guarantees, never a literal.
+   Six rules elsewhere in this file once paired a hardcoded white against
+   --bs-ink, which is the page's TEXT colour and is white on a dark palette —
+   so on the first client with a dark brand they rendered white on white. */
+.bespoke-page .bs-tiers{display:grid;gap:clamp(16px,2vw,24px);margin-top:clamp(28px,3vw,44px);align-items:stretch}
+.bespoke-page .bs-tiers--1{grid-template-columns:minmax(0,420px);justify-content:center}
+.bespoke-page .bs-tiers--2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.bespoke-page .bs-tiers--3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.bespoke-page .bs-tiers--4{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.bespoke-page .bs-tier{position:relative;display:flex;flex-direction:column;gap:10px;padding:clamp(22px,2.4vw,32px);background:var(--bs-surface,#fff);color:var(--bs-ink);border:1px solid var(--bs-line);border-radius:var(--bs-r-lg,20px);transition:transform .2s ease,box-shadow .2s ease}
+.bespoke-page .bs-tier:hover{transform:translateY(-3px);box-shadow:var(--bs-shadow)}
+.bespoke-page .bs-tier__flag{position:absolute;top:-12px;left:clamp(22px,2.4vw,32px);background:var(--bs-primary-strong,#b65e16);color:var(--bs-on-primary,#fff);font-family:var(--bs-font-display,inherit);font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:999px}
+.bespoke-page .bs-tier__name{font-family:var(--bs-font-display,inherit);font-size:clamp(1.05rem,1.5vw,1.3rem);font-weight:var(--bs-display-weight,700);color:inherit;margin:0}
+.bespoke-page .bs-tier__price{font-family:var(--bs-font-display,inherit);font-size:clamp(1.9rem,3.4vw,2.6rem);font-weight:var(--bs-display-weight,800);line-height:1;color:inherit;margin:2px 0 0}
+.bespoke-page .bs-tier__period{font-family:var(--bs-font-body,inherit);font-size:.9rem;font-weight:500;opacity:.72;margin-left:2px}
+.bespoke-page .bs-tier__detail{font-size:.95rem;color:var(--bs-ink-muted,#555);margin:0}
+.bespoke-page .bs-tier__list{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:8px;flex:1}
+.bespoke-page .bs-tier__list li{display:flex;gap:9px;align-items:flex-start;font-size:.94rem;line-height:1.45;color:var(--bs-ink-muted,#555)}
+.bespoke-page .bs-tier__list li .bs-icon{flex:0 0 auto;margin-top:3px;color:var(--bs-primary-on-surface,#b65e16)}
+.bespoke-page .bs-tier__cta{margin-top:auto;padding-top:16px;display:inline-flex;justify-content:center;align-items:center;min-height:46px;border-radius:var(--bs-r,12px);background:var(--bs-primary-strong,#b65e16);color:var(--bs-on-primary,#fff);font-family:var(--bs-font-display,inherit);font-weight:700;text-decoration:none;padding:13px 20px;margin-top:18px;transition:filter .2s ease}
+.bespoke-page .bs-tier__cta:hover{filter:brightness(1.08)}
+
+/* The featured card flips to the brand fill. Its children inherit that
+   colour rather than re-declaring one, so there is no pair to get wrong. */
+.bespoke-page .bs-tier--featured{background:var(--bs-primary-strong,#b65e16);color:var(--bs-on-primary,#fff);border-color:var(--bs-primary-strong,#b65e16);box-shadow:var(--bs-shadow)}
+.bespoke-page .bs-tier--featured .bs-tier__detail,
+.bespoke-page .bs-tier--featured .bs-tier__list li{color:inherit;opacity:.9}
+.bespoke-page .bs-tier--featured .bs-tier__list li .bs-icon{color:inherit}
+.bespoke-page .bs-tier--featured .bs-tier__flag{background:var(--bs-on-primary,#fff);color:var(--bs-primary-strong,#b65e16)}
+.bespoke-page .bs-tier--featured .bs-tier__cta{background:var(--bs-on-primary,#fff);color:var(--bs-primary-strong,#b65e16)}
+.bespoke-page .bs-pricing__note{margin-top:20px;font-size:.88rem;color:var(--bs-ink-muted,#555);text-align:center}
+
+/* ---------- people -------------------------------------------------------- */
+.bespoke-page .bs-people__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:clamp(16px,2vw,24px);margin-top:clamp(28px,3vw,44px)}
+.bespoke-page .bs-person{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:clamp(20px,2.2vw,28px);background:var(--bs-surface,#fff);color:var(--bs-ink);border:1px solid var(--bs-line);border-radius:var(--bs-r-lg,20px)}
+.bespoke-page .bs-person__mark{display:grid;place-items:center;width:58px;height:58px;border-radius:999px;background:var(--bs-surface-alt,#f4f5f7);color:var(--bs-primary-on-surface-alt,#b65e16);font-family:var(--bs-font-display,inherit);font-weight:var(--bs-display-weight,800);font-size:1.15rem;letter-spacing:.02em}
+.bespoke-page .bs-person__name{font-family:var(--bs-font-display,inherit);font-size:1.08rem;font-weight:var(--bs-display-weight,700);color:inherit;margin:6px 0 0}
+.bespoke-page .bs-person__role{font-size:.92rem;color:var(--bs-ink-muted,#555);margin:0}
+.bespoke-page .bs-person__tags{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.bespoke-page .bs-person__tags li{font-size:.76rem;letter-spacing:.03em;padding:5px 10px;border-radius:999px;border:1px solid var(--bs-line);color:var(--bs-ink-muted,#555)}
+
+@media (max-width:900px){
+  .bespoke-page .bs-tiers--3,
+  .bespoke-page .bs-tiers--2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+}
+@media (max-width:620px){
+  .bespoke-page .bs-tiers{grid-template-columns:minmax(0,1fr)}
+  .bespoke-page .bs-tier--featured{order:-1}
+}
+
 `;

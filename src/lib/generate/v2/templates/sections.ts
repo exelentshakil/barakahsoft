@@ -16,6 +16,7 @@ import {
 import type { PageCopy } from "@/lib/generate/v2/page-copy";
 import type { LayoutDna } from "@/lib/generate/v2/layout-dna";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
+import type { Entity } from "@/lib/extract-entities";
 
 /**
  * Which structural variant this lead gets for a given section.
@@ -41,7 +42,34 @@ export interface RenderContext {
   /** Real routes, honouring inner_pages_built. */
   href: (path: string) => string;
   primaryHref: string;
+  /**
+   * Verified facts from the client's own site.
+   *
+   * Only the pricing and people sections read these, and they read them
+   * instead of `copy` rather than as well as it: a price or a person's name
+   * must reach the page exactly as the scrape found it.
+   */
+  entities: Entity[];
 }
+
+/**
+ * Entity kinds that belong in a price table.
+ *
+ * Matches the folding in compose.ts, kept as its own set because the two
+ * answer different questions — that one asks whether a section is possible,
+ * this one asks which rows go in it.
+ */
+const PRICE_KINDS = new Set([
+  "pricing-tier",
+  "price-tier",
+  "pricing",
+  "price",
+  "membership",
+  "membership-tier",
+  "package",
+  "plan",
+  "tier",
+]);
 
 const FIELD_SERVICE = (services: string[], offeringPlural = "Service") =>
   `<label class="bs-field"><span class="bs-sr">${esc(offeringPlural)}</span><select class="bs-select" name="service"><option value="">What are you after?</option>${services
@@ -809,6 +837,128 @@ export function contactSection(ctx: RenderContext): string {
 
       <div class="bs-contact__form">${leadForm(ctx, copy.contact.formTitle, copy.contact.formSubtitle, copy.contact.submitLabel, "")}</div>
     </div>
+  </div>
+</section>`;
+}
+
+/**
+ * The ways to buy, priced.
+ *
+ * The first section built from verified entities rather than model copy, and
+ * the reason for that split is the whole point of the section: a price is the
+ * one thing on a page a customer will hold the business to, so it is printed
+ * exactly as it was found on their own site. The copy model writes the heading
+ * above the table and nothing inside it.
+ *
+ * A gym reference asks for this and the old engine had no way to answer — its
+ * closest renderer was a feature grid, so six real membership tiers came out
+ * as six blurbs with no prices. Same for a salon's treatment menu, a
+ * solicitor's fixed fees and a nursery's session rates.
+ */
+export function pricingSection(ctx: RenderContext): string {
+  const { copy, brief } = ctx;
+  const tiers = ctx.entities.filter((entity) => PRICE_KINDS.has(entity.kind.toLowerCase()));
+  if (tiers.length === 0) return "";
+
+  // Beyond six the table stops being scannable and starts being a spreadsheet.
+  const shown = tiers.slice(0, 6);
+  // The middle option is what most people pick, so it is the one that carries
+  // the emphasis — but only when there is a genuine middle to point at.
+  const featured = shown.length >= 3 ? Math.floor((shown.length - 1) / 2) : -1;
+
+  const cards = shown
+    .map((tier, index) => {
+      const attributes = tier.attributes.slice(0, 6);
+      return `<article class="bs-tier${index === featured ? " bs-tier--featured" : ""}">
+      ${index === featured ? `<span class="bs-tier__flag">Most popular</span>` : ""}
+      <h3 class="bs-tier__name">${esc(tier.label)}</h3>
+      ${tier.price ? `<p class="bs-tier__price">${esc(tier.price)}${tier.period ? `<span class="bs-tier__period">/${esc(tier.period)}</span>` : ""}</p>` : ""}
+      ${tier.detail ? `<p class="bs-tier__detail">${esc(tier.detail)}</p>` : ""}
+      ${
+        attributes.length
+          ? `<ul class="bs-tier__list">${attributes
+              .map((line) => `<li>${icon("check", "bs-icon bs-icon--sm")}<span>${esc(line)}</span></li>`)
+              .join("")}</ul>`
+          : ""
+      }
+      <a class="bs-tier__cta" href="${esc(ctx.primaryHref)}">${esc(brief.intent.primaryLabel)}</a>
+    </article>`;
+    })
+    .join("");
+
+  const heading = copy.pricing.headline || `${brief.vertical.nouns.offeringPlural} and prices`;
+
+  return `<section id="pricing" class="bs-section bs-pricing">
+  <div class="bs-container">
+    <div class="bs-sectionhead">
+      <div>
+        ${copy.pricing.eyebrow ? `<span class="bs-eyebrow">${esc(copy.pricing.eyebrow)}</span>` : ""}
+        <h2 class="bs-h2">${markHeadline(heading, copy.pricing.headlineMark)}</h2>
+        ${copy.pricing.intro ? `<p class="bs-lede">${esc(copy.pricing.intro)}</p>` : ""}
+      </div>
+    </div>
+    <div class="bs-tiers bs-tiers--${Math.min(shown.length, 4)}">${cards}</div>
+    ${copy.pricing.footnote ? `<p class="bs-pricing__note">${esc(copy.pricing.footnote)}</p>` : ""}
+  </div>
+</section>`;
+}
+
+/**
+ * The people a customer will actually deal with.
+ *
+ * A gym's coaches, a salon's stylists, a clinic's practitioners, a firm's
+ * solicitors. Every reference site in those industries has this section and
+ * the engine's nearest renderer was "why choose us", which turned four named
+ * people into four abstract virtues.
+ *
+ * Names are never invented — the section only exists when the scrape found
+ * real people on the client's own site, which is why it reads from entities
+ * and not from copy.
+ */
+export function peopleSection(ctx: RenderContext): string {
+  const { copy, brief } = ctx;
+  const people = ctx.entities.filter((entity) => entity.kind.toLowerCase() === "person").slice(0, 8);
+  if (people.length === 0) return "";
+
+  // Portraits come from the photo pool only after the hero, about and service
+  // slots have taken theirs, and a wrong face is worse than none — so a
+  // monogram is the default and a photo is the exception.
+  const cards = people
+    .map((person) => {
+      const initials = person.label
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((part) => part[0] ?? "")
+        .join("")
+        .toUpperCase();
+      return `<article class="bs-person">
+      <div class="bs-person__mark" aria-hidden="true">${esc(initials)}</div>
+      <h3 class="bs-person__name">${esc(person.label)}</h3>
+      ${person.detail ? `<p class="bs-person__role">${esc(person.detail)}</p>` : ""}
+      ${
+        person.attributes.length
+          ? `<ul class="bs-person__tags">${person.attributes
+              .slice(0, 4)
+              .map((tag) => `<li>${esc(tag)}</li>`)
+              .join("")}</ul>`
+          : ""
+      }
+    </article>`;
+    })
+    .join("");
+
+  const heading = copy.people.headline || `The team at ${brief.businessName}`;
+
+  return `<section id="people" class="bs-section bs-section--tint bs-people">
+  <div class="bs-container">
+    <div class="bs-sectionhead">
+      <div>
+        ${copy.people.eyebrow ? `<span class="bs-eyebrow">${esc(copy.people.eyebrow)}</span>` : ""}
+        <h2 class="bs-h2">${markHeadline(heading, copy.people.headlineMark)}</h2>
+        ${copy.people.intro ? `<p class="bs-lede">${esc(copy.people.intro)}</p>` : ""}
+      </div>
+    </div>
+    <div class="bs-people__grid">${cards}</div>
   </div>
 </section>`;
 }

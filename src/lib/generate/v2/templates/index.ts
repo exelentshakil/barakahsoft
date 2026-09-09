@@ -22,6 +22,8 @@ import {
   faqSection,
   contactSection,
   type RenderContext,
+  pricingSection,
+  peopleSection,
 } from "@/lib/generate/v2/templates/sections";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
 
@@ -95,6 +97,8 @@ const RENDERERS: Record<
   "cta-band": { kind: "cta", label: "Conversion band", render: bandSection },
   reviews: { kind: "reviews", label: "Reviews", render: reviewsSection },
   areas: { kind: "areas", label: "Service areas", render: areasSection },
+  pricing: { kind: "pricing", label: "Prices & packages", render: pricingSection },
+  people: { kind: "people", label: "The team", render: peopleSection },
   guarantee: { kind: "contact", label: "Guarantee & booking", render: guaranteeSection },
   faq: { kind: "faq", label: "FAQ", render: faqSection },
   contact: { kind: "contact", label: "Contact", render: contactSection },
@@ -222,6 +226,7 @@ export async function buildPage(args: {
     galleryPhotos: realPhotos,
     href,
     primaryHref: href("/contact"),
+    entities,
   };
 
   // The unified render engine: one renderer per section, and the reference

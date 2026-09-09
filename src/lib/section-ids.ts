@@ -22,6 +22,8 @@ export const SECTION_IDS = [
   "cta-band",
   "reviews",
   "areas",
+  "pricing",
+  "people",
   "guarantee",
   "faq",
   "contact",

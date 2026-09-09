@@ -83,6 +83,15 @@ export const PageCopySchema = z.object({
   booking: z
     .object({ eyebrow: soft(60), headline: soft(80), headlineMark: soft(40), body: soft(260) })
     .default({ eyebrow: "", headline: "", headlineMark: "", body: "" }),
+  // Headers only. The rows underneath are the client's verified entities,
+  // rendered verbatim — a price a copy model has "improved" is a number a
+  // customer will hold the business to, so it never passes through one.
+  pricing: z
+    .object({ eyebrow: soft(60), headline: soft(80), headlineMark: soft(40), intro: soft(320), footnote: soft(160) })
+    .default({ eyebrow: "", headline: "", headlineMark: "", intro: "", footnote: "" }),
+  people: z
+    .object({ eyebrow: soft(60), headline: soft(80), headlineMark: soft(40), intro: soft(320) })
+    .default({ eyebrow: "", headline: "", headlineMark: "", intro: "" }),
   guarantee: z.object({ eyebrow: S(4, 60), headline: S(8, 80), body: S(30, 420), ctaLabel: S(3, 30) }),
   faq: z.object({
     eyebrow: S(4, 60),
@@ -300,6 +309,22 @@ function fallbackCopy(brief: SiteBrief): PageCopy {
       headlineMark: "suits you",
       body: fb("bookingBody", "Choose a preferred day and we will confirm a time that works for both of us.").slice(0, 260),
     },
+    // Headers only, and empty ones are fine: both sections render from
+    // verified entities and drop themselves when there are none, so a
+    // fallback here is a heading over real rows, never invented rows.
+    pricing: {
+      eyebrow: fb("pricingEyebrow", "Prices").slice(0, 60),
+      headline: fb("pricingHeadline", `${nouns.offeringPlural} and prices`).slice(0, 80),
+      headlineMark: "",
+      intro: fb("pricingIntro", "Everything is priced up front, so you know what you are paying before you commit.").slice(0, 320),
+      footnote: "",
+    },
+    people: {
+      eyebrow: fb("peopleEyebrow", "The team").slice(0, 60),
+      headline: fb("peopleHeadline", `The people at ${brief.businessName}`).slice(0, 80),
+      headlineMark: "",
+      intro: fb("peopleIntro", `The people you will actually deal with in ${city}.`).slice(0, 320),
+    },
     guarantee: {
       eyebrow: fb("guaranteeEyebrow", "Our promise").slice(0, 60),
       headline: fb("guaranteeHeadline", "You will know exactly where you stand").slice(0, 80),
@@ -483,6 +508,8 @@ Return STRICT JSON matching this shape exactly, no markdown fence, no commentary
 "reviews":{"eyebrow":"","headline":""},
 "areas":{"eyebrow":"","headline":"","body":""},
 "booking":{"eyebrow":"","headline":"","headlineMark":"","body":""},
+"pricing":{"eyebrow":"","headline":"","headlineMark":"","intro":"","footnote":""},
+"people":{"eyebrow":"","headline":"","headlineMark":"","intro":""},
 "guarantee":{"eyebrow":"","headline":"","body":"","ctaLabel":""},
 "faq":{"eyebrow":"","headline":"","items":[{"q":"","a":""}]},
 "contact":{"eyebrow":"","headline":"","body":"","formTitle":"","formSubtitle":"","submitLabel":""},
@@ -491,6 +518,11 @@ Return STRICT JSON matching this shape exactly, no markdown fence, no commentary
 
 services.items must have one entry per supplied service, in the supplied order, using the supplied
 name verbatim.
+
+pricing and people are HEADINGS ONLY. The rows beneath them are the verified facts listed above and
+are printed exactly as found — you are writing the heading over a table you cannot see the inside of.
+Never write a price, a package name or a person\'s name into these fields. If the facts above list no
+prices or no named people, leave that block\'s strings empty; the section will not be built.
 
 LENGTHS — these are enforced, and anything outside them is rejected:
 hero.headline 8-90 · hero.subhead 20-260 · about.paragraphs 60-800 EACH, one or two of them
