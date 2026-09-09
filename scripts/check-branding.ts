@@ -16,6 +16,11 @@ const BANNED: { pattern: RegExp; why: string }[] = [
   { pattern: /barakahsoft/i, why: "platform brand — read it from the tenant" },
   { pattern: /\+1 ?\(?307\)? ?533-?6678/, why: "platform phone — use tenant.brand.phoneE164" },
   { pattern: /NEXT_PUBLIC_(SITE|PORTAL)_URL/, why: "process-global origin — use tenant.siteBaseUrl / portalBaseUrl" },
+  // A postal address is the leak that carries neither the brand name nor the
+  // phone number, so the two patterns above miss it entirely — the platform's
+  // Wyoming address sat in the shared footer and would have printed under a
+  // Belfast studio's logo.
+  { pattern: /\b(Sheridan,?\s*WY|WY\s*82801|N\.?\s*Gould St)/i, why: "platform address — use landing.contact.addressLines" },
 ];
 
 /** Files whose output reaches someone who bought from a partner. */

@@ -4,7 +4,7 @@ import { getTenant } from "@/lib/tenant";
 // partner's footer claiming another company's copyright is a real problem, not
 // a cosmetic one.
 export async function Footer() {
-  const { brand } = await getTenant();
+  const { brand, landing } = await getTenant();
 
   return (
     <footer className="border-t border-border bg-background py-14 text-foreground">
@@ -24,7 +24,21 @@ export async function Footer() {
             <div className="mt-4 space-y-3 text-sm">
               <a href={`tel:${brand.phoneE164}`} className="block transition-colors hover:text-primary">{brand.phoneDisplay}</a>
               <a href={`mailto:${brand.supportEmail}`} className="block text-muted-foreground transition-colors hover:text-primary">{brand.supportEmail}</a>
-              <address className="not-italic text-muted-foreground">30 N. Gould St. Ste R, Sheridan, WY 82801</address>
+              {/* The registered address of whoever this footer belongs to. It was
+                  the platform's Wyoming address, hardcoded, which would have
+                  appeared under a Belfast studio's logo. */}
+              {landing.contact?.addressLines && (
+                <address className="not-italic text-muted-foreground">
+                  {landing.contact.addressLines.map((line) => (
+                    <span key={line} className="block">
+                      {line}
+                    </span>
+                  ))}
+                </address>
+              )}
+              {landing.contact?.hours && (
+                <p className="text-muted-foreground">{landing.contact.hours}</p>
+              )}
             </div>
           </div>
         </div>

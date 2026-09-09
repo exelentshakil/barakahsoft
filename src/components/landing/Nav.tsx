@@ -40,11 +40,11 @@ export async function Nav() {
          <div className="hidden items-center gap-4 lg:flex">
            <a href={`tel:${brand.phoneE164}`} className="text-sm font-semibold text-foreground transition hover:text-primary">{brand.phoneDisplay}</a>
            <a href={`mailto:${brand.supportEmail}`} className="text-sm text-muted-foreground transition hover:text-primary">{brand.supportEmail}</a>
-           <Button asChild size="sm" className="rounded-lg bg-[#ffd12d] text-[#111] hover:bg-[#f5c400]">
+           <Button asChild size="sm" className="rounded-lg bg-primary text-primary-foreground hover:brightness-110">
              <a href="/#top">See My New Homepage (Free)</a>
            </Button>
          </div>
-         <Button asChild size="sm" className="rounded-lg bg-[#ffd12d] text-[#111] hover:bg-[#f5c400] lg:hidden">
+         <Button asChild size="sm" className="rounded-lg bg-primary text-primary-foreground hover:brightness-110 lg:hidden">
            <a href="/#top">Free Redesign</a>
          </Button>
       </div>

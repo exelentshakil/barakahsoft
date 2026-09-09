@@ -8,10 +8,10 @@ import type { Tenant } from "@/tenants/types";
  * and hand back a free homepage redesign, which is the one thing this platform
  * does for him.
  *
- * TESTING: every address below is hello@barakahsoft.com, marked TEST-EMAIL, so
- * this can be exercised end to end without waiting on Brendan. There are three.
- * Mail leaving from the wrong domain is the failure a prospect notices rather
- * than we do.
+ * TESTING: brand.fromEmail is still the platform's, marked TEST-EMAIL, because
+ * outbound mail has to leave from a domain verified in Brevo and this one is
+ * not yet. Everything a visitor reads — support address, enquiry recipient,
+ * phone, postal address — is already Smile Creative's own.
  *
  * REMAINING SETUP:
  *   1. Add start.smilecreative.agency to the Vercel project and point DNS at
@@ -46,7 +46,7 @@ export const smilecreative: Tenant = {
     "smile.localhost",
   ],
   siteBaseUrl: "https://start.smilecreative.agency",
-  portalBaseUrl: "https://start.smilecreative.agency",
+  portalBaseUrl: "https://portal.smilecreative.agency",
 
   brand: {
     name: "Smile Creative",
@@ -57,10 +57,16 @@ export const smilecreative: Tenant = {
     primaryHsl: "340 82% 52%",
     phoneDisplay: "+44 (28) 9099 7004",
     phoneE164: "+442890997004",
-    supportEmail: "hello@barakahsoft.com", // TEST-EMAIL → studio@smilecreative.agency
-    fromEmail: "hello@barakahsoft.com", // TEST-EMAIL → verify the domain in Brevo first
+    supportEmail: "office@smilecreative.agency",
+    // The only address still pointed at the platform: mail must leave from a
+    // domain verified in Brevo, and smilecreative.agency is not yet. Swap this
+    // the moment SPF and DKIM are in place — until then a partner's prospect
+    // gets a message from the wrong sender, which lands in spam as often as
+    // it lands confusing.
+    fromEmail: "hello@barakahsoft.com", // TEST-EMAIL → office@smilecreative.agency once Brevo verifies the domain
     senderName: "Smile Creative",
-    emailSignature: "Smile Creative · Belfast · +44 (28) 9099 7004",
+    emailSignature:
+      "Smile Creative · Moat House, 54 Bloomfield Avenue, Belfast BT5 5AD · +44 (28) 9099 7004 · office@smilecreative.agency",
     // Brendan's own tags when he has them. Empty means nothing fires — the
     // platform's pixel must never load on a partner's domain.
     analytics: {},
@@ -72,7 +78,7 @@ export const smilecreative: Tenant = {
   // through a US entity is a VAT problem on top of the branding one.
   commerce: {
     mode: "enquiry",
-    enquiryEmail: "office@smilecreative.agency", // TEST-EMAIL → studio@smilecreative.agency
+    enquiryEmail: "office@smilecreative.agency",
     primaryActionLabel: "Get my free redesign",
   },
 
@@ -191,6 +197,9 @@ export const smilecreative: Tenant = {
       },
     ],
 
-    contact: { hours: "Monday to Friday, 9am – 5pm" },
+    contact: {
+      addressLines: ["Moat House, 54 Bloomfield Avenue", "Belfast BT5 5AD"],
+      hours: "Monday to Friday, 9am – 5pm",
+    },
   },
 };

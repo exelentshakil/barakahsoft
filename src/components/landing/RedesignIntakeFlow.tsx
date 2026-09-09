@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,7 +11,24 @@ import { trackPixelEvent } from "@/lib/meta-pixel";
 import { isValidUrl } from "@/lib/validate-url";
 import { LEAD_PROBLEMS } from "@/lib/lead-problems";
 
-export function RedesignIntakeFlow() {
+export function RedesignIntakeFlow({
+  /**
+   * "legacy" is the platform landing's yellow-on-navy bar, kept byte-identical.
+   * "brand" takes the host tenant's own accent, so a partner's form is their
+   * colour rather than BarakahSoft's.
+   */
+  accent = "legacy",
+  /**
+   * The reassurance under the field. Off where the surrounding section already
+   * says it — the partner landing did, and the duplicate read as a stutter.
+   */
+  showNote = true,
+  submitLabel = "See My New Homepage (Free)",
+}: {
+  accent?: "legacy" | "brand";
+  showNote?: boolean;
+  submitLabel?: string;
+} = {}) {
   const [url, setUrl] = useState("");
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -77,15 +94,44 @@ export function RedesignIntakeFlow() {
 
   return (
     <div className="w-full">
-      <form onSubmit={begin} className="mx-auto mt-6 flex w-full max-w-2xl flex-col gap-3 rounded-xl border border-white/20 bg-white p-2 shadow-2xl sm:flex-row">
-        <Input required type="text" placeholder="Enter your current website address (e.g., mysite.com)" value={url} onChange={(event) => setUrl(event.target.value)} className="h-12 flex-1 border-0 bg-transparent text-base sm:text-sm text-[#1e212b] shadow-none focus-visible:ring-0" />
-        <Button type="submit" className="h-12 rounded-lg bg-[#ffd12d] px-6 font-bold text-[#07284d] hover:bg-[#f5c400]">See My New Homepage (Free) <ArrowRight className="h-4 w-4" /></Button>
+      {/* No mx-auto or max-w here: the section that places this decides how wide
+          it is. Owning both was what made it sit off-centre inside a narrower
+          column on the partner landing. */}
+      <form
+        onSubmit={begin}
+        className="flex w-full flex-col gap-2 rounded-2xl border border-white/15 bg-white p-2 shadow-2xl sm:flex-row"
+      >
+        <div className="flex flex-1 items-center gap-2 px-3">
+          <Globe className="h-4 w-4 shrink-0 text-[#9aa4bd]" aria-hidden="true" />
+          <Input
+            required
+            type="text"
+            placeholder="yourbusiness.co.uk"
+            aria-label="Your current website address"
+            value={url}
+            onChange={(event) => setUrl(event.target.value)}
+            className="h-12 flex-1 border-0 bg-transparent px-0 text-base text-[#1e212b] shadow-none placeholder:text-[#9aa4bd] focus-visible:ring-0"
+          />
+        </div>
+        <Button
+          type="submit"
+          className={
+            accent === "brand"
+              ? "h-12 shrink-0 rounded-xl bg-primary px-6 font-bold text-primary-foreground hover:brightness-110"
+              : "h-12 shrink-0 rounded-xl bg-[#ffd12d] px-6 font-bold text-[#07284d] hover:bg-[#f5c400]"
+          }
+        >
+          {submitLabel}
+          <ArrowRight className="h-4 w-4" />
+        </Button>
       </form>
-      <div className="mt-3 flex flex-col items-center justify-center gap-1 sm:flex-row sm:gap-3">
-        <p className="text-[11px] sm:text-xs text-[#7890a5]">🔒 We only look at your public website</p>
-        <span className="hidden sm:inline text-[#7890a5]">•</span>
-        <p className="text-[11px] sm:text-xs text-[#7890a5]">Free · No credit card · Yours to keep</p>
-      </div>
+      {showNote && (
+        <div className="mt-3 flex flex-col items-center justify-center gap-1 sm:flex-row sm:gap-3">
+          <p className="text-[11px] sm:text-xs text-[#7890a5]">🔒 We only look at your public website</p>
+          <span className="hidden sm:inline text-[#7890a5]">•</span>
+          <p className="text-[11px] sm:text-xs text-[#7890a5]">Free · No credit card · Yours to keep</p>
+        </div>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden border border-[#e5e7f2] p-0 shadow-2xl sm:max-w-md bg-white">

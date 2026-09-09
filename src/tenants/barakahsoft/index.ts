@@ -26,6 +26,9 @@ export const barakahsoft: Tenant = {
     legalEntity: "BarakahSoft LLC",
     jurisdiction: "Wyoming, USA",
     logoUrl: "https://barakahsoft.com/wp-content/uploads/2026/01/Logo1.png",
+    // The indigo the app theme is built around. The landing CTA was a
+    // separate hardcoded yellow; the nav now follows this, which is the
+    // colour the rest of the platform UI already uses.
     primaryHsl: "249 97% 61%",
     phoneDisplay: "+1 (307) 533-6678",
     phoneE164: "+13075336678",
@@ -51,6 +54,9 @@ export const barakahsoft: Tenant = {
 
   landing: {
     audience: "Home-services businesses in the US and UK, reached by cold outreach and paid social.",
+    contact: {
+      addressLines: ["30 N. Gould St. Ste R", "Sheridan, WY 82801"],
+    },
     heroVideoUrl:
       "https://liepxeeugfrxmidcmbxo.supabase.co/storage/v1/object/public/landing/barakahsoft-hero.mp4",
     team: [
