@@ -11,6 +11,7 @@ import type { Lead, ScrapeResults } from "@/types/database";
 import { resolveBusinessContact } from "@/lib/business-contact";
 import { cleanAboutContent } from "@/lib/clean-about-content";
 
+import type { Entity } from "@/lib/extract-entities";
 // Assembles the single source of truth a generation runs against.
 //
 // The operator can override any field from the Studio, but every default
@@ -86,6 +87,38 @@ function realPhotos(facts: Record<string, unknown>): string[] {
  */
 const NAV_BOILERPLATE = /^(home|blog|contact|about|about us|privacy|privacy policy|terms|terms of service|sitemap|careers|login|search|reviews|gallery|faq|faqs|news)$/i;
 
+/**
+ * What this business sells, preferring what was read off their own pages.
+ *
+ * `derived_services` is a classifier's summary and comes back short and
+ * abstract: T-FIT's was ["Membership", "Facility Hire"], which is a
+ * description of a gym's business model rather than anything a visitor
+ * browses. The same scrape found nine real classes by name — AMRAP, Mini
+ * Hyrox, Legs Bums & Tums — each verified against the page it was read from.
+ * Those are what belongs in the offerings list, the nav, and a page each.
+ *
+ * The classifier's items are kept and appended rather than discarded: they are
+ * occasionally the only thing that names a whole line of work the entity
+ * extractor read as individual items.
+ */
+function offeringsFromEntities(entities: Entity[], derived: string[]): string[] {
+  const BROWSABLE = new Set(["offering", "class", "service", "treatment", "product", "dish", "menu-item", "course", "session"]);
+  const fromEntities = entities
+    .filter((entity) => BROWSABLE.has(entity.kind.toLowerCase()))
+    .map((entity) => entity.label.trim())
+    .filter(Boolean);
+
+  // Two entities is not a better list than a classifier's; nine is.
+  if (fromEntities.length < 3) return derived;
+
+  const seen = new Set(fromEntities.map((name) => name.toLowerCase()));
+  const merged = [...fromEntities];
+  for (const name of derived) {
+    if (!seen.has(name.toLowerCase())) merged.push(name);
+  }
+  return merged.slice(0, 12);
+}
+
 export function servicesFromFacts(facts: Record<string, unknown>): string[] {
   // Sitemap-derived names come from the site's own URL structure and are the
   // most reliable signal available — and on a light scrape they are the only
@@ -138,7 +171,7 @@ export function buildSiteBrief(
 
   const services = overrides.services?.filter(Boolean).length
     ? overrides.services.filter(Boolean)
-    : servicesFromFacts(facts);
+    : offeringsFromEntities(scrapeResults.entities ?? [], servicesFromFacts(facts));
 
   const derivedAreas = (facts.derived_areas as string[] | undefined) ?? [];
   const areas = overrides.areas?.filter(Boolean).length
