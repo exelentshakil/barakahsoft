@@ -178,5 +178,44 @@ export const localRetail: VerticalProfile = {
 
   schema: { localBusinessType: "Store", offeringSchemaType: "Product" },
   glyphs: { offering: "award", why: ["award", "clock", "shield", "wrench"] },
-  fallback: {},
+  // Used only when the copy model fails. Without these the fallback was
+  // forty tradesman strings, which is what a gym actually shipped with.
+  fallback: {
+    "heroHeadline":
+      "{business}, {city}",
+    "heroSubhead":
+      "An independent shop with people who know the stock. Come in, ring us, or order for delivery.",
+    "formTitle":
+      "Order or enquire",
+    "formSubtitle":
+      "We reply the same day",
+    "servicesEyebrow":
+      "What we sell",
+    "servicesHeadline":
+      "In the shop",
+    "servicesIntro":
+      "What we stock, and what we can order in for you.",
+    "offeringBlurb":
+      "{item}.",
+    "galleryEyebrow":
+      "In the shop",
+    "galleryHeadline":
+      "What you will find",
+    "processHeadline":
+      "Ordering and delivery",
+    "step1":
+      "Ring, message or come in and tell us what you are after.",
+    "step2":
+      "We confirm what we have and what it costs.",
+    "step3":
+      "Collect it, or we deliver it locally.",
+    "guaranteeEyebrow":
+      "Ordering",
+    "guaranteeHeadline":
+      "Delivery, notice and returns",
+    "guaranteeBody":
+      "We deliver locally and can usually turn things around quickly. Tell us your deadline and we will be honest about whether we can meet it.",
+    "bandBody":
+      "Come in, or send us a message and we will sort it.",
+  },
 };

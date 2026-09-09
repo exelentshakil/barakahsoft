@@ -182,5 +182,44 @@ export const hospitalityFood: VerticalProfile = {
 
   schema: { localBusinessType: "Restaurant", offeringSchemaType: "MenuItem" },
   glyphs: { offering: "award", why: ["award", "clock", "shield", "wrench"] },
-  fallback: {},
+  // Used only when the copy model fails. Without these the fallback was
+  // forty tradesman strings, which is what a gym actually shipped with.
+  fallback: {
+    "heroHeadline":
+      "{business}, {city}",
+    "heroSubhead":
+      "Book a table, see the menu, or just turn up. We are open most days and we are easy to find.",
+    "formTitle":
+      "Book a table",
+    "formSubtitle":
+      "We confirm every booking",
+    "servicesEyebrow":
+      "The menu",
+    "servicesHeadline":
+      "What we cook",
+    "servicesIntro":
+      "The dishes we are known for. The menu changes with what is good.",
+    "offeringBlurb":
+      "{item}.",
+    "galleryEyebrow":
+      "The room",
+    "galleryHeadline":
+      "What it is like to eat here",
+    "processHeadline":
+      "Booking and visiting",
+    "step1":
+      "Book online or ring us. Walk-ins are welcome when we have room.",
+    "step2":
+      "Tell us about allergies or anything you need and we will sort it.",
+    "step3":
+      "Turn up and we will look after you.",
+    "guaranteeEyebrow":
+      "Before you come",
+    "guaranteeHeadline":
+      "What to know before you visit",
+    "guaranteeBody":
+      "Opening hours, parking and dietary requirements are all on this page. If anything is unclear, ring us.",
+    "bandBody":
+      "Book a table, or come and find us.",
+  },
 };

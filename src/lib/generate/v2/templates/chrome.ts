@@ -35,16 +35,23 @@ export function navMarkup(ctx: RenderContext): string {
     </div>
   </aside>`;
 
+  // The vertical's own words. "Services"/"Service Areas" and the /services/
+  // and /areas/ segments were literals here, so a florist's nav said "Service
+  // Areas" and linked at a path the page body no longer uses.
+  const { nouns, lists, sections: profileSections } = ctx.brief.vertical;
+  const areasEnabled =
+    lists.areaCount > 0 && profileSections.some((entry) => entry.id === "areas" && entry.enabled);
+
   const servicesPanel = services.length
     ? `<li class="bs-nav__item" data-nav-dropdown>
-    <button class="bs-nav__link" type="button" data-nav-trigger aria-expanded="false">Services${icon("arrow", "bs-icon bs-icon--sm bs-nav__caret")}</button>
+    <button class="bs-nav__link" type="button" data-nav-trigger aria-expanded="false">${esc(nouns.offeringPlural)}${icon("arrow", "bs-icon bs-icon--sm bs-nav__caret")}</button>
     <div class="bs-nav__panel" data-nav-panel data-open="false">
-      <div class="bs-nav__panelhead"><span>Core services</span><span class="bs-nav__count">${services.length} offerings</span></div>
+      <div class="bs-nav__panelhead"><span>${esc(nouns.offeringPlural)}</span><span class="bs-nav__count">${services.length}</span></div>
       <div class="bs-nav__panelmain">
         <div class="bs-nav__panelgrid">
           ${services
             .map(
-              (service, index) => `<a href="${esc(ctx.href(`/services/${slug(service)}`))}">
+              (service, index) => `<a href="${esc(ctx.href(`/${nouns.offeringPath}/${slug(service)}`))}">
             ${thumbs[index % Math.max(thumbs.length, 1)] ? `<span class="bs-nav__thumb"><img src="${esc(thumbs[index % thumbs.length])}" alt="" width="96" height="96" loading="lazy"></span>` : `<span class="bs-nav__thumb bs-nav__thumb--glyph">${icon("wrench", "bs-icon bs-icon--sm")}</span>`}
             <span class="bs-nav__itemtext"><strong>${esc(service)}</strong><span>${esc(service)} in ${esc(brief.city)}</span></span>
           </a>`
@@ -57,16 +64,16 @@ export function navMarkup(ctx: RenderContext): string {
   </li>`
     : "";
 
-  const areasPanel = areas.length
+  const areasPanel = areas.length && areasEnabled
     ? `<li class="bs-nav__item" data-nav-dropdown>
-    <button class="bs-nav__link" type="button" data-nav-trigger aria-expanded="false">Service Areas${icon("arrow", "bs-icon bs-icon--sm bs-nav__caret")}</button>
+    <button class="bs-nav__link" type="button" data-nav-trigger aria-expanded="false">${esc(nouns.areaPlural)}${icon("arrow", "bs-icon bs-icon--sm bs-nav__caret")}</button>
     <div class="bs-nav__panel" data-nav-panel data-open="false">
-      <div class="bs-nav__panelhead"><span>Coverage locations</span><span class="bs-nav__count">${areas.length} zones covered</span></div>
+      <div class="bs-nav__panelhead"><span>${esc(nouns.areaPlural)}</span><span class="bs-nav__count">${areas.length}</span></div>
       <div class="bs-nav__panelmain">
         <div class="bs-nav__panelgrid bs-nav__panelgrid--areas">
           ${areas
             .map(
-              (area) => `<a href="${esc(ctx.href(`/areas/${slug(area)}`))}">
+              (area) => `<a href="${esc(ctx.href(`/${nouns.areaPath}/${slug(area)}`))}">
             <span class="bs-nav__thumb bs-nav__thumb--pin">${icon("pin", "bs-icon bs-icon--sm")}</span>
             <span class="bs-nav__itemtext"><strong>${esc(area)}</strong><span>${esc(brief.industry)} in ${esc(area)}</span></span>
           </a>`
@@ -89,8 +96,8 @@ export function navMarkup(ctx: RenderContext): string {
   // drawer degenerated into once services and areas were both in it.
   const drawerGroups: { title: string | null; links: { label: string; href: string }[] }[] = [
     { title: null, links: [{ label: "Home", href: ctx.href("/") }, { label: "About", href: ctx.href("/about") }, { label: "FAQ", href: ctx.href("/faq") }, { label: "Contact", href: ctx.href("/contact") }] },
-    { title: "Services", links: services.map((service) => ({ label: service, href: ctx.href(`/services/${slug(service)}`) })) },
-    { title: "Service areas", links: areas.map((area) => ({ label: area, href: ctx.href(`/areas/${slug(area)}`) })) },
+    { title: nouns.offeringPlural, links: services.map((service) => ({ label: service, href: ctx.href(`/${nouns.offeringPath}/${slug(service)}`) })) },
+    { title: nouns.areaPlural, links: areas.map((area) => ({ label: area, href: ctx.href(`/${nouns.areaPath}/${slug(area)}`) })) },
   ].filter((group) => group.links.length > 0);
 
   // The strip above the nav. On the reference sites this is where a company
@@ -165,6 +172,7 @@ export function navMarkup(ctx: RenderContext): string {
 
 export function footerMarkup(ctx: RenderContext): string {
   const { brief, copy, logoUrl } = ctx;
+  const { nouns } = brief.vertical;
   const year = new Date().getFullYear();
 
   const column = (title: string, links: { label: string; href: string }[]) =>
@@ -197,12 +205,12 @@ export function footerMarkup(ctx: RenderContext): string {
         ${brief.phone ? `<a class="bs-phone-xl" href="${esc(telHref(brief.phone) ?? "#")}">${esc(brief.phone)}</a>` : ""}
         ${brief.email ? `<a class="bs-footer__email" href="mailto:${esc(brief.email)}">${esc(brief.email)}</a>` : ""}
       </div>
-      ${column("Services", brief.services.slice(0, 8).map((service) => ({ label: service, href: ctx.href(`/services/${slug(service)}`) })))}
-      ${column("Service Areas", brief.areas.slice(0, 8).map((area) => ({ label: area, href: ctx.href(`/areas/${slug(area)}`) })))}
+      ${column(nouns.offeringPlural, brief.services.slice(0, 8).map((service) => ({ label: service, href: ctx.href(`/${nouns.offeringPath}/${slug(service)}`) })))}
+      ${column(nouns.areaPlural, brief.areas.slice(0, 8).map((area) => ({ label: area, href: ctx.href(`/${nouns.areaPath}/${slug(area)}`) })))}
       ${column("Useful Links", [
         { label: "Home", href: ctx.href("/") },
         { label: "About", href: ctx.href("/about") },
-        { label: "Services", href: ctx.href("/services") },
+        { label: nouns.offeringPlural, href: ctx.href(`/${nouns.offeringPath}`) },
         { label: "FAQ", href: ctx.href("/faq") },
         { label: "Contact", href: ctx.href("/contact") },
       ])}
@@ -222,7 +230,7 @@ export function footerMarkup(ctx: RenderContext): string {
          deliberate and shows the whole thing. -->
     <div class="bs-footer__wordmark" aria-hidden="true"><span>${esc(brief.businessName)}</span><span>${esc(brief.businessName)}</span></div>
     <div class="bs-footer__bottom">
-      <span>© ${year} ${esc(brief.businessName)}. ${esc(brief.industry)} in ${esc(brief.city)} and the surrounding area.</span>
+      <span>© ${year} ${esc(brief.businessName)}. ${esc(brief.industry)} in ${esc(brief.city)}${brief.vertical.lists.areaCount > 0 ? " and the surrounding area" : ""}.</span>
       <span><a href="${esc(ctx.href("/privacy"))}">Privacy Policy</a> · <a href="${esc(ctx.href("/terms"))}">Terms of Service</a></span>
     </div>
   </div>

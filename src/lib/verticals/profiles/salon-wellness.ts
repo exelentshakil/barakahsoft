@@ -169,5 +169,44 @@ export const salonWellness: VerticalProfile = {
 
   schema: { localBusinessType: "BeautySalon", offeringSchemaType: "Service" },
   glyphs: { offering: "award", why: ["award", "shield", "clock", "wrench"] },
-  fallback: {},
+  // Used only when the copy model fails. Without these the fallback was
+  // forty tradesman strings, which is what a gym actually shipped with.
+  fallback: {
+    "heroHeadline":
+      "{industry} in {city}",
+    "heroSubhead":
+      "Book with someone who takes the time to get it right. See the work, see the prices, then decide.",
+    "formTitle":
+      "Book an appointment",
+    "formSubtitle":
+      "We confirm every booking",
+    "servicesEyebrow":
+      "What we offer",
+    "servicesHeadline":
+      "Services and prices",
+    "servicesIntro":
+      "What each appointment includes and roughly how long it takes.",
+    "offeringBlurb":
+      "{item}.",
+    "galleryEyebrow":
+      "Our work",
+    "galleryHeadline":
+      "Recent work on real clients",
+    "processHeadline":
+      "Your first visit",
+    "step1":
+      "Book online or message us and tell us what you are after.",
+    "step2":
+      "We talk it through properly before we start.",
+    "step3":
+      "You leave happy, and we book the next one if you want to.",
+    "guaranteeEyebrow":
+      "Booking",
+    "guaranteeHeadline":
+      "Booking and cancellations",
+    "guaranteeBody":
+      "You can request a particular person when you book. Let us know as early as you can if you need to change an appointment.",
+    "bandBody":
+      "Book in, or message us if you are not sure what you need.",
+  },
 };

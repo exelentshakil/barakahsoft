@@ -196,5 +196,30 @@ export const homeServices: VerticalProfile = {
     why: ["shield", "award", "clock", "wrench"],
   },
 
-  fallback: {},
+  // Used only when the copy model fails. Without these the fallback was
+  // forty tradesman strings, which is what a gym actually shipped with.
+  fallback: {
+    "heroHeadline":
+      "Reliable {industry} in {city}",
+    "heroSubhead":
+      "Straightforward quotes, work done properly, and someone who answers the phone. Serving {city} and the surrounding area.",
+    "formTitle":
+      "Get your free quote",
+    "formSubtitle":
+      "No obligation, no pressure",
+    "servicesIntro":
+      "Everything we handle for homes and businesses across {city} and the surrounding area.",
+    "offeringBlurb":
+      "{item}, carried out by our own team and quoted clearly before any work starts.",
+    "galleryEyebrow":
+      "Our work",
+    "galleryHeadline":
+      "Recent projects",
+    "guaranteeHeadline":
+      "The work is done right, or we come back",
+    "guaranteeBody":
+      "We stand behind what we do. If something is not right, tell us and we will put it right.",
+    "bandBody":
+      "Tell us what is going on and we will come and look at it.",
+  },
 };

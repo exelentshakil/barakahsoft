@@ -13,6 +13,14 @@ export interface GeminiCallOptions {
    * it there threw away the whole build.
    */
   timeoutMs?: number;
+  /**
+   * How much of the output budget the model may spend reasoning before it has
+   * to start answering. Left unset, a thinking model can consume the entire
+   * ceiling on thoughts and return no answer at all.
+   */
+  thinkingBudget?: number;
+  /** Internal: set on the one retry after a budget exhaustion, to stop a loop. */
+  __retriedForBudget?: boolean;
 }
 
 // The strongest models for a call where output quality IS the product.
@@ -79,6 +87,7 @@ export async function callGemini(
   images?: GeminiImagePart[],
   options?: GeminiCallOptions
 ): Promise<string | null> {
+  const retriedForBudget = options?.__retriedForBudget === true;
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     console.error("[gemini] GEMINI_API_KEY is not set in this environment");
@@ -96,6 +105,13 @@ export async function callGemini(
   if (options?.temperature !== undefined) generationConfig.temperature = options.temperature;
   if (options?.maxTokens !== undefined) {
     generationConfig.maxOutputTokens = Math.min(options.maxTokens, MAX_OUTPUT_TOKENS);
+  }
+  // Cap reasoning so it cannot eat the answer. Defaults to a third of the
+  // output budget: enough for the model to plan, never enough for it to spend
+  // everything thinking and return an empty response.
+  if (options?.maxTokens !== undefined) {
+    const budget = options.thinkingBudget ?? Math.floor(Math.min(options.maxTokens, MAX_OUTPUT_TOKENS) / 3);
+    generationConfig.thinkingConfig = { thinkingBudget: budget };
   }
   if (Object.keys(generationConfig).length > 0) requestBody.generationConfig = generationConfig;
 
@@ -126,15 +142,51 @@ export async function callGemini(
 
       const data = await res.json();
       const candidateResult = data.candidates?.[0];
-      const text = candidateResult?.content?.parts?.[0]?.text;
 
-      // A model that stops on its own limit or a safety rule returns a
-      // perfectly successful response with no text in it, which read as
-      // "returned nothing" and pointed at the API key. Say which it was.
+      // Join every ANSWER part, not parts[0].
+      //
+      // The chain leads with a thinking model, and on those the response is a
+      // list of parts where the reasoning arrives first, flagged `thought:
+      // true`, and the answer follows. Reading parts[0] therefore read the
+      // model's reasoning when there was any, and read NOTHING when thinking
+      // consumed the output budget before the answer began — which returned
+      // null, and null in page-copy.ts silently becomes fallbackCopy: forty
+      // hardcoded tradesman strings, on every vertical. A gym shipped with
+      // "straightforward quotes, work done properly" because of this line.
+      //
+      // Line ~156 below has always added thoughtsTokenCount to the recorded
+      // usage, so the code knew thought parts existed while reading one part.
+      const parts: { text?: string; thought?: boolean }[] = candidateResult?.content?.parts ?? [];
+      const text = parts
+        .filter((part) => part?.thought !== true && typeof part?.text === "string")
+        .map((part) => part.text as string)
+        .join("");
+
       if (typeof text !== "string" || !text.trim()) {
+        const finishReason = candidateResult?.finishReason ?? "none";
+        const thoughts = data.usageMetadata?.thoughtsTokenCount ?? 0;
+
+        // Running out of budget mid-thought is a different failure from a
+        // safety block or a dead key, and it is fixable by asking again with
+        // room. Conflating the three is what hid this.
+        if (finishReason === "MAX_TOKENS" && !retriedForBudget) {
+          console.warn(
+            `[gemini] ${candidate} spent its whole budget thinking ` +
+              `(${thoughts} thought tokens, limit ${generationConfig.maxOutputTokens ?? "default"}) ` +
+              `and never began the answer — retrying with more room and less thinking`
+          );
+          return callGemini(prompt, candidate, images, {
+            ...options,
+            maxTokens: Math.min((options?.maxTokens ?? 8000) * 2, MAX_OUTPUT_TOKENS),
+            modelChain: [candidate],
+            __retriedForBudget: true,
+          });
+        }
+
         console.error(
-          `[gemini] empty content from ${candidate} — finishReason=${candidateResult?.finishReason ?? "none"}` +
-            ` limit=${generationConfig.maxOutputTokens ?? "default"}`
+          `[gemini] empty content from ${candidate} — finishReason=${finishReason}` +
+            ` limit=${generationConfig.maxOutputTokens ?? "default"} thoughtTokens=${thoughts}` +
+            ` parts=${parts.length}`
         );
         return null;
       }

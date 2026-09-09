@@ -124,121 +124,175 @@ function fallbackCopy(brief: SiteBrief): PageCopy {
   const trade = brief.industry;
   const action = brief.intent.primaryLabel;
   const services = brief.services.slice(0, 8);
+  const { nouns } = brief.vertical;
+  const offering = nouns.offering;
+  const offerings = nouns.offeringPlural.toLowerCase();
+  const customer = nouns.customer;
+  const work = nouns.work;
+
+  /**
+   * A line of fallback copy, from the vertical if it has one.
+   *
+   * This whole function used to be tradesman prose — "straightforward quotes,
+   * work done properly", "the site is left tidy", "we come back and put it
+   * right" — and it fires whenever the model call fails, which for a while was
+   * every hard vertical. A gym shipped with all of it.
+   *
+   * So every line is now either supplied by the profile (`vertical.fallback`,
+   * a field that was declared for exactly this and read by nothing) or a
+   * neutral default written to be true of any local business. Nothing here
+   * says "quote", "job" or "warranty" unless a profile asks for it.
+   */
+  const fb = (key: string, neutral: string): string => {
+    const supplied = brief.vertical.fallback?.[key];
+    return (supplied ?? neutral)
+      .replace(/\{city\}/g, city)
+      .replace(/\{business\}/g, brief.businessName)
+      .replace(/\{industry\}/g, trade)
+      .replace(/\{offering\}/g, offering)
+      .replace(/\{offerings\}/g, offerings)
+      .replace(/\{customer\}/g, customer)
+      .replace(/\{work\}/g, work);
+  };
 
   return {
     hero: {
       eyebrow: `${city} ${trade}`.slice(0, 60),
-      headline: `Reliable ${trade} in ${city}`.slice(0, 90),
+      headline: fb("heroHeadline", `${trade} in ${city}`).slice(0, 90),
       headlineMark: city,
-      subhead: `Straightforward quotes, work done properly, and someone who answers the phone. Serving ${city} and the surrounding area.`,
-      formTitle: "Get your free quote",
-      formSubtitle: "No obligation, no pressure",
+      subhead: fb(
+        "heroSubhead",
+        `${brief.businessName} looks after ${customer}s in ${city}. Get in touch and speak to someone who can actually help.`
+      ).slice(0, 260),
+      formTitle: fb("formTitle", action).slice(0, 46),
+      formSubtitle: fb("formSubtitle", "No obligation").slice(0, 60),
       submitLabel: action,
-      reassurance: "We reply the same working day.",
+      reassurance: fb("reassurance", "We reply the same working day.").slice(0, 70),
     },
     trust: {
       stats: [
         brief.rating ? { value: brief.rating.toFixed(1), label: "Average rating" } : { value: "100%", label: "Local team" },
-        { value: brief.reviewCount ? String(brief.reviewCount) : "5★", label: "Customer reviews" },
+        { value: brief.reviewCount ? String(brief.reviewCount) : "5\u2605", label: "Customer reviews" },
       ],
-      badges: [brief.licensedInsured ? "Licensed & insured" : "Locally owned", "Free quotes"],
+      badges: [brief.licensedInsured ? "Licensed & insured" : "Locally owned", "Local team"],
     },
     about: {
       eyebrow: `About ${brief.businessName}`.slice(0, 60),
-      headline: `Local ${trade} you can actually reach`.slice(0, 80),
+      headline: fb("aboutHeadline", `A local ${trade.toLowerCase()} you can actually reach`).slice(0, 80),
       headlineMark: "actually reach",
       paragraphs: [
-        trimToSentence(brief.aboutContent ?? `${brief.businessName} works with homeowners and businesses across ${city}, doing ${trade.toLowerCase()} properly and explaining it in plain language.`, 780),
+        trimToSentence(
+          brief.aboutContent ??
+            fb(
+              "aboutBody",
+              `${brief.businessName} looks after ${customer}s across ${city}, and explains things in plain language rather than jargon.`
+            ),
+          780
+        ),
       ],
       founderRole: brief.founder ? "Founder" : "",
-      sealLine: `${city} · Trusted local trade`.slice(0, 54),
+      sealLine: `${city} \u00b7 ${brief.businessName}`.slice(0, 54),
       stats: [],
       ctaLabel: action,
     },
     services: {
-      eyebrow: "What we do",
-      headline: `${trade} services in ${city}`.slice(0, 80),
+      eyebrow: fb("servicesEyebrow", "What we do").slice(0, 60),
+      headline: fb("servicesHeadline", `${nouns.offeringPlural} in ${city}`).slice(0, 80),
       headlineMark: city,
-      intro: `Everything we handle for homes and businesses across ${city} and the surrounding area.`,
-      items: services.map((name) => ({ name, blurb: `${name} carried out by our own team, quoted clearly before any work starts.` })),
+      intro: fb("servicesIntro", `What ${brief.businessName} offers ${customer}s across ${city}.`).slice(0, 320),
+      items: services.map((name) => ({
+        name,
+        blurb: fb("offeringBlurb", `${name}, handled by ${brief.businessName}'s own team.`).replace(/\{item\}/g, name),
+      })),
     },
     whyUs: {
       eyebrow: "Why us",
-      headline: "Why customers choose us",
-      intro: `What makes working with ${brief.businessName} different from the cheapest quote you will get.`,
+      headline: fb("whyUsHeadline", `Why ${customer}s choose us`).slice(0, 80),
+      intro: fb("whyUsIntro", `What working with ${brief.businessName} is actually like.`).slice(0, 320),
       points: [
-        { title: "Local and accountable", body: `We are based here, we work here, and you can reach us after the job is finished.` },
-        { title: "Clear pricing", body: "You get a written quote before anything starts. No surprises at the end." },
-        { title: "Our own team", body: "The people who quote the work are the people who do it." },
-        { title: "Done properly", body: "Materials, preparation and finish are the parts nobody sees. We do not cut them." },
+        { title: "Local and accountable", body: `We are based in ${city}, and you can reach us after the ${work} is done.` },
+        { title: "Clear from the start", body: "You know what you are getting and what it costs before anything begins." },
+        { title: "Our own people", body: "The people you speak to are the people who do the work." },
+        { title: "Done properly", body: "The parts nobody sees are the parts we do not cut." },
       ],
     },
     process: {
       eyebrow: "How it works",
-      headline: "Three steps, no surprises",
+      headline: fb("processHeadline", "Three steps, no surprises").slice(0, 80),
       steps: [
-        { title: "Tell us what you need", body: "Call or send the form. We ask a few questions to understand the job." },
-        { title: "We look properly", body: "We assess the work on site and put the price in writing." },
-        { title: "We get it done", body: "Booked in, completed, and tidied up behind us." },
+        { title: "Get in touch", body: fb("step1", "Call or send the form. We ask a few questions so we understand what you need.") },
+        { title: "We come back to you", body: fb("step2", "We confirm what we can do, when, and what it costs.") },
+        { title: "We get it done", body: fb("step3", `Booked in and completed, with no chasing on your side.`) },
       ],
     },
-    gallery: { eyebrow: "Our work", headline: "Recent projects", captions: [] },
+    gallery: {
+      eyebrow: fb("galleryEyebrow", "Our work").slice(0, 60),
+      headline: fb("galleryHeadline", `${brief.businessName} in ${city}`).slice(0, 80),
+      captions: [],
+    },
     band: {
-      headline: `Need a ${trade.toLowerCase()} in ${city}?`.slice(0, 80),
-      body: "Tell us what is going on and we will come and look at it.",
+      headline: fb("bandHeadline", `Looking for a ${trade.toLowerCase()} in ${city}?`).slice(0, 80),
+      body: fb("bandBody", "Tell us what you need and we will take it from there.").slice(0, 220),
       ctaLabel: action,
     },
-    reviews: { eyebrow: "Reviews", headline: "What our customers say" },
+    reviews: { eyebrow: "Reviews", headline: `What our ${customer}s say`.slice(0, 90) },
     areas: {
       eyebrow: "Where we work",
-      headline: `Serving ${city} and the surrounding area`.slice(0, 80),
-      body: `We cover ${brief.areas.slice(0, 6).join(", ") || city} and the towns around them. If you are not sure whether we reach you, just ask.`,
+      headline: `${nouns.areaPlural} around ${city}`.slice(0, 80),
+      body: `We cover ${brief.areas.slice(0, 6).join(", ") || city} and the area around them. If you are not sure whether we reach you, just ask.`,
     },
     booking: {
-      eyebrow: "Book a visit",
-      headline: "Pick a day that suits you",
+      eyebrow: fb("bookingEyebrow", "Get in touch").slice(0, 60),
+      headline: fb("bookingHeadline", "Pick a day that suits you").slice(0, 70),
       headlineMark: "suits you",
-      body: "Choose a preferred day and we will confirm a time that works for both of us.",
+      body: fb("bookingBody", "Choose a preferred day and we will confirm a time that works for both of us.").slice(0, 260),
     },
     guarantee: {
-      eyebrow: "Our promise",
-      headline: "The work is done right, or we come back",
-      body: "We stand behind what we do. If something is not right, tell us and we will put it right.",
+      eyebrow: fb("guaranteeEyebrow", "Our promise").slice(0, 60),
+      headline: fb("guaranteeHeadline", "You will know exactly where you stand").slice(0, 80),
+      body: fb(
+        "guaranteeBody",
+        "We tell you what to expect before you commit, and if something is not right we want to hear about it."
+      ).slice(0, 420),
       ctaLabel: action,
     },
     faq: {
       eyebrow: "Questions",
       headline: "Frequently asked questions",
-      items: [
-        { q: "How much will it cost?", a: "Every job is different, so we quote after seeing the work. The quote is free, written down, and there is no obligation." },
-        { q: "How soon can you start?", a: "It depends on the work and the season. Get in touch and we will tell you honestly where we are." },
-        { q: "Are you insured?", a: brief.licensedInsured ? "Yes — we are licensed, bonded and insured, and we are happy to show you the paperwork." : "Ask us and we will talk you through exactly how we are covered." },
-        { q: "Do you clean up afterwards?", a: "Yes. The site is left tidy — that is part of the job, not an extra." },
-        { q: "How long does the work take?", a: "Most jobs are done in a day or two once we start. We tell you the expected window before you commit, and if it changes you hear it from us first." },
-        { q: "Do you offer a warranty?", a: "Yes. We stand behind our workmanship, and we will tell you exactly what is covered and for how long before any work begins." },
-        { q: "What materials do you use?", a: "We use trade-quality materials suited to the job and the local weather, and we will explain the options and what each one costs." },
-        { q: "How do payments work?", a: "There is nothing to pay for the quote. We agree the payment terms in writing before starting, and there are no surprise charges at the end." },
-        { q: "What if something goes wrong after the job?", a: `Call us on ${brief.phone ?? "the number on this page"}. We are local, we are not going anywhere, and putting it right is part of the deal.` },
-        { q: "How do I get started?", a: `Send the form or call us. We will ask a few questions, arrange a time to look at the work, and give you a written price with no obligation.` },
-      ],
+      // Built from the vertical's own seed questions rather than ten hardcoded
+      // trade ones. The answers are deliberately thin: this path only runs when
+      // the model failed, and an honest "ask us" beats an invented specific.
+      items: brief.vertical.copy.faqSeeds.slice(0, 10).map((question) => ({
+        q: question.slice(0, 140),
+        a: fb(
+          "faqAnswer",
+          `Get in touch and we will answer that properly for your situation — call ${brief.phone ?? "the number on this page"} or send the form and we will come back to you.`
+        ).slice(0, 600),
+      })),
     },
     contact: {
       eyebrow: "Get in touch",
       headline: `Talk to a real person in ${city}`.slice(0, 80),
-      body: "Tell us what you need and we will come back to you the same working day.",
-      formTitle: "Request your quote",
-      formSubtitle: "No obligation",
+      body: fb("contactBody", "Tell us what you need and we will come back to you the same working day.").slice(0, 320),
+      formTitle: fb("formTitle", action).slice(0, 46),
+      formSubtitle: fb("formSubtitle", "No obligation").slice(0, 60),
       submitLabel: action,
     },
     footer: {
-      blurb: `${brief.businessName} provides ${trade.toLowerCase()} for homes and businesses across ${city} and the surrounding area.`,
-      ctaHeadline: `Ready to get started?`,
-      ctaBody: "Speak to us directly or request a quote today.",
+      blurb: fb(
+        "footerBlurb",
+        `${brief.businessName} is a ${trade.toLowerCase()} in ${city}, looking after ${customer}s across the area.`
+      ).slice(0, 320),
+      ctaHeadline: "Ready to get started?",
+      ctaBody: fb("footerCtaBody", "Speak to us directly, or send the form and we will come to you.").slice(0, 200),
       ctaLabel: action,
     },
     seo: {
       title: `${brief.businessName} | ${trade} in ${city}`.slice(0, 65),
-      description: `${trade} in ${city}. ${brief.licensedInsured ? "Licensed and insured. " : ""}Free quotes, local team, work done properly. Get in touch today.`.slice(0, 165),
+      description: fb(
+        "seoDescription",
+        `${trade} in ${city}. ${brief.businessName} looks after ${customer}s across the area. Get in touch today.`
+      ).slice(0, 165),
     },
   };
 }

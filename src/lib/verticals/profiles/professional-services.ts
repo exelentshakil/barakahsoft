@@ -184,5 +184,40 @@ export const professionalServices: VerticalProfile = {
 
   schema: { localBusinessType: "ProfessionalService", offeringSchemaType: "Service" },
   glyphs: { offering: "shield", why: ["award", "shield", "clock", "wrench"] },
-  fallback: {},
+  // Used only when the copy model fails. Without these the fallback was
+  // forty tradesman strings, which is what a gym actually shipped with.
+  fallback: {
+    "heroHeadline":
+      "{industry} in {city}",
+    "heroSubhead":
+      "Clear advice, a fixed price agreed up front, and the person you meet is the person who does the work.",
+    "formTitle":
+      "Request a consultation",
+    "formSubtitle":
+      "No obligation",
+    "servicesIntro":
+      "The matters we handle, described the way clients describe them.",
+    "offeringBlurb":
+      "{item}, handled by the person you speak to.",
+    "galleryEyebrow":
+      "Our work",
+    "galleryHeadline":
+      "How we have helped",
+    "processHeadline":
+      "How working with us goes",
+    "step1":
+      "Tell us the situation. The first conversation costs nothing.",
+    "step2":
+      "We set out what we would do and what it costs, in writing.",
+    "step3":
+      "We get on with it, and keep you posted throughout.",
+    "guaranteeEyebrow":
+      "Getting started",
+    "guaranteeHeadline":
+      "What it costs, and when you know",
+    "guaranteeBody":
+      "You get a fixed price for a described piece of work before anything begins. If your budget will not stretch to it, we say so at the first conversation.",
+    "bandBody":
+      "Tell us the situation and we will tell you where you stand.",
+  },
 };

@@ -27,7 +27,9 @@ export async function callFastModel(
 
   if (provider === "gemini") {
     // Force flash chain for wireframing
-    const flashChain = ["gemini-1.5-flash", "gemini-2.5-flash", "gemini-flash-latest"];
+    // gemini-1.5-flash is retired and 404s on the current key, so leading with
+    // it cost every fast call a wasted round-trip before it fell through.
+    const flashChain = ["gemini-flash-latest", "gemini-2.5-flash"];
     const chain = pinned ? [pinned, ...flashChain.filter((m) => m !== pinned)] : flashChain;
     return callGemini(prompt, chain[0], undefined, {
       system: options.system,

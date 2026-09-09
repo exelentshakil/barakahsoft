@@ -43,8 +43,8 @@ export interface RenderContext {
   primaryHref: string;
 }
 
-const FIELD_SERVICE = (services: string[]) =>
-  `<label class="bs-field"><span class="bs-sr">Service needed</span><select class="bs-select" name="service"><option value="">What do you need?</option>${services
+const FIELD_SERVICE = (services: string[], offeringPlural = "Service") =>
+  `<label class="bs-field"><span class="bs-sr">${esc(offeringPlural)}</span><select class="bs-select" name="service"><option value="">What are you after?</option>${services
     .map((service) => `<option value="${esc(service)}">${esc(service)}</option>`)
     .join("")}<option value="Something else">Something else</option></select></label>`;
 
@@ -53,9 +53,15 @@ function leadForm(ctx: RenderContext, title: string, subtitle: string, submitLab
   const { formSkin } = ctx.dna.treatment;
   // The bar already carries the discount, so the form goes back to
   // reassurance rather than repeating it three inches away.
+  // This used to discard the model's own form copy and substitute "Get your
+  // free quote" / "No obligation, no pressure" whenever the offer bar was
+  // showing — so a gym asked for a quote on a perfectly good build. The reason
+  // for the substitution was to stop the form repeating the bar's discount,
+  // which the vertical's own CTA wording does just as well.
   const muted = ctx.dna.resolutions.formOfferMuted;
-  const headTitle = muted && formSkin === "offer-banner" ? "Get your free quote" : title;
-  const headSub = muted && formSkin === "offer-banner" ? "No obligation, no pressure" : subtitle;
+  const { cta } = ctx.brief.vertical;
+  const headTitle = muted && formSkin === "offer-banner" ? cta.primaryLabel : title;
+  const headSub = muted && formSkin === "offer-banner" ? "No obligation" : subtitle;
 
   return `<form class="bs-form bs-form--${formSkin}" data-lead-form>
   <div class="bs-form__head">
@@ -89,6 +95,7 @@ export function heroSection(ctx: RenderContext): string {
     facebookUrl: brief.socials.find((url) => /facebook\.com/i.test(url)) ?? null,
     facebookRating: brief.facebookRating,
     facebookReviewCount: brief.facebookReviewCount,
+    trustSignals: brief.vertical.copy.trustSignals,
   });
 
   // The credential badges used to sit here AND in the trust bar, wrapping
@@ -683,10 +690,21 @@ export function guaranteeSection(ctx: RenderContext): string {
   const { copy, brief } = ctx;
   const photo = ctx.photos[5] ?? ctx.photos[2] ?? null;
   const points = [
-    brief.licensedInsured ? { glyph: "shield", title: "Licensed, bonded & insured", body: `Fully covered on every job in ${brief.city} and the surrounding area.` } : null,
-    { glyph: "award", title: "Workmanship stands behind it", body: "If something is not right, we come back and put it right. No argument." },
-    { glyph: "clock", title: "We turn up when we say", body: "Booked in properly, and you hear from us if anything changes." },
-  ].filter((point): point is { glyph: string; title: string; body: string } => point !== null);
+    // Three trade promises the model never saw, printed on every vertical: a
+    // gym does not offer a workmanship warranty and does not turn up anywhere.
+    // The vertical's own trust signals say what this business actually stands
+    // behind, and licensedInsured is still only claimed when the facts show it.
+    brief.licensedInsured
+      ? { glyph: "shield", title: "Licensed & insured", body: `Fully covered across ${brief.city} and the surrounding area.` }
+      : null,
+    ...brief.vertical.copy.trustSignals.slice(0, 3).map((signal, index) => ({
+      glyph: brief.vertical.glyphs.why[index + 1] ?? "award",
+      title: signal.split(/[,—-]/)[0].trim().slice(0, 44),
+      body: signal,
+    })),
+  ]
+    .filter((point): point is { glyph: string; title: string; body: string } => point !== null)
+    .slice(0, 3);
 
   return `<section id="guarantee" class="bs-section bs-guarantee">
   <div class="bs-container">

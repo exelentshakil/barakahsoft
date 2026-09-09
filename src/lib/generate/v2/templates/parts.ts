@@ -128,6 +128,8 @@ export function reviewPills(args: {
   mode?: "combined" | "two-pills" | "pills-stats";
   /** With a stat band below, the hero shows credentials rather than figures. */
   qualitative?: boolean;
+  /** The vertical's own trust signals, replacing hardcoded trade claims. */
+  trustSignals?: string[];
 }): string {
   if (!args.rating) return "";
   const mode = args.mode ?? "combined";
@@ -138,11 +140,12 @@ export function reviewPills(args: {
   const statRow =
     mode === "pills-stats"
       ? `<div class="bs-heroproof">${(
-          args.qualitative
-            ? ["Licensed &amp; insured", "Own crews, no subs", "Written warranty"]
-            : ["Licensed &amp; insured", "Free written quotes", "Workmanship warranty"]
+          // The vertical's own trust signals. These were six trade claims
+            // printed into the fold of every page — "own crews, no subs" on a
+            // gym — and none of them was gated on being true.
+            (args.trustSignals?.length ? args.trustSignals : ["Locally owned", "Independent", "Established here"]).slice(0, 3)
         )
-          .map((label) => `<span class="bs-heroproof__cell">${icon("check", "bs-icon bs-icon--sm")}${label}</span>`)
+          .map((label: string) => `<span class="bs-heroproof__cell">${icon("check", "bs-icon bs-icon--sm")}${label}</span>`)
           .join("")}</div>`
       : "";
 
