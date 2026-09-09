@@ -17,6 +17,7 @@ import type { PageCopy } from "@/lib/generate/v2/page-copy";
 import type { LayoutDna } from "@/lib/generate/v2/layout-dna";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
 import type { Entity } from "@/lib/extract-entities";
+import type { SectionId } from "@/lib/section-ids";
 
 /**
  * Which structural variant this lead gets for a given section.
@@ -50,6 +51,17 @@ export interface RenderContext {
    * must reach the page exactly as the scrape found it.
    */
   entities: Entity[];
+  /**
+   * The sections this page really has, in order.
+   *
+   * The navigation used to gate itself on the VERTICAL's section list, which
+   * was the same thing until the composer started deciding the page from a
+   * reference blueprint and the client's own facts. Now a page can have a
+   * pricing section its vertical never lists, or no areas section though its
+   * vertical enables them — so a nav reading the vertical would offer a menu
+   * to a section that is not on the page, and miss one that is.
+   */
+  pageSections: SectionId[];
 }
 
 /**

@@ -354,13 +354,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     // Deterministic and pure, so it is recomputed in each step rather than
     // carried through the step boundary as serialized state.
     const { layoutDnaFor } = await import("@/lib/generate/v2/layout-dna");
-    const { buildChromeData } = await import("@/lib/generate/v2/chrome-data");
     const dnaV2 = layoutDnaFor(`${brief.leadSlug}|${brief.businessName}|${brief.industry}|${brief.city}`, brief.layoutSalt ?? 0);
-    const chromeData = buildChromeData(brief, {
-      services: serviceNames,
-      areas: brief.areas,
-      innerPagesBuilt: Boolean(loaded.artifact?.inner_pages_built),
-    });
 
     // The page, assembled from templates the application owns.
     //

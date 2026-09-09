@@ -38,11 +38,14 @@ export function navMarkup(ctx: RenderContext): string {
   // The vertical's own words. "Services"/"Service Areas" and the /services/
   // and /areas/ segments were literals here, so a florist's nav said "Service
   // Areas" and linked at a path the page body no longer uses.
-  const { nouns, lists, sections: profileSections } = ctx.brief.vertical;
-  const areasEnabled =
-    lists.areaCount > 0 && profileSections.some((entry) => entry.id === "areas" && entry.enabled);
+  const { nouns, lists } = ctx.brief.vertical;
+  // Gated on the page that was actually built, not on the profile. A nav
+  // offering a menu to a section the composer dropped is a dead link on the
+  // one impression that decides the sale.
+  const onPage = (id: string) => ctx.pageSections.includes(id as (typeof ctx.pageSections)[number]);
+  const areasEnabled = lists.areaCount > 0 && onPage("areas");
 
-  const servicesPanel = services.length
+  const servicesPanel = services.length && onPage("services")
     ? `<li class="bs-nav__item" data-nav-dropdown>
     <button class="bs-nav__link" type="button" data-nav-trigger aria-expanded="false">${esc(nouns.offeringPlural)}${icon("arrow", "bs-icon bs-icon--sm bs-nav__caret")}</button>
     <div class="bs-nav__panel" data-nav-panel data-open="false">
@@ -97,7 +100,7 @@ export function navMarkup(ctx: RenderContext): string {
   const drawerGroups: { title: string | null; links: { label: string; href: string }[] }[] = [
     { title: null, links: [{ label: "Home", href: ctx.href("/") }, { label: "About", href: ctx.href("/about") }, { label: "FAQ", href: ctx.href("/faq") }, { label: "Contact", href: ctx.href("/contact") }] },
     { title: nouns.offeringPlural, links: services.map((service) => ({ label: service, href: ctx.href(`/${nouns.offeringPath}/${slug(service)}`) })) },
-    { title: nouns.areaPlural, links: areas.map((area) => ({ label: area, href: ctx.href(`/${nouns.areaPath}/${slug(area)}`) })) },
+    { title: nouns.areaPlural, links: areasEnabled ? areas.map((area) => ({ label: area, href: ctx.href(`/${nouns.areaPath}/${slug(area)}`) })) : [] },
   ].filter((group) => group.links.length > 0);
 
   // The strip above the nav. On the reference sites this is where a company

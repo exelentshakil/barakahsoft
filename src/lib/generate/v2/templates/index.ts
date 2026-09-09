@@ -227,6 +227,7 @@ export async function buildPage(args: {
     href,
     primaryHref: href("/contact"),
     entities,
+    pageSections: composition.sections.map((section) => section.id),
   };
 
   // The unified render engine: one renderer per section, and the reference
