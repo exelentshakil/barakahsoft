@@ -42,7 +42,7 @@ export const ICP_CATEGORIES: IcpCategory[] = [
     vertical: "professional-services",
     fit: "unsupported",
     match:
-      /\b(saas|software as a service|software (company|platform|product)|app developer|mobile app|web3|crypto|blockchain|fintech platform|ai (tool|startup|platform)|developer tool|api platform|venture capital|angel invest|startup accelerator)\b/i,
+      /\b(saas|software as a service|software (company|platform|product)|app developer|mobile app|web3|crypto|blockchain|fintech platform|ai (tool|startup|platform)|developer tool|api platform|venture capital|angel invest|startup accelerator)/i,
     why: "No Google Business Profile, no service area and no phone-first conversion, so the reviews, areas and call-to-action this engine is built around have nothing real behind them. Needs feature blocks, pricing tiers and product screenshots instead — a different product.",
   },
   {
@@ -51,7 +51,7 @@ export const ICP_CATEGORIES: IcpCategory[] = [
     vertical: "local-retail",
     fit: "unsupported",
     match:
-      /\b(dtc brand|direct[- ]to[- ]consumer|online (store|shop|boutique)|e-?commerce (brand|store)|shopify store|dropship)\b/i,
+      /\b(dtc brand|direct[- ]to[- ]consumer|online (store|shop|boutique)|e-?commerce (brand|store)|shopify store|dropship)/i,
     why: "Needs a product catalogue, a cart and inventory, which this engine does not build. A shop with a real premises and a Google listing is a different case and is supported.",
   },
   {
@@ -60,7 +60,7 @@ export const ICP_CATEGORIES: IcpCategory[] = [
     vertical: "home-services",
     fit: "native",
     match:
-      /\b(plumb|electric|hvac|heating|cooling|boiler|drain|roof|siding|gutter|contractor|builder|carpent|joiner|landscap|lawn|garden|tree surgeon|pest control|exterminator|locksmith|handyman|glazier|mover|removal|junk removal|cleaner|cleaning (company|service)|painter|decorator|plaster|tiler|flooring|insulation|solar|ev charger|paving|driveway|fenc|deck|remodel|renovat|restoration|water damage|auto repair|garage|mechanic|mot)\b/i,
+      /\b(plumb|electric|hvac|heating|cooling|boiler|drain|roof|siding|gutter|contractor|builder|carpent|joiner|landscap|lawn|garden|tree surgeon|pest control|exterminator|locksmith|handyman|glazier|mover|removal|junk removal|cleaner|cleaning (company|service)|painter|decorator|plaster|tiler|flooring|insulation|solar|ev charger|paving|driveway|fenc|deck|remodel|renovat|restoration|water damage|auto repair|garage|mechanic|mot\b)/i,
   },
   {
     slug: "health-wellness",
@@ -68,7 +68,7 @@ export const ICP_CATEGORIES: IcpCategory[] = [
     vertical: "health-wellness",
     fit: "native",
     match:
-      /\b(dentist|dental|orthodont|doctor|gp surgery|medical (clinic|practice)|chiropract|physio|physical therap|osteopath|podiatr|optician|optometr|veterinar|vet (clinic|practice)|therapist|counsell?or|psycholog|med ?spa|dermatolog|fertility|audiolog)\b/i,
+      /\b(dentist|dental|orthodont|doctor|gp surgery|medical (clinic|practice)|chiropract|physio|physical therap|osteopath|podiatr|optician|optometr|veterinar|vet (clinic|practice)|therapist|counsell?or|psycholog|med ?spa|dermatolog|fertility|audiolog)/i,
   },
   {
     slug: "beauty-fitness",
@@ -76,7 +76,7 @@ export const ICP_CATEGORIES: IcpCategory[] = [
     vertical: "salon-wellness",
     fit: "native",
     match:
-      /\b(hair ?(salon|dresser|stylist)|barber|nail ?(salon|bar|tech)|beauty (salon|clinic)|esthetic|aesthetic clinic|lash|brow|waxing|tanning|massage|spa\b|day spa|gym\b|fitness (studio|centre|center)|personal train|yoga|pilates|crossfit|martial arts|dance (studio|school))\b/i,
+      /\b(hair ?(salon|dresser|stylist)|barber|nail ?(salon|bar|tech)|beauty (salon|clinic)|esthetic|aesthetic clinic|lash|brow|waxing|tanning|massage|spa\b|day spa|gym\b|fitness (studio|centre|center)|personal train|yoga|pilates|crossfit|martial arts|dance (studio|school))/i,
   },
   {
     slug: "hospitality-food",
@@ -84,7 +84,7 @@ export const ICP_CATEGORIES: IcpCategory[] = [
     vertical: "hospitality-food",
     fit: "native",
     match:
-      /\b(restaurant|bistro|brasserie|café|cafe\b|coffee ?(shop|house)|takeaway|take ?out|pizzeria|bakery|patisserie|deli\b|butcher|caterer|catering|pub\b|bar\b|nightclub|brewery|hotel|guest ?house|bed and breakfast|b&b|airbnb|event venue|wedding (venue|planner)|tour (guide|operator))\b/i,
+      /\b(restaurant|bistro|brasserie|café|cafe\b|coffee ?(shop|house)|takeaway|take ?out|pizzeria|bakery|patisserie|deli\b|butcher|caterer|catering|pub\b|bar\b|nightclub|brewery|hotel|guest ?house|bed and breakfast|b&b|airbnb|event venue|wedding (venue|planner)|tour (guide|operator))/i,
   },
   {
     slug: "professional-services",
@@ -92,7 +92,7 @@ export const ICP_CATEGORIES: IcpCategory[] = [
     vertical: "professional-services",
     fit: "native",
     match:
-      /\b(law firm|solicitor|attorney|barrister|legal (services|practice)|accountant|accountancy|cpa\b|bookkeep|tax (advisor|consultant)|financial (advisor|planner)|mortgage (broker|advisor)|insurance (broker|agent)|estate agent|real estate (agent|broker)|letting agent|surveyor|architect|interior design|consultan|recruit|staffing agency|marketing agency|advertising agency|it support|managed services)\b/i,
+      /\b(law firm|solicitor|attorney|barrister|legal (services|practice)|accountant|accountancy|cpa\b|bookkeep|tax (advisor|consultant)|financial (advisor|planner)|mortgage (broker|advisor)|insurance (broker|agent)|estate agent|real estate (agent|broker)|letting agent|surveyor|architect|interior design|consultan|recruit|staffing agency|marketing agency|advertising agency|it support|managed services)/i,
   },
   {
     slug: "local-retail",
@@ -100,7 +100,7 @@ export const ICP_CATEGORIES: IcpCategory[] = [
     vertical: "local-retail",
     fit: "native",
     match:
-      /\b(florist|flower shop|garden cent|jewell?er|boutique|gift shop|book ?shop|pet (shop|store|groom)|furniture (shop|store)|home ?ware|hardware store|farm shop|off licence|convenience store|pharmacy|chemist|bike shop|music shop|toy shop|antique)\b/i,
+      /\b(florist|flower shop|garden cent|jewell?er|boutique|gift shop|book ?shop|pet (shop|store|groom)|furniture (shop|store)|home ?ware|hardware store|farm shop|off licence|convenience store|pharmacy|chemist|bike shop|music shop|toy shop|antique)/i,
   },
   {
     slug: "creators-educators",
@@ -108,7 +108,7 @@ export const ICP_CATEGORIES: IcpCategory[] = [
     vertical: "professional-services",
     fit: "adapted",
     match:
-      /\b(coach|coaching|keynote speaker|author\b|podcast|course creator|online course|coaching program|corporate train|tutor|tuition|driving (school|instructor)|music (teacher|lessons)|language school)\b/i,
+      /\b(coach|coaching|keynote speaker|author\b|podcast|course creator|online course|coaching program|corporate train|tutor|tuition|driving (school|instructor)|music (teacher|lessons)|language school)/i,
   },
   {
     slug: "creative-portfolio",
@@ -116,7 +116,7 @@ export const ICP_CATEGORIES: IcpCategory[] = [
     vertical: "professional-services",
     fit: "adapted",
     match:
-      /\b(photograph|videograph|film ?maker|graphic design|ux design|ui design|illustrat|artist\b|fashion design|copywrit|creative director|branding studio|design studio)\b/i,
+      /\b(photograph|videograph|film ?maker|graphic design|ux design|ui design|illustrat|artist\b|fashion design|copywrit|creative director|branding studio|design studio)/i,
   },
   {
     slug: "nonprofit-community",
@@ -124,7 +124,7 @@ export const ICP_CATEGORIES: IcpCategory[] = [
     vertical: "professional-services",
     fit: "adapted",
     match:
-      /\b(charity|charities|non-?profit|ngo\b|foundation\b|community (centre|center|trust)|church|mosque|synagogue|temple\b|religious|private school|nursery|day ?care|childcare|preschool|association|society\b)\b/i,
+      /\b(charity|charities|non-?profit|ngo\b|foundation\b|community (centre|center|trust)|church|mosque|synagogue|temple\b|religious|private school|nursery|day ?care|childcare|preschool|association|society\b)/i,
   },
 ];
 

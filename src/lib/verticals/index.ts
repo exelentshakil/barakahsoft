@@ -1,5 +1,10 @@
 import { PERSONAS, type PersonaSlug } from "@/lib/personas";
+import { healthWellness } from "@/lib/verticals/profiles/health-wellness";
 import { homeServices } from "@/lib/verticals/profiles/home-services";
+import { hospitalityFood } from "@/lib/verticals/profiles/hospitality-food";
+import { localRetail } from "@/lib/verticals/profiles/local-retail";
+import { professionalServices } from "@/lib/verticals/profiles/professional-services";
+import { salonWellness } from "@/lib/verticals/profiles/salon-wellness";
 import type { VerticalProfile } from "@/lib/verticals/types";
 
 export * from "@/lib/verticals/types";
@@ -17,7 +22,17 @@ export { fill, fillVars, type FillVars } from "@/lib/verticals/fill";
  * checking of SectionId and SCHEMA_TYPES, and a profile change being reviewable
  * as a diff, are the reasons to be happy about it.
  */
-export const PROFILES: VerticalProfile[] = [homeServices];
+export const PROFILES: VerticalProfile[] = [
+  // Most specific first. home-services is last of the "native" set because its
+  // patterns are the broadest; professional-services is last overall because it
+  // is the catch-all for expertise businesses.
+  healthWellness,
+  hospitalityFood,
+  salonWellness,
+  localRetail,
+  homeServices,
+  professionalServices,
+];
 
 export const DEFAULT_PROFILE = homeServices;
 

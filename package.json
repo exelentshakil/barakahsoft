@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint && tsx scripts/check-route-auth.ts && tsx scripts/check-branding.ts",
+    "lint": "next lint && tsx scripts/check-route-auth.ts && tsx scripts/check-branding.ts && tsx scripts/check-verticals.ts",
     "visual-qa:install": "playwright install chromium",
     "visual-qa:worker": "tsx --env-file=.env.local scripts/visual-qa-worker.ts",
     "visual-qa:once": "tsx --env-file=.env.local scripts/visual-qa-worker.ts --once",
@@ -14,7 +14,8 @@
     "restyle": "tsx --env-file=.env.local scripts/restyle-lead.ts",
     "check": "tsx --env-file=.env.local scripts/check-site.ts",
     "check:auth": "tsx scripts/check-route-auth.ts",
-    "check:branding": "tsx scripts/check-branding.ts"
+    "check:branding": "tsx scripts/check-branding.ts",
+    "check:verticals": "tsx scripts/check-verticals.ts"
   },
   "dependencies": {
     "@radix-ui/react-collapsible": "^1.1.20",
