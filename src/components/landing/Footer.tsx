@@ -1,15 +1,19 @@
-const LOGO_URL = "https://barakahsoft.com/wp-content/uploads/2026/01/Logo1.png";
+import { getTenant } from "@/lib/tenant";
+// Copyright and legal links. The entity named here is the one that contracts
+// with the client, so it has to be whichever brand's domain this is — a
+// partner's footer claiming another company's copyright is a real problem, not
+// a cosmetic one.
+export async function Footer() {
+  const { brand } = await getTenant();
 
-// Copyright + legal links verbatim from the live barakahsoft.com footer.
-export function Footer() {
   return (
     <footer className="border-t border-border bg-background py-14 text-foreground">
       <div className="mx-auto max-w-6xl px-6">
         <div className="grid gap-10 border-b border-border pb-10 md:grid-cols-[1.4fr_0.8fr_1fr]">
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={LOGO_URL} alt="BarakahSoft" className="h-7 w-auto" />
-            <p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">BarakahSoft creates human-reviewed homepage redesigns for businesses that want to look as good online as they do in real life.</p>
+            <img src={brand.logoUrl} alt={brand.name} className="h-7 w-auto" />
+            <p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">{brand.name} creates human-reviewed homepage redesigns for businesses that want to look as good online as they do in real life.</p>
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">The offer</p>
@@ -18,14 +22,14 @@ export function Footer() {
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Talk to us</p>
             <div className="mt-4 space-y-3 text-sm">
-              <a href="tel:+13075336678" className="block transition-colors hover:text-primary">+1 (307) 533-6678</a>
-              <a href="mailto:hello@barakahsoft.com" className="block text-muted-foreground transition-colors hover:text-primary">hello@barakahsoft.com</a>
+              <a href={`tel:${brand.phoneE164}`} className="block transition-colors hover:text-primary">{brand.phoneDisplay}</a>
+              <a href={`mailto:${brand.supportEmail}`} className="block text-muted-foreground transition-colors hover:text-primary">{brand.supportEmail}</a>
               <address className="not-italic text-muted-foreground">30 N. Gould St. Ste R, Sheridan, WY 82801</address>
             </div>
           </div>
         </div>
         <div className="flex flex-col gap-4 pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <span>Copyright © 2026 BarakahSoft LLC. All Rights Reserved.</span>
+          <span>Copyright © {new Date().getFullYear()} {brand.legalEntity}. All Rights Reserved.</span>
           <div className="flex gap-5"><a href="/terms-and-conditions/" className="hover:text-primary">Terms</a><a href="/privacy-policy/" className="hover:text-primary">Privacy</a><a href="/refund-policy/" className="hover:text-primary">Refund policy</a></div>
         </div>
       </div>

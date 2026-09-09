@@ -75,10 +75,30 @@ export interface TenantLanding {
   heroEyebrow?: string;
   heroHeadline?: string;
   heroSubhead?: string;
+  /** Background footage for the hero. Omitted renders the poster image alone. */
+  heroVideoUrl?: string;
   team: { name: string; role: string; photoUrl?: string; bio?: string }[];
   /** Before/after work shown as proof. Scoped per tenant so nobody shows another's clients. */
   sampleSites: { label: string; beforeUrl?: string; afterUrl?: string; href?: string }[];
   faq: { q: string; a: string }[];
+}
+
+/**
+ * A tenant's own legal copy.
+ *
+ * Deliberately NOT inheritable. The platform's terms name a Wyoming LLC, a
+ * specific management fee and a specific refund remedy; rendering those under
+ * a partner's name with the entity swapped would not be a branding slip, it
+ * would be publishing a false legal document that a customer could rely on.
+ *
+ * A tenant without these gets a short holding page pointing at their support
+ * address, which is honest, rather than someone else's contract.
+ */
+export interface TenantLegal {
+  /** Rendered as trusted HTML — authored by us, per tenant, never user input. */
+  termsHtml?: string;
+  privacyHtml?: string;
+  refundHtml?: string;
 }
 
 export interface Tenant {
@@ -96,5 +116,7 @@ export interface Tenant {
   isDefault?: boolean;
   brand: TenantBrand;
   commerce: TenantCommerce;
+  /** Own legal copy. Never inherited from another tenant — see TenantLegal. */
+  legal?: TenantLegal;
   landing: TenantLanding;
 }

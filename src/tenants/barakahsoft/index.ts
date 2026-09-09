@@ -51,7 +51,22 @@ export const barakahsoft: Tenant = {
 
   landing: {
     audience: "Home-services businesses in the US and UK, reached by cold outreach and paid social.",
-    team: [],
+    heroVideoUrl:
+      "https://liepxeeugfrxmidcmbxo.supabase.co/storage/v1/object/public/landing/barakahsoft-hero.mp4",
+    team: [
+      {
+        name: "Shakil Ahmed",
+        role: "Founder · Research and design direction",
+        photoUrl: "https://barakahsoft.com/wp-content/uploads/2026/07/Shak-Headshot-Medium.jpeg",
+        bio: "I own the audit, category research, redesign direction, and final quality of what reaches your business.",
+      },
+      {
+        name: "Jim Sabellico",
+        role: "Client relations · Communication & support",
+        photoUrl: "https://barakahsoft.com/wp-content/uploads/2026/07/Jim-Headshot-Medium.jpeg",
+        bio: "I keep communication clear, make sure the concept reaches you, and help you understand the simplest next step.",
+      },
+    ],
     sampleSites: [],
     faq: [],
   },

@@ -1,3 +1,4 @@
+import { brandChannels } from "@/lib/brand-style";
 import { compileDesignTokens } from "@/lib/design-tokens";
 import type { SitePayload } from "@/components/site-shell/types";
 
@@ -33,8 +34,9 @@ export function getShellStyle(payload: Pick<SitePayload, "brandColorHsl" | "font
   // globals.css is built from these instead of a second hardcoded color, so
   // "premium" stays true whether a lead's real brand color is navy, red, or
   // teal, not just for one demo color.
-  const match = payload.brandColorHsl?.match(HSL_TRIPLET);
-  const channels = match ? { h: match[1], s: `${match[2]}%`, l: `${match[3]}%` } : DEFAULT_PRIMARY_HSL;
+  // Shared with the per-tenant theme in lib/brand-style.ts, so the channel
+  // handling has one implementation rather than two that can drift.
+  const channels = brandChannels(payload.brandColorHsl);
   cssVars["--primary-h"] = channels.h;
   cssVars["--primary-s"] = channels.s;
   cssVars["--primary-l"] = channels.l;

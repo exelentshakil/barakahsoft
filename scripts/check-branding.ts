@@ -31,6 +31,13 @@ const GUARDED = [
   "src/components/portal/sections/ProposalFooter.tsx",
   "src/components/portal/sections/ProposalDecisionBox.tsx",
   "src/components/portal/sections/ProposalCheckoutModal.tsx",
+  "src/components/landing/Nav.tsx",
+  "src/components/landing/Footer.tsx",
+  "src/components/landing/Hero.tsx",
+  "src/components/landing/LandingTeamShowcase.tsx",
+  "src/components/landing/CookieConsent.tsx",
+  "src/app/layout.tsx",
+  "src/app/admin/layout.tsx",
 ];
 
 /**
@@ -43,6 +50,38 @@ const GUARDED = [
  */
 const ALLOWED_LINE = /^\s*(\/\/|\*|\/\*)|const fromEmail = \(\)|const senderName = \(\)|\|\| "BarakahSoft"/;
 
+/**
+ * Comment bodies, including JSX ones.
+ *
+ * A prose line inside a {/* ... *\/} block explaining WHY the platform's pixel
+ * must not fire on a partner's domain has to be allowed to name the platform;
+ * rewording the explanation to satisfy a grep would make the comment worse.
+ * Tracked as a state machine rather than per-line, because a JSX comment's
+ * middle lines carry no marker of their own.
+ */
+function stripComments(lines: string[]): string[] {
+  let inBlock = false;
+  return lines.map((line) => {
+    let out = line;
+    if (inBlock) {
+      const end = out.indexOf("*/");
+      if (end === -1) return "";
+      out = out.slice(end + 2);
+      inBlock = false;
+    }
+    const start = out.indexOf("/*");
+    if (start !== -1) {
+      const end = out.indexOf("*/", start + 2);
+      if (end === -1) {
+        inBlock = true;
+        return out.slice(0, start);
+      }
+      out = out.slice(0, start) + out.slice(end + 2);
+    }
+    return out;
+  });
+}
+
 const failures: string[] = [];
 
 for (const file of GUARDED) {
@@ -51,12 +90,13 @@ for (const file of GUARDED) {
     failures.push(`${file}: guarded file is missing — update scripts/check-branding.ts`);
     continue;
   }
-  const lines = fs.readFileSync(full, "utf-8").split("\n");
+  const raw = fs.readFileSync(full, "utf-8").split("\n");
+  const lines = stripComments(raw);
   lines.forEach((line, index) => {
     if (ALLOWED_LINE.test(line)) return;
     for (const { pattern, why } of BANNED) {
       if (pattern.test(line)) {
-        failures.push(`${file}:${index + 1}  ${why}\n    ${line.trim().slice(0, 110)}`);
+        failures.push(`${file}:${index + 1}  ${why}\n    ${raw[index].trim().slice(0, 110)}`);
       }
     }
   });

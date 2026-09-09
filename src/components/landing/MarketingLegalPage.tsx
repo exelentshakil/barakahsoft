@@ -1,3 +1,4 @@
+import { getTenant } from "@/lib/tenant";
 import type { ReactNode } from "react";
 import { Footer } from "@/components/landing/Footer";
 import { Nav } from "@/components/landing/Nav";
@@ -46,12 +47,71 @@ const CONTENT: Record<LegalKind, { title: string; intro: string; sections: { tit
   },
 };
 
-export function MarketingLegalPage({ kind }: { kind: LegalKind }) {
+const OWNER = "barakahsoft";
+
+export async function MarketingLegalPage({ kind }: { kind: LegalKind }) {
+  const tenant = await getTenant();
+  const own = tenant.legal?.[`${kind}Html` as const];
+
+  // The copy below is the platform's own: it names a Wyoming LLC, a $497
+  // management fee and a specific refund remedy. Rendering it for another
+  // tenant with the entity name swapped would publish a false contract that a
+  // customer could rely on — a legal problem, not a branding one. So a tenant
+  // gets its own copy or a holding page, never someone else's.
+  if (tenant.slug !== OWNER && !own) {
+    return (
+      <main className="min-h-screen bg-white text-[#1e212b]">
+        <Nav />
+        <section className="px-6 py-24">
+          <div className="mx-auto max-w-2xl">
+            <h1 className="font-sans text-4xl font-semibold tracking-[-0.04em] text-[#07284d]">
+              {CONTENT[kind].title}
+            </h1>
+            <p className="mt-5 text-lg leading-8 text-[#60778d]">
+              {tenant.brand.legalEntity} has not published this policy online yet. For a copy, or for
+              any question about how we handle your information, email{" "}
+              <a className="font-semibold text-primary hover:underline" href={`mailto:${tenant.brand.supportEmail}`}>
+                {tenant.brand.supportEmail}
+              </a>
+              .
+            </p>
+          </div>
+        </section>
+        <Footer />
+      </main>
+    );
+  }
+
+  if (own) {
+    return (
+      <main className="min-h-screen bg-white text-[#1e212b]">
+        <Nav />
+        <section className="border-b border-[#d9e8f4] bg-[#eef7ff] px-6 py-20">
+          <div className="mx-auto max-w-4xl">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">
+              {tenant.brand.legalEntity}
+            </p>
+            <h1 className="mt-4 font-sans text-5xl font-semibold tracking-[-0.05em] text-[#07284d]">
+              {CONTENT[kind].title}
+            </h1>
+          </div>
+        </section>
+        <section className="px-6 py-16">
+          <article
+            className="mx-auto max-w-3xl space-y-6 text-base leading-8 text-[#60778d]"
+            dangerouslySetInnerHTML={{ __html: own }}
+          />
+        </section>
+        <Footer />
+      </main>
+    );
+  }
+
   const content = CONTENT[kind];
   return (
     <main className="min-h-screen bg-white text-[#1e212b]">
       <Nav />
-      <section className="border-b border-[#d9e8f4] bg-[#eef7ff] px-6 py-20"><div className="mx-auto max-w-4xl"><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">BarakahSoft LLC</p><h1 className="mt-4 font-sans text-5xl font-semibold tracking-[-0.05em] text-[#07284d]">{content.title}</h1><p className="mt-5 max-w-2xl text-lg leading-8 text-[#60778d]">{content.intro}</p><p className="mt-5 text-xs font-semibold uppercase tracking-wider text-[#7890a5]">Last updated August 2026</p></div></section>
+      <section className="border-b border-[#d9e8f4] bg-[#eef7ff] px-6 py-20"><div className="mx-auto max-w-4xl"><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0c68c8]">{tenant.brand.legalEntity}</p><h1 className="mt-4 font-sans text-5xl font-semibold tracking-[-0.05em] text-[#07284d]">{content.title}</h1><p className="mt-5 max-w-2xl text-lg leading-8 text-[#60778d]">{content.intro}</p><p className="mt-5 text-xs font-semibold uppercase tracking-wider text-[#7890a5]">Last updated August 2026</p></div></section>
       <section className="px-6 py-16"><article className="mx-auto max-w-3xl space-y-10 text-base leading-8 text-[#60778d]">{content.sections.map((section) => <section key={section.title}><h2 className="font-sans text-2xl font-semibold tracking-tight text-[#07284d]">{section.title}</h2><div className="mt-3">{section.body}</div></section>)}</article></section>
       <Footer />
     </main>

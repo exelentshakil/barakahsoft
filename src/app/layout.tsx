@@ -3,63 +3,87 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import Script from "next/script";
 import { CookieConsent } from "@/components/landing/CookieConsent";
 import "./globals.css";
+import { getTenant } from "@/lib/tenant";
+import { brandChannels, brandStyle } from "@/lib/brand-style";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" });
 
 const LOGO_URL = "/icon.png";
-const SITE_URL = "https://home.barakahsoft.com";
-const TITLE = "Free Homepage Redesign & Local AI Search Audit | BarakahSoft";
-const DESCRIPTION = "Get a free, human-reviewed homepage redesign & Queens/NYC search audit built from your real business, branding, and services. No card and no obligation.";
+const DESCRIPTION =
+  "Get a free, human-reviewed homepage redesign and local search audit built from your real business, branding and services. No card and no obligation.";
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  title: TITLE,
-  description: DESCRIPTION,
-  icons: { icon: LOGO_URL, shortcut: LOGO_URL, apple: LOGO_URL },
-  openGraph: {
-    title: TITLE,
+/**
+ * Metadata is generated per request rather than exported as a static object,
+ * because the title, canonical origin and site name all belong to whichever
+ * brand's domain this request arrived on. A static object cannot read
+ * headers(), so a partner's domain would have served BarakahSoft's title and
+ * OG tags to every crawler that visited it.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const { brand, siteBaseUrl } = await getTenant();
+  const title = `Free Homepage Redesign & Local Search Audit | ${brand.name}`;
+
+  return {
+    metadataBase: new URL(siteBaseUrl),
+    title,
     description: DESCRIPTION,
-    url: SITE_URL,
-    siteName: "BarakahSoft",
-    images: [{ url: LOGO_URL }],
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: TITLE,
-    description: DESCRIPTION,
-    images: [LOGO_URL],
-  },
-};
+    icons: { icon: LOGO_URL, shortcut: LOGO_URL, apple: LOGO_URL },
+    openGraph: {
+      title,
+      description: DESCRIPTION,
+      url: siteBaseUrl,
+      siteName: brand.name,
+      images: [{ url: LOGO_URL }],
+      type: "website",
+    },
+    twitter: { card: "summary_large_image", title, description: DESCRIPTION, images: [LOGO_URL] },
+  };
+}
 
-export const viewport: Viewport = {
-  themeColor: "#4338ca",
-};
+/**
+ * The browser chrome colour on mobile.
+ *
+ * Generated per request for the same reason the metadata is: on a partner's
+ * domain, the address bar tinting itself the platform's indigo is a small
+ * detail that reads as a mistake.
+ */
+export async function generateViewport(): Promise<Viewport> {
+  const { brand } = await getTenant();
+  return { themeColor: `hsl(${brandChannels(brand.primaryHsl).h} ${brandChannels(brand.primaryHsl).s} ${brandChannels(brand.primaryHsl).l})` };
+}
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const tenant = await getTenant();
+  const { analytics } = tenant.brand;
+
   return (
-    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
+    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`} style={brandStyle(tenant.brand.primaryHsl)}>
       <head>
         
 
 
         
-              {/* Meta Pixel Code */}
-        <Script id="meta-pixel" strategy="afterInteractive">
-          {`(function() {
+        {/*
+          Analytics belong to whichever brand's domain this is.
+          
+          These were two hardcoded ids guarded by a hardcoded list of
+          barakahsoft.com hostnames. That happened to keep the platform's pixel
+          off a partner's domain, but by coincidence rather than by design — the
+          moment a host was added to one list and not the other, a partner's
+          visitors would have been reported into the platform's ad account.
+          
+          Now nothing renders unless THIS tenant has configured an id, and the
+          only runtime check left is the one that is genuinely about the page
+          rather than the brand: operator and internal routes are not measured.
+        */}
+        {analytics?.metaPixelId && (
+          <Script id="meta-pixel" strategy="afterInteractive">
+            {`(function() {
   try {
-  var h = window.location.hostname.toLowerCase();
-  var p = window.location.pathname;
-  if (p.indexOf("/admin") === 0 || p.indexOf("/client-portal") === 0 || p.indexOf("/visual-qa") === 0 || p.indexOf("/api") === 0 || p.indexOf("/auth") === 0 || p.indexOf("/login") === 0) {
-    throw new Error('skip_pixel');
-  }
-  var isLandingHost = h === "redesign.barakahsoft.com" || h === "barakahsoft.com" || h === "www.barakahsoft.com" || h === "home.barakahsoft.com";
-  var isLandingPath = p === "/";
-  if (!isLandingHost || !isLandingPath) {
-    throw new Error('skip_pixel');
-  }
-} catch(e) { if(e.message === 'skip_pixel') { window.fbq = function(){}; return; } }
+    var p = window.location.pathname;
+    if (p !== "/") throw new Error('skip_pixel');
+  } catch(e) { window.fbq = function(){}; return; }
 
 !function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -69,34 +93,35 @@ n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '1777973306713413');
+fbq('init', ${JSON.stringify(analytics.metaPixelId)});
 fbq('track', 'PageView');
 })();`}
-        </Script>
+          </Script>
+        )}
       </head>
       <body className="min-h-screen bg-white font-sans text-slate-900 antialiased">
-        <noscript><img height="1" width="1" style={{ display: "none" }} src="https://www.facebook.com/tr?id=1777973306713413&ev=PageView&noscript=1" alt="" /></noscript>
-        
-        {/* Microsoft Clarity Analytics & Heatmaps (Restricted to main landing page only) */}
-        <Script id="microsoft-clarity" strategy="afterInteractive">
-          {`(function(c,l,a,r,i,t,y){
-        try {
-          var h = window.location.hostname.toLowerCase();
-          var p = window.location.pathname;
-          if (p.indexOf("/admin") === 0 || p.indexOf("/client-portal") === 0 || p.indexOf("/visual-qa") === 0 || p.indexOf("/api") === 0 || p.indexOf("/auth") === 0 || p.indexOf("/login") === 0) {
-            return;
-          }
-          var isLandingHost = h === "redesign.barakahsoft.com" || h === "barakahsoft.com" || h === "www.barakahsoft.com" || h === "home.barakahsoft.com";
-          var isLandingPath = p === "/";
-          if (!isLandingHost || !isLandingPath) {
-            return;
-          }
-        } catch(e) { return; }
+        {analytics?.metaPixelId && (
+          <noscript>
+            <img
+              height="1"
+              width="1"
+              style={{ display: "none" }}
+              src={`https://www.facebook.com/tr?id=${encodeURIComponent(analytics.metaPixelId)}&ev=PageView&noscript=1`}
+              alt=""
+            />
+          </noscript>
+        )}
+
+        {analytics?.clarityId && (
+          <Script id="microsoft-clarity" strategy="afterInteractive">
+            {`(function(c,l,a,r,i,t,y){
+        if (window.location.pathname !== "/") return;
         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
         t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "y86f9mlgdd");`}
-        </Script>
+    })(window, document, "clarity", "script", ${JSON.stringify(analytics.clarityId)});`}
+          </Script>
+        )}
         
         {children}
         <CookieConsent />

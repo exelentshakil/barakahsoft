@@ -5,7 +5,9 @@ import Link from "next/link";
 import { ShieldCheck, Settings, X, Check, Cookie } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const STORAGE_KEY = "barakahsoft-cookie-consent-v2";
+// Brand-neutral: one deployment serves several brands, and a partner's
+// visitors should not have their choice stored under another company's key.
+const STORAGE_KEY = "cookie-consent-v2";
 
 export interface CookiePreferences {
   necessary: boolean;
@@ -65,7 +67,7 @@ export function CookieConsent() {
     }
 
     // Notify any custom listeners
-    window.dispatchEvent(new CustomEvent("barakahsoft_cookie_consent", { detail: prefs }));
+    window.dispatchEvent(new CustomEvent("cookie_consent", { detail: prefs }));
   }
 
   function saveDecision(analytics: boolean, marketing: boolean) {

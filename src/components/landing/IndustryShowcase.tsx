@@ -22,7 +22,7 @@ export async function IndustryShowcase() {
         <SectionEyebrow icon={Telescope}>Design standard</SectionEyebrow>
         <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">See the quality bar before we build yours.</h2>
         <p className="mt-3 text-muted-foreground">
-          These are curated real websites we study for structure, visual hierarchy, proof, and conversion ideas. They are research references, not BarakahSoft client work.
+          These are curated real websites we study for structure, visual hierarchy, proof, and conversion ideas. They are research references, not our own client work.
         </p>
       </div>
 
