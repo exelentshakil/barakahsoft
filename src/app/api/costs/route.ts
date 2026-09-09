@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isAdminSession } from "@/lib/is-admin-session";
+import { requireOperator } from "@/lib/tenant-scope";
 import { pricingConfigured } from "@/lib/cost/pricing";
 
 // What a period cost and what it returned.
@@ -30,7 +30,8 @@ function rangeFor(period: string, fromParam: string | null, toParam: string | nu
 }
 
 export async function GET(req: Request) {
-  if (!(await isAdminSession())) {
+  const ctx = await requireOperator();
+  if (!ctx) {
     return NextResponse.json({ error: "Operator access required" }, { status: 403 });
   }
 
@@ -41,27 +42,43 @@ export async function GET(req: Request) {
   }
 
   const admin = createAdminClient();
+  // Every figure below is one brand's. A partner reading their own P&L must
+  // not see the platform's model spend, ad spend or revenue — and the platform
+  // must not book a partner's revenue as its own.
+  const tenantSlug = ctx.tenantSlug;
 
-  const [usage, costs, paid] = await Promise.all([
+  const [usage, costs, paid, coverage] = await Promise.all([
     admin
       .from("ai_usage")
       .select("prompt_tokens, completion_tokens, cost_usd")
+      .eq("tenant_slug", tenantSlug)
       .gte("created_at", from.toISOString())
       .lte("created_at", to.toISOString())
       .returns<{ prompt_tokens: number; completion_tokens: number; cost_usd: number | null }[]>(),
     admin
       .from("operating_costs")
       .select("kind, amount_usd")
+      .eq("tenant_slug", tenantSlug)
       .gte("incurred_on", from.toISOString().slice(0, 10))
       .lte("incurred_on", to.toISOString().slice(0, 10))
       .returns<{ kind: string; amount_usd: number }[]>(),
     admin
       .from("leads")
       .select("id, paid_at")
+      .eq("tenant_slug", tenantSlug)
       .not("paid_at", "is", null)
       .gte("paid_at", from.toISOString())
       .lte("paid_at", to.toISOString())
       .returns<{ id: string; paid_at: string }[]>(),
+    // ICP coverage, over every lead rather than the period: the question it
+    // answers is "which businesses can this engine actually serve", and the
+    // answer does not reset every fortnight. The unsupported bucket is the
+    // roadmap — it says which section renderer to build next.
+    admin
+      .from("leads")
+      .select("icp_category, icp_fit")
+      .eq("tenant_slug", tenantSlug)
+      .returns<{ icp_category: string | null; icp_fit: string | null }[]>(),
   ]);
 
   const rows = usage.data ?? [];
@@ -89,5 +106,19 @@ export async function GET(req: Request) {
     pricingConfigured: await pricingConfigured(),
   };
 
-  return NextResponse.json({ ...summary, paidLeads: (paid.data ?? []).length });
+  // Coverage, folded into the same call the P&L panel already makes.
+  const leads = coverage.data ?? [];
+  const byFit: Record<string, number> = { native: 0, adapted: 0, unsupported: 0, unclassified: 0 };
+  const byCategory: Record<string, number> = {};
+  for (const lead of leads) {
+    byFit[lead.icp_fit ?? "unclassified"] = (byFit[lead.icp_fit ?? "unclassified"] ?? 0) + 1;
+    const category = lead.icp_category ?? "unclassified";
+    byCategory[category] = (byCategory[category] ?? 0) + 1;
+  }
+
+  return NextResponse.json({
+    ...summary,
+    paidLeads: (paid.data ?? []).length,
+    coverage: { total: leads.length, byFit, byCategory },
+  });
 }

@@ -33,12 +33,12 @@ interface ShowcaseRow {
 const APPROVED_STATUSES = new Set<string>(["qa_approved", "delivered", "paid", "live", "won"]);
 
 /**
- * Approved showcases, highest sort weight first.
+ * One brand's approved showcases, highest sort weight first.
  *
  * A row missing either image is dropped rather than rendered half-empty — a
  * one-sided "before/after" is worse than one fewer card.
  */
-export async function listApprovedShowcases(limit = 12): Promise<ShowcaseEntry[]> {
+export async function listApprovedShowcases(tenantSlug: string, limit = 12): Promise<ShowcaseEntry[]> {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return [];
   }
@@ -50,6 +50,9 @@ export async function listApprovedShowcases(limit = 12): Promise<ShowcaseEntry[]
       .from("leads")
       .select("slug, business_name, showcase_label, showcase_before_url, showcase_after_url, status")
       .eq("showcase_approved", true)
+      // Scoped, or a partner's landing page advertises the platform's clients
+      // as its own work — and the platform advertises the partner's.
+      .eq("tenant_slug", tenantSlug)
       .order("showcase_sort", { ascending: false })
       .order("showcase_approved_at", { ascending: false })
       .limit(limit)

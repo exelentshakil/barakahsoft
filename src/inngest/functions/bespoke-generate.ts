@@ -106,11 +106,6 @@ export const bespokeGenerate = inngest.createFunction(
     const model = undefined;
     const admin = createAdminClient();
 
-    // Every model call this run makes is billed to this lead. Generation is
-    // concurrency-limited to one run per lead, so a module-level current
-    // lead is accurate without threading an id through every signature.
-    setUsageContext(lead_id, `phase-${phase}`);
-
     const loaded = await step.run("load-context", async () => {
       const [{ data: lead }, { data: scrapeResults }, { data: artifact }] = await Promise.all([
         admin.from("leads").select("*").eq("id", lead_id).single<Lead>(),
@@ -121,6 +116,13 @@ export const bespokeGenerate = inngest.createFunction(
       if (!scrapeResults) throw new Error(`bespoke-generate: lead ${lead_id} has not been scraped yet`);
       return { lead, scrapeResults, artifact };
     });
+
+    // Every model call this run makes is billed to this lead, and to the brand
+    // that owns it. Generation is concurrency-limited to one run per lead, so
+    // a module-level current context is accurate without threading an id
+    // through every signature. Set after load-context because the tenant is
+    // read from the lead.
+    setUsageContext(lead_id, `phase-${phase}`, loaded.lead.tenant_slug);
 
     // Step 0 of the router: which kind of business is this? Everything below —
     // the section order, the nouns, the call to action, the photo queries, the

@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { scrapeBusiness } from "@/lib/scrape";
 import { autoSelectOrResearch, presetFor } from "@/lib/inspiration-library";
 import { classifyBusiness } from "@/lib/classify-business";
+import { classifyIcp } from "@/lib/verticals/icp";
 import { compileDesignTokens } from "@/lib/design-tokens";
 import { evaluateLeadValue } from "@/lib/audit/lead-value";
 
@@ -69,6 +70,29 @@ export const scrapeRun = inngest.createFunction(
       const previousDerived = (scrape.facts.business_name as string | undefined) ?? null;
       const nameIsMachineDerived = !lead.business_name || lead.business_name === previousDerived;
       if (identity.businessName && nameIsMachineDerived) updates.business_name = identity.businessName;
+
+      // Step 0 of the router: which of the nine macro-ICPs is this, and can
+      // this engine serve it well? Recorded on the lead so coverage is a
+      // measured number rather than an estimate, and read by the generate
+      // route, which refuses to build a page for a business whose proof and
+      // conversion model this engine has nothing to fill.
+      //
+      // Free: no model call, just patterns over what classifyBusiness already
+      // returned plus the two facts that decide whether a page can be thick.
+      const places = (scrape.facts.places as { rating?: number | null } | undefined) ?? undefined;
+      const nap = (scrape.facts.nap as { phones?: string[] } | undefined) ?? undefined;
+      const icp = classifyIcp({
+        industry: identity.industry,
+        businessName: identity.businessName,
+        services: identity.services,
+        isLocal: identity.isLocal,
+        hasPhone: Boolean(nap?.phones?.length || lead.phone),
+        hasReviews: Boolean(places?.rating),
+      });
+      updates.icp_category = icp.category.slug;
+      updates.icp_fit = icp.fit;
+      // Only fills a vertical the operator has not already chosen.
+      if (!lead.vertical_slug) updates.vertical_slug = icp.category.vertical;
       if (Object.keys(updates).length > 0) {
         await admin.from("leads").update(updates).eq("id", lead_id);
       }

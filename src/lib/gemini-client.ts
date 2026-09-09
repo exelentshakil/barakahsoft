@@ -148,6 +148,7 @@ export async function callGemini(
       const ctx = usageContext();
       void recordUsage({
         leadId: ctx.leadId,
+        tenantSlug: ctx.tenantSlug,
         purpose: ctx.purpose,
         provider: "gemini",
         model: candidate,

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isAdminSession } from "@/lib/is-admin-session";
+import { requireOperator } from "@/lib/tenant-scope";
 import { fetchDailyInsights } from "@/lib/meta/ads-insights";
 
 // Pull ad spend from Meta into the period totals.
@@ -14,8 +14,21 @@ import { fetchDailyInsights } from "@/lib/meta/ads-insights";
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
-  if (!(await isAdminSession())) {
+  const ctx = await requireOperator();
+  if (!ctx) {
     return NextResponse.json({ error: "Operator access required" }, { status: 403 });
+  }
+
+  // META_ADS_TOKEN and META_AD_ACCOUNT_ID are the platform's, so this pulls
+  // the platform's spend. Left ungated it would import BarakahSoft's ad spend
+  // into a partner's P&L and make their unit economics fiction. Per-tenant ad
+  // credentials are the fix when a partner runs ads; refusing is the honest
+  // answer until then.
+  if (ctx.tenantSlug !== "barakahsoft") {
+    return NextResponse.json(
+      { error: "Ad-spend sync is not configured for this account. Add costs manually for now." },
+      { status: 501 }
+    );
   }
 
   const body = await req.json().catch(() => null);

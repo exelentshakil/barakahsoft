@@ -1,3 +1,4 @@
+import { getTenant } from "@/lib/tenant";
 import { listApprovedShowcases } from "@/lib/showcase/list";
 import { ShowcaseGrid } from "@/components/landing/ShowcaseGrid";
 
@@ -12,7 +13,10 @@ import { ShowcaseGrid } from "@/components/landing/ShowcaseGrid";
 // no clients.
 
 export async function ShowcaseComparisons() {
-  const entries = await listApprovedShowcases();
+  // Whose work this is. Resolved from the host, so a partner's landing page
+  // shows their own delivered redesigns and never the platform's clients.
+  const tenant = await getTenant();
+  const entries = await listApprovedShowcases(tenant.slug);
   if (entries.length === 0) return null;
 
   return (

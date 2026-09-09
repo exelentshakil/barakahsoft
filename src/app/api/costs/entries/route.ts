@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isAdminSession } from "@/lib/is-admin-session";
+import { requireOperator } from "@/lib/tenant-scope";
 
 // Costs that are not model calls — ad spend, tooling, anything else set
 // against revenue for a period.
@@ -9,7 +9,8 @@ import { isAdminSession } from "@/lib/is-admin-session";
 // could not reach the one screen that compares spend to what came in.
 
 export async function GET(req: Request) {
-  if (!(await isAdminSession())) {
+  const ctx = await requireOperator();
+  if (!ctx) {
     return NextResponse.json({ error: "Operator access required" }, { status: 403 });
   }
   const limit = Math.min(Number(new URL(req.url).searchParams.get("limit") ?? 20), 100);
@@ -17,6 +18,7 @@ export async function GET(req: Request) {
   const { data, error } = await admin
     .from("operating_costs")
     .select("*")
+    .eq("tenant_slug", ctx.tenantSlug)
     .order("incurred_on", { ascending: false })
     .limit(limit);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -24,7 +26,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  if (!(await isAdminSession())) {
+  const ctx = await requireOperator();
+  if (!ctx) {
     return NextResponse.json({ error: "Operator access required" }, { status: 403 });
   }
 
@@ -44,6 +47,7 @@ export async function POST(req: Request) {
 
   const admin = createAdminClient();
   const { error } = await admin.from("operating_costs").insert({
+    tenant_slug: ctx.tenantSlug,
     kind,
     label: typeof body?.label === "string" && body.label.trim() ? body.label.trim().slice(0, 120) : null,
     amount_usd: amount,
@@ -55,14 +59,21 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  if (!(await isAdminSession())) {
+  const ctx = await requireOperator();
+  if (!ctx) {
     return NextResponse.json({ error: "Operator access required" }, { status: 403 });
   }
   const id = new URL(req.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 });
 
   const admin = createAdminClient();
-  const { error } = await admin.from("operating_costs").delete().eq("id", id);
+  // Scoped on the way out too: an id is guessable, and a delete that is not
+  // scoped is one brand erasing another's books.
+  const { error } = await admin
+    .from("operating_costs")
+    .delete()
+    .eq("id", id)
+    .eq("tenant_slug", ctx.tenantSlug);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

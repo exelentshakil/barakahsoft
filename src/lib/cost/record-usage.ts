@@ -12,6 +12,8 @@ import { costOf } from "@/lib/cost/pricing";
 
 export interface UsageRecord {
   leadId?: string | null;
+  /** Whose spend this is. Defaults to the platform when unset. */
+  tenantSlug?: string | null;
   provider: "openai" | "gemini";
   model: string;
   purpose?: string | null;
@@ -28,6 +30,7 @@ export async function recordUsage(usage: UsageRecord): Promise<void> {
     const admin = createAdminClient();
     await admin.from("ai_usage").insert({
       lead_id: usage.leadId ?? null,
+      tenant_slug: usage.tenantSlug ?? "barakahsoft",
       provider: usage.provider,
       model: usage.model,
       purpose: usage.purpose ?? null,
@@ -51,13 +54,26 @@ export async function recordUsage(usage: UsageRecord): Promise<void> {
  * the current lead is set once at the top of a run and read by the clients.
  */
 let currentLeadId: string | null = null;
+let currentTenant: string | null = null;
 let currentPurpose: string | null = null;
 
-export function setUsageContext(leadId: string | null, purpose?: string | null): void {
+export function setUsageContext(
+  leadId: string | null,
+  purpose?: string | null,
+  /**
+   * Whose spend this is.
+   *
+   * Carried separately from the lead because lead_id is deliberately nullable
+   * — work not tied to a lead would otherwise be unattributable, and a
+   * partner's P&L would silently inherit the platform's model spend.
+   */
+  tenantSlug?: string | null
+): void {
   currentLeadId = leadId;
   currentPurpose = purpose ?? null;
+  currentTenant = tenantSlug ?? null;
 }
 
-export function usageContext(): { leadId: string | null; purpose: string | null } {
-  return { leadId: currentLeadId, purpose: currentPurpose };
+export function usageContext(): { leadId: string | null; purpose: string | null; tenantSlug: string | null } {
+  return { leadId: currentLeadId, purpose: currentPurpose, tenantSlug: currentTenant };
 }

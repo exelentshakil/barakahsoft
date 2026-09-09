@@ -1,4 +1,5 @@
 import { profileForLead } from "@/lib/verticals/resolve";
+import { classifyIcp } from "@/lib/verticals/icp";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminSession } from "@/lib/is-admin-session";
@@ -133,6 +134,38 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     `${brief.leadSlug}|${brief.businessName}|${brief.industry}|${brief.city}`,
     brief.layoutSalt ?? 0
   );
+  // The fit gate.
+  //
+  // "Always premium" is only a guarantee if the engine declines the work it
+  // cannot do well. This is a local-business lead-generation site builder: it
+  // proves with Google reviews, converts on a call or a form, and ranks on a
+  // named service area. A SaaS startup has none of those, so it would get a
+  // page with an empty reviews block, a Service Areas section listing nothing
+  // real, and a "Get a free quote" button — visibly worse than what we sell,
+  // on exactly the sort of lead most likely to judge us on design.
+  //
+  // Refused rather than built, with the reason, and overridable: an operator
+  // who knows better sets the vertical on the brief screen, which counts as
+  // the deliberate decision this is protecting against making by accident.
+  if (lead.icp_fit === "unsupported" && !lead.vertical_slug) {
+    const icp = classifyIcp({
+      industry: lead.industry,
+      businessName: lead.business_name,
+      services: brief.services,
+    });
+    return NextResponse.json(
+      {
+        error:
+          icp.reason ??
+          "This business is outside what this engine builds well, so it has not been generated.",
+        icpCategory: lead.icp_category,
+        icpFit: lead.icp_fit,
+        override: "Set a vertical on the brief screen to build anyway.",
+      },
+      { status: 422 }
+    );
+  }
+
   const { ready, warnings } = briefReadiness(brief);
 
   // Generating from a brief this thin produces exactly the generic page

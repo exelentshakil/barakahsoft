@@ -254,6 +254,7 @@ export async function callOpenAI(prompt: string, options: CallOptions = {}): Pro
         const ctx = usageContext();
         void recordUsage({
           leadId: ctx.leadId,
+          tenantSlug: ctx.tenantSlug,
           purpose: ctx.purpose,
           provider: "openai",
           model,
