@@ -388,6 +388,10 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
         clientPhotos: pool.filter((photo) => photo.source === "client").map((photo) => photo.url),
         brandHex: clientBrandHex,
         design: dna,
+        // What this business actually has, verified against the pages it was
+        // read from. Decides which of the reference's sections can be filled;
+        // an empty list simply falls the page back to the vertical's own list.
+        entities: loaded.scrapeResults.entities ?? [],
         innerPagesBuilt: Boolean(loaded.artifact?.inner_pages_built),
       });
     })) as Awaited<ReturnType<typeof import("@/lib/generate/v2/templates").buildPage>>;
@@ -402,7 +406,10 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
       css: `${tokenBlock}\n${BASE_STYLESHEET}`,
       rationale: page.rationale,
       sections: page.sections,
-      notes: [] as string[],
+      // Sections the reference site asked for that this build dropped, and
+      // why. Surfaced to the operator through qa_notes below; the recurring
+      // entries are the renderers worth building next.
+      notes: page.notes,
     };
 
     await step.run("persist-build", async () => {

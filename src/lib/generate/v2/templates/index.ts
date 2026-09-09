@@ -1,4 +1,6 @@
-import type { SectionId } from "@/lib/verticals/types";
+import type { SectionId } from "@/lib/section-ids";
+import { composePage } from "@/lib/generate/v2/compose";
+import type { Entity } from "@/lib/extract-entities";
 import { layoutDnaFor, type LayoutDna } from "@/lib/generate/v2/layout-dna";
 import { derivePalette, rgbTriplet, readableOn, strongOn, contrastOn } from "@/lib/generate/v2/palette";
 import type { DesignDna } from "@/lib/design-dna";
@@ -49,6 +51,10 @@ export interface BuiltPage {
   tokens: Record<string, string>;
   fontHref: string;
   rationale: string;
+  /** Sections the reference asked for that this build could not or would not
+   *  render, each with the reason. Written to qa_notes; this list is the
+   *  roadmap for which renderer to build next. */
+  notes: string[];
 }
 
 function fontHrefFor(display: string, body: string): string {
@@ -107,9 +113,13 @@ export async function buildPage(args: {
   brandHex: string | null;
   /** The operator's design direction from the brief screen. */
   design: DesignDna | null;
+  /** Verified facts from the client's own site. Decides which of the
+   *  reference's sections this business can actually fill. */
+  entities?: Entity[];
   innerPagesBuilt: boolean;
 }): Promise<BuiltPage> {
   const { brief, logoUrl, media, photos, clientPhotos, brandHex, design, innerPagesBuilt } = args;
+  const entities = args.entities ?? [];
 
   const dna = layoutDnaFor(`${brief.leadSlug}|${brief.businessName}|${brief.industry}|${brief.city}`, brief.layoutSalt ?? 0);
 
@@ -131,7 +141,25 @@ export async function buildPage(args: {
   const type = design?.typography.displayFamily
     ? { display: design.typography.displayFamily, body: design.typography.bodyFamily || design.typography.displayFamily }
     : TYPE_PAIRS[dna.seed % TYPE_PAIRS.length];
-  const copy = await generatePageCopy(brief, TONES[dna.seed % TONES.length]);
+  const composition = composePage({
+    vertical: brief.vertical,
+    design,
+    capability: {
+      entities,
+      hasReviews: Boolean(brief.rating || brief.reviewCount),
+      hasPhotos: clientPhotos.length > 0,
+      areaCount: brief.areas.length,
+      serviceCount: brief.services.length,
+    },
+  });
+  console.log(
+    `[build-page] ${composition.sections.length} sections from the ${composition.source}` +
+      `${composition.notes.length ? `, ${composition.notes.length} dropped` : ""}: ` +
+      composition.sections.map((section) => section.kind).join(" → ")
+  );
+
+
+  const copy = await generatePageCopy(brief, TONES[dna.seed % TONES.length], composition.sections);
 
   // Before phase 2 the inner routes genuinely do not exist, so linking at them
   // would ship a nav full of 404s on the impression that decides the sale.
@@ -196,25 +224,27 @@ export async function buildPage(args: {
     primaryHref: href("/contact"),
   };
 
-  // The unified render engine: one renderer per section kind, and the vertical
-  // profile decides which of them run and in what order.
+  // The unified render engine: one renderer per section, and the reference
+  // site's own structure decides which of them run and in what order.
   //
-  // This was a literal array, which is why a restaurant got a Service Areas
-  // section and a single-location florist got eight invented towns. The
-  // home-services profile lists exactly these thirteen ids in exactly this
-  // order with these labels, so a trade's page is byte-identical.
+  // This was a literal array — which is why a restaurant got a Service Areas
+  // section and a single-location florist got eight invented towns — and then
+  // a per-vertical list, which fixed those two cases and left every business
+  // in a vertical with the same page. Now a best-in-class site in the lead's
+  // industry supplies the sequence and the client's own verified facts decide
+  // which of it they can fill. See compose.ts.
   //
   // `label` is the studio panel name, never page text — every heading a
   // visitor reads is written by the model into `copy`, which is why a menu and
   // a service list can share one renderer.
-  const built = brief.vertical.sections
-    .filter((section) => section.enabled)
+  const labelFor = new Map(brief.vertical.sections.map((section) => [section.id, section.label]));
+  const built = composition.sections
     .map((section) => {
       const renderer = RENDERERS[section.id];
       return {
         id: section.id as string,
         kind: renderer.kind,
-        label: section.label ?? renderer.label,
+        label: labelFor.get(section.id) ?? renderer.label,
         html: renderer.render(ctx),
       };
     })
@@ -280,6 +310,7 @@ export async function buildPage(args: {
     bodyHtml: built.map((section) => section.html).join("\n"),
     footerHtml: footerMarkup(ctx),
     sections: built.map((section) => ({ ...section, locked: false })),
+    notes: composition.notes,
     copy,
     dna,
     tokens,

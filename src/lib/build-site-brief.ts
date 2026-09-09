@@ -233,6 +233,10 @@ export function buildSiteBrief(
       .slice(0, 6),
     heroImage,
     factsDigest: buildRichContext(facts, { relevantPage: findRelevantPage(facts), maxChars: 5000 }),
+    // Read once at analysis time and verified against their source pages.
+    // Empty for any lead scraped before entity extraction existed, which
+    // simply leaves the copy prompt as it was.
+    entities: scrapeResults.entities ?? [],
     licensedInsured: findLicenseInsuranceMention(facts),
     leadSlug: lead.slug,
     // The complaints the owner ticked on the intake form. These never

@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { scrapeBusiness } from "@/lib/scrape";
 import { autoSelectOrResearch, presetFor } from "@/lib/inspiration-library";
 import { classifyBusiness } from "@/lib/classify-business";
+import { extractEntities } from "@/lib/extract-entities";
 import { classifyIcp } from "@/lib/verticals/icp";
 import { resolveVerticalAsync } from "@/lib/verticals/resolve";
 import { compileDesignTokens } from "@/lib/design-tokens";
@@ -126,6 +127,35 @@ export const scrapeRun = inngest.createFunction(
       if (identity.services.length > 0) facts.derived_services = identity.services;
       if (identity.areas.length > 0) facts.derived_areas = identity.areas;
       await admin.from("scrape_results").update({ facts }).eq("lead_id", lead_id);
+    });
+
+    // What this business specifically HAS, read from the pages already
+    // fetched: membership tiers, classes, staff, amenities, policies.
+    //
+    // Its own step because it is a second model call and because a failure
+    // here must not cost the identification above — a lead with no entities
+    // still builds, from the vertical's section list, exactly as before.
+    await step.run("extract-entities", async () => {
+      const { data: scrape } = await admin
+        .from("scrape_results")
+        .select("facts")
+        .eq("lead_id", lead_id)
+        .maybeSingle<{ facts: Record<string, unknown> }>();
+      if (!scrape?.facts) return { skipped: "no facts" };
+
+      const { entities, dropped } = await extractEntities(scrape.facts);
+      await admin.from("scrape_results").update({ entities }).eq("lead_id", lead_id);
+
+      const byKind = entities.reduce<Record<string, number>>((counts, entity) => {
+        counts[entity.kind] = (counts[entity.kind] ?? 0) + 1;
+        return counts;
+      }, {});
+      console.log(
+        `[scrape-run] entities for ${lead_id}: ${entities.length} kept` +
+          `${dropped.length ? `, ${dropped.length} dropped as unsourced` : ""} — ` +
+          (Object.entries(byKind).map(([kind, n]) => `${kind}×${n}`).join(", ") || "none")
+      );
+      return { kept: entities.length, dropped: dropped.length };
     });
 
     // A design direction is chosen automatically the moment the facts land,

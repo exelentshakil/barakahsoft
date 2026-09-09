@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DesignDnaSchema } from "@/lib/design-dna";
+import { SECTION_IDS } from "@/lib/section-ids";
 
 // What kind of business this is, expressed as everything the generator needs
 // to know that is NOT a fact about this particular client.
@@ -21,23 +22,8 @@ import { DesignDnaSchema } from "@/lib/design-dna";
 // profile (see resolve.ts) merges into this same shape and must not be able to
 // reorder a page or invent a schema.org type.
 
-/** Every section the renderer can build. Array order in a profile is page order. */
-export const SECTION_IDS = [
-  "hero",
-  "trust",
-  "about",
-  "services",
-  "why-us",
-  "process",
-  "gallery",
-  "cta-band",
-  "reviews",
-  "areas",
-  "guarantee",
-  "faq",
-  "contact",
-] as const;
-export type SectionId = (typeof SECTION_IDS)[number];
+/** Array order in a profile is page order. Defined in section-ids.ts — see the note there. */
+export { SECTION_IDS, type SectionId } from "@/lib/section-ids";
 
 /**
  * schema.org LocalBusiness subtypes, as a closed allowlist.

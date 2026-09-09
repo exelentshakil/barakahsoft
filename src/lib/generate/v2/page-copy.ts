@@ -126,7 +126,41 @@ function facts(brief: SiteBrief): string {
 - Licensed/insured: ${brief.licensedInsured ? "SUPPORTED — may be stated" : "NOT SUPPORTED — never claim it"}
 - What the owner says is wrong with their current site: ${brief.painInstructions.join(" | ") || "not supplied"}
 - THEIR OWN STORY, in their words (use this for the about section — the real names, the real history, the real warranty; rewrite it, never invent around it): ${cleanAboutContent(brief.aboutContent) || "none supplied"}
-- Scraped fact digest: ${brief.factsDigest.slice(0, 3000)}`;
+- Scraped fact digest: ${brief.factsDigest.slice(0, 3000)}
+${entityBlock(brief)}`;
+}
+
+/**
+ * The specific things this business has, grouped by kind.
+ *
+ * The difference between "Reliable Gym in Belfast" and a page that names ten
+ * real classes and six membership tiers is entirely here. Every line was read
+ * off the client's own site and checked against the page it came from, so
+ * these can be used verbatim — which is stated plainly, because the prompt
+ * elsewhere spends a lot of words telling the model not to invent, and it
+ * needs to know this block is the exception it is allowed to lean on.
+ */
+function entityBlock(brief: SiteBrief): string {
+  if (!brief.entities?.length) return "";
+
+  const byKind = new Map<string, string[]>();
+  for (const entity of brief.entities.slice(0, 60)) {
+    const line = [
+      entity.label,
+      entity.price ? `— ${entity.price}${entity.period ? ` per ${entity.period}` : ""}` : "",
+      entity.detail ? `(${entity.detail})` : "",
+      entity.attributes.length ? `[${entity.attributes.slice(0, 6).join("; ")}]` : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    byKind.set(entity.kind, [...(byKind.get(entity.kind) ?? []), line]);
+  }
+
+  return `
+WHAT THIS BUSINESS ACTUALLY HAS — read off their own website and verified against the page it came from.
+These are real. Use them by name, use the prices exactly as written, and prefer them over anything generic.
+Do not add to these lists, do not round a price, and do not invent a tier or a name to balance a layout.
+${[...byKind.entries()].map(([kind, lines]) => `${kind}:\n${lines.map((line) => `  - ${line}`).join("\n")}`).join("\n")}`;
 }
 
 /**
@@ -368,7 +402,41 @@ function salvage(raw: unknown, brief: SiteBrief): PageCopy {
   return out as unknown as PageCopy;
 }
 
-export async function generatePageCopy(brief: SiteBrief, tone: string): Promise<PageCopy> {
+/**
+ * What each slot means on THIS page.
+ *
+ * The vertical's briefs describe an industry and are the floor. A composed
+ * section carries the reference site's own purpose for that slot, which is
+ * about this page specifically, so it wins where both exist. Without either,
+ * the model reads the slot name literally — which is how "gallery" became
+ * "recent projects" and "guarantee" became a warranty on workmanship, on a
+ * gym.
+ */
+function sectionMeanings(brief: SiteBrief, composed: { id: string; kind: string; purpose: string }[]): string {
+  const meanings = new Map<string, string>(Object.entries(brief.vertical.copy.sectionBriefs));
+  for (const section of composed) {
+    if (section.purpose?.trim()) {
+      meanings.set(section.id, `${section.purpose.trim()} (this page calls it "${section.kind}")`);
+    }
+  }
+  return [...meanings.entries()].map(([slot, meaning]) => `- ${slot}: ${meaning}`).join("\n");
+}
+
+export async function generatePageCopy(
+  brief: SiteBrief,
+  tone: string,
+  /**
+   * The sections this page is actually being built from, with the reference
+   * site's own description of what each is for.
+   *
+   * More specific than the vertical's `sectionBriefs`, which describe a whole
+   * industry: this describes THIS page. When a reference gym page's second
+   * section is "membership-tiers — the three ways to join, priced", that is a
+   * far better instruction for the `services` slot than "the services this
+   * business sells".
+   */
+  composed: { id: string; kind: string; purpose: string }[] = []
+): Promise<PageCopy> {
   const prompt = `Write every piece of copy for one local business homepage. You are writing WORDS ONLY —
 the page, its layout and its styling already exist and are not yours to change. Return JSON.
 
@@ -433,9 +501,7 @@ Leave a section empty ("") rather than padding it if the facts do not support it
 
 WHAT EACH SECTION MEANS FOR THIS BUSINESS
 The slot names below are structural. Read them as described here, not as the words suggest.
-${Object.entries(brief.vertical.copy.sectionBriefs)
-  .map(([slot, meaning]) => `- ${slot}: ${meaning}`)
-  .join("\n")}
+${sectionMeanings(brief, composed)}
 
 faq.items: answer each of these, in this order, in the owner's own voice:
 ${brief.vertical.copy.faqSeeds.map((question, index) => `${index + 1}. ${question}`).join("\n")}

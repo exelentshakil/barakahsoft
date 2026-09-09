@@ -1,3 +1,5 @@
+import type { Entity } from "@/lib/extract-entities";
+
 // Hand-written row types matching supabase/migrations/*.sql, mirroring the
 // quotehaul pattern of not auto-generating types until the schema settles.
 
@@ -124,6 +126,9 @@ export interface ScrapeResults {
   search_visibility_at: string | null;
   // Real competitors with measured review counts and speed scores.
   competitors: unknown | null;
+  // The specific things this business has — tiers, classes, people, amenities
+  // — each carrying the page it was read from. See lib/extract-entities.ts.
+  entities: Entity[];
   scraped_at: string;
 }
 

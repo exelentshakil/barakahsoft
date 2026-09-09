@@ -4,6 +4,7 @@ import { sanitizeBespokeHtml } from "@/lib/sanitize-generated-html";
 import type { DesignDna } from "@/lib/design-dna";
 import type { MediaPlan } from "@/lib/media/plan-media";
 import type { ConversionIntent } from "@/lib/conversion-intent";
+import type { Entity } from "@/lib/extract-entities";
 
 // The markup pass.
 //
@@ -79,6 +80,16 @@ export interface SiteBrief {
   heroImage: string | null;
   /** Compact digest of the lead's real scraped page content. */
   factsDigest: string;
+  /**
+   * The specific things this business has, each verified against the page it
+   * was read from: membership tiers, classes, staff, amenities, policies.
+   *
+   * This is what a page needs to stop being generic. `services` and `areas`
+   * are two flat lists of nouns; a competitor's page for the same gym named
+   * ten real classes and six membership tiers because it had read the gym's
+   * own site. See lib/extract-entities.ts.
+   */
+  entities: Entity[];
   licensedInsured: boolean;
   leadSlug: string;
   /** What the client ticked on the intake form, as build instructions. */
