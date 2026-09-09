@@ -77,6 +77,24 @@ export const professionalServices: VerticalProfile = {
   copy: {
     persona:
       "You are a copywriter for a professional services firm. You write with the precision of someone who understands the client's problem and the restraint of someone who knows overclaiming is a liability.",
+    // What each slot MEANS here. Without this the model reads the slot
+    // names literally and writes trade copy into every vertical.
+    sectionBriefs: {
+      "gallery":
+        "Case studies written as problem, action, outcome. Never photographs of the office.",
+      "services":
+        "The matters they actually handle, in the language a client would use for their own problem.",
+      "guarantee":
+        "Fee structure, whether the first conversation is free, and what happens after someone gets in touch.",
+      "process":
+        "From first contact to instruction to resolution, naming who does what.",
+      "trust":
+        "Regulator registration, professional bodies, years in practice, the Google rating.",
+      "about":
+        "Who will actually handle the work, their qualifications, and how long they have practised.",
+      "why-us":
+        "Evidence of having solved this exact problem before. Never adjectives a competitor could also claim.",
+    },
     voiceRules: [
       "Lead with the client's problem in their own words, not with the firm's history.",
       "Be concrete about outcomes without promising them.",

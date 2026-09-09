@@ -1,6 +1,7 @@
 import { DEFAULT_PROFILE, PERSONA_VERTICAL, PROFILES, getCuratedProfile } from "@/lib/verticals/index";
 import { VerticalProfileSchema, type VerticalProfile, type VerticalResolution } from "@/lib/verticals/types";
 import { isPersonaSlug } from "@/lib/personas";
+import { generateProfileFor, industryKey, loadGeneratedProfile } from "@/lib/verticals/generate-profile";
 import type { Artifact, Lead } from "@/types/database";
 
 // Step 0: which kind of business is this?
@@ -96,4 +97,49 @@ export function profileForLead(
   services: string[] = []
 ): VerticalProfile {
   return resolveVerticalSync(lead, artifact, services).profile;
+}
+
+/**
+ * The full router, including the generated fallback.
+ *
+ * resolveVerticalSync answers from what is already in hand and is what render
+ * paths use. This one may reach the database, and may write a profile — so it
+ * belongs in the scrape and the build, never in a page render.
+ *
+ * The order is the same, with two steps appended: a profile generated earlier
+ * for this industry, then one written now. Everything structural is inherited
+ * from a curated base either way; see generate-profile.ts for why.
+ */
+export async function resolveVerticalAsync(
+  lead: Pick<Lead, "industry" | "business_name" | "persona" | "vertical_slug" | "icp_category">,
+  artifact?: Pick<Artifact, "vertical_profile"> | null,
+  services: string[] = []
+): Promise<VerticalResolution> {
+  const sync = resolveVerticalSync(lead, artifact, services);
+
+  // Anything the sync path recognised is already right. Only the fallback —
+  // "nothing matched, here is home-services" — is worth spending a model call
+  // on, and that fallback is precisely what made every unrecognised business
+  // read like a trade.
+  if (sync.source !== "fallback") return sync;
+
+  const chosen = lead.vertical_slug ?? "";
+  if (chosen.startsWith("gen:")) {
+    const cached = await loadGeneratedProfile(chosen);
+    if (cached) return { ...sync, profile: cached, source: "cached" };
+  }
+
+  const industry = (lead.industry ?? "").trim();
+  if (!industry) return sync;
+
+  const slug = `gen:${industryKey(industry)}`;
+  const cached = await loadGeneratedProfile(slug);
+  if (cached) return { ...sync, profile: cached, source: "cached" };
+
+  const generated = await generateProfileFor(industry);
+  return {
+    ...sync,
+    profile: generated,
+    source: generated.origin === "generated" ? "generated" : "fallback",
+  };
 }

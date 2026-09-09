@@ -299,6 +299,12 @@ Return STRICT JSON matching this shape exactly, no markdown fence, no commentary
 services.items must have one entry per supplied service, in the supplied order, using the supplied
 name verbatim.
 
+WHAT EACH SECTION MEANS FOR THIS BUSINESS
+The slot names below are structural. Read them as described here, not as the words suggest.
+${Object.entries(brief.vertical.copy.sectionBriefs)
+  .map(([slot, meaning]) => `- ${slot}: ${meaning}`)
+  .join("\n")}
+
 faq.items: answer each of these, in this order, in the owner's own voice:
 ${brief.vertical.copy.faqSeeds.map((question, index) => `${index + 1}. ${question}`).join("\n")}
 

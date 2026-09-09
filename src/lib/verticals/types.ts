@@ -200,6 +200,20 @@ export const VerticalProfileSchema = z.object({
   copy: z.object({
     /** Replaces the "direct-response copywriter for local trade businesses" system line. */
     persona: short(30, 300),
+    /**
+     * What each section MEANS for this kind of business.
+     *
+     * The slot names are structural — "gallery", "guarantee", "process" — and
+     * the model fills them with whatever those words most often mean, which is
+     * trade work, because that is what the words look like. A gym got a
+     * "Recent projects" gallery and a guarantee promising to "come back and
+     * redo the work", both structurally valid and both nonsense.
+     *
+     * One line per section, injected beside the JSON shape. Absent sections
+     * fall back to the generic instruction, which is fine where the meaning
+     * genuinely does not shift.
+     */
+    sectionBriefs: z.record(z.string().max(300)).default({}),
     voiceRules: z.array(z.string().max(200)).max(8).default([]),
     /** Appended to the generator's own forbidden-word list. */
     forbiddenSlop: z.array(z.string().max(120)).max(14).default([]),

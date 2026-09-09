@@ -1,7 +1,7 @@
 import { inngest } from "@/inngest/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildSiteBrief, buildKnownPaths, servicesForMatching, type BriefOverrides } from "@/lib/build-site-brief";
-import { resolveVerticalSync } from "@/lib/verticals/resolve";
+import { resolveVerticalAsync } from "@/lib/verticals/resolve";
 import type { VerticalProfile } from "@/lib/verticals/types";
 import {
   generateBespokePage,
@@ -129,7 +129,7 @@ export const bespokeGenerate = inngest.createFunction(
     // art direction, the schema.org type — is chosen by the profile this
     // returns. Resolved fresh at build time, then frozen into the artifact so
     // the delivered page always renders against what it was built with.
-    const vertical = resolveVerticalSync(loaded.lead, null, servicesForMatching(loaded.scrapeResults));
+    const vertical = await resolveVerticalAsync(loaded.lead, null, servicesForMatching(loaded.scrapeResults));
     const brief = buildSiteBrief(loaded.lead, loaded.scrapeResults, vertical.profile, overrides ?? {});
 
     // Recorded so coverage is a measured number rather than an estimate: which
@@ -430,13 +430,27 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
 
     const stylesheetCss = built.css;
     // The deterministic release gate: contrast measured against the compiled
-    // tokens, plus token-pair warnings. No browser, no model call, no cost.
-    // It was stubbed out to `passes: true` while save-homepage went on writing
-    // its findings into qa_notes, so the studio showed a clean bill of health
-    // that had never been computed. Its findings are recorded and surfaced;
-    // they do not fail the build yet, because a gate that starts fatal on a
-    // corpus it has never been run against fails good pages on day one.
+    // tokens. No browser, no model call, no cost.
+    //
+    // Blockers are FATAL. They were recorded-but-tolerated for one release so
+    // the gate could be judged against real palettes rather than assumptions —
+    // and the first thing it caught was a section rendering white text on a
+    // white background, which then shipped to a client anyway. A gate whose
+    // findings do not stop a build is a log line, not a gate.
+    //
+    // A failed build leaves the previous page untouched and puts the exact
+    // failing selector and ratio in front of the operator, which is a better
+    // outcome than a page nobody can read on a phone in daylight.
     const checked = { report: verifyHomepage(composedHtml, brief, gateTokens, stylesheetCss) };
+    if (!checked.report.passes) {
+      const detail = checked.report.blockers
+        .map((finding) => `${finding.check}: ${finding.detail}`)
+        .join("\n");
+      throw new Error(
+        `Release gate failed with ${checked.report.blockers.length} contrast blocker(s). ` +
+          `The page was not saved.\n${detail}`
+      );
+    }
 
 
     // The advisory creative-director pass is gone: it cost another model call

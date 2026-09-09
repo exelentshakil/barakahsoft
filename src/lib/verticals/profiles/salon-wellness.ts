@@ -63,6 +63,24 @@ export const salonWellness: VerticalProfile = {
   copy: {
     persona:
       "You are a copywriter for an independent salon or studio. You write warmly and specifically about how someone will look and feel, without beauty-industry cliché.",
+    // What each slot MEANS here. Without this the model reads the slot
+    // names literally and writes trade copy into every vertical.
+    sectionBriefs: {
+      "gallery":
+        "The work itself on real clients, and the room they will sit in. Never stock beauty photography, and never 'recent projects' or 'recent work' - this is a chair or a gym floor, not a building site.",
+      "services":
+        "Treatments or classes, with what each includes and how long it takes. Prices where the facts supply them.",
+      "guarantee":
+        "Booking, the cancellation policy, and how to request a particular stylist or trainer.",
+      "process":
+        "What a first visit is like, including the consultation before anything starts.",
+      "trust":
+        "Years established, the Google rating, and qualifications where the facts state them.",
+      "about":
+        "The individual stylists, therapists or trainers by name, and what each specialises in.",
+      "why-us":
+        "Why clients keep coming back to these particular people. Never a promise about how someone will look.",
+    },
     voiceRules: [
       "Name the individual stylists, therapists or trainers. People book a person.",
       "Be specific about what a service includes and how long it takes.",

@@ -59,9 +59,9 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-section,.bespoke-page .bs-trustbar{scroll-margin-top:120px}
 .bespoke-page .bs-section{position:relative;padding:clamp(56px,7vw,112px) 0;background:var(--bs-surface,#fff)}
 .bespoke-page .bs-section--tint{background:var(--bs-surface-alt,#f4f5f7)}
-.bespoke-page .bs-section--ink{background:var(--bs-ink,#16181d);color:#fff}
-.bespoke-page .bs-section--ink .bs-lede,.bespoke-page .bs-section--ink .bs-body,.bespoke-page .bs-section--ink .bs-small{color:rgb(255 255 255 / .78)}
-.bespoke-page .bs-section--ink .bs-card{background:rgb(255 255 255 / .06);border-color:rgb(255 255 255 / .14);color:#fff}
+.bespoke-page .bs-section--ink{background:var(--bs-invert-surface,#16181d);color:var(--bs-invert-ink,#fff)}
+.bespoke-page .bs-section--ink .bs-lede,.bespoke-page .bs-section--ink .bs-body,.bespoke-page .bs-section--ink .bs-small{color:var(--bs-invert-muted,rgb(255 255 255 / .78))}
+.bespoke-page .bs-section--ink .bs-card{background:var(--bs-invert-card,rgb(255 255 255 / .06));border-color:var(--bs-invert-line,rgb(255 255 255 / .14));color:var(--bs-invert-ink,#fff)}
 .bespoke-page .bs-section--flush{padding:0}
 .bespoke-page .bs-container{width:100%;max-width:var(--bs-max);margin-inline:auto;padding-inline:var(--bs-gutter)}
 .bespoke-page .bs-container--narrow{max-width:760px}
@@ -96,7 +96,7 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-h3{font-size:clamp(1.3rem,1.8vw,1.65rem);line-height:1.15}
 .bespoke-page .bs-h4{font-size:1.05rem;line-height:1.25;letter-spacing:-.01em}
 .bespoke-page .bs-mark{color:var(--bs-primary,#e4761b)}
-.bespoke-page .bs-section--ink .bs-mark{color:var(--bs-on-ink-accent,#e4761b)}
+.bespoke-page .bs-section--ink .bs-mark{color:var(--bs-invert-accent,var(--bs-on-ink-accent,#e4761b))}
 /* The hero mark sits on a photograph under a near-black scrim, not on a
    card. A raw --bs-primary can be any brand colour a client brings,
    including a dark navy or forest green that goes muddy against that scrim.
@@ -171,7 +171,7 @@ export const BASE_STYLESHEET = `
   display:inline-flex;align-items:center;gap:8px;font-size:.78rem;font-weight:700;letter-spacing:.04em;
   text-transform:uppercase;padding:8px 14px;border-radius:999px;border:1px solid var(--bs-line);white-space:nowrap;
 }
-.bespoke-page .bs-section--ink .bs-badge{border-color:rgb(255 255 255 / .22)}
+.bespoke-page .bs-section--ink .bs-badge{border-color:var(--bs-invert-line,rgb(255 255 255 / .22));color:var(--bs-invert-ink,#fff)}
 .bespoke-page .bs-chip{display:inline-flex;align-items:center;gap:7px;font-size:.85rem;font-weight:600;padding:7px 12px;border-radius:6px;background:var(--bs-surface-alt,#f4f5f7)}
 /* Four fixed columns left two stats floating in half a section of white. */
 /* An explicit column count, not auto-fit.
@@ -205,9 +205,12 @@ export const BASE_STYLESHEET = `
   text-transform:uppercase;line-height:1.35;color:var(--bs-muted);max-width:20ch;
 }
 .bespoke-page .bs-section--ink .bs-stat__value,.bespoke-page .bs-section--brand .bs-stat__value{color:#fff}
-.bespoke-page .bs-section--ink .bs-stat__label,.bespoke-page .bs-section--brand .bs-stat__label{color:rgb(255 255 255 / .72)}
-.bespoke-page .bs-section--ink .bs-stat,.bespoke-page .bs-section--brand .bs-stat{background:rgb(255 255 255 / .06);border-color:rgb(255 255 255 / .16)}
-.bespoke-page .bs-section--ink .bs-stat__icon,.bespoke-page .bs-section--brand .bs-stat__icon{background:rgb(255 255 255 / .12);color:#fff}
+.bespoke-page .bs-section--brand .bs-stat__label{color:rgb(255 255 255 / .72)}
+.bespoke-page .bs-section--ink .bs-stat__label{color:var(--bs-invert-muted,rgb(255 255 255 / .72))}
+.bespoke-page .bs-section--brand .bs-stat{background:rgb(255 255 255 / .06);border-color:rgb(255 255 255 / .16)}
+.bespoke-page .bs-section--ink .bs-stat{background:var(--bs-invert-card,rgb(255 255 255 / .06));border-color:var(--bs-invert-line,rgb(255 255 255 / .16));color:var(--bs-invert-ink,#fff)}
+.bespoke-page .bs-section--brand .bs-stat__icon{background:rgb(255 255 255 / .12);color:#fff}
+.bespoke-page .bs-section--ink .bs-stat__icon{background:var(--bs-invert-card,rgb(255 255 255 / .12));color:var(--bs-invert-ink,#fff)}
 .bespoke-page .bs-rating{display:inline-flex;align-items:center;gap:10px;font-weight:700;font-size:.92rem}
 /* Review proof pills.
    Two platforms, one shape. They carry different information — Google has a

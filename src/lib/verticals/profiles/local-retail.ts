@@ -74,6 +74,22 @@ export const localRetail: VerticalProfile = {
   copy: {
     persona:
       "You are a copywriter for an independent local shop. You write the way a good shopkeeper talks about their stock: specific, knowledgeable, proud of it, and never grand.",
+    // What each slot MEANS here. Without this the model reads the slot
+    // names literally and writes trade copy into every vertical.
+    sectionBriefs: {
+      "gallery":
+        "The shop and the stock, photographed as it actually looks. Never white-background product cutouts.",
+      "services":
+        "What they sell, with real product names and makers where the facts supply them.",
+      "guarantee":
+        "Ordering, delivery areas and cut-off times, returns and exchanges.",
+      "process":
+        "How to order, how much notice is needed, and whether same-day is possible.",
+      "trust":
+        "Years trading, the Google rating, and named local growers, makers or suppliers.",
+      "about":
+        "The shopkeeper, why they stock what they stock, and what makes it different from a supermarket.",
+    },
     voiceRules: [
       "Name actual products and actual makers or growers where the facts supply them.",
       "Say clearly whether you deliver, where to, and by when.",

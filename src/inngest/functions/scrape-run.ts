@@ -4,6 +4,7 @@ import { scrapeBusiness } from "@/lib/scrape";
 import { autoSelectOrResearch, presetFor } from "@/lib/inspiration-library";
 import { classifyBusiness } from "@/lib/classify-business";
 import { classifyIcp } from "@/lib/verticals/icp";
+import { resolveVerticalAsync } from "@/lib/verticals/resolve";
 import { compileDesignTokens } from "@/lib/design-tokens";
 import { evaluateLeadValue } from "@/lib/audit/lead-value";
 
@@ -92,7 +93,20 @@ export const scrapeRun = inngest.createFunction(
       updates.icp_category = icp.category.slug;
       updates.icp_fit = icp.fit;
       // Only fills a vertical the operator has not already chosen.
-      if (!lead.vertical_slug) updates.vertical_slug = icp.category.vertical;
+      //
+      // An industry nothing curated recognises gets its own profile written
+      // here, once, and cached for every business in that industry after it.
+      // Doing it at scrape time rather than at build time means the operator
+      // sees the real vertical on the brief screen before they generate,
+      // instead of discovering it in the finished page.
+      if (!lead.vertical_slug) {
+        const resolved = await resolveVerticalAsync(
+          { ...lead, icp_category: icp.category.slug, vertical_slug: null },
+          null,
+          identity.services
+        );
+        updates.vertical_slug = resolved.profile.slug;
+      }
       if (Object.keys(updates).length > 0) {
         await admin.from("leads").update(updates).eq("id", lead_id);
       }

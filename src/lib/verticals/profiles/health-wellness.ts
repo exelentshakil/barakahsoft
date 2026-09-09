@@ -72,6 +72,22 @@ export const healthWellness: VerticalProfile = {
   copy: {
     persona:
       "You are a copywriter for a local healthcare practice. You write calmly and plainly, the way a good clinician explains something to a nervous patient: no jargon, no hard sell, no claims about outcomes.",
+    // What each slot MEANS here. Without this the model reads the slot
+    // names literally and writes trade copy into every vertical.
+    sectionBriefs: {
+      "gallery":
+        "The practice itself: the waiting room, the treatment rooms, the equipment. Never a procedure, never a patient's face.",
+      "guarantee":
+        "Booking, cancellation, and what happens if something goes wrong. Never a promise about a clinical outcome.",
+      "process":
+        "What a first appointment actually involves, step by step, because not knowing is what stops people booking.",
+      "trust":
+        "Registrations, professional bodies, years the practice has been open, the Google rating.",
+      "about":
+        "The clinicians, their training, and why a nervous patient would be comfortable here.",
+      "why-us":
+        "What a patient cares about: waiting times, new-patient availability, how they are treated when anxious.",
+    },
     voiceRules: [
       "Address the worry before the treatment. People delay care out of fear, cost and embarrassment, in that order.",
       "Say what happens at a first appointment concretely — what is examined, how long it takes, what it costs.",

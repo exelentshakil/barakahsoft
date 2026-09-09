@@ -264,8 +264,24 @@ export function compileDesignTokens(
     "--bs-ink-rgb": rgbChannels(ink),
     "--bs-ink-muted": inkMuted,
 
+    // The inverted band: always the opposite of the page, whichever way the
+    // page went. Everything inside a .bs-section--ink reads from this family
+    // rather than from --bs-ink, because --bs-ink is the page's TEXT colour and
+    // is white on a dark palette — which is how a section rendered white text
+    // on a white background and shipped.
     "--bs-invert-surface": relativeLuminance(surface) > 0.4 ? "#0B0F19" : "#FFFFFF",
     "--bs-invert-ink": relativeLuminance(surface) > 0.4 ? "#FFFFFF" : "#0B0F19",
+    // Secondary copy inside that band. Not an alpha of the ink colour, because
+    // an alpha assumes the ground is dark and goes invisible when it is light.
+    "--bs-invert-muted": relativeLuminance(surface) > 0.4 ? "#C7CCD9" : "#3C4457",
+    "--bs-invert-line": relativeLuminance(surface) > 0.4 ? "rgba(255,255,255,.14)" : "rgba(11,15,25,.14)",
+    "--bs-invert-card": relativeLuminance(surface) > 0.4 ? "rgba(255,255,255,.06)" : "rgba(11,15,25,.05)",
+    // An accent that stays legible on whichever ground the band actually has.
+    "--bs-invert-accent": ensureContrast(
+      p.primary,
+      relativeLuminance(surface) > 0.4 ? "#0B0F19" : "#FFFFFF",
+      4.5
+    ),
 
     // The hero mark sits on a photograph under a near-black scrim, not on
     // --bs-surface. A raw --bs-primary reads fine on a white card and

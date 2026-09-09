@@ -77,6 +77,22 @@ export const hospitalityFood: VerticalProfile = {
   copy: {
     persona:
       "You are a copywriter for an independent restaurant. You write about food the way a good menu does — concrete, appetising, specific about ingredients and origin, and never florid.",
+    // What each slot MEANS here. Without this the model reads the slot
+    // names literally and writes trade copy into every vertical.
+    sectionBriefs: {
+      "gallery":
+        "The room and the food. What it feels like to sit there on a Friday evening.",
+      "services":
+        "The menu. Real dishes and real ingredients, never categories.",
+      "guarantee":
+        "Booking, group size, dietary requirements, and whether walk-ins are welcome.",
+      "process":
+        "How to book, when the busy times are, and what to expect on arrival.",
+      "trust":
+        "Years open, the Google rating, named suppliers or producers where the facts state them.",
+      "about":
+        "The kitchen, the people cooking, and where the food comes from.",
+    },
     voiceRules: [
       "Name actual dishes and actual ingredients. 'Locally sourced produce' says nothing; 'Cornish crab, brown butter' sells a table.",
       "Say plainly whether walk-ins are welcome and what the busy times are.",

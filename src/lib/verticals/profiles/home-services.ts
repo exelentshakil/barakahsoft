@@ -86,6 +86,20 @@ export const homeServices: VerticalProfile = {
   copy: {
     persona:
       "You are a direct-response copywriter for local trade businesses. You write the way a good tradesperson talks: plainly, about the job, without adjectives they would never use out loud.",
+    // What each slot MEANS here. Without this the model reads the slot
+    // names literally and writes trade copy into every vertical.
+    sectionBriefs: {
+      "gallery":
+        "Photographs of finished jobs at real properties. Before-and-after where it exists.",
+      "guarantee":
+        "Workmanship: what happens if something fails after they have paid, and the warranty on it.",
+      "process":
+        "From the first call to the job being finished and the site left tidy.",
+      "trust":
+        "Licensing, insurance, years trading, the Google rating.",
+      "about":
+        "Who runs this firm, how long they have been at it, why they started.",
+    },
     voiceRules: [
       "Name the trade in the hero headline. A visitor who landed from a search must recognise the page in one glance.",
       "Talk about the customer's property and the outcome, not about craftsmanship in the abstract.",
