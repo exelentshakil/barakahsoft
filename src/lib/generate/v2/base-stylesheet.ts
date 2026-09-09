@@ -1383,4 +1383,57 @@ export const BASE_STYLESHEET = `
   .bespoke-page .bs-tiers{grid-template-columns:minmax(0,1fr)}
 }
 
+/* ---------- header treatments --------------------------------------------- */
+/* Three real headers. Every site built before this shipped the same one,
+   because chrome.ts emitted one fixed markup and the three archetypes that
+   layout-dna picks were never rendered. Which one a site gets now comes from
+   the reference's mood — see layout-plan.ts. Colours are tokens only: the bar
+   sits on --bs-nav-bg, which resolves through --bs-invert-surface. */
+
+/* Pinned flat to the top edge, square, with a brand rule under it. */
+.bespoke-page .bs-nav--utility-bar{border-bottom:3px solid var(--bs-primary-strong,#b65e16);box-shadow:none}
+.bespoke-page .bs-nav--utility-bar .bs-nav__inner{padding-block:10px}
+.bespoke-page .bs-nav--utility-bar .bs-btn{border-radius:4px}
+
+/* Floating over the content, inset from the edges. */
+.bespoke-page .bs-nav--floating-glass{top:14px;margin-inline:clamp(12px,3vw,32px);border-radius:var(--bs-r-lg,20px);background:color-mix(in srgb, var(--bs-nav-bg) 88%, transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 10px 40px rgb(0 0 0 / .35)}
+@supports not (backdrop-filter:blur(4px)){
+  .bespoke-page .bs-nav--floating-glass{background:var(--bs-nav-bg)}
+}
+.bespoke-page .bs-nav--floating-glass + *{margin-top:-14px}
+
+/* Name on its own line, centred, links beneath. */
+@media (min-width:961px){
+  .bespoke-page .bs-nav--stacked-brand .bs-nav__inner{flex-direction:column;gap:10px;padding-block:14px}
+  .bespoke-page .bs-nav--stacked-brand .bs-nav__links{justify-content:center}
+}
+
+/* ---------- footer treatments --------------------------------------------- */
+/* Four real footers, same story. "map-anchored" is the one chosen from the
+   CLIENT rather than the reference — a footer built around an address is
+   wrong for a business that never gave one. */
+
+/* The closing call to action as a full-bleed brand slab. */
+.bespoke-page .bs-footer--cta-slab .bs-footer-cta{background:var(--bs-primary-strong,#b65e16);color:var(--bs-on-primary,#fff);border-radius:var(--bs-r-lg,20px);padding:clamp(28px,4vw,52px);border:0}
+.bespoke-page .bs-footer--cta-slab .bs-footer-cta .bs-h2,
+.bespoke-page .bs-footer--cta-slab .bs-footer-cta p{color:inherit}
+
+/* Brand block given the width, columns tucked alongside. */
+@media (min-width:901px){
+  .bespoke-page .bs-footer--map-anchored .bs-footer__cols{grid-template-columns:1.6fr repeat(3,1fr)}
+  .bespoke-page .bs-footer--map-anchored .bs-footer__brand{padding-right:clamp(20px,3vw,48px);border-right:1px solid rgb(255 255 255 / .12)}
+}
+
+/* The wordmark carries the footer; the columns stay quiet under it. */
+.bespoke-page .bs-footer--big-type .bs-footer__wordmark{font-size:clamp(3.5rem,15vw,11rem);opacity:.16}
+.bespoke-page .bs-footer--big-type .bs-footer__cols{gap:clamp(16px,2vw,28px)}
+.bespoke-page .bs-footer--big-type .bs-footer__col h3{font-size:.7rem;letter-spacing:.14em}
+
+/* Split into two panels, the brand side on its own ground. */
+@media (min-width:901px){
+  .bespoke-page .bs-footer--split-panel .bs-footer__cols{grid-template-columns:1fr 2fr;gap:clamp(28px,4vw,64px)}
+  .bespoke-page .bs-footer--split-panel .bs-footer__brand{background:rgb(255 255 255 / .05);padding:clamp(20px,2.4vw,32px);border-radius:var(--bs-r-lg,20px)}
+  .bespoke-page .bs-footer--split-panel .bs-footer__cols > .bs-footer__col:not(.bs-footer__brand){align-self:start}
+}
+
 `;

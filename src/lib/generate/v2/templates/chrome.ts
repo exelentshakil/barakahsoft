@@ -133,7 +133,7 @@ export function navMarkup(ctx: RenderContext): string {
       ? `<span class="bs-nav__logo bs-nav__logo--hidden" aria-hidden="true"></span>`
       : `<a class="bs-nav__logo" href="${esc(ctx.href("/"))}" aria-label="${esc(brief.businessName)} home">${brand}</a>`;
 
-  return `<nav class="bs-nav bs-nav--edge-${navEdge}" data-nav data-sticky-nav aria-label="Main">
+  return `<nav class="bs-nav bs-nav--edge-${navEdge} bs-nav--${ctx.layout.chrome}" data-nav data-sticky-nav aria-label="Main">
   ${utilityBar}
   <div class="bs-nav__bar">
     ${barBrand}
@@ -185,7 +185,7 @@ export function footerMarkup(ctx: RenderContext): string {
           .join("")}</ul></div>`
       : "";
 
-  return `<footer class="bs-footer">
+  return `<footer class="bs-footer bs-footer--${ctx.layout.footer}">
   <div class="bs-container">
     <div class="bs-footer-cta">
       <div>
@@ -209,7 +209,7 @@ export function footerMarkup(ctx: RenderContext): string {
         ${brief.email ? `<a class="bs-footer__email" href="mailto:${esc(brief.email)}">${esc(brief.email)}</a>` : ""}
       </div>
       ${column(nouns.offeringPlural, brief.services.slice(0, 8).map((service) => ({ label: service, href: ctx.href(`/${nouns.offeringPath}/${slug(service)}`) })))}
-      ${column(nouns.areaPlural, brief.areas.slice(0, 8).map((area) => ({ label: area, href: ctx.href(`/${nouns.areaPath}/${slug(area)}`) })))}
+      ${ctx.pageSections.includes("areas") ? column(nouns.areaPlural, brief.areas.slice(0, 8).map((area) => ({ label: area, href: ctx.href(`/${nouns.areaPath}/${slug(area)}`) }))) : ""}
       ${column("Useful Links", [
         { label: "Home", href: ctx.href("/") },
         { label: "About", href: ctx.href("/about") },

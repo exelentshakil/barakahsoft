@@ -33,6 +33,10 @@ export interface LayoutPlan {
   whyUs: string;
   process: string;
   areas: string;
+  /** Header treatment: utility-bar, floating-glass, stacked-brand. */
+  chrome: string;
+  /** Footer treatment: cta-slab, map-anchored, big-type, split-panel. */
+  footer: string;
   /** What pinned each axis, for the operator and for debugging. */
   source: string;
 }
@@ -109,7 +113,43 @@ const ABOUT_FOR: Partial<Record<DesignDna["mood"], string>> = {
   "clinical-trust": "editorial-column",
 };
 
-export function layoutPlanFor(design: DesignDna | null, seed: number, seedAbout: string): LayoutPlan {
+/**
+ * The header, from how the reference carries itself.
+ *
+ * A dark premium page floats its bar over the content; a utility brand pins a
+ * flat one to the top edge; an editorial brand centres its name above the
+ * links. These were three archetypes chosen by seed in layout-dna and never
+ * rendered — `chrome.ts` emitted one fixed header for every site ever built.
+ */
+const CHROME_FOR: Record<DesignDna["mood"], string> = {
+  "dark-premium": "floating-glass",
+  "bold-utility": "utility-bar",
+  "clinical-trust": "utility-bar",
+  "light-editorial": "stacked-brand",
+  "warm-craft": "stacked-brand",
+};
+
+/**
+ * The footer, from the reference's rhythm — and from whether the business has
+ * somewhere to send people.
+ *
+ * `map-anchored` is the one that depends on the client rather than the
+ * reference: a footer built around an address is wrong for a business that
+ * never gave one, which is the same rule the whole composer runs on.
+ */
+function footerFor(design: DesignDna, hasAddress: boolean, seed: number): string {
+  if (hasAddress && design.layout.sectionRhythm !== "cinematic") return "map-anchored";
+  if (design.typography.scale === "dramatic" || design.layout.sectionRhythm === "cinematic") return "big-type";
+  if (design.mood === "bold-utility") return "cta-slab";
+  return seed % 2 === 0 ? "split-panel" : "cta-slab";
+}
+
+export function layoutPlanFor(
+  design: DesignDna | null,
+  seed: number,
+  seedAbout: string,
+  hasAddress = false
+): LayoutPlan {
   if (!design) {
     return {
       hero: "",
@@ -121,6 +161,8 @@ export function layoutPlanFor(design: DesignDna | null, seed: number, seedAbout:
       process: seeded(seed, 5),
       gallery: seeded(seed, 6),
       areas: seeded(seed, 7),
+      chrome: ["utility-bar", "floating-glass", "stacked-brand"][seed % 3],
+      footer: ["cta-slab", "map-anchored", "big-type", "split-panel"][seed % 4],
       source: "seed (no design direction)",
     };
   }
@@ -139,6 +181,8 @@ export function layoutPlanFor(design: DesignDna | null, seed: number, seedAbout:
     process: seeded(seed, 5),
     gallery: GALLERY_FOR[design.layout.imageDensity] ?? seeded(seed, 6),
     areas: seeded(seed, 7),
-    source: `${design.sourceName}: ${design.layout.heroTreatment} hero, ${design.layout.serviceLayout} services, ${design.layout.imageDensity} imagery, ${design.layout.proofStyle} proof`,
+    chrome: CHROME_FOR[design.mood] ?? "utility-bar",
+    footer: footerFor(design, hasAddress, seed),
+    source: `${design.sourceName}: ${design.layout.heroTreatment} hero, ${design.layout.serviceLayout} services, ${design.layout.imageDensity} imagery, ${design.layout.proofStyle} proof, ${CHROME_FOR[design.mood] ?? "utility-bar"} header, ${footerFor(design, hasAddress, seed)} footer`,
   };
 }

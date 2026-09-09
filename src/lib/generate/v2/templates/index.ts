@@ -166,7 +166,10 @@ export async function buildPage(args: {
   );
 
 
-  const layout = layoutPlanFor(design, dna.seed, dna.about.id);
+  // The address decides one footer treatment, so it is passed rather than
+  // guessed: a footer built around a location is wrong for a business that
+  // never gave one.
+  const layout = layoutPlanFor(design, dna.seed, dna.about.id, Boolean(brief.address));
   console.log(`[build-page] layout from ${layout.source}`);
 
   const copy = await generatePageCopy(brief, TONES[dna.seed % TONES.length], composition.sections);
