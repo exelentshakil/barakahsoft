@@ -1,3 +1,4 @@
+import { getTenant } from "@/lib/tenant";
 // Node rather than edge: the CAPI half of this hits meta-pixel-server, which
 // hashes with node:crypto. This is a fire-and-forget beacon, so the few extra
 // milliseconds cost nothing that matters.
@@ -31,7 +32,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ leadSlu
       await fireMetaCapiEvent({
         eventName: "ViewContent",
         eventId: body.event_id,
-        sourceUrl: req.headers.get("referer") || `https://portal.barakahsoft.com/s/${leadSlug}`,
+        // Falls back to the tenant's own portal, not the platform's: Meta
+        // matches events on source URL, so attributing a partner's pageview to
+        // a domain their pixel has never seen makes it unmatchable.
+        sourceUrl:
+          req.headers.get("referer") || `${(await getTenant()).portalBaseUrl}/s/${leadSlug}`,
       }).catch(() => {});
     }
   }

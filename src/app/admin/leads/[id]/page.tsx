@@ -1,3 +1,4 @@
+import { tenantBySlug } from "@/tenants";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AdminLeadWorkspace } from "@/components/admin/AdminLeadWorkspace";
@@ -46,6 +47,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <AdminLeadWorkspace
+      tenant={tenantBySlug(lead.tenant_slug)}
       lead={lead}
       artifact={artifact ?? null}
       scrapeResults={scrapeResults ?? null}

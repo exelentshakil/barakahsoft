@@ -44,6 +44,8 @@ const GUARDED = [
   "src/components/landing/PartnerLanding.tsx",
   "src/app/layout.tsx",
   "src/app/admin/layout.tsx",
+  "src/components/admin/AdminLeadWorkspace.tsx",
+  "src/app/api/s/[leadSlug]/events/route.ts",
 ];
 
 /**

@@ -1,3 +1,4 @@
+import type { Tenant } from "@/tenants/types";
 "use client";
 
 import { useCallback, useState } from "react";
@@ -176,6 +177,15 @@ interface AdminLeadWorkspaceProps {
   otherLeads: Lead[];
   cost: LeadCost;
   proposalViews?: { id?: string; created_at: string; location?: string }[];
+  /**
+   * The brand that owns this lead, resolved on the server.
+   *
+   * Passed rather than looked up here because this is a client component: the
+   * tenant registry reads server-only environment variables, which come back
+   * undefined in a browser bundle and quietly fall through to the platform's
+   * defaults — the exact failure this prop exists to stop.
+   */
+  tenant: Tenant;
 }
 
 export function AdminLeadWorkspace({
@@ -185,14 +195,13 @@ export function AdminLeadWorkspace({
   otherLeads,
   cost,
   proposalViews = [],
+  tenant,
 }: AdminLeadWorkspaceProps) {
   const router = useRouter();
   const pathname = usePathname();
   // Ad spend is pulled with the platform's own Meta credentials, so the control
-  // only makes sense for the platform's own leads. Compared against the literal
-  // rather than imported from the tenant registry, which reads server-only
-  // environment variables and has no business in a client bundle.
-  const isPlatformTenant = lead.tenant_slug === "barakahsoft";
+  // only makes sense for the platform's own leads.
+  const isPlatformTenant = Boolean(tenant.isDefault);
   const [pendingLeadId, setPendingLeadId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -242,8 +251,11 @@ export function AdminLeadWorkspace({
   const contact = resolveBusinessContact(scrapeResults, { phone: lead.phone, email: lead.email }, { forceFallback: lead.source === "outreach" || lead.source === "manual" });
   const phone = displayPhone(contact.phone) || "No phone on file";
   const email = contact.email || "No email on file";
-  const portalUrl = `https://portal.barakahsoft.com/s/${lead.slug}`;
-  const portalAdminUrl = `https://portal.barakahsoft.com/s/${lead.slug}?admin=true`;
+  // The proposal lives on the domain of whoever sold it. These were hardcoded
+  // to the platform's portal, so every link an operator copied for a partner's
+  // client pointed at the wrong company.
+  const portalUrl = `${tenant.portalBaseUrl}/s/${lead.slug}`;
+  const portalAdminUrl = `${portalUrl}?admin=true`;
   
   // Clean mode strips our own operator furniture from the preview — the
   // fixed "Edit on page / Code" toolbar is position:fixed, so it lands in any

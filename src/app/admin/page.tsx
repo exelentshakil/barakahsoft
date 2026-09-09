@@ -1,3 +1,4 @@
+import { tenantBySlug } from "@/tenants";
 import { requireOperator } from "@/lib/tenant-scope";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -60,6 +61,7 @@ export default async function AdminLeadsPage() {
 
   return (
     <AdminLeadWorkspace
+      tenant={tenantBySlug(activeLead.tenant_slug)}
       lead={activeLead}
       artifact={artifact ?? null}
       scrapeResults={scrapeResults ?? null}
