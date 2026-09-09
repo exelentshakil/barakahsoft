@@ -179,6 +179,70 @@ function rendererFor(kind: string, nearest: string | null): SectionId | null {
 }
 
 /**
+ * Add back what a reference missed but this business plainly has.
+ *
+ * A blueprint is only as complete as the markdown the reference site exposed,
+ * and a JavaScript-heavy homepage yields a short one — PureGym returned six
+ * sections, none of them an about or a team. Treating that as the whole truth
+ * would have thrown away a gym's five named trainers and its founder's story,
+ * which is the opposite of the point: the reference is here to say what a page
+ * in this industry LEADS with, not to delete facts the client actually has.
+ *
+ * So every addition here is one of two things, never an invention:
+ *
+ *   structural   hero, about, faq, a conversion band, contact — built from the
+ *                business's own name, story, phone and address, which every
+ *                lead has by definition.
+ *   earned       people and pricing, added only when the scrape found real
+ *                staff or real tiers.
+ *
+ * Each one is recorded, so an operator can see the page is not purely the
+ * reference's shape and why.
+ */
+function topUp(sections: ComposedSection[], capability: Capability, notes: string[]): void {
+  const have = availableStems(capability);
+  const has = (id: SectionId) => sections.some((section) => section.id === id);
+  // The anchors are listed in order of preference, so the FIRST one that is
+  // actually on the page wins. Taking the last match instead put "about"
+  // before the trust bar, because `hero` was listed as the weaker fallback and
+  // was the one that got used.
+  const indexOf = (ids: SectionId[]) => {
+    for (const id of ids) {
+      const at = sections.findIndex((section) => section.id === id);
+      if (at >= 0) return at;
+    }
+    return undefined;
+  };
+
+  const add = (id: SectionId, after: SectionId[], why: string) => {
+    if (has(id)) return;
+    const at = indexOf(after);
+    const position = at === undefined ? Math.max(sections.length - 1, 0) : at + 1;
+    sections.splice(position, 0, { id, kind: id, purpose: "" });
+    notes.push(`[blueprint] added ${id} — ${why}`);
+  };
+
+  // The way in. Never optional, and always first.
+  if (!has("hero")) {
+    sections.unshift({ id: "hero", kind: "hero", purpose: "" });
+    notes.push("[blueprint] added hero — the reference had none and a page needs one");
+  }
+
+  if (capability.hasReviews) add("trust", ["hero"], "they have a real rating to lead with");
+  add("about", ["trust", "hero"], "their own story is a fact the reference cannot supply");
+  if (have.has("person")) add("people", ["about"], "the scrape found real named staff");
+  if (have.has("price")) add("pricing", ["services", "about"], "the scrape found real priced options");
+  add("faq", ["reviews", "gallery", "services"], "the questions a customer asks before getting in touch");
+  add("cta-band", ["faq"], "a page this long needs a second way to act");
+
+  // The way out. Never optional, and always last.
+  if (!has("contact")) {
+    sections.push({ id: "contact", kind: "contact", purpose: "" });
+    notes.push("[blueprint] added contact — the reference had none and a page needs one");
+  }
+}
+
+/**
  * The vertical's own section list, plus anything the client's facts earn.
  *
  * No curated profile lists `pricing` or `people` — they were written before
@@ -196,10 +260,15 @@ function fromVertical(vertical: VerticalProfile, capability: Capability): Compos
   const have = availableStems(capability);
   const insertAfter = (id: SectionId, after: SectionId[], kind: string) => {
     if (sections.some((section) => section.id === id)) return;
-    const at = after
-      .map((target) => sections.findIndex((section) => section.id === target))
-      .filter((index) => index >= 0)
-      .pop();
+    // First listed anchor that exists wins — see the note in topUp.
+    let at: number | undefined;
+    for (const target of after) {
+      const found = sections.findIndex((section) => section.id === target);
+      if (found >= 0) {
+        at = found;
+        break;
+      }
+    }
     const position = at === undefined ? sections.length - 1 : at + 1;
     sections.splice(Math.max(position, 1), 0, { id, kind, purpose: "" });
   };
@@ -258,20 +327,11 @@ export function composePage(args: {
     sections.push({ id, kind: section.kind, purpose: section.purpose });
   }
 
-  // A page must have a way in and a way to get in touch, whatever the
-  // reference happened to do. Everything else is genuinely optional.
-  for (const required of ["hero", "contact"] as const) {
-    if (!used.has(required)) {
-      const at = required === "hero" ? 0 : sections.length;
-      sections.splice(at, 0, { id: required, kind: required, purpose: "" });
-      used.add(required);
-      notes.push(`[blueprint] added ${required} — the reference had none and a page needs one`);
-    }
-  }
+  topUp(sections, capability, notes);
 
   // A blueprint that resolved to almost nothing is a bad extraction, not a
   // minimal page. Fall back rather than ship three sections.
-  if (sections.length < 5) {
+  if (sections.length < 6) {
     notes.push(
       `[blueprint] only ${sections.length} section(s) survived; using the ${vertical.slug} section list instead`
     );
