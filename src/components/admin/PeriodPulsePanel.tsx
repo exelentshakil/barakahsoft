@@ -20,7 +20,33 @@ interface Summary {
   otherCosts: { kind: string; amountUsd: number }[];
   paidLeads: number;
   pricingConfigured: boolean;
+  /**
+   * ICP coverage across every lead, not just this period.
+   *
+   * "Which businesses can this engine serve" does not reset every fortnight,
+   * and the unsupported count is the roadmap: it says which section renderer
+   * is worth building next.
+   */
+  coverage?: {
+    total: number;
+    byFit: Record<string, number>;
+    byCategory: Record<string, number>;
+  };
 }
+
+const FIT_LABEL: Record<string, string> = {
+  native: "Built for it",
+  adapted: "Adapted",
+  unsupported: "Declined",
+  unclassified: "Not analysed",
+};
+
+const FIT_TONE: Record<string, string> = {
+  native: "text-emerald-700",
+  adapted: "text-indigo-700",
+  unsupported: "text-amber-700",
+  unclassified: "text-slate-500",
+};
 
 const PERIODS: { id: Period; label: string }[] = [
   { id: "week", label: "7 days" },
@@ -186,6 +212,37 @@ export function PeriodPulsePanel({ collectedRevenue, pipelineToClose }: { collec
         <p className="text-[10px] leading-snug text-amber-700">
           {data.ai.unpricedCalls} of {data.ai.calls} calls used a model with no price — actual spend is higher.
         </p>
+      )}
+
+      {/* Coverage. The question this answers is whether the engine can serve
+          the leads actually coming in — measured, rather than estimated from
+          a list of industries we hope to sell to. */}
+      {data?.coverage && data.coverage.total > 0 && (
+        <div className="space-y-1.5 border-t border-slate-200 pt-3">
+          <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">
+            Coverage · {data.coverage.total} leads
+          </p>
+          {(["native", "adapted", "unsupported", "unclassified"] as const).map((fit) => {
+            const count = data.coverage?.byFit[fit] ?? 0;
+            if (count === 0) return null;
+            const pct = Math.round((count / (data.coverage?.total ?? 1)) * 100);
+            return (
+              <div key={fit} className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-600">{FIT_LABEL[fit]}</span>
+                <span className={`text-sm font-black ${FIT_TONE[fit]}`}>
+                  {count} <span className="text-[10px] font-bold opacity-70">({pct}%)</span>
+                </span>
+              </div>
+            );
+          })}
+          {(data.coverage.byFit.unsupported ?? 0) > 0 && (
+            <p className="text-[10px] leading-snug text-amber-700">
+              Declined leads are businesses this engine has nothing real to fill a page with — no
+              listing, no reviews, no service area. The biggest declined category is what to build for
+              next.
+            </p>
+          )}
+        </div>
       )}
 
       {error && <p className="text-[10px] font-semibold text-rose-600">{error}</p>}

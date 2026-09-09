@@ -1153,6 +1153,9 @@ Shaq`,
                     phone={lead.phone}
                     email={lead.email}
                     painPoints={lead.pain_points}
+                    verticalSlug={lead.vertical_slug}
+                    icpCategory={lead.icp_category}
+                    icpFit={lead.icp_fit}
                   />
                   <DeleteLeadButton leadId={lead.id} />
                 </div>

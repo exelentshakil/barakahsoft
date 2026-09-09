@@ -8,6 +8,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+/**
+ * The verticals an operator can choose.
+ *
+ * Listed rather than imported from the profile registry: this is a client
+ * component, and importing the registry would pull every profile's prompts,
+ * photo templates and art direction into the browser for a dropdown of six
+ * labels. The API validates the slug against the real registry.
+ */
+const VERTICAL_OPTIONS = [
+  { slug: "home-services", label: "Home & Trade Services" },
+  { slug: "health-wellness", label: "Health & Medical Practice" },
+  { slug: "hospitality-food", label: "Restaurant & Hospitality" },
+  { slug: "salon-wellness", label: "Salon, Spa & Fitness" },
+  { slug: "professional-services", label: "Professional & B2B Services" },
+  { slug: "local-retail", label: "Local Shop & Retail" },
+];
+
 export function EditLeadDialog({
   leadId,
   businessName,
@@ -16,6 +33,9 @@ export function EditLeadDialog({
   phone,
   email,
   painPoints,
+  verticalSlug,
+  icpCategory,
+  icpFit,
 }: {
   leadId: string;
   businessName: string | null;
@@ -24,6 +44,11 @@ export function EditLeadDialog({
   phone?: string | null;
   email?: string | null;
   painPoints?: string[];
+  /** The operator's vertical override, if one is set. */
+  verticalSlug?: string | null;
+  /** What the router classified this as, and whether we serve it. */
+  icpCategory?: string | null;
+  icpFit?: string | null;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -33,6 +58,7 @@ export function EditLeadDialog({
   const [phoneValue, setPhoneValue] = useState(phone ?? "");
   const [emailValue, setEmailValue] = useState(email ?? "");
   const [painPointsValue, setPainPointsValue] = useState(painPoints?.join("\n") ?? "");
+  const [vertical, setVertical] = useState(verticalSlug ?? "");
   const [notes, setNotes] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +78,7 @@ export function EditLeadDialog({
           phone: phoneValue,
           email: emailValue,
           pain_points: painPointsValue.split("\n").map((p) => p.trim()).filter(Boolean),
+          vertical_slug: vertical,
         }),
       });
       const data = await res.json();
@@ -116,6 +143,31 @@ export function EditLeadDialog({
                 placeholder="e.g. (702) 213-5972"
               />
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="edit-vertical">Vertical</Label>
+            <select
+              id="edit-vertical"
+              value={vertical}
+              onChange={(e) => setVertical(e.target.value)}
+              className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="">
+                Auto — {icpCategory ?? "not classified yet"}
+                {icpFit ? ` (${icpFit})` : ""}
+              </option>
+              {VERTICAL_OPTIONS.map((option) => (
+                <option key={option.slug} value={option.slug}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {icpFit === "unsupported"
+                ? "This business was classified as outside what the engine builds well, so generation is blocked. Choosing a vertical here overrides that and builds anyway."
+                : "Leave on Auto unless the classifier got it wrong. This decides the page's sections, wording, call to action and art direction."}
+            </p>
           </div>
 
           <div>
