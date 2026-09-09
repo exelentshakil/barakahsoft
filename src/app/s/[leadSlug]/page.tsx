@@ -1,4 +1,5 @@
 import { tenantBySlug } from "@/tenants";
+import { isLiveClientSite } from "@/lib/tenant";
 import { profileForLead } from "@/lib/verticals/resolve";
 export const runtime = "edge";
 import type { Metadata } from "next";
@@ -80,8 +81,14 @@ export default async function LeadSitePage({
     );
   }
 
-  // If viewing the direct website preview
-  if (sParams.view === "preview") {
+  // The website, rather than the proposal.
+  //
+  // Two ways to reach it: ?view=preview, which is how the operator and the
+  // client review the build; and a request that arrived on the client's own
+  // custom domain, which is their real website and must never render the
+  // proposal that was written to sell to them.
+  const liveSite = await isLiveClientSite();
+  if (sParams.view === "preview" || liveSite) {
     // The schema.org subtype comes from the profile frozen into the artifact,
     // so a dentist is a Dentist and a florist a Florist rather than every
     // client on the platform being a generic LocalBusiness.
@@ -117,7 +124,17 @@ export default async function LeadSitePage({
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
         {faqSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
                 {payload.bespokeHomepageHtml ? (
-          <BespokeHomepage payload={{ ...payload, previewMode: true }} />
+          <BespokeHomepage
+            payload={{
+              ...payload,
+              previewMode: !liveSite,
+              // On the client's own domain the site IS the root: linking at
+              // /s/<slug>/about would leak our path structure into their
+              // navigation and their canonical URLs. basePath was never set,
+              // so it defaulted to /s/<slug> everywhere.
+              ...(liveSite ? { basePath: "" } : {}),
+            }}
+          />
         ) : (
           <NotBuiltYet businessName={payload.businessName} />
         )}

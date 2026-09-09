@@ -1,3 +1,4 @@
+import { sitePresentation } from "@/lib/tenant";
 export const runtime = "edge";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
@@ -28,7 +29,7 @@ export default async function AboutPage({ params, searchParams }: { params: Prom
   if (!result) notFound();
   if ((!result.payload.innerPagesBuilt || !result.payload.bespokePages.about) && !(await isAdminSession())) redirect(`/s/${leadSlug}#about`);
 
-  const payload = { ...result.payload, previewMode: (await searchParams).view === "preview" };
+  const payload = { ...result.payload, ...(await sitePresentation((await searchParams).view)) };
   const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: "About", path: "/about" }]);
 
   return (

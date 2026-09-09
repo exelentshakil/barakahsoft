@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { DEFAULT_TENANT, isAppHost, resolveTenantByHost } from "@/tenants";
-import { TENANT_HEADER } from "@/lib/tenant";
+import { LIVE_SITE_HEADER, TENANT_HEADER } from "@/lib/tenant";
 
 // v4 Phase P1 — custom-domain routing for a lead's own live site, keyed by
 // leads.custom_domain, mirroring the rewrite pattern quotehaul used for
@@ -45,6 +45,13 @@ async function rewriteForCustomDomain(request: NextRequest): Promise<NextRespons
   // and "powered by" would carry the default brand rather than the seller's.
   const headers = new Headers(request.headers);
   headers.set(TENANT_HEADER, lead.tenant_slug ?? DEFAULT_TENANT.slug);
+  // This request is for the client's WEBSITE, not for the proposal we sold
+  // them with. /s/[leadSlug] serves both — the proposal by default, the site
+  // under ?view=preview — and the rewrite carried no marker, so the first
+  // client to point their domain here would have served their customers the
+  // sales pitch aimed at the client, with the site's structured data on the
+  // branch nobody reached.
+  headers.set(LIVE_SITE_HEADER, "1");
   return NextResponse.rewrite(url, { request: { headers } });
 }
 

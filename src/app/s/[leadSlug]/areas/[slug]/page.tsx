@@ -1,3 +1,4 @@
+import { sitePresentation } from "@/lib/tenant";
 export const runtime = "edge";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
@@ -29,7 +30,7 @@ export default async function AreaPage({ params, searchParams }: { params: Promi
   const pageHtml = result.payload.bespokePages[`areas/${slug}`];
   if ((!result.payload.innerPagesBuilt || !pageHtml) && !isAdmin) redirect(`/s/${leadSlug}#areas`);
 
-  const payload = { ...result.payload, previewMode: (await searchParams).view === "preview" };
+  const payload = { ...result.payload, ...(await sitePresentation((await searchParams).view)) };
   const area = payload.areas.find((a) => a.slug === slug);
   if (!area) notFound();
 

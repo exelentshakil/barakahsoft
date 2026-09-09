@@ -15,6 +15,22 @@ import { DEFAULT_TENANT, resolveTenantByHost, tenantBySlug, type Tenant } from "
 export const TENANT_HEADER = "x-tenant";
 
 /**
+ * Set by the custom-domain rewrite: this request is for a client's own live
+ * website, not for the proposal we sold them with.
+ *
+ * /s/[leadSlug] serves both from one route, so something has to say which. A
+ * visitor on the client's domain must never see the sales pitch written to
+ * persuade that client, and the site's structured data belongs on the page
+ * that has to rank.
+ */
+export const LIVE_SITE_HEADER = "x-live-site";
+
+/** True when this request arrived on a client's own custom domain. */
+export async function isLiveClientSite(): Promise<boolean> {
+  return (await headers()).get(LIVE_SITE_HEADER) === "1";
+}
+
+/**
  * The tenant for the current request.
  *
  * Cached per render pass, so a layout, a page and three components asking for
@@ -49,3 +65,22 @@ export async function getTenantForLead(leadId: string): Promise<Tenant> {
 
 export { DEFAULT_TENANT, resolveTenantByHost, tenantBySlug };
 export type { Tenant };
+
+/**
+ * How a delivered page should present itself, given where the request came from.
+ *
+ * On a client's own custom domain the site IS the root: internal links must not
+ * carry ?view=preview and must not be prefixed with /s/<slug>, or our path
+ * structure leaks into their navigation and their canonical URLs. Everywhere
+ * else, ?view=preview is what distinguishes reviewing the build from reading
+ * the proposal.
+ */
+export async function sitePresentation(viewParam?: string): Promise<{
+  liveSite: boolean;
+  previewMode: boolean;
+  basePath?: string;
+}> {
+  const liveSite = await isLiveClientSite();
+  if (liveSite) return { liveSite, previewMode: false, basePath: "" };
+  return { liveSite, previewMode: viewParam === "preview" };
+}

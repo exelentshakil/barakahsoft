@@ -1,3 +1,4 @@
+import { sitePresentation } from "@/lib/tenant";
 export const runtime = "edge";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
@@ -27,7 +28,7 @@ export default async function FaqPage({ params, searchParams }: { params: Promis
   if (!result) notFound();
   if ((!result.payload.innerPagesBuilt || !result.payload.bespokePages.faq) && !(await isAdminSession())) redirect(`/s/${leadSlug}#faq`);
 
-  const payload = { ...result.payload, previewMode: (await searchParams).view === "preview" };
+  const payload = { ...result.payload, ...(await sitePresentation((await searchParams).view)) };
   const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: "FAQ", path: "/faq" }]);
 
   return (

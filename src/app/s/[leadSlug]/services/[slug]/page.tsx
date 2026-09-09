@@ -1,3 +1,4 @@
+import { sitePresentation } from "@/lib/tenant";
 import { profileForLead } from "@/lib/verticals/resolve";
 export const runtime = "edge";
 import type { Metadata } from "next";
@@ -36,7 +37,7 @@ export default async function ServicePage({ params, searchParams }: { params: Pr
   if (!result) notFound();
   if ((!result.payload.innerPagesBuilt || !result.payload.bespokePages[`services/${slug}`]) && !(await isAdminSession())) redirect(`/s/${leadSlug}#services`);
 
-  const payload = { ...result.payload, previewMode: (await searchParams).view === "preview" };
+  const payload = { ...result.payload, ...(await sitePresentation((await searchParams).view)) };
   const service = payload.services.find((s) => s.slug === slug);
   if (!service) notFound();
 

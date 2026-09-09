@@ -1,3 +1,4 @@
+import { sitePresentation } from "@/lib/tenant";
 export const runtime = "edge";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
@@ -28,7 +29,7 @@ export default async function ContactPage({ params, searchParams }: { params: Pr
   if (!result) notFound();
   if ((!result.payload.innerPagesBuilt || !result.payload.bespokePages.contact) && !(await isAdminSession())) redirect(`/s/${leadSlug}#contact`);
 
-  const payload = { ...result.payload, previewMode: (await searchParams).view === "preview" };
+  const payload = { ...result.payload, ...(await sitePresentation((await searchParams).view)) };
   const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: "Contact", path: "/contact" }]);
 
   return (
