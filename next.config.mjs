@@ -2,11 +2,12 @@
 const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   images: {
+    // Asset hosts for every tenant in src/tenants/. next/image refuses an
+    // unlisted host outright, so a partner added there without a line here
+    // renders a broken logo and an empty portfolio.
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'barakahsoft.com',
-      },
+      { protocol: 'https', hostname: 'barakahsoft.com' },
+      { protocol: 'https', hostname: 'smilecreative.agency' },
     ],
   },
   // The export route reads the chrome stylesheet and the real header,

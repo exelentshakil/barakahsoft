@@ -77,9 +77,46 @@ export interface TenantLanding {
   heroSubhead?: string;
   /** Background footage for the hero. Omitted renders the poster image alone. */
   heroVideoUrl?: string;
+
   team: { name: string; role: string; photoUrl?: string; bio?: string }[];
-  /** Before/after work shown as proof. Scoped per tenant so nobody shows another's clients. */
-  sampleSites: { label: string; beforeUrl?: string; afterUrl?: string; href?: string }[];
+
+  /**
+   * Work this tenant has already delivered, as their own proof.
+   *
+   * Distinct from the before/after showcase, which is built from leads in this
+   * database. A partner arriving with fifteen years of portfolio and zero leads
+   * here has proof; it is just not proof we generated, so it lives in config
+   * rather than being manufactured.
+   */
+  portfolio: {
+    name: string;
+    /** What the work was. "Website design & build". */
+    kind: string;
+    /** Who they are. "Family removals firm, Ahoghill". */
+    who?: string;
+    /** Live site, opened in a new tab. */
+    href: string;
+    /** Screenshot. Hotlinked from wherever the tenant already hosts it. */
+    imageUrl?: string;
+  }[];
+
+  /** Named work with no screenshot — a credibility list, not a gallery. */
+  alsoWorkedOn?: { name: string; kind: string }[];
+
+  services?: { title: string; body: string; href?: string }[];
+
+  /** Headline prices. Starting figures, labelled as such by the section copy. */
+  pricing?: { figure: string; title: string; body: string }[];
+
+  /** How working with this tenant goes, numbered. */
+  process?: { title: string; body: string; when?: string }[];
+
+  /** Prose the tenant wants said in their own voice, rendered as paragraphs. */
+  promise?: { eyebrow: string; headline: string; paragraphs: string[] };
+
+  /** Where they actually are. Brand carries the phone and email. */
+  contact?: { addressLines?: string[]; hours?: string };
+
   faq: { q: string; a: string }[];
 }
 

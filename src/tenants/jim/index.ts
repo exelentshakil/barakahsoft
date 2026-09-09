@@ -43,7 +43,7 @@ export const jim: Tenant = {
   landing: {
     audience: "TODO",
     team: [],
-    sampleSites: [],
+    portfolio: [],
     faq: [],
   },
 };

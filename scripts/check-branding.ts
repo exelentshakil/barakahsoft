@@ -36,6 +36,7 @@ const GUARDED = [
   "src/components/landing/Hero.tsx",
   "src/components/landing/LandingTeamShowcase.tsx",
   "src/components/landing/CookieConsent.tsx",
+  "src/components/landing/PartnerLanding.tsx",
   "src/app/layout.tsx",
   "src/app/admin/layout.tsx",
 ];
