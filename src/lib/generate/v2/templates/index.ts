@@ -1,5 +1,7 @@
 import type { SectionId } from "@/lib/section-ids";
 import { composePage } from "@/lib/generate/v2/compose";
+import { compileDesignTokens } from "@/lib/design-tokens";
+import { DEFAULT_DESIGN_DNA } from "@/lib/design-dna";
 import type { Entity } from "@/lib/extract-entities";
 import { layoutDnaFor, type LayoutDna } from "@/lib/generate/v2/layout-dna";
 import { derivePalette, rgbTriplet, readableOn, strongOn, contrastOn } from "@/lib/generate/v2/palette";
@@ -259,7 +261,39 @@ export async function buildPage(args: {
   const radius = { sharp: "2px", soft: "12px", rounded: "20px", pill: "999px" }[design?.geometry.radius ?? "soft"];
   const rhythm = { tight: "68px", generous: "104px", cinematic: "132px" }[design?.layout.sectionRhythm ?? "generous"];
 
+  // The compiled token set is the floor, and buildPage's own values win on top.
+  //
+  // These were two independent maps: `compileDesignTokens` produced the set the
+  // release gate verifies, and this map produced the set the page actually
+  // ships. They disagreed by twelve variables, so the page referenced
+  // --bs-primary-on-surface-alt, --bs-nav-bg and the whole --bs-invert-*
+  // family without ever defining them, and every rule using one fell through
+  // to its hardcoded fallback — a fixed orange, on every client, whatever
+  // their brand. The gate could not see it, because the gate was reading the
+  // other map.
+  //
+  // This is the same bug --bs-primary-strong had, which was reaching 42 rules.
+  // Starting from the compiled set means a variable can no longer be used by
+  // the stylesheet and left undefined on the page, and the gate's verdict is
+  // now about the CSS that ships.
+  const compiled = compileDesignTokens(
+    design ?? {
+      ...DEFAULT_DESIGN_DNA,
+      palette: {
+        primary: palette.primary,
+        accent: palette.accent,
+        surface: palette.surface,
+        surfaceAlt: palette.surfaceAlt,
+        ink: palette.ink,
+        inkMuted: palette.inkMuted ?? DEFAULT_DESIGN_DNA.palette.inkMuted,
+        onPrimary: palette.onPrimary ?? DEFAULT_DESIGN_DNA.palette.onPrimary,
+      },
+    },
+    { clientBrandHex: brandHex }
+  );
+
   const tokens: Record<string, string> = {
+    ...compiled.vars,
     "--bs-primary": palette.primary,
     "--bs-primary-rgb": rgbTriplet(palette.primary),
     "--bs-on-primary": readableOn(strongOn(palette.primary)),
