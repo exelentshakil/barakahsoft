@@ -276,9 +276,15 @@ export async function buildPage(args: {
   // Starting from the compiled set means a variable can no longer be used by
   // the stylesheet and left undefined on the page, and the gate's verdict is
   // now about the CSS that ships.
+  // Compiled from the palette that ACTUALLY ships, not from the design
+  // direction it came from. Those differ: compileDesignTokens can swap the
+  // primary for the client's brand hex, while the palette resolved above
+  // deliberately lets the operator's chosen direction win. Deriving
+  // --bs-primary-on-surface-alt and the invert family from a primary the page
+  // does not use would reintroduce the same mismatch one level down.
   const compiled = compileDesignTokens(
-    design ?? {
-      ...DEFAULT_DESIGN_DNA,
+    {
+      ...(design ?? DEFAULT_DESIGN_DNA),
       palette: {
         primary: palette.primary,
         accent: palette.accent,
@@ -289,7 +295,7 @@ export async function buildPage(args: {
         onPrimary: palette.onPrimary ?? DEFAULT_DESIGN_DNA.palette.onPrimary,
       },
     },
-    { clientBrandHex: brandHex }
+    { colourSource: "reference", clientBrandHex: null }
   );
 
   const tokens: Record<string, string> = {
