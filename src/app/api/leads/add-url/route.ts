@@ -46,7 +46,8 @@ function pickPainPoints(...candidates: unknown[]): string[] {
 export async function POST(req: Request) {
   // Being signed in is not being an operator: any Supabase user can
   // complete a magic link. This route then uses the service-role client.
-  if (!(await requireOperator())) {
+  const ctx = await requireOperator();
+  if (!ctx) {
     return NextResponse.json({ error: "Operator access required" }, { status: 403 });
   }
 
@@ -106,6 +107,8 @@ export async function POST(req: Request) {
         const { data: lead, error } = await admin
           .from("leads")
           .insert({
+            // A lead an operator adds belongs to the brand they work for.
+            tenant_slug: ctx.tenantSlug,
             source_url: rawUrl,
             business_name: item.business_name?.trim() || null,
             email: validEmail,
@@ -158,6 +161,7 @@ export async function POST(req: Request) {
   const { data: lead, error } = await admin
     .from("leads")
     .insert({
+      tenant_slug: ctx.tenantSlug,
       source_url: rawUrl,
       business_name: body.business_name?.trim() || null,
       email: rawEmail ? rawEmail.toLowerCase() : null,

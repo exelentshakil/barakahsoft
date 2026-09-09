@@ -1,3 +1,5 @@
+import { DEFAULT_TENANT, isAppHost } from "@/tenants";
+import { getTenant } from "@/lib/tenant";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendInstantLeadAlert, sendInstantLeadConfirmationEmail } from "@/lib/notifications";
@@ -7,16 +9,25 @@ import { isLeadProblem } from "@/lib/lead-problems";
 import { inngest } from "@/inngest/client";
 import { generateUniqueDomainSlug, normaliseWebsiteHost } from "@/lib/domain-slug";
 
+/**
+ * Any tenant's own host may post here.
+ *
+ * This was a hardcoded barakahsoft.com allowlist, so a partner's landing form
+ * posting from their own domain would have been refused by the browser before
+ * the request arrived — their intake would simply not work, with no error
+ * anywhere on the server to explain it.
+ */
 function getCorsHeaders(req: Request): HeadersInit {
   const origin = req.headers.get("origin") || "";
-  const isAllowed =
-    origin === "https://barakahsoft.com" ||
-    origin === "https://www.barakahsoft.com" ||
-    origin.endsWith(".barakahsoft.com") ||
-    origin === "http://localhost:3000";
+  let isAllowed = origin === "http://localhost:3000";
+  try {
+    if (origin) isAllowed = isAllowed || isAppHost(new URL(origin).hostname);
+  } catch {
+    // A malformed Origin header is simply not allowed.
+  }
 
   return {
-    "Access-Control-Allow-Origin": isAllowed ? origin : "https://barakahsoft.com",
+    "Access-Control-Allow-Origin": isAllowed ? origin : DEFAULT_TENANT.siteBaseUrl,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Max-Age": "86400",
@@ -62,6 +73,10 @@ export async function POST(req: Request) {
     const { data: lead, error } = await admin
       .from("leads")
       .insert({
+        // Which brand this lead belongs to, from the host it arrived on.
+        // Without this every partner's inbound lead would land in the
+        // platform's pipeline and be invisible to the partner who earned it.
+        tenant_slug: (await getTenant()).slug,
         source_url: body.source_url,
         business_name: null,
         contact_name: String(body.name).trim().slice(0, 200),
