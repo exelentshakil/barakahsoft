@@ -15,7 +15,8 @@
     "check": "tsx --env-file=.env.local scripts/check-site.ts",
     "check:auth": "tsx scripts/check-route-auth.ts",
     "check:branding": "tsx scripts/check-branding.ts",
-    "check:verticals": "tsx scripts/check-verticals.ts"
+    "check:verticals": "tsx scripts/check-verticals.ts",
+    "backfill:verticals": "tsx --env-file=.env.local scripts/backfill-verticals.ts"
   },
   "dependencies": {
     "@radix-ui/react-collapsible": "^1.1.20",
