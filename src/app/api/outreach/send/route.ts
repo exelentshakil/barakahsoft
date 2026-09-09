@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminSession } from "@/lib/is-admin-session";
 import { sendEmail } from "@/lib/notifications";
 import { stageFor, isDue, signOff, type OutreachContext, type SequenceTrack } from "@/lib/outreach/sequence";
+import { tenantBySlug } from "@/tenants";
 import { signalsFor, type OutreachDraft } from "@/lib/outreach/personalise";
 import type { Lead, ScrapeResults } from "@/types/database";
 
@@ -50,10 +51,6 @@ function asHtml(text: string): string {
 function headlineFindingFor(lead: Lead, scrape: ScrapeResults | null): string | null {
   const top = signalsFor(lead, scrape)[0];
   return top ? top.detail : null;
-}
-
-function portalOrigin(): string {
-  return (process.env.NEXT_PUBLIC_PORTAL_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
 }
 
 function sanitizeEmail(candidate: string | null | undefined): string | null {
@@ -129,12 +126,18 @@ export async function POST(req: Request) {
 
     const scrape = scrapeFor.get(lead.id) ?? null;
     const facts = (scrape?.facts ?? {}) as Record<string, unknown>;
-    const previewUrl = `${portalOrigin()}/s/${lead.slug}?view=preview`;
+    // Cold outreach is signed by whoever is actually sending it — the preview
+    // link, the sign-off and the sending address all belong to the tenant that
+    // owns the lead, not to whichever brand happens to be the default.
+    const tenant = tenantBySlug(lead.tenant_slug);
+    const previewUrl = `${tenant.portalBaseUrl}/s/${lead.slug}?view=preview`;
     const ctx: OutreachContext = {
       businessName: lead.business_name ?? "your business",
       previewUrl,
       city: (facts.town as string) ?? null,
       headlineFinding: headlineFindingFor(lead, scrape),
+      senderName: tenant.brand.senderName,
+      senderCompany: tenant.brand.name,
     };
 
     // A reviewed personal draft beats the sequence copy, but only for the
@@ -154,6 +157,8 @@ export async function POST(req: Request) {
     try {
       delivered = await sendEmail({
         to: sanitizeEmail(lead.email) || lead.email,
+        from: tenant.brand.fromEmail,
+        fromName: tenant.brand.senderName,
         subject,
         html: asHtml(text),
       });

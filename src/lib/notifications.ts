@@ -1,3 +1,4 @@
+import { tenantBySlug } from "@/tenants";
 import { Resend } from "resend";
 import twilio from "twilio";
 import type { Lead } from "@/types/database";
@@ -18,7 +19,6 @@ function getTwilioClient() {
 
 const fromEmail = () => process.env.BREVO_SENDER_EMAIL || process.env.RESEND_FROM_EMAIL || "hello@barakahsoft.com";
 const senderName = () => process.env.SENDER_NAME || "BarakahSoft";
-const siteUrl = () => process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 // Universal transactional email dispatcher: Native Brevo API with Resend fallback
 export async function sendEmail({
@@ -92,16 +92,38 @@ export async function sendEmail({
   return false;
 }
 
+/**
+ * The brand a lead's mail goes out as.
+ *
+ * Every message here used to be signed BarakahSoft from
+ * hello@barakahsoft.com with a +1 (307) number, which is correct for the
+ * platform's own leads and wrong for a partner's: their prospect would get a
+ * proposal branded KeyGrowth linking to a portal signed by a Wyoming LLC.
+ */
+function brandFor(lead: Lead) {
+  const tenant = tenantBySlug(lead.tenant_slug);
+  return {
+    tenant,
+    brand: tenant.brand,
+    sender: { from: tenant.brand.fromEmail, fromName: tenant.brand.senderName },
+  };
+}
+
 // Fires synchronously from /api/intake, NOT from an Inngest function
 export async function sendInstantLeadAlert(lead: Lead) {
-  const operatorEmail = process.env.OPERATOR_ALERT_EMAIL;
+  const { tenant, sender } = brandFor(lead);
+  // Where a partner's own new-lead alert goes. Falls back to the platform's
+  // env var only for the platform's own leads.
+  const operatorEmail =
+    tenant.commerce.enquiryEmail || tenant.brand.supportEmail || process.env.OPERATOR_ALERT_EMAIL;
   const operatorPhone = process.env.OPERATOR_ALERT_PHONE;
-  const leadUrl = `${siteUrl()}/admin/leads/${lead.id}`;
+  const leadUrl = `${tenant.siteBaseUrl}/admin/leads/${lead.id}`;
   const summary = `${lead.business_name || lead.source_url} — ${lead.phone || "no phone"} — ${lead.email || "no email"}`;
 
   if (operatorEmail) {
     await sendEmail({
       to: operatorEmail,
+      ...sender,
       subject: `New lead: ${lead.business_name || lead.source_url}`,
       html: `<p>New lead just submitted the intake form.</p><p>${summary}</p><p><a href="${leadUrl}">Open in admin</a></p>`,
     });
@@ -123,14 +145,14 @@ export async function sendInstantLeadAlert(lead: Lead) {
 // Email #1 (Instant Auto-Confirmation)
 export async function sendInstantLeadConfirmationEmail(lead: Lead) {
   if (!lead.email) return;
-  const portalSubdomain = process.env.NEXT_PUBLIC_PORTAL_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://portal.barakahsoft.com";
-  const trackingUrl = `${portalSubdomain}/s/${lead.slug}?auth=${createPortalToken(lead.id)}`;
+  const { tenant, brand, sender } = brandFor(lead);
+  const trackingUrl = `${tenant.portalBaseUrl}/s/${lead.slug}?auth=${createPortalToken(lead.id)}`;
   const businessName = lead.business_name || lead.source_url;
 
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #0d1738; background-color: #ffffff; border: 1px solid #e5e7f2; border-radius: 12px;">
       <div style="margin-bottom: 24px; border-bottom: 1px solid #e5e7f2; padding-bottom: 16px;">
-        <span style="font-size: 18px; font-weight: bold; color: #533afd;">BarakahSoft</span>
+        <span style="font-size: 18px; font-weight: bold; color: #533afd;">${brand.name}</span>
         <span style="font-size: 12px; color: #777588; margin-left: 8px;">· Live Redesign Portal</span>
       </div>
       <h2 style="font-size: 22px; font-weight: 700; color: #0d1738; margin-top: 0;">We received your website request</h2>
@@ -152,13 +174,14 @@ export async function sendInstantLeadConfirmationEmail(lead: Lead) {
         <p style="margin: 4px 0 0 0;">3. You review the concept in 48 hours with zero obligation</p>
       </div>
       <p style="font-size: 12px; color: #777588; margin-top: 28px; border-top: 1px solid #e5e7f2; padding-top: 16px;">
-        BarakahSoft LLC · Direct Line: +1 (307) 533-6678 · hello@barakahsoft.com
+        ${brand.emailSignature}
       </p>
     </div>
   `;
 
   await sendEmail({
     to: lead.email,
+    ...sender,
     subject: `We received your website — follow your redesign live (${businessName})`,
     html,
   });
@@ -167,12 +190,13 @@ export async function sendInstantLeadConfirmationEmail(lead: Lead) {
 // Email #2 (Concept Delivery)
 export async function sendPreviewReadyEmail(lead: Lead, magicLink: string) {
   if (!lead.email) return;
+  const { brand, sender } = brandFor(lead);
   const businessName = lead.business_name || lead.source_url;
 
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #0d1738; background-color: #ffffff; border: 1px solid #e5e7f2; border-radius: 12px;">
       <div style="margin-bottom: 24px; border-bottom: 1px solid #e5e7f2; padding-bottom: 16px;">
-        <span style="font-size: 18px; font-weight: bold; color: #07284d;">Barakah<span style="color: #533afd;">Soft</span></span>
+        <span style="font-size: 18px; font-weight: bold; color: #07284d;">${brand.name}</span>
         <span style="font-size: 12px; color: #777588; margin-left: 8px;">· Executive Delivery</span>
       </div>
       <h2 style="font-size: 22px; font-weight: 700; color: #0d1738; margin-top: 0;">Your Rebuilt Homepage & Speed Audit are Ready!</h2>
@@ -185,13 +209,14 @@ export async function sendPreviewReadyEmail(lead: Lead, magicLink: string) {
         </a>
       </div>
       <p style="font-size: 12px; color: #777588; margin-top: 28px; border-top: 1px solid #e5e7f2; padding-top: 16px;">
-        BarakahSoft LLC · Direct Line: +1 (307) 533-6678 · hello@barakahsoft.com
+        ${brand.emailSignature}
       </p>
     </div>
   `;
 
   await sendEmail({
     to: lead.email,
+    ...sender,
     subject: `Your free redesign for ${businessName} is ready`,
     html,
   });

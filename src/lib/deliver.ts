@@ -1,3 +1,4 @@
+import { tenantBySlug } from "@/tenants";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPreviewReadyEmail } from "@/lib/notifications";
 import { createPortalToken } from "@/lib/portal-token";
@@ -7,8 +8,8 @@ import type { Lead } from "@/types/database";
 // (plan §5). The delivered preview uses the same signed, expiring portal
 // token as the intake confirmation so the report is not publicly enumerable.
 export async function deliverArtifact(lead: Lead): Promise<string> {
-  const siteUrl = process.env.NEXT_PUBLIC_PORTAL_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-  const previewUrl = `${siteUrl}/s/${lead.slug}?auth=${createPortalToken(lead.id)}`;
+  // The link a client clicks has to be on the domain of whoever sold to them.
+  const previewUrl = `${tenantBySlug(lead.tenant_slug).portalBaseUrl}/s/${lead.slug}?auth=${createPortalToken(lead.id)}`;
 
   await sendPreviewReadyEmail(lead, previewUrl);
 

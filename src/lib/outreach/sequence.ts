@@ -31,6 +31,13 @@ export interface OutreachContext {
   city: string | null;
   /** The single clearest measured problem, when one exists. */
   headlineFinding: string | null;
+  /**
+   * Who is writing. Required on commercial email, and it has to be the person
+   * and company actually sending — a partner's cold email signed by someone at
+   * another company is both wrong and unlawful under CAN-SPAM and PECR.
+   */
+  senderName?: string;
+  senderCompany?: string;
 }
 
 /**
@@ -47,7 +54,8 @@ export function signOff(ctx: OutreachContext, track: SequenceTrack = "outreach")
     track === "inbound"
       ? `You are receiving this because you requested a free rebuild for ${ctx.businessName}.`
       : `You received this because ${ctx.businessName} came up while I was looking at local businesses whose websites I could rebuild.`;
-  return ["", "—", "Shakil · BarakahSoft", because, "Reply STOP and I will not contact you again."].join("\n");
+  const signature = [ctx.senderName, ctx.senderCompany].filter(Boolean).join(" · ") || "BarakahSoft";
+  return ["", "—", signature, because, "Reply STOP and I will not contact you again."].join("\n");
 }
 
 export const OUTREACH_SEQUENCE: OutreachStage[] = [

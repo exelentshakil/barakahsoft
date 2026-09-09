@@ -1,3 +1,4 @@
+import { tenantBySlug } from "@/tenants";
 import { assertLeadInTenant } from "@/lib/tenant-scope";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -28,8 +29,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     );
   }
 
-  const portalSubdomain = process.env.NEXT_PUBLIC_PORTAL_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://portal.barakahsoft.com";
-  const trackingUrl = `${portalSubdomain}/s/${lead.slug}?auth=${createPortalToken(lead.id)}`;
+  const tenant = tenantBySlug(lead.tenant_slug);
+  const trackingUrl = `${tenant.portalBaseUrl}/s/${lead.slug}?auth=${createPortalToken(lead.id)}`;
   const businessName = lead.business_name || lead.source_url;
 
   const stepNumber = typeof body.step === "number" ? body.step : 1;
@@ -75,7 +76,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         <p style="margin: 4px 0 0 0;">• Yours to keep, with zero obligation</p>
       </div>
       <p style="font-size: 12px; color: #777588; margin-top: 28px; border-top: 1px solid #e5e7f2; padding-top: 16px;">
-        BarakahSoft LLC · Direct Line: +1 (307) 533-6678 · hello@barakahsoft.com
+        ${tenant.brand.emailSignature}
       </p>
     </div>
   `;
@@ -83,6 +84,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const hasEmailConfig = Boolean(process.env.BREVO_API_KEY || process.env.RESEND_API_KEY);
   const emailSent = await sendEmail({
     to: lead.email,
+    from: tenant.brand.fromEmail,
+    fromName: tenant.brand.senderName,
     subject,
     html,
   });
