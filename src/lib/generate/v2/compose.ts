@@ -65,7 +65,7 @@ export interface Capability {
  * Matching on the stem keeps both sides free to use their own industry's
  * vocabulary, which was the whole point of not making them enums.
  */
-function stem(word: string): string {
+export function stem(word: string): string {
   const base = word
     .toLowerCase()
     .trim()
@@ -135,8 +135,8 @@ function stem(word: string): string {
   return FOLD[base] ?? base;
 }
 
-/** Everything this lead can evidence, as folded stems. */
-function availableStems(capability: Capability): Set<string> {
+/** Everything this lead can evidence, as folded stems. Shared with the operator panel. */
+export function availableStems(capability: Capability): Set<string> {
   const stems = new Set(capability.entities.map((entity) => stem(entity.kind)));
   if (capability.hasReviews) stems.add("review");
   if (capability.hasPhotos) stems.add("photo");

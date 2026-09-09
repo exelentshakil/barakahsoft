@@ -17,6 +17,7 @@
     "check:branding": "tsx scripts/check-branding.ts",
     "check:verticals": "tsx scripts/check-verticals.ts",
     "check:contrast": "tsx scripts/check-contrast.ts",
+    "dry": "tsx --env-file=.env.local scripts/dry-build.ts",
     "backfill:verticals": "tsx --env-file=.env.local scripts/backfill-verticals.ts",
     "operator": "tsx --env-file=.env.local scripts/operator.ts",
     "check:contrast": "tsx scripts/check-contrast.ts"

@@ -73,6 +73,8 @@ import { HandoverPanel } from "@/components/admin/HandoverPanel";
 import { LeadValuePanel, type LeadValueData } from "@/components/admin/LeadValuePanel";
 import { EditLeadDialog } from "@/components/admin/EditLeadDialog";
 import { DeleteLeadButton } from "@/components/admin/DeleteLeadButton";
+import { PagePlanPanel } from "@/components/admin/PagePlanPanel";
+import type { DesignDna } from "@/lib/design-dna";
 import { SocialMockupPanel } from "@/components/admin/SocialMockupPanel";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -1594,6 +1596,14 @@ Shaq`,
             </TabPanel>
 
             <TabPanel active={tab === "build"}>
+              {/* What the page will actually be about, before it is built. */}
+              <PagePlanPanel
+                entities={scrapeResults?.entities ?? []}
+                design={(artifact?.inspiration_branding as DesignDna | null) ?? null}
+                hasReviews={reviewCount > 0}
+                hasPhotos={Array.isArray(facts.site_photos) && facts.site_photos.length > 0}
+              />
+
               {/* STEP 2: BESPOKE GENERATOR STUDIO */}
               <BespokeGenerationStudio
                 lead={lead}
