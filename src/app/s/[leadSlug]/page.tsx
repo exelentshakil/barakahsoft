@@ -25,19 +25,51 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // LocalBusiness JSON-LD all point at this one URL, exactly per plan §6's
 // "Google indexes one document" requirement. Hash fragments are never
 // canonicalized as separate pages.
-export async function generateMetadata({ params }: { params: Promise<{ leadSlug: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ leadSlug: string }>;
+  searchParams?: Promise<{ view?: string }>;
+}): Promise<Metadata> {
   const { leadSlug } = await params;
+  const view = searchParams ? (await searchParams).view : undefined;
   const result = await getSiteData(leadSlug);
   if (!result) return {};
 
-  const { payload } = result;
-  const town = payload.nap.address?.split(",").slice(-3, -2)[0]?.trim();
-  const title = town ? `${payload.headline} | ${payload.businessName}` : payload.businessName;
+  const { payload, lead } = result;
+  const tenant = tenantBySlug(lead.tenant_slug);
+  const icon = tenant.brand.iconUrl;
+
+  // This route serves two different pages, and they want opposite metadata.
+  //
+  // The delivered website is the CLIENT's and should read as theirs in a tab
+  // and in search. The proposal is ours — a private page we sent them — and
+  // should carry the seller's name and icon, and stay out of search entirely.
+  const liveSite = await isLiveClientSite();
+  if (liveSite || view === "preview") {
+    const town = payload.nap.address?.split(",").slice(-3, -2)[0]?.trim();
+    return {
+      title: town ? `${payload.headline} | ${payload.businessName}` : payload.businessName,
+      description: payload.subhead || payload.differentiator || undefined,
+      alternates: { canonical: `/s/${leadSlug}` },
+      ...(icon ? { icons: { icon, shortcut: icon, apple: icon } } : {}),
+    };
+  }
 
   return {
-    title,
-    description: payload.subhead || payload.differentiator || undefined,
-    alternates: { canonical: `/s/${leadSlug}` },
+    title: `${payload.businessName} — your new homepage | ${tenant.brand.name}`,
+    description: `A rebuilt homepage concept for ${payload.businessName}, prepared by ${tenant.brand.name}. Free to keep, nothing to cancel.`,
+    // A private proposal with a real client's name on it has no business in an
+    // index, and the link is shared by email rather than found.
+    robots: { index: false, follow: false },
+    openGraph: {
+      title: `${payload.businessName} — your new homepage`,
+      description: `Prepared by ${tenant.brand.name}.`,
+      siteName: tenant.brand.name,
+      ...(icon ? { images: [{ url: icon }] } : {}),
+    },
+    ...(icon ? { icons: { icon, shortcut: icon, apple: icon } } : {}),
   };
 }
 

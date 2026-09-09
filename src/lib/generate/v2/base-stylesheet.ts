@@ -140,9 +140,9 @@ export const BASE_STYLESHEET = `
 /* On a brand or ink band this button sits on white, so its text must be ink
    explicitly — inheriting the band's white was why "Need a roof inspection?"
    rendered as an empty white pill. */
-.bespoke-page .bs-btn--light{background:#fff!important;color:var(--bs-ink,#16181d)!important;box-shadow:0 10px 24px rgb(0 0 0 / .18)}
+.bespoke-page .bs-btn--light{background:var(--bs-surface,#fff)!important;color:var(--bs-ink,#16181d)!important;box-shadow:0 10px 24px rgb(0 0 0 / .18)}
 .bespoke-page .bs-btn--light:hover{background:#fff!important;color:var(--bs-primary-strong,#e4761b)!important;filter:none}
-.bespoke-page .bs-section--brand .bs-btn,.bespoke-page .bs-footer-cta .bs-btn{background:#fff;color:var(--bs-ink,#16181d)}
+.bespoke-page .bs-section--brand .bs-btn,.bespoke-page .bs-footer-cta .bs-btn{background:var(--bs-surface,#fff);color:var(--bs-ink,#16181d)}
 .bespoke-page .bs-section--brand .bs-btn:hover,.bespoke-page .bs-footer-cta .bs-btn:hover{color:var(--bs-primary-strong,#e4761b)}
 .bespoke-page .bs-btn--wide{width:100%}
 .bespoke-page .bs-actions{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
@@ -158,7 +158,7 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-card:hover{transform:translateY(-4px);box-shadow:var(--bs-shadow-lg)}
 .bespoke-page .bs-card--flat{box-shadow:none}
 .bespoke-page .bs-card--flat:hover{transform:none;box-shadow:none;border-color:var(--bs-primary,#e4761b)}
-.bespoke-page .bs-card--ink{background:var(--bs-ink,#16181d);color:#fff;border-color:rgb(255 255 255 / .12)}
+.bespoke-page .bs-card--ink{background:var(--bs-invert-surface,#16181d);color:var(--bs-invert-ink,#fff);border-color:var(--bs-invert-line,rgb(255 255 255 / .12))}
 .bespoke-page .bs-panel{background:var(--bs-surface,#fff);border-radius:var(--bs-r-lg);box-shadow:var(--bs-shadow-lg);padding:clamp(26px,3vw,48px)}
 .bespoke-page .bs-media{position:relative;overflow:hidden;border-radius:var(--bs-r);background:var(--bs-surface-alt,#eee);aspect-ratio:4/3}
 .bespoke-page .bs-media>img{width:100%;height:100%;object-fit:cover;display:block}
@@ -222,7 +222,7 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-pill{
   display:inline-flex;align-items:center;gap:11px;
   min-width:186px;min-height:58px;padding:10px 16px;
-  border-radius:var(--bs-r);background:#fff;color:var(--bs-ink,#16181d);
+  border-radius:var(--bs-r);background:var(--bs-surface,#fff);color:var(--bs-ink,#16181d);
   border:1px solid var(--bs-line);box-shadow:0 6px 18px rgb(0 0 0 / .14);
   text-decoration:none;transition:transform .16s ease,box-shadow .16s ease;
 }
@@ -289,7 +289,7 @@ export const BASE_STYLESHEET = `
   position:absolute;left:0;bottom:0;right:0;z-index:5;
   display:flex;align-items:stretch;box-shadow:var(--bs-shadow-lg);border-radius:8px;overflow:hidden;max-width:fit-content;
 }
-.bespoke-page .bs-founder-badge>*:first-child{background:#fff;color:var(--bs-ink,#16181d);display:flex;align-items:center;justify-content:center;padding:12px 16px;font-weight:800;font-size:.85rem}
+.bespoke-page .bs-founder-badge>*:first-child{background:var(--bs-surface,#fff);color:var(--bs-ink,#16181d);display:flex;align-items:center;justify-content:center;padding:12px 16px;font-weight:800;font-size:.85rem}
 /* A forced brightness(0) invert(1) here used to flatten every logo to a
    white silhouette — invisible whenever the source image isn't a clean
    transparent-alpha mark (a JPEG, or a PNG with a baked-in white background),
@@ -298,7 +298,7 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-founder-badge>*:last-child{background:var(--bs-primary-strong,var(--bs-primary,#e4761b));color:var(--bs-on-primary,#fff);padding:12px 20px;display:flex;flex-direction:column;justify-content:center;line-height:1.25}
 
 /* ---------- lead form -------------------------------------------------- */
-.bespoke-page .bs-form{background:#fff;color:var(--bs-ink,#16181d);border-radius:var(--bs-r);box-shadow:var(--bs-shadow-lg);overflow:visible;width:100%;max-width:440px}
+.bespoke-page .bs-form{background:var(--bs-surface,#fff);color:var(--bs-ink,#16181d);border-radius:var(--bs-r);box-shadow:var(--bs-shadow-lg);overflow:visible;width:100%;max-width:440px}
 .bespoke-page .bs-form__head{position:relative;background:var(--bs-primary-strong,var(--bs-primary,#e4761b));color:var(--bs-on-primary,#fff);padding:22px 24px;text-align:center;border-radius:var(--bs-r) var(--bs-r) 0 0}
 .bespoke-page .bs-form__head::after{content:"";position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);border-left:12px solid transparent;border-right:12px solid transparent;border-top:12px solid var(--bs-primary-strong,var(--bs-primary,#e4761b))}
 .bespoke-page .bs-form__head h2,.bespoke-page .bs-form__head h3,.bespoke-page .bs-form__head .bs-h3{font-family:var(--bs-font-display,inherit);font-weight:900;text-transform:uppercase;letter-spacing:.04em;font-size:1.2rem;line-height:1.15}
@@ -322,7 +322,7 @@ export const BASE_STYLESHEET = `
    the fold on any screen under about 880px tall — a 13" laptop, and every
    social mockup, which is where this was first noticed. It now takes exactly
    the screen minus the chrome, so the first fold is the whole first fold. */
-.bespoke-page .bs-hero{position:relative;padding:0;min-height:clamp(560px,calc(100svh - 112px),880px);display:flex;align-items:center;overflow:hidden;background:var(--bs-ink,#16181d);color:#fff}
+.bespoke-page .bs-hero{position:relative;padding:0;min-height:clamp(560px,calc(100svh - 112px),880px);display:flex;align-items:center;overflow:hidden;background:var(--bs-invert-surface,#16181d);color:var(--bs-invert-ink,#fff)}
 /* The application's legacy stylesheet zeroes padding-inline on every direct
    child of a section, which strips this container's gutter and pushes the hero
    content against the viewport edge. The room is put on the grid, where no
@@ -370,7 +370,7 @@ export const BASE_STYLESHEET = `
    block for its position:fixed descendants — which made the mobile drawer
    resolve against the 105px-tall nav instead of the viewport and vanish
    behind the hero. Measured: 330x105 at x=375 before this. */
-.bespoke-page .bs-nav{--bs-nav-bg:var(--bs-ink,#16181d);position:sticky;top:0;z-index:100;background:var(--bs-nav-bg);color:#fff;box-shadow:0 2px 20px rgb(0 0 0 / .2);backdrop-filter:none;-webkit-backdrop-filter:none;filter:none;border-bottom:0}
+.bespoke-page .bs-nav{--bs-nav-bg:var(--bs-invert-surface,#16181d);position:sticky;top:0;z-index:100;background:var(--bs-nav-bg);color:#fff;box-shadow:0 2px 20px rgb(0 0 0 / .2);backdrop-filter:none;-webkit-backdrop-filter:none;filter:none;border-bottom:0}
 .bespoke-page .bs-nav__bar{display:flex;align-items:center;justify-content:space-between;gap:24px;width:100%;max-width:var(--bs-max);margin-inline:auto;padding:14px var(--bs-gutter)}
 .bespoke-page .bs-nav__logo{display:flex;align-items:center;gap:10px;font-family:var(--bs-font-display,inherit);font-weight:900;font-size:1.15rem;letter-spacing:-.01em}
 .bespoke-page .bs-nav__logo img{max-height:52px;width:auto;object-fit:contain}
@@ -395,10 +395,10 @@ export const BASE_STYLESHEET = `
 }
 .bespoke-page [data-nav-panel][data-open=true]{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(-50%) translateY(0)}
 .bespoke-page [data-nav-panel] a{display:flex;gap:10px;padding:10px;border-radius:8px;font-weight:600;color:inherit}
-.bespoke-page [data-nav-panel] a:hover{background:var(--bs-surface-alt,#f4f5f7);color:var(--bs-primary-on-surface,#b65e16)}
+.bespoke-page [data-nav-panel] a:hover{background:var(--bs-surface-alt,#f4f5f7);color:var(--bs-primary-on-surface-alt,#b65e16)}
 .bespoke-page [data-nav-toggle]{display:none;background:none;border:0;color:inherit;padding:10px;cursor:pointer}
 .bespoke-page [data-nav-drawer]{
-  position:fixed;inset:0 0 0 auto;width:min(400px,88vw);z-index:200;background:var(--bs-ink,#16181d);color:#fff;
+  position:fixed;inset:0 0 0 auto;width:min(400px,88vw);z-index:200;background:var(--bs-invert-surface,#16181d);color:var(--bs-invert-ink,#fff);
   padding:28px var(--bs-gutter);overflow-y:auto;transform:translateX(100%);transition:transform .24s ease;
 }
 .bespoke-page [data-nav-drawer][data-open=true]{transform:translateX(0)}
@@ -636,7 +636,7 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-form--dark-glass .bs-form__note{color:rgb(255 255 255 / .6)}
 
 /* About surface -------------------------------------------------------- */
-.bespoke-page .bs-about--surface-ink{background:var(--bs-primary-strong,#16181d);color:#fff}
+.bespoke-page .bs-about--surface-ink{background:var(--bs-primary-strong,#16181d);color:var(--bs-on-primary,#fff)}
 .bespoke-page .bs-about--surface-ink .bs-h2,
 .bespoke-page .bs-about--surface-ink .bs-founder-badge strong{color:#fff}
 .bespoke-page .bs-about--surface-ink .bs-body{color:rgb(255 255 255 / .8)}
@@ -651,7 +651,7 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-founder-badge--below{
   position:static;margin-top:18px;background:none;box-shadow:none;padding:0;
 }
-.bespoke-page .bs-about--surface-ink .bs-founder-badge--overlap{background:#fff;color:var(--bs-ink,#16181d)}
+.bespoke-page .bs-about--surface-ink .bs-founder-badge--overlap{background:var(--bs-surface,#fff);color:var(--bs-ink,#16181d)}
 
 /* Badge finishes ------------------------------------------------------- */
 /* One shape, five materials. The badge is the only element every page in
@@ -722,7 +722,7 @@ export const BASE_STYLESHEET = `
 }
 
 /* Stat band ------------------------------------------------------------ */
-.bespoke-page .bs-statband{background:var(--bs-primary-strong,#c2410c);color:#fff;padding-block:clamp(26px,3vw,42px);margin-top:clamp(36px,4vw,64px)}
+.bespoke-page .bs-statband{background:var(--bs-primary-strong,#c2410c);color:var(--bs-on-primary,#fff);padding-block:clamp(26px,3vw,42px);margin-top:clamp(36px,4vw,64px)}
 .bespoke-page .bs-statband .bs-stat{background:none;border:0}
 .bespoke-page .bs-statband .bs-stat__value,.bespoke-page .bs-statband .bs-stat__label{color:#fff}
 .bespoke-page .bs-statband .bs-stat__icon{background:rgb(255 255 255 / .14);color:#fff}
@@ -794,9 +794,9 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-section--brand .bs-lede{margin-inline:auto;margin-bottom:26px;max-width:52ch;font-size:clamp(1.05rem,1.3vw,1.2rem)}
 .bespoke-page .bs-section--brand .bs-lede,.bespoke-page .bs-section--brand .bs-body{color:rgb(255 255 255 / .88)}
 .bespoke-page .bs-section--brand .bs-eyebrow,.bespoke-page .bs-section--brand .bs-mark{color:#fff}
-.bespoke-page .bs-section--brand .bs-card{background:#fff;color:var(--bs-ink,#16181d)}
-.bespoke-page .bs-section--brand .bs-btn{background:#fff;color:var(--bs-ink,#16181d)}
-.bespoke-page .bs-section--photo{position:relative;background:var(--bs-ink,#16181d);color:#fff;overflow:hidden}
+.bespoke-page .bs-section--brand .bs-card{background:var(--bs-surface,#fff);color:var(--bs-ink,#16181d)}
+.bespoke-page .bs-section--brand .bs-btn{background:var(--bs-surface,#fff);color:var(--bs-ink,#16181d)}
+.bespoke-page .bs-section--photo{position:relative;background:var(--bs-invert-surface,#16181d);color:var(--bs-invert-ink,#fff);overflow:hidden}
 .bespoke-page .bs-section--photo>.bs-media{position:absolute;inset:0;border-radius:0;aspect-ratio:auto;z-index:0}
 .bespoke-page .bs-section--photo>.bs-media>img{width:100%;height:100%;object-fit:cover}
 .bespoke-page .bs-section--photo::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgb(0 0 0 / .82),rgb(0 0 0 / .45))}
@@ -887,7 +887,7 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-seal__ring{position:absolute;inset:0;z-index:2}
 .bespoke-page .bs-seal__ring text{font-family:var(--bs-font-body,inherit);font-size:14px;font-weight:800;letter-spacing:.14em;fill:var(--bs-ink,#16181d)}
 .bespoke-page .bs-seal::before{content:"";position:absolute;inset:0;border-radius:999px;background:var(--bs-surface,#fff);box-shadow:0 12px 34px rgb(0 0 0 / .18)}
-.bespoke-page .bs-seal__core{position:relative;z-index:3;width:62px;height:62px;border-radius:999px;background:var(--bs-ink,#16181d);color:#fff;display:grid;place-items:center;overflow:hidden}
+.bespoke-page .bs-seal__core{position:relative;z-index:3;width:62px;height:62px;border-radius:999px;background:var(--bs-invert-surface,#16181d);color:var(--bs-invert-ink,#fff);display:grid;place-items:center;overflow:hidden}
 .bespoke-page .bs-seal__core img{width:80%;height:80%;object-fit:contain}
 .bespoke-page .bs-seal__glyph{width:26px;height:26px}
 @keyframes bs-seal-spin{to{transform:rotate(360deg)}}
@@ -1145,7 +1145,7 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-servicerow{display:grid;grid-template-columns:210px 1fr;gap:24px;align-items:center;background:var(--bs-surface,#fff);border:1px solid var(--bs-line);border-radius:var(--bs-r);overflow:hidden;transition:transform .2s ease,box-shadow .2s ease}
 .bespoke-page .bs-servicerow:hover{transform:translateX(4px);box-shadow:var(--bs-shadow)}
 .bespoke-page .bs-servicerow .bs-media{aspect-ratio:4/3;height:100%;border-radius:0}
-.bespoke-page .bs-servicerow__glyph{display:grid;place-items:center;height:100%;min-height:150px;background:var(--bs-surface-alt,#f4f5f7);color:var(--bs-primary-on-surface,#b65e16)}
+.bespoke-page .bs-servicerow__glyph{display:grid;place-items:center;height:100%;min-height:150px;background:var(--bs-surface-alt,#f4f5f7);color:var(--bs-primary-on-surface-alt,#b65e16)}
 .bespoke-page .bs-servicerow__body{padding:22px 26px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 .bespoke-page .bs-services--v2 .bs-services__grid{grid-template-columns:1fr 380px}
 .bespoke-page .bs-services--v2 .bs-services__aside{order:2}
@@ -1157,7 +1157,7 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(24px,3vw,44px);position:relative;margin-block:clamp(36px,4vw,60px);list-style:none;counter-reset:none}
 .bespoke-page .bs-process .bs-steps::before{content:"";position:absolute;top:44px;left:12%;right:12%;height:2px;background:repeating-linear-gradient(90deg,var(--bs-line) 0 8px,transparent 8px 16px)}
 .bespoke-page .bs-step{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;background:transparent;border:0;box-shadow:none;padding:0}
-.bespoke-page .bs-step__ring{position:relative;display:grid;place-items:center;width:88px;height:88px;border-radius:999px;background:var(--bs-surface,#fff);border:2px solid var(--bs-line);color:var(--bs-primary-strong,#e4761b);box-shadow:var(--bs-shadow)}
+.bespoke-page .bs-step__ring{position:relative;display:grid;place-items:center;width:88px;height:88px;border-radius:999px;background:var(--bs-surface,#fff);border:2px solid var(--bs-line);color:var(--bs-primary-on-surface,#b65e16);box-shadow:var(--bs-shadow)}
 .bespoke-page .bs-step:hover .bs-step__ring{border-color:var(--bs-primary-strong,#e4761b)}
 .bespoke-page .bs-step__icon{width:34px;height:34px}
 .bespoke-page .bs-step__num{position:absolute;right:-4px;bottom:-4px;width:30px;height:30px;border-radius:999px;background:var(--bs-primary-strong,#e4761b);color:var(--bs-on-primary,#fff);display:grid;place-items:center;font-family:var(--bs-font-display,inherit);font-weight:900;font-size:.95rem;border:3px solid var(--bs-surface,#fff)}

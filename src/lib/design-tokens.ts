@@ -316,6 +316,20 @@ export function compileDesignTokens(
     "--bs-border-width": BORDER[dna.geometry.borderTreatment],
     "--bs-border-color": `rgb(${rgbChannels(ink)} / 0.14)`,
     "--bs-primary-on-surface": ensureContrast(p.primary, surface, 4.5),
+    // The same, against the tinted ground. surface-alt is a different colour
+    // from surface, so a value computed for one is not guaranteed on the other
+    // — which is how the nav panel's hover state landed at 3.56:1.
+    "--bs-primary-on-surface-alt": ensureContrast(p.primary, surfaceAlt, 4.5),
+
+    // The brand colour as a FILL, guaranteed readable under --bs-on-primary.
+    //
+    // Forty-two rules in the stylesheet use this, and nothing has ever emitted
+    // it: every one of them fell through to the literal #e4761b in its var()
+    // fallback, so review avatars, step rings and filled chips have been
+    // rendering a hardcoded orange on every site regardless of the client's
+    // brand. That it also failed contrast was the smaller half of the bug.
+    "--bs-primary-strong": ensureContrast(p.primary, readableOn(p.primary, "#0B0B0F"), 4.5),
+    "--bs-accent-strong": ensureContrast(p.accent, readableOn(p.accent, "#0B0B0F"), 4.5),
 
     "--bs-section-y": rhythm.section,
     "--bs-gap": rhythm.gap,

@@ -28,18 +28,28 @@ for (const tenant of TENANTS) {
   }
 }
 
-// The deployment's own configured origins, registered to the default tenant.
+// Every tenant's own configured origins, registered to that tenant.
 //
-// A safety net for an environment whose NEXT_PUBLIC_SITE_URL or _PORTAL_URL
-// points somewhere no tenant module declares — a staging origin, a renamed
-// domain. Without it that host is not an app host, and the custom-domain
-// rewrite would treat the deployment's own front door as a client's website.
-for (const url of [DEFAULT_TENANT.siteBaseUrl, DEFAULT_TENANT.portalBaseUrl]) {
-  try {
-    const { hostname } = new URL(url);
-    if (!BY_HOST.has(hostname)) BY_HOST.set(hostname, DEFAULT_TENANT);
-  } catch {
-    // A malformed origin is not worth failing module load over.
+// A tenant declares siteBaseUrl and portalBaseUrl and it is easy to assume
+// those are covered by primaryHost and extraHosts. They are not: Smile
+// Creative's portalBaseUrl is portal.smilecreative.agency and that host was in
+// neither list, so every proposal served from it resolved to the DEFAULT
+// tenant and a partner's client read the platform's brand, icon and metadata
+// on the page they had been sent to buy from.
+//
+// Deriving the hosts from the origins a tenant already declares means the two
+// can never disagree — there is nothing to keep in sync by hand.
+for (const tenant of TENANTS) {
+  for (const url of [tenant.siteBaseUrl, tenant.portalBaseUrl]) {
+    try {
+      const { hostname } = new URL(url);
+      // An explicit primaryHost or extraHosts entry wins: those are declared
+      // deliberately, and a shared staging origin should not steal a host from
+      // the tenant that actually named it.
+      if (!BY_HOST.has(hostname)) BY_HOST.set(hostname, tenant);
+    } catch {
+      // A malformed origin is not worth failing module load over.
+    }
   }
 }
 

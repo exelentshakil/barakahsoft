@@ -17,7 +17,7 @@ export const barakahsoft: Tenant = {
     "portal.barakahsoft.com",
     "localhost",
   ],
-  siteBaseUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://home.barakahsoft.com",
+  siteBaseUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://redesign.barakahsoft.com",
   portalBaseUrl: process.env.NEXT_PUBLIC_PORTAL_URL || "https://portal.barakahsoft.com",
   isDefault: true,
 

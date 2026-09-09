@@ -1,4 +1,5 @@
 import { tenantBySlug } from "@/tenants";
+import { requireOperator } from "@/lib/tenant-scope";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AdminLeadWorkspace } from "@/components/admin/AdminLeadWorkspace";
@@ -11,11 +12,28 @@ import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 export const dynamic = "force-dynamic";
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+
+  // Both queries are scoped to the operator's own brand.
+  //
+  // The sidebar list was not, so opening any lead on a partner's dashboard
+  // listed every lead on the platform beside it — the exact cross-tenant leak
+  // the rest of this work exists to prevent, in the most visible place there
+  // is. operatorLead does the same for the lead itself and 404s rather than
+  // 403s, because a 403 confirms the row exists.
+  const ctx = await requireOperator();
+  if (!ctx) notFound();
+
   const supabase = createAdminClient();
 
   const [{ data: lead }, { data: otherLeads }, { data: artifact }, { data: scrapeResults }] = await Promise.all([
-    supabase.from("leads").select("*").eq("id", id).maybeSingle<Lead>(),
-    supabase.from("leads").select("*").order("created_at", { ascending: false }).limit(20).returns<Lead[]>(),
+    supabase.from("leads").select("*").eq("id", id).eq("tenant_slug", ctx.tenantSlug).maybeSingle<Lead>(),
+    supabase
+      .from("leads")
+      .select("*")
+      .eq("tenant_slug", ctx.tenantSlug)
+      .order("created_at", { ascending: false })
+      .limit(20)
+      .returns<Lead[]>(),
     // maybeSingle, not single: a lead that has not been analysed yet has
     // neither row, and .single() throws — which turned every brand-new lead
     // into a 500 on its own detail page.
