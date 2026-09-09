@@ -67,7 +67,7 @@ export const barakahsoft: Tenant = {
         bio: "I keep communication clear, make sure the concept reaches you, and help you understand the simplest next step.",
       },
     ],
-    portfolio: [],
+    examples: [],
     faq: [],
   },
 };

@@ -43,7 +43,7 @@ export const jonas: Tenant = {
   landing: {
     audience: "TODO",
     team: [],
-    portfolio: [],
+    examples: [],
     faq: [],
   },
 };

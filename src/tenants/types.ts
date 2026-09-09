@@ -81,38 +81,35 @@ export interface TenantLanding {
   team: { name: string; role: string; photoUrl?: string; bio?: string }[];
 
   /**
-   * Work this tenant has already delivered, as their own proof.
+   * Real redesigns, shown as desktop and mobile pairs.
    *
-   * Distinct from the before/after showcase, which is built from leads in this
-   * database. A partner arriving with fifteen years of portfolio and zero leads
-   * here has proof; it is just not proof we generated, so it lives in config
-   * rather than being manufactured.
+   * This is the whole proof section of a lead-generation landing page: a
+   * prospect deciding whether to hand over their URL is asking one question,
+   * "what will mine look like", and six real screenshots answer it better than
+   * any amount of copy. Mobile is a separate image rather than a CSS crop
+   * because the mobile design is a different design, and showing it is the
+   * claim being made.
    */
-  portfolio: {
+  examples: {
     name: string;
-    /** What the work was. "Website design & build". */
-    kind: string;
-    /** Who they are. "Family removals firm, Ahoghill". */
-    who?: string;
-    /** Live site, opened in a new tab. */
-    href: string;
-    /** Screenshot. Hotlinked from wherever the tenant already hosts it. */
-    imageUrl?: string;
+    /** One or two words under the name. "Self storage". */
+    category: string;
+    desktopUrl: string;
+    /** Optional: not every example needs a phone shot. */
+    mobileUrl?: string;
   }[];
 
-  /** Named work with no screenshot — a credibility list, not a gallery. */
-  alsoWorkedOn?: { name: string; kind: string }[];
+  /** "Show more examples" — the tenant's own portfolio page. */
+  moreExamplesHref?: string;
 
-  services?: { title: string; body: string; href?: string }[];
+  /** A single line of credibility under the hero form. */
+  trustLine?: string;
 
-  /** Headline prices. Starting figures, labelled as such by the section copy. */
-  pricing?: { figure: string; title: string; body: string }[];
-
-  /** How working with this tenant goes, numbered. */
+  /** How the free redesign works, numbered. */
   process?: { title: string; body: string; when?: string }[];
 
-  /** Prose the tenant wants said in their own voice, rendered as paragraphs. */
-  promise?: { eyebrow: string; headline: string; paragraphs: string[] };
+  /** What the prospect gets for nothing, as a plain list. */
+  included?: string[];
 
   /** Where they actually are. Brand carries the phone and email. */
   contact?: { addressLines?: string[]; hours?: string };

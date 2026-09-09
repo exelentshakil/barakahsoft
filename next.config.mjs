@@ -8,6 +8,7 @@ const nextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'barakahsoft.com' },
       { protocol: 'https', hostname: 'smilecreative.agency' },
+      { protocol: 'https', hostname: 'redesign.smilecreative.agency' },
     ],
   },
   // The export route reads the chrome stylesheet and the real header,

@@ -1,5 +1,5 @@
 import { barakahsoft } from "@/tenants/barakahsoft";
-import { keygrowth } from "@/tenants/keygrowth";
+import { smilecreative } from "@/tenants/smilecreative";
 import type { Tenant } from "@/tenants/types";
 
 export * from "@/tenants/types";
@@ -15,7 +15,7 @@ export * from "@/tenants/types";
  * not registered — a tenant with a placeholder host would claim a hostname
  * nobody owns and shadow the default fallback.
  */
-export const TENANTS: Tenant[] = [barakahsoft, keygrowth];
+export const TENANTS: Tenant[] = [barakahsoft, smilecreative];
 
 export const DEFAULT_TENANT: Tenant =
   TENANTS.find((tenant) => tenant.isDefault) ?? barakahsoft;
