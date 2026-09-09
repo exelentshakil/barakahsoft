@@ -1,3 +1,4 @@
+import { profileForLead } from "@/lib/verticals/resolve";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminSession } from "@/lib/is-admin-session";
@@ -55,7 +56,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     return NextResponse.json({ error: "Analyse this lead first — there are no facts to build from yet." }, { status: 409 });
   }
 
-  const brief = buildSiteBrief(lead, scrape, {});
+  const brief = buildSiteBrief(lead, scrape, profileForLead(lead, artifact ?? null), {});
   const parsedDna = DesignDnaSchema.safeParse(artifact?.inspiration_branding);
   const dna = parsedDna.success ? parsedDna.data : DEFAULT_DESIGN_DNA;
   const facts = (scrape.facts ?? {}) as Record<string, unknown>;

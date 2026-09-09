@@ -1,3 +1,5 @@
+import type { VerticalProfile } from "@/lib/verticals/types";
+
 // What this business's website is actually for.
 //
 // Every generated page used the same call to action — "Get a free quote" —
@@ -107,12 +109,38 @@ const DEFAULT_INTENT = (hasPhone: boolean): ConversionIntent => ({
     "Make it obvious what happens when the visitor gets in touch, and how quickly. Ambiguity about the next step is what loses the enquiry.",
 });
 
-export function conversionIntentFor(industry: string | null | undefined, hasPhone: boolean): ConversionIntent {
+/**
+ * The rules above are all trade regexes, so they answer for home services and
+ * miss for everything else — a florist, a dentist and a law firm all fell
+ * through to DEFAULT_INTENT's generic "Get in touch". The vertical profile is
+ * consulted in that gap, before the generic default, which is why this is a
+ * fallback rather than an override: a trade keeps the exact intent it has
+ * today, and every other vertical stops being asked for a quote.
+ */
+export function conversionIntentFor(
+  industry: string | null | undefined,
+  hasPhone: boolean,
+  profile?: VerticalProfile
+): ConversionIntent {
   const trade = (industry ?? "").trim();
-  if (!trade) return DEFAULT_INTENT(hasPhone);
+  const rule = trade ? RULES.find((r) => r.match.test(trade)) : undefined;
+  if (rule) return rule.intent(hasPhone);
+  if (profile) return fromProfile(profile, hasPhone);
+  return DEFAULT_INTENT(hasPhone);
+}
 
-  const rule = RULES.find((r) => r.match.test(trade));
-  return rule ? rule.intent(hasPhone) : DEFAULT_INTENT(hasPhone);
+function fromProfile(profile: VerticalProfile, hasPhone: boolean): ConversionIntent {
+  const { cta } = profile;
+  // A profile may ask for the phone as the primary action; without a real
+  // number to dial there is nothing to put behind the button.
+  const callWithoutPhone = cta.intent === "call-now" && !hasPhone;
+  return {
+    primary: callWithoutPhone ? "quote-form" : cta.intent,
+    primaryLabel: callWithoutPhone ? "Request a callback" : cta.primaryLabel,
+    secondary: cta.secondaryIntent,
+    secondaryLabel: cta.secondaryLabel,
+    guidance: cta.guidance,
+  };
 }
 
 // The intake options, mapped to what the rebuilt page must demonstrably fix.

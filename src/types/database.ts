@@ -53,6 +53,12 @@ export interface Lead {
   // v4 Phase R2 — self-identified at intake, distinct from the AI/keyword-
   // inferred `industry` above. See src/lib/personas.ts for the slug set.
   persona: string | null;
+  /** Which vertical profile this lead resolved to. Operator-overridable. */
+  vertical_slug: string | null;
+  /** One of the nine macro-ICPs, for coverage reporting. */
+  icp_category: string | null;
+  /** Whether this engine can serve this business well. See lib/verticals/types.ts. */
+  icp_fit: "native" | "adapted" | "unsupported" | null;
   status: LeadStatus;
   place_id: string | null;
   custom_domain: string | null;
@@ -209,6 +215,8 @@ export interface Artifact {
   // CSS custom properties compiled from inspiration_branding, stored so a
   // generated page always renders with the tokens it was generated against.
   design_tokens: { vars: Record<string, string>; fontHref: string | null; mood: string } | null;
+  /** The vertical profile this build used, frozen at generation time. */
+  vertical_profile: unknown | null;
   // Generated markup for inner pages, keyed by route ("about", "faq",
   // "services/panel-upgrades", ...).
   bespoke_pages: Record<string, string>;

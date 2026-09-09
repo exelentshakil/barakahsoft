@@ -1,3 +1,4 @@
+import { profileForLead } from "@/lib/verticals/resolve";
 import { getSiteData } from "@/lib/get-site-data";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sanitizeBespokeHtml } from "@/lib/sanitize-generated-html";
@@ -148,8 +149,13 @@ export async function criticiseSite(input: string): Promise<SectionCriticResult>
   const { sections } = await loadSections(leadSlug);
   const html = sanitizeBespokeHtml(sections.map((section) => section.html).join("\n"));
   const tokens = (data.payload.designTokens ?? compileDesignTokens(DEFAULT_DESIGN_DNA)) as DesignTokens;
-  const brief = buildSiteBrief(data.lead, data.scrapeResults);
-  const intent = conversionIntentFor(data.lead.industry, Boolean(data.payload.nap.phone));
+  // Surgery edits an already-built page, so it reads the profile frozen into
+  // the artifact rather than re-resolving. Re-resolving would let a registry
+  // change silently rewrite the nouns and call to action of a section the
+  // client has already approved.
+  const profile = profileForLead(data.lead, data.artifact);
+  const brief = buildSiteBrief(data.lead, data.scrapeResults, profile);
+  const intent = conversionIntentFor(data.lead.industry, Boolean(data.payload.nap.phone), profile);
 
   const deterministic = verifyHomepage(html, brief, tokens, data.artifact.bespoke_css ?? null);
   const design = await criticiseDesign(html, tokens, intent, Boolean(data.payload.nap.phone));
@@ -212,7 +218,7 @@ export async function promptSection(
   const section = sections.find((item) => item.id === sectionId);
   if (!section) throw new Error(`Section "${sectionId}" not found. Available: ${sections.map((s) => s.id).join(", ")}`);
 
-  const brief = buildSiteBrief(data.lead, data.scrapeResults);
+  const brief = buildSiteBrief(data.lead, data.scrapeResults, profileForLead(data.lead, data.artifact));
   const systemPrompt = "You are a premium agency frontend designer doing a precise section-level repair. Return valid semantic HTML only.";
   const promptText = `You are surgically improving one section of a live generated homepage. Keep the section grounded in facts and preserve existing CSS class hooks where possible so the current stylesheet continues to style it. Use only token-based class architecture and no literal colors.
 

@@ -1,3 +1,4 @@
+import type { VerticalProfile } from "@/lib/verticals/types";
 import { slugifyText } from "@/lib/slug";
 import { buildRichContext, findRelevantPage } from "@/lib/facts-context";
 import { extractServiceAreas } from "@/lib/scrape/extract-service-areas";
@@ -84,7 +85,7 @@ function realPhotos(facts: Record<string, unknown>): string[] {
  */
 const NAV_BOILERPLATE = /^(home|blog|contact|about|about us|privacy|privacy policy|terms|terms of service|sitemap|careers|login|search|reviews|gallery|faq|faqs|news)$/i;
 
-function servicesFromFacts(facts: Record<string, unknown>): string[] {
+export function servicesFromFacts(facts: Record<string, unknown>): string[] {
   // Sitemap-derived names come from the site's own URL structure and are the
   // most reliable signal available — and on a light scrape they are the only
   // one, since only the homepage was read.
@@ -125,6 +126,7 @@ function cityFromFacts(facts: Record<string, unknown>): string | null {
 export function buildSiteBrief(
   lead: Lead,
   scrapeResults: ScrapeResults,
+  vertical: VerticalProfile,
   overrides: BriefOverrides = {}
 ): SiteBrief {
   const facts = (scrapeResults.facts ?? {}) as Record<string, unknown>;
@@ -174,6 +176,7 @@ export function buildSiteBrief(
     }));
 
   return {
+    vertical,
     businessName:
       overrides.businessName?.trim() ||
       (typeof facts.business_name === "string" ? facts.business_name : "") ||
@@ -237,7 +240,8 @@ export function buildSiteBrief(
     painInstructions: painPointInstructions(lead.pain_points),
     intent: conversionIntentFor(
       overrides.industry?.trim() || lead.industry,
-      !!(overrides.phone?.trim() || nap.phones?.[0] || lead.phone)
+      !!(overrides.phone?.trim() || nap.phones?.[0] || lead.phone),
+      vertical
     ),
   };
 }
@@ -251,4 +255,16 @@ export function briefReadiness(brief: SiteBrief): { ready: boolean; warnings: st
   if (brief.factsDigest.length < 800) warnings.push("Very little real content was scraped — consider re-scraping before generating.");
   if (brief.city === "the local area") warnings.push("No real city detected — set one in the brief for local headlines.");
   return { ready: brief.services.length >= 2, warnings };
+}
+
+/**
+ * The services a lead's scrape found, for vertical matching.
+ *
+ * The router tests a profile's patterns against the business's own service
+ * names as well as its industry, because "bridal bouquets" identifies a
+ * florist more reliably than an industry string that came back "retail".
+ */
+export function servicesForMatching(scrapeResults: ScrapeResults | null): string[] {
+  if (!scrapeResults) return [];
+  return servicesFromFacts((scrapeResults.facts ?? {}) as Record<string, unknown>);
 }

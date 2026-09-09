@@ -1,3 +1,4 @@
+import { fill, fillVars } from "@/lib/verticals/fill";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
 
 // Photographs for the whole page, not just the four the client had.
@@ -57,14 +58,20 @@ export async function buildPhotoPool(brief: SiteBrief, clientPhotos: string[]): 
   const needed = Math.max(0, TARGET_POOL - pool.length);
   if (needed === 0) return pool;
 
-  // One query per service, then generic trade shots to fill. Queries name the
-  // trade so a "repair" query does not return a stock photo of a phone.
+  // One query per offering, then generic shots to fill. Queries name the
+  // industry so a "repair" query does not return a stock photo of a phone.
+  //
+  // The generic four come from the vertical profile. They were hardcoded to
+  // "crew at work", "truck and equipment" and "finished project home
+  // exterior", which is the right pool for a roofer and returns nothing a
+  // dentist, a florist or a solicitor would ever put on their homepage.
+  const profile = brief.vertical;
+  const vars = fillVars(brief, profile);
   const queries = [
-    ...brief.services.slice(0, 8).map((service) => `${service} ${brief.industry}`),
-    `${brief.industry} crew at work`,
-    `${brief.industry} finished project home exterior`,
-    `professional ${brief.industry} team portrait`,
-    `${brief.industry} truck and equipment`,
+    ...brief.services.slice(0, 8).map((offering) => fill(profile.media.offeringQuery, { ...vars, item: offering })),
+    fill(profile.media.heroQuery, vars),
+    fill(profile.media.proofQuery, vars),
+    fill(profile.media.teamQuery, vars),
   ];
 
   const results = await Promise.all(queries.map((query) => searchPexelsMany(query, 2)));

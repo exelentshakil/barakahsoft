@@ -1,3 +1,4 @@
+import type { VerticalProfile } from "@/lib/verticals/types";
 import { callOpenAI } from "@/lib/openai-client";
 import { sanitizeBespokeHtml } from "@/lib/sanitize-generated-html";
 import type { DesignDna } from "@/lib/design-dna";
@@ -19,6 +20,17 @@ import type { ConversionIntent } from "@/lib/conversion-intent";
 // position instead of by subject.
 
 export interface SiteBrief {
+  /**
+   * What kind of business this is, as data.
+   *
+   * Everything the generator needs to know that is not a fact about this
+   * particular client — the nouns, the section order, the call to action, the
+   * photo queries, the house art direction — reads from here rather than from
+   * a regex on `industry`. Resolved once per lead and frozen into the artifact
+   * alongside the design tokens, so a page always renders against the profile
+   * it was generated against.
+   */
+  vertical: VerticalProfile;
   businessName: string;
   industry: string;
   city: string;

@@ -1,3 +1,4 @@
+import { profileForLead } from "@/lib/verticals/resolve";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminSession } from "@/lib/is-admin-session";
@@ -127,7 +128,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     overrides.layoutSalt = salt;
   }
 
-  const brief = buildSiteBrief(lead, scrapeResults, overrides);
+  const brief = buildSiteBrief(lead, scrapeResults, profileForLead(lead, null), overrides);
   const resolvedDna = layoutDnaFor(
     `${brief.leadSlug}|${brief.businessName}|${brief.industry}|${brief.city}`,
     brief.layoutSalt ?? 0

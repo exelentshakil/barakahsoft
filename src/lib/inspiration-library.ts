@@ -310,12 +310,25 @@ const PRESETS: Preset[] = [
 ];
 
 /** The house direction for an industry, before the library has anything. */
-export function presetFor(industry: string | null | undefined): { label: string; dna: DesignDna } {
+/**
+ * The presets above are keyed by trade, so a business outside the trades fell
+ * through to DEFAULT_DESIGN_DNA — one averaged direction for a florist, a law
+ * firm and a restaurant alike, which is precisely the generic result this
+ * module exists to avoid. A vertical profile carries its own committed house
+ * direction and is consulted in that gap.
+ *
+ * A fallback, not an override: a roofer still gets the roofing preset.
+ */
+export function presetFor(
+  industry: string | null | undefined,
+  profile?: { label: string; artDirection: DesignDna }
+): { label: string; dna: DesignDna } {
   const text = (industry ?? "").trim();
   if (text) {
     const hit = PRESETS.find((p) => p.match.test(text));
     if (hit) return { label: hit.label, dna: hit.dna };
   }
+  if (profile) return { label: `House direction · ${profile.label}`, dna: profile.artDirection };
   return { label: "House default direction", dna: DEFAULT_DESIGN_DNA };
 }
 

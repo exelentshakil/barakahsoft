@@ -1,3 +1,5 @@
+import { fill } from "@/lib/verticals/fill";
+import type { VerticalProfile } from "@/lib/verticals/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { mirrorToStorage, describeImages, saveDescriptions, type MediaSubject } from "@/lib/media/ingest";
 import { generateSiteImage, type ImageShape } from "@/lib/media/generate-image";
@@ -114,34 +116,56 @@ export async function ingestRealPhotos(
   return already;
 }
 
-/** The slots a premium page actually needs filled. */
-export function buildSlots(services: string[], industry: string, city: string): MediaSlot[] {
-  const trade = industry.toLowerCase();
+/**
+ * The slots a premium page actually needs filled.
+ *
+ * The subjects are written per vertical rather than here. They used to describe
+ * a job site and a work van for every business on earth, so a florist's
+ * generated hero was "a florist professional at work on a real job site, seen
+ * mid-task with real tools and equipment" — which is how a page stops looking
+ * expensive before a word of copy is written.
+ */
+export function buildSlots(
+  offerings: string[],
+  industry: string,
+  city: string,
+  profile: VerticalProfile,
+  businessName = ""
+): MediaSlot[] {
+  const vars = {
+    industry: industry.toLowerCase(),
+    city,
+    business: businessName,
+    offering: profile.nouns.offering,
+  };
+  const avoid = profile.media.forbiddenImagery.length
+    ? `. Avoid: ${profile.media.forbiddenImagery.join("; ")}`
+    : "";
 
   return [
     {
       key: "hero",
       prefers: ["work", "vehicle", "team", "exterior"],
       shape: "landscape",
-      fallbackSubject: `A ${trade} professional at work on a real job site in ${city}, seen mid-task with real tools and equipment, wide establishing shot`,
+      fallbackSubject: fill(profile.media.heroSubject, vars) + avoid,
     },
     {
       key: "about",
       prefers: ["team", "vehicle", "exterior"],
       shape: "landscape",
-      fallbackSubject: `A small ${trade} team beside their work van outside a local business premises, natural and unposed`,
+      fallbackSubject: fill(profile.media.aboutSubject, vars) + avoid,
     },
     {
       key: "proof",
       prefers: ["work", "property", "product"],
       shape: "landscape",
-      fallbackSubject: `A finished, high-quality ${trade} installation, clean and professionally completed, detail shot`,
+      fallbackSubject: fill(profile.media.proofSubject, vars) + avoid,
     },
-    ...services.slice(0, 6).map((service, index) => ({
+    ...offerings.slice(0, 6).map((offering, index) => ({
       key: `service-${index}`,
       prefers: ["work", "product", "property"] as MediaSubject[],
       shape: "landscape" as ImageShape,
-      fallbackSubject: `${service} being carried out by a ${trade} professional, close documentary shot showing the actual work and equipment involved`,
+      fallbackSubject: fill(profile.media.offeringSubject, { ...vars, item: offering }) + avoid,
     })),
   ];
 }

@@ -1,6 +1,7 @@
 import { inngest } from "@/inngest/client";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { buildSiteBrief, buildKnownPaths, type BriefOverrides } from "@/lib/build-site-brief";
+import { buildSiteBrief, buildKnownPaths, servicesForMatching, type BriefOverrides } from "@/lib/build-site-brief";
+import { resolveVerticalSync } from "@/lib/verticals/resolve";
 import {
   generateBespokePage,
   type InnerPageRequest,
@@ -122,7 +123,21 @@ export const bespokeGenerate = inngest.createFunction(
       return { lead, scrapeResults, artifact };
     });
 
-    const brief = buildSiteBrief(loaded.lead, loaded.scrapeResults, overrides ?? {});
+    // Step 0 of the router: which kind of business is this? Everything below —
+    // the section order, the nouns, the call to action, the photo queries, the
+    // art direction, the schema.org type — is chosen by the profile this
+    // returns. Resolved fresh at build time, then frozen into the artifact so
+    // the delivered page always renders against what it was built with.
+    const vertical = resolveVerticalSync(loaded.lead, null, servicesForMatching(loaded.scrapeResults));
+    const brief = buildSiteBrief(loaded.lead, loaded.scrapeResults, vertical.profile, overrides ?? {});
+
+    // Recorded so coverage is a measured number rather than an estimate: which
+    // verticals real leads actually resolve to, and how they got there.
+    if (loaded.lead.vertical_slug !== vertical.profile.slug) {
+      await step.run("record-vertical", async () => {
+        await admin.from("leads").update({ vertical_slug: vertical.profile.slug }).eq("id", lead_id);
+      });
+    }
 
     // Pad services to exactly 8 and areas to exactly 8 (if they have fewer) so the mega menu
     // looks perfectly balanced, using an LLM to invent highly relevant inter-related items.
@@ -225,7 +240,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     // Media first: the copy pass benefits from knowing what imagery exists,
     // and the markup pass cannot place an image it has not been given.
     const media = await step.run("plan-media", async () => {
-      const slots = buildSlots(services, brief.industry, brief.city);
+      const slots = buildSlots(services, brief.industry, brief.city, brief.vertical, brief.businessName);
 
       // An existing plan is kept. It was being rebuilt from scratch every run,
       // which overwrote whatever the operator had chosen on the brief screen
@@ -392,6 +407,11 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
           bespoke_sections: built.sections,
           bespoke_rationale: built.rationale,
           design_tokens: { vars: page.tokens, fontHref: page.fontHref, mood: gateTokens.mood },
+          // Frozen for the same reason as design_tokens: the delivered page has
+          // to render against the profile it was built with. Editing a profile
+          // in the registry must not retroactively change the navigation labels
+          // and schema.org type of every site already shipped.
+          vertical_profile: brief.vertical,
           last_edited_at: new Date().toISOString(),
         })
         .eq("lead_id", lead_id);
