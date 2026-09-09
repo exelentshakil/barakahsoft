@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 interface ProposalCheckoutModalProps {
   businessName: string;
   setupPrice: number;
@@ -7,6 +10,13 @@ interface ProposalCheckoutModalProps {
   checkoutLoading: boolean;
   onClose: () => void;
   onCheckout: () => void;
+  /** "stripe" pays now; "enquiry" collects a name and a contact instead. */
+  commerceMode: "stripe" | "enquiry";
+  /** The entity named at the point of payment. Must be the one being paid. */
+  legalEntity: string;
+  primaryActionLabel: string;
+  /** Enquiry mode only: POSTs to the seller's own inbox. */
+  onEnquiry?: (input: { name: string; contact: string; message: string }) => Promise<void>;
 }
 
 export function ProposalCheckoutModal({
@@ -18,7 +28,18 @@ export function ProposalCheckoutModal({
   checkoutLoading,
   onClose,
   onCheckout,
+  commerceMode,
+  legalEntity,
+  primaryActionLabel,
+  onEnquiry,
 }: ProposalCheckoutModalProps) {
+  const [name, setName] = useState("");
+  const [contact, setContact] = useState("");
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const enquiry = commerceMode === "enquiry";
+  const canSubmit = name.trim().length > 1 && contact.trim().length > 3;
   const payButtonLabel =
     checkoutLoading
       ? "Redirecting..."
@@ -62,19 +83,76 @@ export function ProposalCheckoutModal({
           </div>
         </div>
 
+        {sent ? (
+          <div className="space-y-3 rounded-lg bg-[#f4f3ff] p-5 text-center">
+            <p className="text-sm font-bold text-[#0d1738]">Request sent.</p>
+            <p className="text-[13px] leading-relaxed text-[#5b6270]">
+              {legalEntity} will be in touch to confirm the details and next steps. Nothing is charged
+              and nothing is committed until you say so.
+            </p>
+            <button
+              onClick={onClose}
+              className="w-full text-center text-xs font-semibold text-[#777588] hover:text-[#0d1738] pt-1"
+            >
+              Back to the proposal
+            </button>
+          </div>
+        ) : (
         <div className="space-y-3">
           <p className="text-center text-[11px] leading-relaxed text-[#777588]">
-            *After payment, final content approval, and domain access are received.
+            {enquiry
+              ? "Nothing is charged here. This starts the conversation."
+              : "*After payment, final content approval, and domain access are received."}
           </p>
+
+          {enquiry && (
+            <div className="space-y-2 text-left">
+              <input
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Your name"
+                autoComplete="name"
+                className="w-full rounded-md border border-[#e5e7f2] px-3 py-3 text-sm text-[#0d1738] outline-none focus:border-[#533afd]"
+              />
+              <input
+                value={contact}
+                onChange={(event) => setContact(event.target.value)}
+                placeholder="Email or phone"
+                autoComplete="email"
+                className="w-full rounded-md border border-[#e5e7f2] px-3 py-3 text-sm text-[#0d1738] outline-none focus:border-[#533afd]"
+              />
+              <textarea
+                value={message}
+                onChange={(event) => setMessage(event.target.value)}
+                placeholder="Anything you want us to know (optional)"
+                rows={3}
+                className="w-full resize-none rounded-md border border-[#e5e7f2] px-3 py-3 text-sm text-[#0d1738] outline-none focus:border-[#533afd]"
+              />
+            </div>
+          )}
+
           <button
-            onClick={onCheckout}
-            disabled={checkoutLoading}
+            onClick={async () => {
+              if (!enquiry) return onCheckout();
+              if (!canSubmit || !onEnquiry) return;
+              setSending(true);
+              try {
+                await onEnquiry({ name, contact, message });
+                setSent(true);
+              } finally {
+                setSending(false);
+              }
+            }}
+            disabled={enquiry ? sending || !canSubmit : checkoutLoading}
             className="w-full rounded-md bg-[#533afd] py-4 text-sm font-bold text-white shadow-md transition hover:bg-[#432bd9] disabled:opacity-60"
           >
-            {payButtonLabel}
+            {enquiry ? (sending ? "Sending…" : primaryActionLabel) : payButtonLabel}
           </button>
+
           <p className="text-center text-[11px] text-[#777588]">
-            🔒 256-bit encrypted checkout via Stripe · Verified BarakahSoft LLC
+            {enquiry
+              ? `Goes straight to ${legalEntity}. No card, no commitment.`
+              : `🔒 256-bit encrypted checkout via Stripe · Verified ${legalEntity}`}
           </p>
           <button
             onClick={onClose}
@@ -83,6 +161,7 @@ export function ProposalCheckoutModal({
             Cancel and review proposal preview
           </button>
         </div>
+        )}
       </div>
     </div>
   );

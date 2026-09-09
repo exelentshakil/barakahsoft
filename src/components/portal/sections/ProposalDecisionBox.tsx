@@ -15,6 +15,26 @@ interface ProposalDecisionBoxProps {
   launchSteps: LaunchStep[];
   onOpenCheckout: () => void;
   chatContext: string;
+  /**
+   * Whose proposal this is. Passed in rather than resolved here because this
+   * is a client component; the server page reads the tenant from the host.
+   */
+  brandName: string;
+  phoneDisplay: string;
+  phoneE164: string;
+  /**
+   * "stripe"  — the primary action opens Checkout and names a price.
+   * "enquiry" — it opens a short form and the submission reaches the seller.
+   *
+   * A partner cannot charge through the platform's Stripe account, so their
+   * proposal asks to start the conversation instead. The price stays on the
+   * page either way: hiding it turns a straight answer into a sales call,
+   * which is exactly what the reassurance paragraph below promises not to do.
+   */
+  commerceMode: "stripe" | "enquiry";
+  primaryActionLabel: string;
+  /** Crisp is the platform's chat widget; a partner without one gets no button. */
+  hasChat: boolean;
 }
 
 export function ProposalDecisionBox({
@@ -26,6 +46,12 @@ export function ProposalDecisionBox({
   launchSteps,
   onOpenCheckout,
   chatContext,
+  brandName,
+  phoneDisplay,
+  phoneE164,
+  commerceMode,
+  primaryActionLabel,
+  hasChat,
 }: ProposalDecisionBoxProps) {
   const narrative =
     setupPrice === 0 && monthlyPrice > 0
@@ -74,16 +100,21 @@ export function ProposalDecisionBox({
             onClick={onOpenCheckout}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md bg-[#533afd] px-8 py-4 text-base font-bold text-white shadow-md transition hover:bg-[#432bd9]"
           >
-            Start my selected plan ({priceFormattedLabel}) <ArrowRight className="h-5 w-5" />
+            {commerceMode === "stripe"
+              ? `${primaryActionLabel} (${priceFormattedLabel})`
+              : primaryActionLabel}{" "}
+            <ArrowRight className="h-5 w-5" />
           </button>
         )}
-        <a
-          href="tel:+13075336678"
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md border border-white/25 px-6 py-4 text-sm font-bold text-white transition hover:bg-white/10"
-        >
-          <PhoneCall className="h-4 w-4" /> Call Us with Questions
-        </a>
-        {!isPaid && (
+        {phoneE164 && (
+          <a
+            href={`tel:${phoneE164}`}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md border border-white/25 px-6 py-4 text-sm font-bold text-white transition hover:bg-white/10"
+          >
+            <PhoneCall className="h-4 w-4" /> Call Us with Questions
+          </a>
+        )}
+        {!isPaid && hasChat && (
           <button
             type="button"
             onClick={() => {
@@ -93,7 +124,7 @@ export function ProposalDecisionBox({
             }}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md border border-white/25 px-6 py-4 text-sm font-bold text-white transition hover:bg-white/10"
           >
-            Message BarakahSoft
+            Message {brandName}
           </button>
         )}
       </div>

@@ -1,3 +1,4 @@
+import { tenantBySlug } from "@/tenants";
 import { profileForLead } from "@/lib/verticals/resolve";
 export const runtime = "edge";
 import type { Metadata } from "next";
@@ -141,6 +142,7 @@ export default async function LeadSitePage({
   // By default, render the full interactive Master Proposal & Website X-Ray!
   return (
     <LiveClientProposal
+      tenant={tenantBySlug(lead.tenant_slug)}
       lead={lead}
       payload={payload}
       scrapeResults={scrapeResults}

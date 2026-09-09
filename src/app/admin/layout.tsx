@@ -1,3 +1,4 @@
+import { getTenant } from "@/lib/tenant";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -6,9 +7,11 @@ import { CrispChat } from "@/components/CrispChat";
 import { NewLeadWatcher } from "@/components/admin/NewLeadWatcher";
 import { AddUrlDialog } from "@/components/admin/AddUrlDialog";
 
-const LOGO_URL = "https://barakahsoft.com/wp-content/uploads/2026/01/Logo1.png";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  // Which brand's dashboard is this? Middleware has already refused anyone
+  // without an accounts row for this host's tenant, so the chrome can trust it.
+  const tenant = await getTenant();
   const supabase = await createClient();
   const {
     data: { user },
@@ -28,7 +31,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <div className="flex items-center gap-4">
             <Link href="/admin">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={LOGO_URL} alt="BarakahSoft" className="h-7 w-auto" />
+              <img src={tenant.brand.logoUrl} alt={tenant.brand.name} className="h-7 w-auto" />
             </Link>
             <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#f0f3ff] px-3 py-1 text-xs font-bold text-[#533afd] shrink-0">
               <Zap className="h-3 w-3" /> Lead Fulfillment Engine
@@ -62,7 +65,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           cap left the middle column narrow enough to wrap on a laptop while
           the sides sat in whitespace. */}
       <main className="w-full px-6 py-6">{children}</main>
-      <CrispChat />
+      <CrispChat websiteId={tenant.brand.analytics?.crispId} />
     </div>
   );
 }

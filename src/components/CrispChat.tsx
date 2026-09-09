@@ -2,8 +2,6 @@
 
 import { useEffect } from "react";
 
-const CRISP_WEBSITE_ID = "28d857ed-70f3-4edf-bba4-e23a1e627d00";
-
 declare global {
   interface Window {
     $crisp: any[];
@@ -11,15 +9,26 @@ declare global {
   }
 }
 
-/** Deferred support chat for BarakahSoft-owned surfaces only - loads only on interaction or idle */
-export function CrispChat() {
+/**
+ * Deferred support chat — loads only on interaction or idle.
+ *
+ * The website id is a prop rather than a constant: it identifies an inbox, and
+ * the platform's inbox must never open on a partner's domain. A tenant with no
+ * chat configured renders nothing at all.
+ */
+export function CrispChat({ websiteId }: { websiteId?: string }) {
+  if (!websiteId) return null;
+  return <CrispLoader websiteId={websiteId} />;
+}
+
+function CrispLoader({ websiteId }: { websiteId: string }) {
   useEffect(() => {
     let loaded = false;
     function loadCrisp() {
       if (loaded) return;
       loaded = true;
       window.$crisp = window.$crisp || [];
-      window.CRISP_WEBSITE_ID = CRISP_WEBSITE_ID;
+      window.CRISP_WEBSITE_ID = websiteId;
       const s = document.createElement("script");
       s.src = "https://client.crisp.chat/l.js";
       s.async = true;

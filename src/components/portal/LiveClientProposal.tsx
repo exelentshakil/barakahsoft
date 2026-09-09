@@ -1,3 +1,4 @@
+import type { Tenant } from "@/tenants/types";
 "use client";
 
 import { useState, useEffect } from "react";
@@ -30,6 +31,15 @@ interface LiveClientProposalProps {
   artifact: Artifact | null;
   /** True only for an allowlisted operator session; gates internal controls. */
   isOperator?: boolean;
+  /**
+   * Whose proposal this is.
+   *
+   * Resolved on the server and passed down rather than looked up here: the
+   * tenant registry reads server-only environment variables, which would be
+   * undefined in a client bundle and silently fall back to the platform's
+   * defaults — a partner's prospect reading BarakahSoft's address.
+   */
+  tenant: Tenant;
 }
 
 export function LiveClientProposal({
@@ -38,6 +48,7 @@ export function LiveClientProposal({
   scrapeResults,
   artifact,
   isOperator = false,
+  tenant,
 }: LiveClientProposalProps) {
   useEffect(() => {
     if (isOperator) return;
@@ -164,7 +175,7 @@ export function LiveClientProposal({
 
   return (
     <div className="min-h-screen bg-[#f9f9ff] text-[#0d1738] font-sans antialiased relative">
-      <ProposalHeader businessName={businessName} isPaid={isPaid} isApproved={isApproved} />
+      <ProposalHeader businessName={businessName} isPaid={isPaid} isApproved={isApproved} tenant={tenant} />
 
       {!isApproved && !isPaid && (
         <>
@@ -262,7 +273,12 @@ export function LiveClientProposal({
           launchSteps={launchSteps}
           onOpenCheckout={() => setShowCheckout(true)}
           chatContext={chatContext}
-          
+          brandName={tenant.brand.name}
+          phoneDisplay={tenant.brand.phoneDisplay}
+          phoneE164={tenant.brand.phoneE164}
+          commerceMode={tenant.commerce.mode}
+          primaryActionLabel={tenant.commerce.primaryActionLabel ?? "Start my selected plan"}
+          hasChat={Boolean(tenant.brand.analytics?.crispId)}
         />
 
         {showCheckout && (
@@ -273,14 +289,24 @@ export function LiveClientProposal({
             priceFormattedLabel={priceFormattedLabel}
             scopeItems={scopeItems}
             checkoutLoading={checkoutLoading}
+            commerceMode={tenant.commerce.mode}
+            legalEntity={tenant.brand.legalEntity}
+            primaryActionLabel={tenant.commerce.primaryActionLabel ?? "Start my selected plan"}
+            onEnquiry={async (input) => {
+              await fetch(`/api/s/${lead.slug}/purchase-enquiry`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(input),
+              });
+            }}
             onClose={() => setShowCheckout(false)}
             onCheckout={handleCheckout}
           />
         )}
       </main>
 
-      <ProposalFooter />
-      <CrispChat />
+      <ProposalFooter tenant={tenant} />
+      <CrispChat websiteId={tenant.brand.analytics?.crispId} />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe, LEAD_ENGINE_PRICE_ID } from "@/lib/stripe";
 import { createPortalToken } from "@/lib/portal-token";
 import { buildOfferOptions, type OfferOption } from "@/lib/audit/lead-value";
+import { tenantBySlug } from "@/tenants";
 
 // Checkout, priced from the offer the operator actually set for this lead.
 //
@@ -38,14 +39,27 @@ export async function POST(req: Request) {
 
   const admin = createAdminClient();
   const [{ data: lead }, { data: artifact }, { data: scrape }] = await Promise.all([
-    admin.from("leads").select("id, slug, business_name, email").eq("id", lead_id).single(),
+    admin.from("leads").select("id, slug, business_name, email, tenant_slug").eq("id", lead_id).single(),
     admin.from("artifacts").select("extracted_assets, funnel_pages").eq("lead_id", lead_id).maybeSingle(),
     admin.from("scrape_results").select("facts").eq("lead_id", lead_id).maybeSingle(),
   ]);
   if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
 
+  // Only the tenant that OWNS the platform Stripe account may charge through
+  // it: the card statement carries its descriptor, the funds land in its
+  // balance, and its entity is the one named at the point of payment. A
+  // partner's proposal collects an enquiry instead — see
+  // /api/s/[leadSlug]/purchase-enquiry and src/tenants/types.ts.
+  const tenant = tenantBySlug(lead.tenant_slug);
+  if (tenant.commerce.mode !== "stripe") {
+    return NextResponse.json(
+      { error: "This proposal does not take payment here.", mode: tenant.commerce.mode },
+      { status: 409 }
+    );
+  }
+
   const stripe = getStripe();
-  const portalBaseUrl = process.env.NEXT_PUBLIC_PORTAL_URL || "https://portal.barakahsoft.com";
+  const portalBaseUrl = tenant.portalBaseUrl;
   const businessName = lead.business_name || lead.slug;
 
   // The lead-engine tier is our own product on a fixed published price, not

@@ -26,11 +26,22 @@ export async function sendEmail({
   subject,
   html,
   replyTo,
+  from,
+  fromName,
 }: {
   to: string;
   subject: string;
   html: string;
   replyTo?: string;
+  /**
+   * The sending identity, when it is not the platform's.
+   *
+   * A partner's mail must leave from their own verified domain — otherwise
+   * every message their prospect receives comes from hello@barakahsoft.com,
+   * which is both confusing and, once SPF is checked, likely to be filtered.
+   */
+  from?: string;
+  fromName?: string;
 }): Promise<boolean> {
   const brevoKey = process.env.BREVO_API_KEY;
   if (brevoKey) {
@@ -42,7 +53,7 @@ export async function sendEmail({
           "api-key": brevoKey,
         },
         body: JSON.stringify({
-          sender: { name: senderName(), email: fromEmail() },
+          sender: { name: (fromName || senderName()), email: (from || fromEmail()) },
           to: [{ email: to }],
           subject,
           htmlContent: html,
@@ -61,7 +72,7 @@ export async function sendEmail({
   if (resend) {
     try {
       const { data, error } = await resend.emails.send({
-        from: fromEmail(),
+        from: (from || fromEmail()),
         to,
         subject,
         html,
