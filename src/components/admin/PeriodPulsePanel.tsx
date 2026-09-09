@@ -57,7 +57,21 @@ const PERIODS: { id: Period; label: string }[] = [
 
 const money = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-export function PeriodPulsePanel({ collectedRevenue, pipelineToClose }: { collectedRevenue: number; pipelineToClose: number }) {
+export function PeriodPulsePanel({
+  collectedRevenue,
+  pipelineToClose,
+  /**
+   * Ad spend is the platform's own, pulled with the platform's Meta
+   * credentials. A partner has no ad account here and no reason to think about
+   * one, so the control is not shown to them at all — a button that returns
+   * "not configured for this account" is worse than no button.
+   */
+  showAdSpend = true,
+}: {
+  collectedRevenue: number;
+  pipelineToClose: number;
+  showAdSpend?: boolean;
+}) {
   const [period, setPeriod] = useState<Period>("week");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -127,16 +141,18 @@ export function PeriodPulsePanel({ collectedRevenue, pipelineToClose }: { collec
         <span className="text-xs font-black uppercase tracking-wider text-slate-500">Target pulse</span>
         <span className="flex items-center gap-1">
           {loading && <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-400" />}
-          <button
-            type="button"
-            disabled={syncing}
-            onClick={() => void pullAdSpend()}
-            title="Pull ad spend from Meta"
-            aria-label="Pull ad spend from Meta"
-            className="rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-[#533afd] disabled:opacity-40"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
-          </button>
+          {showAdSpend && (
+            <button
+              type="button"
+              disabled={syncing}
+              onClick={() => void pullAdSpend()}
+              title="Pull ad spend from Meta"
+              aria-label="Pull ad spend from Meta"
+              className="rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-[#533afd] disabled:opacity-40"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
+            </button>
+          )}
           <button type="button" onClick={() => setSettingsOpen(true)} title="Costs and model prices"
             className="rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
             <Settings className="h-3.5 w-3.5" />

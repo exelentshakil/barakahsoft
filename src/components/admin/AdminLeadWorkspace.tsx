@@ -188,6 +188,11 @@ export function AdminLeadWorkspace({
 }: AdminLeadWorkspaceProps) {
   const router = useRouter();
   const pathname = usePathname();
+  // Ad spend is pulled with the platform's own Meta credentials, so the control
+  // only makes sense for the platform's own leads. Compared against the literal
+  // rather than imported from the tenant registry, which reads server-only
+  // environment variables and has no business in a client bundle.
+  const isPlatformTenant = lead.tenant_slug === "barakahsoft";
   const [pendingLeadId, setPendingLeadId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -1108,7 +1113,11 @@ Shaq`,
 
         {outreachLeads.length > 0 && <OutreachSequencePanel leads={outreachLeads} track="outreach" />}
 
-        <PeriodPulsePanel collectedRevenue={collectedThisWeek} pipelineToClose={pendingCloseAmount} />
+        <PeriodPulsePanel
+          collectedRevenue={collectedThisWeek}
+          pipelineToClose={pendingCloseAmount}
+          showAdSpend={isPlatformTenant}
+        />
       </aside>
 
       {/* 2. RIGHT COLUMN: MASTER COMMAND STUDIO */}
