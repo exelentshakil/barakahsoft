@@ -99,8 +99,11 @@ export function looksLikeMarkup(text: string): boolean {
 }
 
 function facts(brief: SiteBrief): string {
+  const { nouns, label } = brief.vertical;
   return `- Business: ${brief.businessName}
-- Trade: ${brief.industry}
+- Business type: ${brief.industry} (${label})
+- What this business sells is called: ${nouns.offeringPlural} (singular: ${nouns.offering})
+- Its customers are called: ${nouns.customer}s. A unit of work is a ${nouns.work}.
 - Main city: ${brief.city}
 - Service areas: ${brief.areas.slice(0, 10).join(", ") || "not supplied"}
 - Founder: ${brief.founder ?? "NOT SUPPLIED — never name a person"}
@@ -256,10 +259,15 @@ HOW TO WRITE
   were not supplied, no reviews you wrote yourself, no founder name unless one is supplied above.
 - Never write: unlock, elevate, seamless, dive in, in today's world, look no further, we pride
   ourselves, your trusted partner, one-stop shop.
+${brief.vertical.copy.forbiddenSlop.map((rule) => `- Never write: ${rule}.`).join("\n")}
+${brief.vertical.copy.voiceRules.map((rule) => `- ${rule}`).join("\n")}
+
+WHAT THIS PAGE IS FOR
+${brief.vertical.cta.guidance}
 - headlineMark must be a phrase copied EXACTLY from its headline — it gets the brand colour.
 - The hero headline is the most important sentence on the page. Short, concrete, about the outcome
   the customer wants. Under nine words if you can.
-- Write TEN FAQ answers. Real answers, two or three sentences, the way the owner would actually
+- Write ${brief.vertical.copy.faqSeeds.length} FAQ answers. Real answers, two or three sentences, the way the owner would actually
   reply on the phone. Never "contact us for details" as an entire answer.
 - Service blurbs say what the customer gets, not what the trade is called.
 - The whyUs points must be things a competitor could NOT also claim, drawn from the facts above.
@@ -289,8 +297,12 @@ Return STRICT JSON matching this shape exactly, no markdown fence, no commentary
 "seo":{"title":"","description":""}}
 
 services.items must have one entry per supplied service, in the supplied order, using the supplied
-name verbatim. faq.items: TEN. Cover price, timing, process, mess and disruption, insurance and licensing,
-warranty, materials, payment, what happens if something goes wrong, and how to get started. whyUs.points: four. process.steps: three or four.`;
+name verbatim.
+
+faq.items: answer each of these, in this order, in the owner's own voice:
+${brief.vertical.copy.faqSeeds.map((question, index) => `${index + 1}. ${question}`).join("\n")}
+
+whyUs.points: four. process.steps: three or four.`;
 
   const chain = bestGeminiChain();
   const raw = await callGemini(prompt, chain[0], undefined, {
@@ -298,8 +310,7 @@ warranty, materials, payment, what happens if something goes wrong, and how to g
     maxTokens: 24000,
     temperature: 0.72,
     timeoutMs: 260_000,
-    system:
-      "You are a direct-response copywriter for local trade businesses. You write plainly, you never invent facts, and you return valid JSON only.",
+    system: `${brief.vertical.copy.persona} You never invent facts, and you return valid JSON only.`,
   });
 
   if (!raw) {

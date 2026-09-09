@@ -24,13 +24,17 @@ export function serviceSchema(opts: {
   phone: string | null;
   address: string | null;
   areaName?: string;
+  /** From the vertical profile. A menu item is not a Service. */
+  offeringType?: "Service" | "Product" | "MenuItem" | "Course" | "Event";
+  /** From the vertical profile, so the provider is typed as what it is. */
+  providerType?: string;
 }) {
   return {
     "@context": "https://schema.org",
-    "@type": "Service",
+    "@type": opts.offeringType ?? "Service",
     serviceType: opts.serviceName,
     provider: {
-      "@type": "LocalBusiness",
+      "@type": opts.providerType ?? "LocalBusiness",
       name: opts.businessName,
       telephone: opts.phone ?? undefined,
       address: opts.address ?? undefined,

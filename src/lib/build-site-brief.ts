@@ -54,12 +54,13 @@ export interface BriefOverrides {
 export function buildKnownPaths(
   services: string[],
   areas: string[],
+  nouns: VerticalProfile["nouns"],
   extras: { locationServices?: { service: string; area: string }[] } = {}
 ): string[] {
   return [
     "/",
-    ...services.map((s) => `/services/${slugifyText(s)}`),
-    ...areas.map((a) => `/areas/${slugifyText(a)}`),
+    ...services.map((s) => `/${nouns.offeringPath}/${slugifyText(s)}`),
+    ...areas.map((a) => `/${nouns.areaPath}/${slugifyText(a)}`),
     ...(extras.locationServices ?? []).map((p) => `/locations/${slugifyText(`${p.service}-${p.area}`)}`),
     "/about",
     "/faq",

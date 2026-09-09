@@ -2,6 +2,7 @@ import { inngest } from "@/inngest/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildSiteBrief, buildKnownPaths, servicesForMatching, type BriefOverrides } from "@/lib/build-site-brief";
 import { resolveVerticalSync } from "@/lib/verticals/resolve";
+import type { VerticalProfile } from "@/lib/verticals/types";
 import {
   generateBespokePage,
   type InnerPageRequest,
@@ -48,8 +49,6 @@ interface PremiumCritique {
   warnings: string[];
 }
 
-const MAX_SERVICE_PAGES = 8;
-const MAX_AREAS = 8;
 
 // step.run's return type is Jsonify<T>, which will not unify with a plain
 // generic helper signature. These helpers only ever need "run something and
@@ -139,36 +138,44 @@ export const bespokeGenerate = inngest.createFunction(
       });
     }
 
-    // Pad services to exactly 8 and areas to exactly 8 (if they have fewer) so the mega menu
-    // looks perfectly balanced, using an LLM to invent highly relevant inter-related items.
+    // Pad the lists so the mega menu looks balanced, inventing plausible
+    // adjacent items to reach the profile's target counts.
+    //
+    // Gated on the profile, and off by default everywhere but home services.
+    // A trade genuinely does adjacent work it has not listed and genuinely does
+    // travel to the next town; a single-location florist does not, and an
+    // invented service area becomes a factual claim on their live website —
+    // which the home-services playbook's own forbidden_slop already forbids.
+    const offeringTarget = brief.vertical.lists.offeringCount;
+    const areaTarget = brief.vertical.lists.areaCount;
     const padded = await step.run("pad-brief-lists", async () => {
-      let paddedServices = brief.services.slice(0, MAX_SERVICE_PAGES);
-      let paddedAreas = brief.areas.slice(0, MAX_AREAS);
+      let paddedServices = brief.services.slice(0, offeringTarget);
+      let paddedAreas = brief.areas.slice(0, areaTarget);
 
-      if (paddedServices.length > 0 && paddedServices.length < MAX_SERVICE_PAGES) {
+      if (brief.vertical.lists.padOfferings && paddedServices.length > 0 && paddedServices.length < offeringTarget) {
         const prompt = `We have a local business in the ${brief.industry} industry.
 They currently offer these services: ${paddedServices.join(", ")}.
-We need exactly ${MAX_SERVICE_PAGES} services for their website navigation to look balanced.
-Creatively invent highly relevant, inter-related realistic services that a business like this would also offer, to pad the list to exactly ${MAX_SERVICE_PAGES} items.
+We need exactly ${offeringTarget} services for their website navigation to look balanced.
+Creatively invent highly relevant, inter-related realistic services that a business like this would also offer, to pad the list to exactly ${offeringTarget} items.
 Return valid JSON only in this format: {"services": ["Service 1", "Service 2", ...]}`;
 
         const raw = await callBestModel(prompt, { maxTokens: 400, temperature: 0.7, model }, provider);
         const parsed = raw ? parseJsonResponse(raw) : null;
-        if (parsed && Array.isArray(parsed.services) && parsed.services.length === MAX_SERVICE_PAGES) {
+        if (parsed && Array.isArray(parsed.services) && parsed.services.length === offeringTarget) {
           paddedServices = parsed.services;
         }
       }
 
-      if (paddedAreas.length > 0 && paddedAreas.length < MAX_AREAS) {
+      if (brief.vertical.lists.padAreas && paddedAreas.length > 0 && paddedAreas.length < areaTarget) {
         const prompt = `We have a local business in ${brief.city}.
 They currently serve these areas: ${paddedAreas.join(", ")}.
-We need exactly ${MAX_AREAS} service areas/locations for their website navigation to look balanced.
-Invent highly relevant, nearby realistic towns, cities, or neighborhoods to pad the list to exactly ${MAX_AREAS} items.
+We need exactly ${areaTarget} service areas/locations for their website navigation to look balanced.
+Invent highly relevant, nearby realistic towns, cities, or neighborhoods to pad the list to exactly ${areaTarget} items.
 Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
 
         const raw = await callBestModel(prompt, { maxTokens: 400, temperature: 0.7, model }, provider);
         const parsed = raw ? parseJsonResponse(raw) : null;
-        if (parsed && Array.isArray(parsed.areas) && parsed.areas.length === MAX_AREAS) {
+        if (parsed && Array.isArray(parsed.areas) && parsed.areas.length === areaTarget) {
           paddedAreas = parsed.areas;
         }
       }
@@ -189,7 +196,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     // page that has not been built.
     const knownPaths =
       phase === 2
-        ? buildKnownPaths(services, areas)
+        ? buildKnownPaths(services, areas, brief.vertical.nouns)
         : ["/"];
 
     // ---- Phase 2 reuses everything the client already approved ----------
@@ -269,7 +276,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     // Navigation and footer come from the classified services, which are the
     // business's real ones. The strategy pass below plans problems and
     // sections, while each section batch writes copy in its actual layout.
-    const serviceNames = brief.services.slice(0, MAX_SERVICE_PAGES);
+    const serviceNames = brief.services.slice(0, brief.vertical.lists.offeringCount);
 
     await step.run("plan-chrome", async () => {
       const chrome = buildChromeSpec(dna, {
@@ -630,7 +637,7 @@ async function buildPages(
   let done = startedAt;
 
   for (const request of requests) {
-    const key = pageKey(request);
+    const key = pageKey(request, ctx.brief.vertical.nouns);
     const stepId = key.replace(/[^a-z0-9]+/gi, "-");
 
     const html = (await step.run(`page-${stepId}`, async () =>
@@ -651,12 +658,12 @@ async function buildPages(
   return done;
 }
 
-function pageKey(request: InnerPageRequest): string {
+function pageKey(request: InnerPageRequest, nouns: VerticalProfile["nouns"]): string {
   switch (request.kind) {
     case "service":
-      return `services/${slugifyText(request.subject ?? request.title)}`;
+      return `${nouns.offeringPath}/${slugifyText(request.subject ?? request.title)}`;
     case "area":
-      return `areas/${slugifyText(request.area ?? request.title)}`;
+      return `${nouns.areaPath}/${slugifyText(request.area ?? request.title)}`;
     case "location-service":
       return `locations/${slugifyText(`${request.subject}-${request.area}`)}`;
     default:
@@ -672,6 +679,13 @@ async function runPhaseTwo(
   areas: string[]
 ): Promise<void> {
   const leadId = ctx.lead.id;
+  const profile = ctx.brief.vertical;
+  const hasSection = (id: string) =>
+    profile.sections.some((section) => section.id === id && section.enabled);
+
+  // Only the pages this vertical actually has. A business with no service
+  // areas got eight area pages built for towns it does not serve, and each one
+  // was linked from the nav.
   const requests: InnerPageRequest[] = [
     ...services.map((name) => ({
       kind: "service" as const,
@@ -679,9 +693,11 @@ async function runPhaseTwo(
       subject: name,
     })),
     { kind: "about" as const, title: `About ${ctx.brief.businessName}` },
-    { kind: "faq" as const, title: "Frequently asked questions" },
+    ...(hasSection("faq") ? [{ kind: "faq" as const, title: "Frequently asked questions" }] : []),
     { kind: "contact" as const, title: `Contact ${ctx.brief.businessName}` },
-    ...areas.map((area) => ({ kind: "area" as const, title: area, area })),
+    ...(profile.lists.areaCount > 0 && hasSection("areas")
+      ? areas.map((area) => ({ kind: "area" as const, title: area, area }))
+      : []),
   ];
 
   await step.run("start-phase-2", async () => {

@@ -1,3 +1,4 @@
+import { profileForLead } from "@/lib/verticals/resolve";
 export const runtime = "edge";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
@@ -40,11 +41,14 @@ export default async function ServicePage({ params, searchParams }: { params: Pr
   if (!service) notFound();
 
   const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: service.h2, path: `/services/${slug}` }]);
+  const profile = profileForLead(result.lead, result.artifact);
   const service_schema = serviceSchema({
     serviceName: service.h2,
     businessName: payload.businessName,
     phone: payload.nap.phone,
     address: payload.nap.address,
+    offeringType: profile.schema.offeringSchemaType,
+    providerType: profile.schema.localBusinessType,
   });
 
   return (

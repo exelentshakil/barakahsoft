@@ -38,31 +38,38 @@ export function buildChromeData(
   options: { services: string[]; areas: string[]; innerPagesBuilt: boolean }
 ): ChromeData {
   const { services, areas, innerPagesBuilt } = options;
+  // Nav labels and URL segments come from the vertical: a restaurant's menu
+  // does not live at /services, and a single-location florist has no
+  // Service Areas to offer.
+  const { nouns } = brief.vertical;
+  const hasSection = (id: string) =>
+    brief.vertical.sections.some((section) => section.id === id && section.enabled);
 
-  const serviceHref = (name: string) =>
-    innerPagesBuilt ? `/services/${slugifyText(name)}` : "#services";
-  const areaHref = (name: string) => (innerPagesBuilt ? `/areas/${slugifyText(name)}` : "#areas");
+  const offeringHref = (name: string) =>
+    innerPagesBuilt ? `/${nouns.offeringPath}/${slugifyText(name)}` : "#services";
+  const areaHref = (name: string) =>
+    innerPagesBuilt ? `/${nouns.areaPath}/${slugifyText(name)}` : "#areas";
 
   const links: NavLink[] = [{ label: "Home", href: "/" }];
 
   if (services.length > 0) {
     links.push({
-      label: "Services",
-      href: innerPagesBuilt ? "/services" : "#services",
-      children: services.slice(0, 8).map((name) => ({ label: name, href: serviceHref(name) })),
+      label: nouns.offeringPlural,
+      href: innerPagesBuilt ? `/${nouns.offeringPath}` : "#services",
+      children: services.slice(0, 8).map((name) => ({ label: name, href: offeringHref(name) })),
     });
   }
 
-  if (areas.length > 0) {
+  if (areas.length > 0 && brief.vertical.lists.areaCount > 0 && hasSection("areas")) {
     links.push({
-      label: "Service Areas",
-      href: innerPagesBuilt ? "/areas" : "#areas",
+      label: nouns.areaPlural,
+      href: innerPagesBuilt ? `/${nouns.areaPath}` : "#areas",
       children: areas.slice(0, 8).map((name) => ({ label: name, href: areaHref(name) })),
     });
   }
 
   links.push({ label: "About", href: innerPagesBuilt ? "/about" : "#about" });
-  links.push({ label: "FAQ", href: innerPagesBuilt ? "/faq" : "#faq" });
+  if (hasSection("faq")) links.push({ label: "FAQ", href: innerPagesBuilt ? "/faq" : "#faq" });
   links.push({ label: "Contact", href: innerPagesBuilt ? "/contact" : "#contact" });
 
   const utility = [

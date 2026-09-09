@@ -1,3 +1,4 @@
+import { profileForLead } from "@/lib/verticals/resolve";
 export const runtime = "edge";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -80,9 +81,12 @@ export default async function LeadSitePage({
 
   // If viewing the direct website preview
   if (sParams.view === "preview") {
+    // The schema.org subtype comes from the profile frozen into the artifact,
+    // so a dentist is a Dentist and a florist a Florist rather than every
+    // client on the platform being a generic LocalBusiness.
     const localBusinessSchema = {
       "@context": "https://schema.org",
-      "@type": "LocalBusiness",
+      "@type": profileForLead(lead, artifact).schema.localBusinessType,
       name: payload.businessName,
       telephone: payload.nap.phone ?? undefined,
       email: payload.nap.email ?? undefined,

@@ -65,7 +65,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     colourSource: artifact?.colour_source,
     clientBrandHex: facts.brand_color_hex as string | null,
   });
-  const knownPaths = buildKnownPaths(brief.services.slice(0, 8), brief.areas.slice(0, 8));
+  const knownPaths = buildKnownPaths(brief.services.slice(0, 8), brief.areas.slice(0, 8), brief.vertical.nouns);
   const media = (Array.isArray(artifact?.media_plan) ? artifact.media_plan : []) as MediaPlan;
 
   // Measured findings, so the agent starts from what is actually wrong rather

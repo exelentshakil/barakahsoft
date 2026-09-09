@@ -1,3 +1,4 @@
+import type { SectionId } from "@/lib/verticals/types";
 import { layoutDnaFor, type LayoutDna } from "@/lib/generate/v2/layout-dna";
 import { derivePalette, rgbTriplet, readableOn, strongOn, contrastOn } from "@/lib/generate/v2/palette";
 import type { DesignDna } from "@/lib/design-dna";
@@ -66,6 +67,32 @@ const TYPE_PAIRS = [
   { display: "Poppins", body: "Inter" },
   { display: "Manrope", body: "Inter" },
 ];
+
+/**
+ * Every section the engine can build, by id.
+ *
+ * A profile's `sections` array is a list of these ids in page order; adding a
+ * section kind means adding one entry here, one renderer, and one slot on
+ * PageCopySchema.
+ */
+const RENDERERS: Record<
+  SectionId,
+  { kind: string; label: string; render: (ctx: RenderContext) => string }
+> = {
+  hero: { kind: "hero", label: "Hero", render: heroSection },
+  trust: { kind: "proof", label: "Trust bar", render: trustSection },
+  about: { kind: "about", label: "About", render: aboutSection },
+  services: { kind: "services", label: "Services", render: servicesSection },
+  "why-us": { kind: "proof", label: "Why choose us", render: whyUsSection },
+  process: { kind: "process", label: "How it works", render: processSection },
+  gallery: { kind: "proof", label: "Recent work", render: gallerySection },
+  "cta-band": { kind: "cta", label: "Conversion band", render: bandSection },
+  reviews: { kind: "reviews", label: "Reviews", render: reviewsSection },
+  areas: { kind: "areas", label: "Service areas", render: areasSection },
+  guarantee: { kind: "contact", label: "Guarantee & booking", render: guaranteeSection },
+  faq: { kind: "faq", label: "FAQ", render: faqSection },
+  contact: { kind: "contact", label: "Contact", render: contactSection },
+};
 
 export async function buildPage(args: {
   brief: SiteBrief;
@@ -169,21 +196,29 @@ export async function buildPage(args: {
     primaryHref: href("/contact"),
   };
 
-  const built: { id: string; kind: string; label: string; html: string }[] = [
-    { id: "hero", kind: "hero", label: "Hero", html: heroSection(ctx) },
-    { id: "trust", kind: "proof", label: "Trust bar", html: trustSection(ctx) },
-    { id: "about", kind: "about", label: "About", html: aboutSection(ctx) },
-    { id: "services", kind: "services", label: "Services", html: servicesSection(ctx) },
-    { id: "why-us", kind: "proof", label: "Why choose us", html: whyUsSection(ctx) },
-    { id: "process", kind: "process", label: "How it works", html: processSection(ctx) },
-    { id: "gallery", kind: "proof", label: "Recent work", html: gallerySection(ctx) },
-    { id: "cta-band", kind: "cta", label: "Conversion band", html: bandSection(ctx) },
-    { id: "reviews", kind: "reviews", label: "Reviews", html: reviewsSection(ctx) },
-    { id: "areas", kind: "areas", label: "Service areas", html: areasSection(ctx) },
-    { id: "guarantee", kind: "contact", label: "Guarantee & booking", html: guaranteeSection(ctx) },
-    { id: "faq", kind: "faq", label: "FAQ", html: faqSection(ctx) },
-    { id: "contact", kind: "contact", label: "Contact", html: contactSection(ctx) },
-  ].filter((section) => section.html.trim().length > 0);
+  // The unified render engine: one renderer per section kind, and the vertical
+  // profile decides which of them run and in what order.
+  //
+  // This was a literal array, which is why a restaurant got a Service Areas
+  // section and a single-location florist got eight invented towns. The
+  // home-services profile lists exactly these thirteen ids in exactly this
+  // order with these labels, so a trade's page is byte-identical.
+  //
+  // `label` is the studio panel name, never page text — every heading a
+  // visitor reads is written by the model into `copy`, which is why a menu and
+  // a service list can share one renderer.
+  const built = brief.vertical.sections
+    .filter((section) => section.enabled)
+    .map((section) => {
+      const renderer = RENDERERS[section.id];
+      return {
+        id: section.id as string,
+        kind: renderer.kind,
+        label: section.label ?? renderer.label,
+        html: renderer.render(ctx),
+      };
+    })
+    .filter((section) => section.html.trim().length > 0);
 
   const radius = { sharp: "2px", soft: "12px", rounded: "20px", pill: "999px" }[design?.geometry.radius ?? "soft"];
   const rhythm = { tight: "68px", generous: "104px", cinematic: "132px" }[design?.layout.sectionRhythm ?? "generous"];

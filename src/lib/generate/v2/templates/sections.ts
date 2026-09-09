@@ -353,11 +353,11 @@ export function servicesSection(ctx: RenderContext): string {
     .map((item, index) => {
       const photo = pool[index % Math.max(pool.length, 1)] ?? null;
       return `<article class="bs-servicerow">
-      ${photo ? `<figure class="bs-media"><img src="${esc(photo)}" alt="${esc(item.name)} in ${esc(brief.city)}" width="640" height="440" loading="lazy" decoding="async"></figure>` : `<div class="bs-servicerow__glyph">${icon("wrench")}</div>`}
+      ${photo ? `<figure class="bs-media"><img src="${esc(photo)}" alt="${esc(item.name)} in ${esc(brief.city)}" width="640" height="440" loading="lazy" decoding="async"></figure>` : `<div class="bs-servicerow__glyph">${icon(brief.vertical.glyphs.offering)}</div>`}
       <div class="bs-servicerow__body">
         <h3 class="bs-h3">${esc(item.name)}</h3>
         <p class="bs-body">${esc(item.blurb)}</p>
-        <a class="bs-textlink" href="${esc(ctx.href(`/services/${slug(item.name)}`))}">See ${esc(item.name.toLowerCase())}${icon("arrow", "bs-icon bs-icon--sm")}</a>
+        <a class="bs-textlink" href="${esc(ctx.href(`/${brief.vertical.nouns.offeringPath}/${slug(item.name)}`))}">See ${esc(item.name.toLowerCase())}${icon("arrow", "bs-icon bs-icon--sm")}</a>
       </div>
     </article>`;
     })
@@ -386,7 +386,7 @@ export function whyUsSection(ctx: RenderContext): string {
   const { copy, brief, logoUrl } = ctx;
   const why = copy.whyUs;
   const photo = ctx.photos[3] ?? ctx.photos[0] ?? null;
-  const glyphs = ["shield", "award", "clock", "wrench"];
+  const glyphs = ctx.brief.vertical.glyphs.why;
 
   return `<section id="why-us" class="bs-section bs-whyus bs-whyus--${variant(ctx.dna.seed, 4)}">
   <div class="bs-whyus__media">
@@ -595,7 +595,7 @@ export function areasSection(ctx: RenderContext): string {
           ${brief.areas
             .slice(0, 12)
             .map(
-              (area) => `<li><a class="bs-areapin" href="${esc(ctx.href(`/areas/${slug(area)}`))}">
+              (area) => `<li><a class="bs-areapin" href="${esc(ctx.href(`/${ctx.brief.vertical.nouns.areaPath}/${slug(area)}`))}">
             <span class="bs-areapin__pin">${icon("pin", "bs-icon bs-icon--sm")}</span>
             <span class="bs-areapin__name">${esc(area)}</span>
             <span class="bs-areapin__go">${icon("arrow", "bs-icon bs-icon--sm")}</span>
