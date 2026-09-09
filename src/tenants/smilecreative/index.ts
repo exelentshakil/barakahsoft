@@ -72,7 +72,7 @@ export const smilecreative: Tenant = {
   // through a US entity is a VAT problem on top of the branding one.
   commerce: {
     mode: "enquiry",
-    enquiryEmail: "hello@barakahsoft.com", // TEST-EMAIL → studio@smilecreative.agency
+    enquiryEmail: "office@smilecreative.agency", // TEST-EMAIL → studio@smilecreative.agency
     primaryActionLabel: "Get my free redesign",
   },
 
