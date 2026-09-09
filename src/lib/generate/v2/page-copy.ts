@@ -36,8 +36,8 @@ export const PageCopySchema = z.object({
     reassurance: soft(70),
   }),
   trust: z.object({
-    stats: z.array(z.object({ value: S(1, 10), label: S(3, 30) })).max(4).default([]),
-    badges: z.array(S(3, 34)).max(4).default([]),
+    stats: z.array(z.object({ value: z.string().max(14), label: z.string().max(30) })).max(4).default([]),
+    badges: z.array(z.string().max(34)).max(4).default([]),
   }),
   about: z.object({
     eyebrow: S(4, 60),
@@ -47,7 +47,7 @@ export const PageCopySchema = z.object({
     founderRole: soft(46),
     /** Wraps the circular seal. Short, three or four words. */
     sealLine: S(6, 54),
-    stats: z.array(z.object({ value: S(1, 10), label: S(3, 30) })).max(4).default([]),
+    stats: z.array(z.object({ value: z.string().max(14), label: z.string().max(30) })).max(4).default([]),
     ctaLabel: S(3, 30),
   }),
   services: z.object({
@@ -68,11 +68,21 @@ export const PageCopySchema = z.object({
     headline: S(8, 80),
     steps: z.array(z.object({ title: S(3, 44), body: S(20, 260) })).min(3).max(4),
   }),
-  gallery: z.object({ eyebrow: S(4, 60), headline: S(8, 80), captions: z.array(S(6, 90)).max(10).default([]) }),
+  gallery: z
+    .object({ eyebrow: soft(60), headline: soft(80), captions: z.array(z.string().max(90)).max(10).default([]) })
+    .default({ eyebrow: "", headline: "", captions: [] }),
   band: z.object({ headline: S(8, 80), body: S(20, 220), ctaLabel: S(3, 30) }),
-  reviews: z.object({ eyebrow: S(4, 60), headline: S(8, 90) }),
-  areas: z.object({ eyebrow: S(4, 60), headline: S(8, 80), body: S(20, 320) }),
-  booking: z.object({ eyebrow: S(4, 60), headline: S(8, 70), headlineMark: soft(40), body: S(20, 260) }),
+  reviews: z.object({ eyebrow: soft(60), headline: soft(90) }).default({ eyebrow: "", headline: "" }),
+  // Optional, with defaults: a vertical that disables a section is told its
+  // facts are "not supplied" and then, until now, had the whole page thrown
+  // away for not writing about them. A section the renderer will never emit
+  // must not be able to reject the fifteen that it will.
+  areas: z
+    .object({ eyebrow: soft(60), headline: soft(80), body: soft(320) })
+    .default({ eyebrow: "", headline: "", body: "" }),
+  booking: z
+    .object({ eyebrow: soft(60), headline: soft(80), headlineMark: soft(40), body: soft(260) })
+    .default({ eyebrow: "", headline: "", headlineMark: "", body: "" }),
   guarantee: z.object({ eyebrow: S(4, 60), headline: S(8, 80), body: S(30, 420), ctaLabel: S(3, 30) }),
   faq: z.object({
     eyebrow: S(4, 60),
@@ -119,6 +129,25 @@ function facts(brief: SiteBrief): string {
 - Scraped fact digest: ${brief.factsDigest.slice(0, 3000)}`;
 }
 
+/**
+ * One line of copy, preferring the vertical's own wording.
+ *
+ * `{city} {business} {industry} {offering} {offerings} {customer} {work}` are
+ * substituted, so a profile writes "Book a {work} with our {offering} team"
+ * once and it reads correctly for a gym, a salon and a solicitor.
+ */
+function verticalLine(brief: SiteBrief, key: string, neutral: string): string {
+  const { nouns } = brief.vertical;
+  return (brief.vertical.fallback?.[key] ?? neutral)
+    .replace(/\{city\}/g, brief.city)
+    .replace(/\{business\}/g, brief.businessName)
+    .replace(/\{industry\}/g, brief.industry)
+    .replace(/\{offering\}/g, nouns.offering)
+    .replace(/\{offerings\}/g, nouns.offeringPlural.toLowerCase())
+    .replace(/\{customer\}/g, nouns.customer)
+    .replace(/\{work\}/g, nouns.work);
+}
+
 function fallbackCopy(brief: SiteBrief): PageCopy {
   const city = brief.city;
   const trade = brief.industry;
@@ -143,17 +172,7 @@ function fallbackCopy(brief: SiteBrief): PageCopy {
    * neutral default written to be true of any local business. Nothing here
    * says "quote", "job" or "warranty" unless a profile asks for it.
    */
-  const fb = (key: string, neutral: string): string => {
-    const supplied = brief.vertical.fallback?.[key];
-    return (supplied ?? neutral)
-      .replace(/\{city\}/g, city)
-      .replace(/\{business\}/g, brief.businessName)
-      .replace(/\{industry\}/g, trade)
-      .replace(/\{offering\}/g, offering)
-      .replace(/\{offerings\}/g, offerings)
-      .replace(/\{customer\}/g, customer)
-      .replace(/\{work\}/g, work);
-  };
+  const fb = (key: string, neutral: string): string => verticalLine(brief, key, neutral);
 
   return {
     hero: {
@@ -297,6 +316,58 @@ function fallbackCopy(brief: SiteBrief): PageCopy {
   };
 }
 
+/**
+ * Keep every section the model got right.
+ *
+ * This was a single all-or-nothing safeParse over ~58 length-constrained
+ * fields, so one overlong meta description or one stat value of eleven
+ * characters discarded fifteen good sections and dropped the whole page to
+ * fallback copy. On a vertical whose fallback was tradesman prose, that is how
+ * a gym ended up asking for a quote.
+ *
+ * Now each top-level section is validated on its own and only the failures are
+ * replaced. A bad `seo` block costs the meta description, not the page.
+ */
+function salvage(raw: unknown, brief: SiteBrief): PageCopy {
+  const whole = PageCopySchema.safeParse(raw);
+  if (whole.success) return whole.data;
+
+  const fallback = fallbackCopy(brief);
+  if (!raw || typeof raw !== "object") {
+    console.warn("[page-copy] response was not an object; using grounded fallback");
+    return fallback;
+  }
+
+  const shape = PageCopySchema.shape as Record<string, z.ZodTypeAny>;
+  const source = raw as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  const replaced: string[] = [];
+
+  for (const [key, schema] of Object.entries(shape)) {
+    const section = schema.safeParse(source[key]);
+    if (section.success) {
+      out[key] = section.data;
+    } else {
+      out[key] = (fallback as unknown as Record<string, unknown>)[key];
+      replaced.push(key);
+    }
+  }
+
+  console.warn(
+    `[page-copy] kept ${Object.keys(shape).length - replaced.length}/${Object.keys(shape).length} sections; ` +
+      `fell back on: ${replaced.join(", ") || "none"}`
+  );
+
+  // If almost nothing survived, the response was junk rather than slightly off
+  // — say so plainly rather than shipping a stitched-together page.
+  if (replaced.length > Object.keys(shape).length / 2) {
+    console.warn("[page-copy] more than half the sections failed; using grounded fallback throughout");
+    return fallback;
+  }
+
+  return out as unknown as PageCopy;
+}
+
 export async function generatePageCopy(brief: SiteBrief, tone: string): Promise<PageCopy> {
   const prompt = `Write every piece of copy for one local business homepage. You are writing WORDS ONLY —
 the page, its layout and its styling already exist and are not yours to change. Return JSON.
@@ -353,6 +424,13 @@ Return STRICT JSON matching this shape exactly, no markdown fence, no commentary
 services.items must have one entry per supplied service, in the supplied order, using the supplied
 name verbatim.
 
+LENGTHS — these are enforced, and anything outside them is rejected:
+hero.headline 8-90 · hero.subhead 20-260 · about.paragraphs 60-800 EACH, one or two of them
+services.intro 20-320 · service blurb 20-220 · whyUs body 30-300 · process body 20-260
+faq answer 30-600 · footer.blurb 40-320 · seo.title 10-65 · seo.description 60-165
+Stat values are 14 characters at most, so write "4.9" or "200+", never "Since 2011 in Belfast".
+Leave a section empty ("") rather than padding it if the facts do not support it.
+
 WHAT EACH SECTION MEANS FOR THIS BUSINESS
 The slot names below are structural. Read them as described here, not as the words suggest.
 ${Object.entries(brief.vertical.copy.sectionBriefs)
@@ -378,34 +456,36 @@ whyUs.points: four. process.steps: three or four.`;
     return fallbackCopy(brief);
   }
 
-  const parsed = PageCopySchema.safeParse(parseJsonResponse(raw));
-  if (!parsed.success) {
-    // A page with honest, slightly plainer copy beats no page at all, and the
-    // fallback is written from the same real facts.
-    console.warn("[page-copy] copy failed validation; using grounded fallback", parsed.error.flatten().fieldErrors);
-    return fallbackCopy(brief);
-  }
+  const copy = salvage(parseJsonResponse(raw), brief);
 
   // A model handed messy source sometimes echoes it. The about section is the
   // one place that happens, and raw markdown on a client's page is worse than
   // plainer prose, so it is replaced rather than shipped.
   const story = cleanAboutContent(brief.aboutContent);
-  if (parsed.data.about.paragraphs.some(looksLikeMarkup)) {
+  if (copy.about.paragraphs.some(looksLikeMarkup)) {
     console.warn("[page-copy] the about copy contained raw markup; substituting the cleaned story");
-    parsed.data.about.paragraphs = story
+    copy.about.paragraphs = story
       ? [trimToSentence(story, 780)]
-      : [`${brief.businessName} works with homeowners and businesses across ${brief.city}, doing ${brief.industry.toLowerCase()} properly and explaining it in plain language.`];
+      : [
+          verticalLine(
+            brief,
+            "aboutParagraph",
+            `{business} looks after {customer}s across {city}, and explains what they do in plain language.`
+          ),
+        ];
   }
 
   // The service list is the client's, not the model's.
   const supplied = brief.services.slice(0, 10);
   if (supplied.length > 0) {
-    const byName = new Map(parsed.data.services.items.map((item) => [item.name.toLowerCase(), item.blurb]));
-    parsed.data.services.items = supplied.map((name) => ({
+    const byName = new Map(copy.services.items.map((item) => [item.name.toLowerCase(), item.blurb]));
+    copy.services.items = supplied.map((name) => ({
       name,
-      blurb: byName.get(name.toLowerCase()) ?? `${name} carried out by our own team, quoted clearly before any work starts.`,
+      blurb:
+        byName.get(name.toLowerCase()) ??
+        verticalLine(brief, "offeringBlurb", "{item}, handled by our own team.").replace(/\{item\}/g, name),
     }));
   }
 
-  return parsed.data;
+  return copy;
 }
