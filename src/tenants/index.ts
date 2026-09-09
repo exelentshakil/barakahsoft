@@ -28,6 +28,21 @@ for (const tenant of TENANTS) {
   }
 }
 
+// The deployment's own configured origins, registered to the default tenant.
+//
+// A safety net for an environment whose NEXT_PUBLIC_SITE_URL or _PORTAL_URL
+// points somewhere no tenant module declares — a staging origin, a renamed
+// domain. Without it that host is not an app host, and the custom-domain
+// rewrite would treat the deployment's own front door as a client's website.
+for (const url of [DEFAULT_TENANT.siteBaseUrl, DEFAULT_TENANT.portalBaseUrl]) {
+  try {
+    const { hostname } = new URL(url);
+    if (!BY_HOST.has(hostname)) BY_HOST.set(hostname, DEFAULT_TENANT);
+  } catch {
+    // A malformed origin is not worth failing module load over.
+  }
+}
+
 const BY_SLUG = new Map(TENANTS.map((tenant) => [tenant.slug, tenant]));
 
 /**

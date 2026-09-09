@@ -17,7 +17,13 @@ async function rewriteForCustomDomain(request: NextRequest): Promise<NextRespons
   // know one NEXT_PUBLIC_SITE_URL and therefore treated a partner's domain as
   // a client site.
   if (!host || isAppHost(host)) return null;
-  if (request.nextUrl.pathname.startsWith("/s/")) return null; // already routed
+  const { pathname } = request.nextUrl;
+  if (pathname.startsWith("/s/")) return null; // already routed
+  // An API call is never a page to rewrite. The matcher now covers /api so
+  // route handlers can read the tenant header, and without this guard a form
+  // POST from a client's own domain to /api/s/<slug>/quote-request would be
+  // rewritten to /s/<lead>/api/s/<slug>/quote-request and 404.
+  if (pathname.startsWith("/api/")) return null;
 
   // Skip the anon/cookie-bound client entirely — a visitor on a client's
   // own custom domain has no admin session and no need for RLS-scoped
@@ -33,7 +39,7 @@ async function rewriteForCustomDomain(request: NextRequest): Promise<NextRespons
   if (!lead || lead.status !== "live") return null;
 
   const url = request.nextUrl.clone();
-  url.pathname = `/s/${lead.slug}${request.nextUrl.pathname}`;
+  url.pathname = `/s/${lead.slug}${pathname}`;
   // The brand comes from the LEAD, not the host: a client's own domain belongs
   // to whoever sold it. Without this the delivered site's portal links, footer
   // and "powered by" would carry the default brand rather than the seller's.
