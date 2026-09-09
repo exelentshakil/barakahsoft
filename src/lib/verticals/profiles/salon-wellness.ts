@@ -55,7 +55,11 @@ export const salonWellness: VerticalProfile = {
     intent: "book-appointment",
     primaryLabel: "Book now",
     secondaryIntent: "call-now",
-    secondaryLabel: "Call the salon",
+    // "Call the salon" — this profile is labelled "Salon, Spa & Fitness" and
+    // its section briefs already say "a chair or a gym floor" and "stylist or
+    // trainer", so one member's venue noun does not belong on the button a
+    // gym's visitors press.
+    secondaryLabel: "Call us",
     guidance:
       "The visitor is judging on the work before they read a word, so the gallery has to be near the top and the images have to be the client's own. Prices belong on the page: a salon that hides them loses the booking to one that does not. Name the individual stylists or trainers — people book a person, not a premises. Booking is the primary action and it should take one tap on a phone.",
   },
