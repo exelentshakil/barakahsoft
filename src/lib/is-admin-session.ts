@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getOrCreateAccount } from "@/lib/get-or-create-account";
+import { getTenant } from "@/lib/tenant";
 
 // Shared admin-session check for public delivered-site route gates
 // (innerPagesBuilt/fullSiteBuilt, both tied to Stripe payment). Confirmed
@@ -16,9 +17,14 @@ export async function isAdminSession(): Promise<boolean> {
   } = await supabase.auth.getUser();
   if (!user?.email) return false;
 
+  // Any account for this email, on any brand. Whether they may act on THIS
+  // brand's data is a separate question, answered by requireOperator /
+  // operatorLead in lib/tenant-scope.ts, which resolve the tenant from the
+  // host. This one only answers "is this person an operator at all", which is
+  // what its callers — public delivered-site gates — actually ask.
   const admin = createAdminClient();
-  const { data: account } = await admin.from("accounts").select("email").eq("email", user.email).maybeSingle();
-  return !!account;
+  const { data: accounts } = await admin.from("accounts").select("email").eq("email", user.email).limit(1);
+  return Boolean(accounts?.length);
 }
 
 /**
@@ -41,8 +47,11 @@ export async function operatorAccountId(): Promise<string | null> {
   // Delegates rather than repeating the lookup: getOrCreateAccount is
   // already the one place that reconciles a login with an accounts row, and
   // a second implementation here would be the thing that drifts.
+  // Which brand this edit belongs to comes from the request host, not from the
+  // login: the same person holds an account per brand.
+  const tenant = await getTenant();
   try {
-    return await getOrCreateAccount(user.id, user.email);
+    return await getOrCreateAccount(user.id, user.email, tenant.slug);
   } catch {
     // Attribution is not worth failing an edit over.
     return null;

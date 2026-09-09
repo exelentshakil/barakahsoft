@@ -3,11 +3,18 @@ import { LeadEngineLanding } from "@/components/landing/LeadEngineLanding";
 import { PartnerLanding } from "@/components/landing/PartnerLanding";
 import { getTenant } from "@/lib/tenant";
 
-// The Design Quality Bar reads approved showcases from the database, so a
-// fully static page would freeze whatever was approved at build time and
-// never show another one. The approve endpoint also revalidates this path
-// directly, making that the fast path and this the safety net.
-export const revalidate = 300;
+// Rendered per request, because which brand this page belongs to is decided by
+// the host it arrived on.
+//
+// It was ISR with `revalidate = 300`, which cannot survive tenancy in two
+// separate ways. Next refuses to prerender a route that reads headers(), so the
+// build failed outright — and even if it had not, a prerendered "/" is ONE
+// cache entry shared by every host: the first visitor would have decided which
+// brand every other visitor saw.
+//
+// The Design Quality Bar's freshness argument for ISR still holds; it is now
+// served by the request itself rather than by a revalidation window.
+export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
   const tenant = await getTenant();
