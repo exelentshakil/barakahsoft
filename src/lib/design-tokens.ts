@@ -110,26 +110,51 @@ function neutralise(hex: string, keepHue = 0.06): string {
 
 /**
  * Force a foreground to clear a contrast threshold against its background.
+ *
+ * This used to pick its direction from `luminance < 0.5` and walk that way
+ * alone, then return pure white or near-black when 24 steps ran out —
+ * WITHOUT checking that the value it returned actually cleared the threshold.
+ *
+ * On a mid-grey ground that is the losing direction and the returned value is
+ * the worst available. A real lead's surface-alt resolved to #A2A2A3: the rule
+ * chose "towards white" because 0.37 < 0.5, walked to #FFFFFF, and shipped
+ * white on mid-grey at 2.55:1 — the nav menu hover state, refused by the
+ * release gate on the finished build. Black on that same ground is 8.2:1, and
+ * was never tried.
+ *
+ * So both directions are walked and the first value that clears wins. When
+ * neither can — a mid-grey has no foreground that reaches 4.5:1 for small
+ * text — it returns whichever endpoint is actually better rather than
+ * whichever the threshold guessed, so the result is always the best available
+ * instead of sometimes the worst.
  */
 function ensureContrast(foreground: string, background: string, minimum: number): string {
   if (contrastRatio(foreground, background) >= minimum) return foreground;
 
-  const towardsWhite = relativeLuminance(background) < 0.5;
   const clean = foreground.replace("#", "");
-  let r = parseInt(clean.slice(0, 2), 16);
-  let g = parseInt(clean.slice(2, 4), 16);
-  let b = parseInt(clean.slice(4, 6), 16);
+  const start = [
+    parseInt(clean.slice(0, 2), 16),
+    parseInt(clean.slice(2, 4), 16),
+    parseInt(clean.slice(4, 6), 16),
+  ];
+  const hex = (channels: number[]) =>
+    `#${channels.map((c) => Math.max(0, Math.min(255, Math.round(c))).toString(16).padStart(2, "0")).join("")}`.toUpperCase();
 
-  for (let step = 0; step < 24; step++) {
-    const shift = towardsWhite ? 10 : -10;
-    r = Math.max(0, Math.min(255, r + shift));
-    g = Math.max(0, Math.min(255, g + shift));
-    b = Math.max(0, Math.min(255, b + shift));
-    const candidate = `#${[r, g, b].map((c) => c.toString(16).padStart(2, "0")).join("")}`.toUpperCase();
-    if (contrastRatio(candidate, background) >= minimum) return candidate;
+  // Darker first when the ground is light, lighter first when it is dark, so a
+  // colour that can go either way keeps the more conventional look.
+  const order = relativeLuminance(background) < 0.5 ? [10, -10] : [-10, 10];
+  for (const shift of order) {
+    const channels = [...start];
+    for (let step = 0; step < 26; step++) {
+      for (let i = 0; i < 3; i++) channels[i] = Math.max(0, Math.min(255, channels[i] + shift));
+      const candidate = hex(channels);
+      if (contrastRatio(candidate, background) >= minimum) return candidate;
+    }
   }
 
-  return towardsWhite ? "#FFFFFF" : "#0B0B0F";
+  // Nothing reaches the threshold. Return the better of the two extremes
+  // rather than the one the luminance test would have guessed.
+  return contrastRatio("#FFFFFF", background) >= contrastRatio("#0B0B0F", background) ? "#FFFFFF" : "#0B0B0F";
 }
 
 /** #RRGGBB -> "r g b", so tokens can drive rgb(var(--x) / alpha) opacity. */

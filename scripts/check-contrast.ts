@@ -57,10 +57,42 @@ const EXTREMES: { label: string; dna: DesignDna }[] = [
   },
 ];
 
+// A real lead. The reference's "secondary" colour landed on surfaceAlt as a
+// mid-grey, and every token computed against that ground had to survive it.
+// The nav hover state did not: ensureContrast walked towards white because
+// 0.37 < 0.5, could only reach 2.55:1 there, and returned white anyway. This
+// palette is the shape that finds that class of bug — a ground too dark for
+// white and too light for the "go lighter" rule to be right.
+const MID_GREY_GROUND: { label: string; dna: DesignDna }[] = [
+  {
+    label: "mid-grey surface-alt",
+    dna: {
+      ...DEFAULT_DESIGN_DNA,
+      palette: {
+        primary: "#E4002B", accent: "#1D1D1B",
+        surface: "#FFFFFF", surfaceAlt: "#A2A2A3",
+        ink: "#1D1D1B", inkMuted: "#5A5A5A", onPrimary: "#FFFFFF",
+      },
+    },
+  },
+  {
+    label: "mid-grey everything",
+    dna: {
+      ...DEFAULT_DESIGN_DNA,
+      palette: {
+        primary: "#808080", accent: "#8A8A8A",
+        surface: "#9E9E9E", surfaceAlt: "#A2A2A3",
+        ink: "#7A7A7A", inkMuted: "#888888", onPrimary: "#909090",
+      },
+    },
+  },
+];
+
 const cases = [
   { label: "house default", dna: DEFAULT_DESIGN_DNA },
   ...PROFILES.map((profile) => ({ label: `profile: ${profile.slug}`, dna: profile.artDirection })),
   ...EXTREMES,
+  ...MID_GREY_GROUND,
 ];
 
 let failed = 0;
