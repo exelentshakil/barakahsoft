@@ -1,5 +1,23 @@
 import { slugifyText } from "@/lib/slug";
-import type { ChromeData, NavLink } from "@/lib/generate/v2/render-sections";
+/**
+ * The chrome contract: what the header/nav renderer needs, independent of who
+ * renders it. These lived in the old prompt-driven renderer; the application
+ * owns the markup now, so they live beside the data that fills them.
+ */
+export interface NavLink {
+  label: string;
+  href: string;
+  /** Present only for a top-level item that opens a mega-menu panel. */
+  children?: { label: string; href: string }[];
+}
+
+export interface ChromeData {
+  links: NavLink[];
+  phone: string | null;
+  primaryLabel: string;
+  primaryHref: string;
+  utility: string[];
+}
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
 
 // Where the navigation points is the application's decision, not the model's.

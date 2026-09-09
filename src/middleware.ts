@@ -52,6 +52,14 @@ export async function middleware(request: NextRequest) {
 
   let response = NextResponse.next({ request });
 
+  // Everything below authenticates, and `/admin` is the only authenticated
+  // surface the matcher covers. Calling auth.getUser() unconditionally cost a
+  // Supabase round-trip on every marketing page view to produce a `user` that
+  // only the `/admin` branch ever read.
+  if (!request.nextUrl.pathname.startsWith("/admin")) {
+    return response;
+  }
+
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return response;
   }
@@ -75,28 +83,26 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (request.nextUrl.pathname.startsWith("/admin")) {
-    if (!user) {
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("next", request.nextUrl.pathname);
-      return NextResponse.redirect(loginUrl);
-    }
+  if (!user) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("next", request.nextUrl.pathname);
+    return NextResponse.redirect(loginUrl);
+  }
 
-    // Any Supabase user can complete a magic-link sign-in — being logged in
-    // is not being authorized. `accounts` is the allowlist; add/remove
-    // operators directly in Supabase (insert/delete a row by email).
-    const { data: account } = await supabase
-      .from("accounts")
-      .select("email")
-      .eq("email", user.email)
-      .maybeSingle();
+  // Any Supabase user can complete a magic-link sign-in — being logged in
+  // is not being authorized. `accounts` is the allowlist; add/remove
+  // operators directly in Supabase (insert/delete a row by email).
+  const { data: account } = await supabase
+    .from("accounts")
+    .select("email")
+    .eq("email", user.email)
+    .maybeSingle();
 
-    if (!account) {
-      await supabase.auth.signOut();
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("error", "not_authorized");
-      return NextResponse.redirect(loginUrl);
-    }
+  if (!account) {
+    await supabase.auth.signOut();
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("error", "not_authorized");
+    return NextResponse.redirect(loginUrl);
   }
 
   return response;

@@ -6,25 +6,16 @@ import {
   type InnerPageRequest,
   type SiteBrief,
 } from "@/lib/generate-bespoke-site";
-import { generateStructureBatch, type GeneratedSection } from "@/lib/generate/structure";
-import { generateSitePlan, sectionBatches } from "@/lib/generate/site-plan";
-import { generateStylesheet } from "@/lib/generate/stylesheet";
-import { renderServiceMap, injectServiceMap } from "@/lib/generate/service-map";
-import { critiqueHomepage, type PremiumCritique } from "@/lib/generate/critique";
 import { callBestModel, type GenerationProvider } from "@/lib/generate/model";
 import { DEFAULT_DESIGN_DNA, DesignDnaSchema, type DesignDna } from "@/lib/design-dna";
 import { compileDesignTokens } from "@/lib/design-tokens";
 import { ingestRealPhotos, buildSlots, planMedia, type MediaPlan } from "@/lib/media/plan-media";
 import { buildChromeSpec } from "@/lib/chrome-spec";
 import { writeLivePage, HOME_KEY } from "@/lib/page-versions";
-import { sanitizeBespokeHtml } from "@/lib/sanitize-generated-html";
 import { resolveLogoUrl } from "@/lib/brand-assets";
 import { verifyHomepage } from "@/lib/audit/quality-gate";
 import { setUsageContext } from "@/lib/cost/record-usage";
 import { parseJsonResponse } from "@/lib/parse-json-response";
-import type { PageSystem } from "@/lib/generate/v2/design-system";
-import type { RenderedSection } from "@/lib/generate/v2/render-sections";
-import type { Critique } from "@/lib/generate/v2/visual-repair";
 import { visualQaEnabled, type GenerationCandidate, type VisualQaReport } from "@/lib/visual-qa";
 import { slugifyText } from "@/lib/slug";
 import type { FunnelPageSection, Lead, ScrapeResults, Artifact } from "@/types/database";
@@ -43,6 +34,18 @@ import type { FunnelPageSection, Lead, ScrapeResults, Artifact } from "@/types/d
 // the homepage that already succeeded, progress is visible rather than a
 // spinner, and a browser reload cannot interrupt anything because none of
 // this runs in a request.
+
+/**
+ * What the retired creative-director pass used to return. The pass itself is
+ * gone — it cost a model call to produce notes the deterministic gate already
+ * produces, and it could not see the rendered page — but qa_notes still reads
+ * this shape, so it is stated here rather than imported from a deleted module.
+ */
+interface PremiumCritique {
+  passes: boolean;
+  blockers: string[];
+  warnings: string[];
+}
 
 const MAX_SERVICE_PAGES = 8;
 const MAX_AREAS = 8;
@@ -397,7 +400,14 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     const composedHtml = built.html;
 
     const stylesheetCss = built.css;
-    const checked = { report: { passes: true, findings: [] as any[], constraints: [] as any[] } }; // Bypass deterministic checks entirely!
+    // The deterministic release gate: contrast measured against the compiled
+    // tokens, plus token-pair warnings. No browser, no model call, no cost.
+    // It was stubbed out to `passes: true` while save-homepage went on writing
+    // its findings into qa_notes, so the studio showed a clean bill of health
+    // that had never been computed. Its findings are recorded and surfaced;
+    // they do not fail the build yet, because a gate that starts fatal on a
+    // corpus it has never been run against fails good pages on day one.
+    const checked = { report: verifyHomepage(composedHtml, brief, gateTokens, stylesheetCss) };
 
 
     // The advisory creative-director pass is gone: it cost another model call
