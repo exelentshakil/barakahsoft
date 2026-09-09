@@ -241,6 +241,45 @@ function rotateHue(hex: string, degrees: number): string {
   return `#${to(hue(h + 1 / 3))}${to(hue(h))}${to(hue(h - 1 / 3))}`.toUpperCase();
 }
 
+/**
+ * surfaceAlt is a SHADE OF SURFACE, never an independent colour.
+ *
+ * The whole stylesheet treats it as "the same page, slightly different band" —
+ * `.bs-section--tint` swaps the background and nothing else, so the text on it
+ * is still --bs-ink, which is chosen to read on --bs-surface.
+ *
+ * It was taken raw from the reference's measured secondary colour, which is a
+ * brand colour and has no relationship to the reference's background. A real
+ * gym came back with surface #1A1A1A and surfaceAlt #9CA3AF: a light grey-blue
+ * band dropped into a near-black page, carrying white text at 2.3:1. Half the
+ * page rendered as a washed-out grey slab.
+ *
+ * So the supplied value is kept only when it is genuinely a near neighbour of
+ * surface. Otherwise it is computed from surface — darker on a light page,
+ * lighter on a dark one — which is what every rule using it already assumes.
+ */
+function siblingSurface(supplied: string, surface: string): string {
+  const surfaceL = relativeLuminance(surface);
+  const suppliedL = relativeLuminance(supplied);
+  const sameSide = surfaceL < 0.5 === suppliedL < 0.5;
+  // A tint is a small step. More than this and it reads as a different colour,
+  // which is exactly the failure being fixed.
+  if (sameSide && Math.abs(surfaceL - suppliedL) <= 0.18) return supplied;
+
+  const clean = surface.replace("#", "");
+  const channels = [
+    parseInt(clean.slice(0, 2), 16),
+    parseInt(clean.slice(2, 4), 16),
+    parseInt(clean.slice(4, 6), 16),
+  ];
+  // Dark pages lift, light pages sink. The step is small enough to read as the
+  // same surface and large enough to separate two adjacent sections.
+  const shift = surfaceL < 0.5 ? 16 : -12;
+  return `#${channels
+    .map((c) => Math.max(0, Math.min(255, c + shift)).toString(16).padStart(2, "0"))
+    .join("")}`.toUpperCase();
+}
+
 export function compileDesignTokens(
   input: DesignDna | null | undefined,
   options: { colourSource?: ColourSource; clientBrandHex?: string | null } = {}
@@ -269,7 +308,7 @@ export function compileDesignTokens(
   const type = TYPE_SCALE[dna.typography.scale];
 
   const surface = neutralise(p.surface);
-  const surfaceAlt = neutralise(p.surfaceAlt);
+  const surfaceAlt = siblingSurface(neutralise(p.surfaceAlt), p.surface);
   const onPrimary = readableOn(p.primary, p.onPrimary);
 
   const ink = ensureContrast(neutralise(p.ink), surface, 4.5);

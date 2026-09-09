@@ -18,6 +18,7 @@ import type { LayoutDna } from "@/lib/generate/v2/layout-dna";
 import type { SiteBrief } from "@/lib/generate-bespoke-site";
 import type { Entity } from "@/lib/extract-entities";
 import type { SectionId } from "@/lib/section-ids";
+import type { LayoutPlan } from "@/lib/generate/v2/layout-plan";
 
 /**
  * Which structural variant this lead gets for a given section.
@@ -62,6 +63,14 @@ export interface RenderContext {
    * to a section that is not on the page, and miss one that is.
    */
   pageSections: SectionId[];
+  /**
+   * Which layout each section uses.
+   *
+   * Was `variant(dna.seed, salt)` inline in every renderer — a hash of the
+   * lead's slug, so layout varied per lead but ignored the reference site and
+   * the operator's chosen direction entirely. See layout-plan.ts.
+   */
+  layout: LayoutPlan;
 }
 
 /**
@@ -170,7 +179,7 @@ export function heroSection(ctx: RenderContext): string {
           .join("")}</div>`
       : "";
 
-  return `<section id="hero" class="bs-section bs-hero bs-hero--${dna.hero.id} bs-hero--${variant(dna.seed, 1)} bs-hero--subject-${subject} bs-hero--decor-${t.decorMotif}${dna.resolutions.decorStripesFine ? " bs-hero--decor-fine" : ""}">
+  return `<section id="hero" class="bs-section bs-hero bs-hero--${ctx.layout.hero || dna.hero.id} bs-hero--${ctx.layout.heroVariant} bs-hero--subject-${subject} bs-hero--decor-${t.decorMotif}${dna.resolutions.decorStripesFine ? " bs-hero--decor-fine" : ""}">
   ${photo ? `<figure class="bs-hero__bg bs-media"><img src="${esc(photo)}" alt="${esc(brief.businessName)} ${esc(brief.industry.toLowerCase())} work in ${esc(brief.city)}" width="1920" height="1280" loading="eager" fetchpriority="high" decoding="async"></figure>` : ""}
   <div class="bs-container">
     <div class="bs-hero__grid">
@@ -358,7 +367,7 @@ export function aboutSection(ctx: RenderContext): string {
   // again: in a showcase post the two panels sit inches apart in one frame.
   const caps = t.headlineCase === "caps";
 
-  return `<section id="about" class="bs-section bs-about bs-about--${dna.about.id} bs-about--${variant(dna.seed, 2)} bs-about--surface-${t.aboutSurface}">
+  return `<section id="about" class="bs-section bs-about bs-about--${ctx.layout.about || dna.about.id} bs-about--${ctx.layout.aboutVariant} bs-about--surface-${t.aboutSurface}">
   <div class="bs-container">
     <div class="bs-about__grid">
       <div class="bs-about__figure">
@@ -410,7 +419,7 @@ export function servicesSection(ctx: RenderContext): string {
     })
     .join("");
 
-  return `<section id="services" class="bs-section bs-section--tint bs-services bs-services--${variant(ctx.dna.seed, 3)}">
+  return `<section id="services" class="bs-section bs-section--tint bs-services bs-services--${ctx.layout.services}">
   <div class="bs-container">
     <div class="bs-sectionhead">
       <div>
@@ -435,7 +444,7 @@ export function whyUsSection(ctx: RenderContext): string {
   const photo = ctx.photos[3] ?? ctx.photos[0] ?? null;
   const glyphs = ctx.brief.vertical.glyphs.why;
 
-  return `<section id="why-us" class="bs-section bs-whyus bs-whyus--${variant(ctx.dna.seed, 4)}">
+  return `<section id="why-us" class="bs-section bs-whyus bs-whyus--${ctx.layout.whyUs}">
   <div class="bs-whyus__media">
     ${photo ? `<figure class="bs-media"><img src="${esc(photo)}" alt="The ${esc(brief.businessName)} team at work" width="1200" height="1400" loading="lazy" decoding="async"></figure>` : ""}
     ${seal(copy.about.sealLine, logoUrl, brief.businessName)}
@@ -474,7 +483,7 @@ export function processSection(ctx: RenderContext): string {
   const process = copy.process;
   const glyphs = ["phone", "home", "wrench", "check"];
 
-  return `<section id="process" class="bs-section bs-process bs-process--${variant(ctx.dna.seed, 5)}">
+  return `<section id="process" class="bs-section bs-process bs-process--${ctx.layout.process}">
   <div class="bs-container">
     <div class="bs-center">
       <span class="bs-eyebrow">${esc(process.eyebrow)}</span>
@@ -533,7 +542,7 @@ export function gallerySection(ctx: RenderContext): string {
     })
     .join("");
 
-  return `<section id="gallery" class="bs-section bs-section--tint bs-gallery--${variant(ctx.dna.seed, 6)}">
+  return `<section id="gallery" class="bs-section bs-section--tint bs-gallery--${ctx.layout.gallery}">
   <div class="bs-container">
     <div class="bs-center">
       <span class="bs-eyebrow">${esc(copy.gallery.eyebrow)}</span>
@@ -631,7 +640,7 @@ export function areasSection(ctx: RenderContext): string {
     ? `${brief.geo.lat},${brief.geo.lng}`
     : [brief.city.trim() || brief.areas[0] || "", brief.regionHint].filter(Boolean).join(", ");
   const query = encodeURIComponent(place);
-  return `<section id="areas" class="bs-section bs-section--tint bs-areas--${variant(ctx.dna.seed, 7)}">
+  return `<section id="areas" class="bs-section bs-section--tint bs-areas--${ctx.layout.areas}">
   <div class="bs-container">
     <div class="bs-split bs-split--wide-right bs-areas">
       <div class="bs-stack">
@@ -854,6 +863,18 @@ export function contactSection(ctx: RenderContext): string {
 }
 
 /**
+ * How many columns a price table gets.
+ *
+ * `auto-fit` packed six tiers as five across and one orphaned underneath. A
+ * price table is read by comparing rows, so the count has to divide evenly:
+ * four goes to two-by-two, five and six to three across.
+ */
+function columnsFor(count: number): number {
+  if (count <= 3) return count;
+  return count === 4 ? 2 : 3;
+}
+
+/**
  * The ways to buy, priced.
  *
  * The first section built from verified entities rather than model copy, and
@@ -874,18 +895,17 @@ export function pricingSection(ctx: RenderContext): string {
 
   // Beyond six the table stops being scannable and starts being a spreadsheet.
   const shown = tiers.slice(0, 6);
-  // The middle option is what most people pick, so it is the one that carries
-  // the emphasis — but only when there is a genuine middle to point at.
-  const featured = shown.length >= 3 ? Math.floor((shown.length - 1) / 2) : -1;
 
   const cards = shown
-    .map((tier, index) => {
+    .map((tier) => {
+      // The extractor writes the same feature list into `detail` (joined with
+      // semicolons) and into `attributes`, so rendering both printed every
+      // tier's contents twice — once as a paragraph, once as ticks.
       const attributes = tier.attributes.slice(0, 6);
-      return `<article class="bs-tier${index === featured ? " bs-tier--featured" : ""}">
-      ${index === featured ? `<span class="bs-tier__flag">Most popular</span>` : ""}
+      return `<article class="bs-tier">
       <h3 class="bs-tier__name">${esc(tier.label)}</h3>
       ${tier.price ? `<p class="bs-tier__price">${esc(tier.price)}${tier.period ? `<span class="bs-tier__period">/${esc(tier.period)}</span>` : ""}</p>` : ""}
-      ${tier.detail ? `<p class="bs-tier__detail">${esc(tier.detail)}</p>` : ""}
+      ${tier.detail && attributes.length === 0 ? `<p class="bs-tier__detail">${esc(tier.detail)}</p>` : ""}
       ${
         attributes.length
           ? `<ul class="bs-tier__list">${attributes
@@ -909,7 +929,7 @@ export function pricingSection(ctx: RenderContext): string {
         ${copy.pricing.intro ? `<p class="bs-lede">${esc(copy.pricing.intro)}</p>` : ""}
       </div>
     </div>
-    <div class="bs-tiers bs-tiers--${Math.min(shown.length, 4)}">${cards}</div>
+    <div class="bs-tiers bs-tiers--${columnsFor(shown.length)}">${cards}</div>
     ${copy.pricing.footnote ? `<p class="bs-pricing__note">${esc(copy.pricing.footnote)}</p>` : ""}
   </div>
 </section>`;

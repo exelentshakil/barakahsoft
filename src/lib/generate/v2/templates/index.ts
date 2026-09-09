@@ -1,5 +1,6 @@
 import type { SectionId } from "@/lib/section-ids";
 import { composePage } from "@/lib/generate/v2/compose";
+import { layoutPlanFor } from "@/lib/generate/v2/layout-plan";
 import { compileDesignTokens } from "@/lib/design-tokens";
 import { DEFAULT_DESIGN_DNA } from "@/lib/design-dna";
 import type { Entity } from "@/lib/extract-entities";
@@ -165,6 +166,9 @@ export async function buildPage(args: {
   );
 
 
+  const layout = layoutPlanFor(design, dna.seed, dna.about.id);
+  console.log(`[build-page] layout from ${layout.source}`);
+
   const copy = await generatePageCopy(brief, TONES[dna.seed % TONES.length], composition.sections);
 
   // Before phase 2 the inner routes genuinely do not exist, so linking at them
@@ -230,6 +234,7 @@ export async function buildPage(args: {
     primaryHref: href("/contact"),
     entities,
     pageSections: composition.sections.map((section) => section.id),
+    layout,
   };
 
   // The unified render engine: one renderer per section, and the reference
@@ -361,6 +366,6 @@ export async function buildPage(args: {
     dna,
     tokens,
     fontHref: fontHrefFor(type.display, type.body),
-    rationale: `${dna.hero.name} hero, ${dna.about.name} about, ${dna.chrome.name} chrome. ${palette.scheme} palette, ${type.display} over ${type.body}. ${built.length} sections, markup owned by the application, copy written for this business.`,
+    rationale: `${layout.hero || dna.hero.id} hero, ${layout.about || dna.about.id} about, ${dna.chrome.name} chrome. Layout from ${layout.source}. ${palette.scheme} palette, ${type.display} over ${type.body}. ${built.length} sections from the ${composition.source}, markup owned by the application, copy written for this business.`,
   };
 }

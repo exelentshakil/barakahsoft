@@ -1349,10 +1349,11 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-tiers--1{grid-template-columns:minmax(0,420px);justify-content:center}
 .bespoke-page .bs-tiers--2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .bespoke-page .bs-tiers--3{grid-template-columns:repeat(3,minmax(0,1fr))}
-.bespoke-page .bs-tiers--4{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+/* Every card the same weight. A "most popular" badge is a claim about the
+   client's business that nothing in their scrape supports. */
+
 .bespoke-page .bs-tier{position:relative;display:flex;flex-direction:column;gap:10px;padding:clamp(22px,2.4vw,32px);background:var(--bs-surface,#fff);color:var(--bs-ink);border:1px solid var(--bs-line);border-radius:var(--bs-r-lg,20px);transition:transform .2s ease,box-shadow .2s ease}
 .bespoke-page .bs-tier:hover{transform:translateY(-3px);box-shadow:var(--bs-shadow)}
-.bespoke-page .bs-tier__flag{position:absolute;top:-12px;left:clamp(22px,2.4vw,32px);background:var(--bs-primary-strong,#b65e16);color:var(--bs-on-primary,#fff);font-family:var(--bs-font-display,inherit);font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:999px}
 .bespoke-page .bs-tier__name{font-family:var(--bs-font-display,inherit);font-size:clamp(1.05rem,1.5vw,1.3rem);font-weight:var(--bs-display-weight,700);color:inherit;margin:0}
 .bespoke-page .bs-tier__price{font-family:var(--bs-font-display,inherit);font-size:clamp(1.9rem,3.4vw,2.6rem);font-weight:var(--bs-display-weight,800);line-height:1;color:inherit;margin:2px 0 0}
 .bespoke-page .bs-tier__period{font-family:var(--bs-font-body,inherit);font-size:.9rem;font-weight:500;opacity:.72;margin-left:2px}
@@ -1363,14 +1364,6 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-tier__cta{margin-top:auto;padding-top:16px;display:inline-flex;justify-content:center;align-items:center;min-height:46px;border-radius:var(--bs-r,12px);background:var(--bs-primary-strong,#b65e16);color:var(--bs-on-primary,#fff);font-family:var(--bs-font-display,inherit);font-weight:700;text-decoration:none;padding:13px 20px;margin-top:18px;transition:filter .2s ease}
 .bespoke-page .bs-tier__cta:hover{filter:brightness(1.08)}
 
-/* The featured card flips to the brand fill. Its children inherit that
-   colour rather than re-declaring one, so there is no pair to get wrong. */
-.bespoke-page .bs-tier--featured{background:var(--bs-primary-strong,#b65e16);color:var(--bs-on-primary,#fff);border-color:var(--bs-primary-strong,#b65e16);box-shadow:var(--bs-shadow)}
-.bespoke-page .bs-tier--featured .bs-tier__detail,
-.bespoke-page .bs-tier--featured .bs-tier__list li{color:inherit;opacity:.9}
-.bespoke-page .bs-tier--featured .bs-tier__list li .bs-icon{color:inherit}
-.bespoke-page .bs-tier--featured .bs-tier__flag{background:var(--bs-on-primary,#fff);color:var(--bs-primary-strong,#b65e16)}
-.bespoke-page .bs-tier--featured .bs-tier__cta{background:var(--bs-on-primary,#fff);color:var(--bs-primary-strong,#b65e16)}
 .bespoke-page .bs-pricing__note{margin-top:20px;font-size:.88rem;color:var(--bs-ink-muted,#555);text-align:center}
 
 /* ---------- people -------------------------------------------------------- */
@@ -1388,7 +1381,6 @@ export const BASE_STYLESHEET = `
 }
 @media (max-width:620px){
   .bespoke-page .bs-tiers{grid-template-columns:minmax(0,1fr)}
-  .bespoke-page .bs-tier--featured{order:-1}
 }
 
 `;

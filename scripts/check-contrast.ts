@@ -76,6 +76,33 @@ const MID_GREY_GROUND: { label: string; dna: DesignDna }[] = [
     },
   },
   {
+    // T-FIT's real palette. A dark page whose surfaceAlt came back LIGHT from
+    // the reference's measured secondary colour — the two on opposite sides of
+    // the divide, which none of the palettes above covered, so every tinted
+    // section rendered as a light slab carrying white text at 2.3:1.
+    label: "dark page, light surface-alt",
+    dna: {
+      ...DEFAULT_DESIGN_DNA,
+      palette: {
+        primary: "#C41230", accent: "#FF002B",
+        surface: "#1A1A1A", surfaceAlt: "#9CA3AF",
+        ink: "#FFFFFF", inkMuted: "#CCCCCC", onPrimary: "#FFFFFF",
+      },
+    },
+  },
+  {
+    // And the reverse: a light page handed a dark surfaceAlt.
+    label: "light page, dark surface-alt",
+    dna: {
+      ...DEFAULT_DESIGN_DNA,
+      palette: {
+        primary: "#0B5FFF", accent: "#00C2A8",
+        surface: "#FFFFFF", surfaceAlt: "#1E1E24",
+        ink: "#101014", inkMuted: "#55555F", onPrimary: "#FFFFFF",
+      },
+    },
+  },
+  {
     label: "mid-grey everything",
     dna: {
       ...DEFAULT_DESIGN_DNA,
