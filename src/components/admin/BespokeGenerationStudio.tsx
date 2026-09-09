@@ -234,6 +234,15 @@ export function BespokeGenerationStudio({
   }
 
   
+  // When this operator last asked for a build, and whether that request is
+  // still in flight.
+  //
+  // The poll below cannot otherwise tell "Inngest has not created the job row
+  // yet" from "no build is running", and those need opposite handling: the
+  // first must keep the button disabled, the second must release it.
+  const requestedAt = useRef<number | null>(null);
+  const submitting = useRef(false);
+
   const notAnalysed = !scrapeResults;
   const isScraping = lead.status === "scraping";
 
@@ -285,7 +294,27 @@ export function BespokeGenerationStudio({
               : null
         );
         if (job) setProgress({ done: job.pages_done ?? 0, total: Math.max(job.pages_total ?? 1, 1) });
-        if (!running) setGenerating(false);
+
+        if (!running) {
+          // A build takes a few seconds to appear here: the POST returns as
+          // soon as the event is queued, and the build_jobs row is written by
+          // a later Inngest step. This poll fires the instant `generating`
+          // flips, so it used to find nothing, conclude no build was running
+          // and re-enable the button within a tick of the click — which is why
+          // a second click was easy, and a second click is a second full build
+          // at full model cost.
+          //
+          // So an in-flight request only stands down once the server has
+          // actually reported on it, or once it has had long enough that
+          // silence means the request never landed.
+          const asked = requestedAt.current;
+          const reported =
+            job?.updated_at != null && asked != null && new Date(job.updated_at).getTime() >= asked - 2000;
+          if (asked == null || reported || Date.now() - asked > 90_000) {
+            requestedAt.current = null;
+            setGenerating(false);
+          }
+        }
       } catch (err) {
         if (!cancelled) setJobError(err instanceof Error ? `Build status unavailable: ${err.message}` : "Build status unavailable.");
       }
@@ -305,7 +334,12 @@ export function BespokeGenerationStudio({
 
   async function handleGenerate(e: React.FormEvent) {
     e.preventDefault();
-    if (busy) return;
+    // Checked against a ref as well as state. Two clicks inside one render
+    // pass both see the old `busy`, and the cost of letting the second one
+    // through is an entire duplicate build.
+    if (busy || submitting.current) return;
+    submitting.current = true;
+    requestedAt.current = Date.now();
     setGenerating(true);
     setGenError(null);
     setGenWarnings([]);
@@ -341,7 +375,12 @@ export function BespokeGenerationStudio({
       
     } catch (err) {
       setGenError(err instanceof Error ? err.message : "Generation failed");
+      requestedAt.current = null;
       setGenerating(false);
+    } finally {
+      // Only the in-flight guard. `generating` stays true until the poll sees
+      // the job, because the build is still starting.
+      submitting.current = false;
     }
   }
 
@@ -908,15 +947,21 @@ export function BespokeGenerationStudio({
         <Button
           type="button"
           variant="outline"
+          disabled={busy}
+          aria-busy={busy}
           onClick={async () => {
             if (!artifact?.bespoke_homepage_html) {
               alert("Homepage must be generated first before building inner pages.");
               return;
             }
-            if (generating) return;
+            // Same guards as the homepage build, and the stakes are higher:
+            // phase 2 writes eighteen pages, so a duplicate is eighteen more.
+            if (busy || submitting.current) return;
+            submitting.current = true;
+            requestedAt.current = Date.now();
             setGenerating(true);
             setGenError(null);
-            
+
             try {
               const res = await fetch(`/api/leads/${lead.id}/generate`, {
                 method: "POST",
@@ -925,15 +970,17 @@ export function BespokeGenerationStudio({
               });
               const data = await res.json();
               if (!res.ok) throw new Error(data.error || "Failed to start generation");
-              
             } catch (err) {
               setGenError(err instanceof Error ? err.message : "Failed to start inner page generation");
+              requestedAt.current = null;
               setGenerating(false);
+            } finally {
+              submitting.current = false;
             }
           }}
-          className="rounded-xl border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50"
+          className="rounded-xl border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {generating ? (
+          {busy ? (
             <>
               <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
               Generating...
