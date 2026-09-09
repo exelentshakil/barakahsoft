@@ -53,6 +53,9 @@ export const smilecreative: Tenant = {
     legalEntity: "Smile Creative",
     jurisdiction: "Northern Ireland, United Kingdom",
     logoUrl: "https://redesign.smilecreative.agency/tenants/smile/logo.png",
+    // Square mark for the browser tab and social cards. Change this one line to
+    // swap it — nothing else references the favicon.
+    iconUrl: "https://smilecreative.agency/wp-content/uploads/2025/04/cropped-Profile-270x270.png",
     // Smile's pink, so a glance at either dashboard says which one it is.
     primaryHsl: "340 82% 52%",
     phoneDisplay: "+44 (28) 9099 7004",

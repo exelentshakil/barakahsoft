@@ -22,7 +22,8 @@ export const jonas: Tenant = {
     name: "Jonas",
     legalEntity: "Jonas", // TODO
     jurisdiction: "TODO",
-    logoUrl: "", // TODO
+    logoUrl: "", // TODO: wordmark, for the nav and footer
+    iconUrl: "", // TODO: square mark, for the browser tab and social cards
     primaryHsl: "222 84% 55%",
     phoneDisplay: "", // TODO
     phoneE164: "", // TODO

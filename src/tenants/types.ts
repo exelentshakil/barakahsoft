@@ -49,7 +49,17 @@ export interface TenantBrand {
   legalEntity: string;
   /** Where that entity is registered, for the legal pages. */
   jurisdiction: string;
+  /** Wordmark, shown in the nav, the footer and the proposal header. */
   logoUrl: string;
+  /**
+   * Square mark for the browser tab, the app icon and social cards.
+   *
+   * Distinct from logoUrl because a wordmark is unreadable at 32px and wrong as
+   * an OG thumbnail. Omitted falls back to the app's own /icon.png, which is
+   * only ever right for the platform — a partner without this has BarakahSoft's
+   * favicon in their prospect's tab, which is small and completely wrong.
+   */
+  iconUrl?: string;
   /** Brand hue as "H S% L%", fed through the same channel split as a client site. */
   primaryHsl: string;
   phoneDisplay: string;

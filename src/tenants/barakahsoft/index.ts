@@ -26,6 +26,8 @@ export const barakahsoft: Tenant = {
     legalEntity: "BarakahSoft LLC",
     jurisdiction: "Wyoming, USA",
     logoUrl: "https://barakahsoft.com/wp-content/uploads/2026/01/Logo1.png",
+    // Served from public/, so it stays fast and needs no remote host allowance.
+    iconUrl: "/icon.png",
     // The indigo the app theme is built around. The landing CTA was a
     // separate hardcoded yellow; the nav now follows this, which is the
     // colour the rest of the platform UI already uses.

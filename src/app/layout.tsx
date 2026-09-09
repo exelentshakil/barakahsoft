@@ -9,7 +9,8 @@ import { brandChannels, brandStyle } from "@/lib/brand-style";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" });
 
-const LOGO_URL = "/icon.png";
+/** The platform's own mark, and the fallback for a tenant that has not set one. */
+const DEFAULT_ICON = "/icon.png";
 const DESCRIPTION =
   "Get a free, human-reviewed homepage redesign and local search audit built from your real business, branding and services. No card and no obligation.";
 
@@ -22,22 +23,23 @@ const DESCRIPTION =
  */
 export async function generateMetadata(): Promise<Metadata> {
   const { brand, siteBaseUrl } = await getTenant();
+  const icon = brand.iconUrl ?? DEFAULT_ICON;
   const title = `Free Homepage Redesign & Local Search Audit | ${brand.name}`;
 
   return {
     metadataBase: new URL(siteBaseUrl),
     title,
     description: DESCRIPTION,
-    icons: { icon: LOGO_URL, shortcut: LOGO_URL, apple: LOGO_URL },
+    icons: { icon, shortcut: icon, apple: icon },
     openGraph: {
       title,
       description: DESCRIPTION,
       url: siteBaseUrl,
       siteName: brand.name,
-      images: [{ url: LOGO_URL }],
+      images: [{ url: icon }],
       type: "website",
     },
-    twitter: { card: "summary_large_image", title, description: DESCRIPTION, images: [LOGO_URL] },
+    twitter: { card: "summary_large_image", title, description: DESCRIPTION, images: [icon] },
   };
 }
 
