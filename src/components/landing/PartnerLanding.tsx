@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Check, Clock, Mail, Monitor, PenLine, Smartphone } from "lucide-react";
+import { Check, Clock, Link2, Mail, Monitor, PenLine, Search, Smartphone } from "lucide-react";
 import { Footer } from "@/components/landing/Footer";
 import { Nav } from "@/components/landing/Nav";
 import { RedesignIntakeFlow } from "@/components/landing/RedesignIntakeFlow";
@@ -66,13 +66,88 @@ function PhoneFrame({ src, alt }: { src: string; alt: string }) {
 /** One icon per step, so the sequence reads at a glance rather than as four paragraphs. */
 const STEP_ICONS = [PenLine, Monitor, Mail, Check];
 
+/**
+ * The distance from typing an address to having the work in hand.
+ *
+ * Deliberately four short stages rather than the fuller process section below:
+ * this one exists to answer "what am I signing up for" in the two seconds
+ * before someone decides whether to type anything at all.
+ */
+const JOURNEY = [
+  { icon: Link2, label: "Your address", detail: "One field. Nothing else asked." },
+  { icon: Search, label: "We study it", detail: "Your site, your market, your competitors." },
+  { icon: PenLine, label: "We design it", detail: "Desktop and mobile, copy written." },
+  { icon: Mail, label: "In your inbox", detail: "Within 48 hours. Yours to keep." },
+] as const;
+
+/**
+ * Scoped to this component rather than globals.css: it is the only place these
+ * run, and keeping them here means deleting the section deletes its animation
+ * too. Under prefers-reduced-motion every element resolves to its final state
+ * with no movement at all.
+ */
+const JOURNEY_STYLES = `
+.pl-journey { --pl-step: 420ms; }
+.pl-rail-track,
+.pl-rail-fill {
+  position: absolute;
+  left: 12.5%;
+  right: 12.5%;
+  top: 21px;
+  height: 2px;
+  display: none;
+}
+@media (min-width: 640px) {
+  .pl-rail-track, .pl-rail-fill { display: block; }
+}
+.pl-rail-track { background: rgba(255, 255, 255, 0.12); }
+.pl-rail-fill { transform-origin: left center; }
+
+/*
+  Motion is opt-IN, not opt-out.
+
+  The obvious way to write this is a keyframe from opacity 0 with
+  animation-fill-mode: both — but then anything that does not run the animation
+  leaves the content permanently invisible, and "does not run" covers more than
+  it sounds: a crawler, print, a browser with animations disabled, a paint that
+  never happens because the tab was backgrounded on load. The hero would simply
+  be empty, with nothing in the markup to explain why.
+
+  So the resting state is the finished state, and the animation only exists
+  where motion is welcome. Reduced-motion users get the static page for free
+  rather than through a second override that has to be remembered.
+
+  For the same reason these keyframes move but never fade: an entrance built on
+  opacity leaves text unreadable for as long as the animation is stalled, and a
+  stalled animation is not hypothetical — a tab opened in the background holds
+  its from-state until it is looked at. Animating transform alone means the
+  worst case is four labels sitting twelve pixels low, which nobody notices.
+*/
+@media (prefers-reduced-motion: no-preference) {
+  .pl-rail-fill {
+    animation: pl-rail 1.9s cubic-bezier(0.22, 1, 0.36, 1) 200ms both;
+  }
+  .pl-stage {
+    animation: pl-pop 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(200ms + var(--i) * var(--pl-step));
+  }
+}
+@keyframes pl-rail { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes pl-pop { from { transform: translateY(12px) scale(0.96); } to { transform: none; } }
+`;
+
 export function PartnerLanding({ tenant }: { tenant: Tenant }) {
   const { brand, landing } = tenant;
   const mobileExamples = landing.examples.filter((example) => example.mobileUrl).slice(0, 4);
   const [lead, ...rest] = landing.examples;
+  // Trimmed to an even count so the grid never ends on a lone card with a hole
+  // beside it. Doing it here rather than hardcoding four means a tenant who
+  // lists three examples or nine still gets full rows.
+  const grid = rest.slice(0, rest.length - (rest.length % 2));
 
   return (
     <main className="min-h-screen bg-white text-[#101832]">
+      <style dangerouslySetInnerHTML={{ __html: JOURNEY_STYLES }} />
       <Nav />
 
       <section className="relative overflow-hidden bg-[#101832] text-white">
@@ -109,15 +184,55 @@ export function PartnerLanding({ tenant }: { tenant: Tenant }) {
             </p>
           </div>
 
-          {/* Proof inside the hero, not three scrolls down: the one thing a
-              visitor wants before typing their address is evidence. */}
+          {/*
+            The one orchestrated moment on the page.
+
+            A visitor's hesitation here is not "is this good" — the screenshot
+            below answers that — it is "what am I signing up for". So the four
+            stages play out once on load, left to right, and end by revealing a
+            finished site. Showing the whole distance from typing an address to
+            having the work in hand is what removes the friction; a list of
+            bullet points describing the same four stages does not.
+
+            One sequence, once, on load. Nothing else on the page moves, and
+            everything resolves to its final state instantly under
+            prefers-reduced-motion.
+          */}
+          <div className="mx-auto mt-16 max-w-3xl">
+            <ol className="pl-journey relative grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-4">
+              <span aria-hidden="true" className="pl-rail-track" />
+              <span aria-hidden="true" className="pl-rail-fill" style={{ background: "hsl(var(--primary))" }} />
+              {JOURNEY.map((stage, index) => {
+                const Icon = stage.icon;
+                return (
+                  <li key={stage.label} className="pl-stage relative text-center" style={{ ["--i" as string]: index }}>
+                    <span className="pl-dot mx-auto flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-[#101832]">
+                      <Icon className="h-4 w-4" style={{ color: "hsl(var(--primary))" }} />
+                    </span>
+                    <p className="mt-3 text-sm font-semibold">{stage.label}</p>
+                    <p className="mt-1 text-xs leading-5 text-white/45">{stage.detail}</p>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+
+          {/*
+            Present immediately, deliberately not animated in.
+
+            Holding the largest image in the hero behind a two-and-a-half second
+            reveal is a measurable LCP cost on the one page whose entire job is
+            conversion, and it buys a flourish nobody asked for. The journey
+            above is the animated moment; the proof does not need to be withheld
+            to make that land.
+          */}
           {lead && (
-            <div className="mx-auto mt-14 max-w-3xl">
-              <BrowserFrame src={lead.desktopUrl} alt={`${lead.name} homepage`} />
-              <p className="mt-3 text-center text-xs text-white/45">
-                {lead.name} — {lead.category}
-              </p>
-            </div>
+            <figure className="mx-auto mt-12 max-w-3xl">
+              <BrowserFrame src={lead.desktopUrl} alt={`${lead.name} homepage, designed by ${brand.name}`} />
+              <figcaption className="mt-3 text-center text-xs text-white/45">
+                {lead.name} — {lead.category}. Live today.
+              </figcaption>
+            </figure>
           )}
 
           {landing.trustLine && (
@@ -128,7 +243,7 @@ export function PartnerLanding({ tenant }: { tenant: Tenant }) {
         </div>
       </section>
 
-      {rest.length > 0 && (
+      {grid.length > 0 && (
         <section id="examples" className="border-b border-black/5 py-20 sm:py-24">
           <div className="mx-auto max-w-6xl px-6">
             <div className="max-w-xl">
@@ -141,8 +256,8 @@ export function PartnerLanding({ tenant }: { tenant: Tenant }) {
               </p>
             </div>
 
-            <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {rest.map((example) => (
+            <div className="mt-12 grid gap-8 sm:grid-cols-2">
+              {grid.map((example) => (
                 <figure key={example.name}>
                   <BrowserFrame src={example.desktopUrl} alt={`${example.name} homepage`} />
                   <figcaption className="mt-4">
