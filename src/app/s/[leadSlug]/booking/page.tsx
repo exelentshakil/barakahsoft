@@ -1,4 +1,10 @@
-export const runtime = "edge";
+// Node (Fluid Compute), not edge.
+//
+// This route hit the 1 MB edge bundle ceiling and the DEPLOY failed — the
+// build itself was fine, which is why the error was not in the build log.
+// Edge is the wrong trade here anyway: Fluid Compute runs in the same regions
+// at the same price, reuses instances so cold starts are comparable, and has
+// no 1 MB wall to trip over as the tenant and vertical registries grow.
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getSiteData } from "@/lib/get-site-data";

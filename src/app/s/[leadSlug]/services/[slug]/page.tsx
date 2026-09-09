@@ -1,6 +1,12 @@
+// Node (Fluid Compute), not edge.
+//
+// This route hit the 1 MB edge bundle ceiling and the DEPLOY failed — the
+// build itself was fine, which is why the error was not in the build log.
+// Edge is the wrong trade here anyway: Fluid Compute runs in the same regions
+// at the same price, reuses instances so cold starts are comparable, and has
+// no 1 MB wall to trip over as the tenant and vertical registries grow.
 import { sitePresentation } from "@/lib/tenant";
-import { profileForLead } from "@/lib/verticals/resolve";
-export const runtime = "edge";
+import { frozenSchema } from "@/lib/verticals/frozen";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getSiteData } from "@/lib/get-site-data";
@@ -42,14 +48,14 @@ export default async function ServicePage({ params, searchParams }: { params: Pr
   if (!service) notFound();
 
   const breadcrumb = breadcrumbSchema(leadSlug, payload.businessName, [{ name: service.h2, path: `/services/${slug}` }]);
-  const profile = profileForLead(result.lead, result.artifact);
+  const schema = frozenSchema(result.artifact);
   const service_schema = serviceSchema({
     serviceName: service.h2,
     businessName: payload.businessName,
     phone: payload.nap.phone,
     address: payload.nap.address,
-    offeringType: profile.schema.offeringSchemaType,
-    providerType: profile.schema.localBusinessType,
+    offeringType: schema.offeringSchemaType,
+    providerType: schema.localBusinessType,
   });
 
   return (
