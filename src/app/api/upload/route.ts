@@ -1,5 +1,5 @@
+import { requireOperator } from "@/lib/tenant-scope";
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Single upload endpoint for anything an operator manually attaches to a
@@ -10,9 +10,11 @@ const MAX_BYTES = 8 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif", "image/svg+xml"];
 
 export async function POST(req: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  // Being signed in is not being an operator: any Supabase user can
+  // complete a magic link. This route then uses the service-role client.
+  if (!(await requireOperator())) {
+    return NextResponse.json({ error: "Operator access required" }, { status: 403 });
+  }
 
   const formData = await req.formData().catch(() => null);
   const file = formData?.get("file");

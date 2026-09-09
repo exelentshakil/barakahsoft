@@ -24,6 +24,8 @@ export interface Account {
   id: string;
   email: string;
   role: string;
+  /** Which brand this operator works for. Scopes everything they can see. */
+  tenant_slug: string;
   created_at: string;
 }
 
@@ -53,6 +55,8 @@ export interface Lead {
   // v4 Phase R2 — self-identified at intake, distinct from the AI/keyword-
   // inferred `industry` above. See src/lib/personas.ts for the slug set.
   persona: string | null;
+  /** Which brand sold this lead. See src/tenants/. */
+  tenant_slug: string;
   /** Which vertical profile this lead resolved to. Operator-overridable. */
   vertical_slug: string | null;
   /** One of the nine macro-ICPs, for coverage reporting. */

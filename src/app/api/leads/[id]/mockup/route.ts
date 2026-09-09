@@ -1,15 +1,16 @@
+import { assertLeadInTenant } from "@/lib/tenant-scope";
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: leadId } = await params;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  // Authenticates and proves the lead belongs to this operator's brand in
+  // one call. 404 rather than 403: a 403 confirms the lead exists.
+  const ctx = await assertLeadInTenant(leadId);
+  if (!ctx) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   const isUpload = req.headers.get("content-type")?.includes("multipart/form-data");
   const body = isUpload ? null : await req.json().catch(() => null);
@@ -66,7 +67,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       ...(body && typeof body.aboutOffsetY === "number" ? { aboutOffsetY: Math.max(-1600, Math.min(300, body.aboutOffsetY)) } : {}),
       ...(uploadedCapture ? { [uploadedCapture.key]: uploadedCapture.url } : {}),
       updated_at: new Date().toISOString(),
-      updated_by: user.email,
+      updated_by: ctx.email,
     };
 
     const updatedExtractedAssets = {

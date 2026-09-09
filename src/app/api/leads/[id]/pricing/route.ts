@@ -1,15 +1,16 @@
+import { assertLeadInTenant } from "@/lib/tenant-scope";
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: leadId } = await params;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  // Authenticates and proves the lead belongs to this operator's brand in
+  // one call. 404 rather than 403: a 403 confirms the lead exists.
+  const ctx = await assertLeadInTenant(leadId);
+  if (!ctx) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid pricing body" }, { status: 400 });
@@ -39,7 +40,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       ...(Array.isArray(body.offerOptions) ? { offerOptions: body.offerOptions.slice(0, 4) } : {}),
       ...(typeof body.offerId === "string" ? { offerId: body.offerId } : {}),
       updated_at: new Date().toISOString(),
-      updated_by: user.email,
+      updated_by: ctx.email,
     };
 
     const updatedExtractedAssets = {

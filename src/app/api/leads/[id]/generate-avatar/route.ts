@@ -1,5 +1,5 @@
+import { assertLeadInTenant } from "@/lib/tenant-scope";
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 
@@ -7,9 +7,11 @@ export const maxDuration = 120;
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: leadId } = await params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  // Authenticates and proves the lead belongs to this operator's brand in
+  // one call. 404 rather than 403: a 403 confirms the lead exists.
+  if (!(await assertLeadInTenant(leadId))) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return NextResponse.json({ error: "GEMINI_API_KEY is not configured" }, { status: 500 });

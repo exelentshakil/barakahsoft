@@ -1,7 +1,7 @@
+import { operatorAccountId } from "@/lib/is-admin-session";
+import { assertLeadInTenant } from "@/lib/tenant-scope";
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getOrCreateAccount } from "@/lib/get-or-create-account";
 import { editSectionWithPrompt } from "@/lib/edit-section";
 import type { Facts } from "@/lib/ai";
 import type { FunnelPageSection } from "@/types/database";
@@ -25,9 +25,11 @@ import type { FunnelPageSection } from "@/types/database";
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: leadId } = await params;
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  // Authenticates and proves the lead belongs to this operator's brand in
+  // one call. 404 rather than 403: a 403 confirms the lead exists.
+  if (!(await assertLeadInTenant(leadId))) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   const body = await req.json().catch(() => null);
   if (typeof body?.slug !== "string") return NextResponse.json({ error: "slug is required" }, { status: 400 });
@@ -64,7 +66,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const nextSections = [...sections];
   nextSections[index] = updated;
 
-  const accountId = await getOrCreateAccount(user.id, user.email ?? "");
+  // Attribution resolves through accounts, never the auth user id — the
+  // last_edited_by foreign key points at accounts and rejects the other.
+  const accountId = await operatorAccountId();
 
   const { error } = await admin
     .from("artifacts")

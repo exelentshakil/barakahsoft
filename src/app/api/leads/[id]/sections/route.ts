@@ -1,5 +1,5 @@
+import { assertLeadInTenant } from "@/lib/tenant-scope";
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { operatorAccountId } from "@/lib/is-admin-session";
 import { getSiteData } from "@/lib/get-site-data";
 import { loadSections, saveSections } from "@/lib/section-surgery";
@@ -7,9 +7,11 @@ import { sanitizeBespokeHtml } from "@/lib/sanitize-generated-html";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  // Authenticates and proves the lead belongs to this operator's brand in
+  // one call. 404 rather than 403: a 403 confirms the lead exists.
+  if (!(await assertLeadInTenant(id))) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   try {
     const { sections, css } = await loadSections(id);
@@ -21,9 +23,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  // Authenticates and proves the lead belongs to this operator's brand in
+  // one call. 404 rather than 403: a 403 confirms the lead exists.
+  if (!(await assertLeadInTenant(id))) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   try {
     const body = await req.json();
@@ -50,9 +54,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  // Authenticates and proves the lead belongs to this operator's brand in
+  // one call. 404 rather than 403: a 403 confirms the lead exists.
+  if (!(await assertLeadInTenant(id))) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   try {
     const body = await req.json();

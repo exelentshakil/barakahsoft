@@ -1,6 +1,8 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
+import { DEFAULT_TENANT, isAppHost, resolveTenantByHost } from "@/tenants";
+import { TENANT_HEADER } from "@/lib/tenant";
 
 // v4 Phase P1 — custom-domain routing for a lead's own live site, keyed by
 // leads.custom_domain, mirroring the rewrite pattern quotehaul used for
@@ -8,22 +10,13 @@ import { NextResponse, type NextRequest } from "next/server";
 // to ever accrue organic Google/Search Console value: a shared
 // /s/[leadSlug] path under BarakahSoft's own domain structurally can't rank
 // as "the client's business."
-function appHostnames(): string[] {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  const hosts = ["localhost:3000", "localhost"];
-  if (siteUrl) {
-    try {
-      hosts.push(new URL(siteUrl).hostname);
-    } catch {
-      // malformed env var — fall through with just the localhost defaults
-    }
-  }
-  return hosts;
-}
-
 async function rewriteForCustomDomain(request: NextRequest): Promise<NextResponse | null> {
   const host = request.headers.get("host")?.split(":")[0] ?? "";
-  if (!host || appHostnames().includes(host)) return null;
+  // An app host belongs to one of our own brands; only a client's own domain
+  // gets rewritten. isAppHost knows every tenant's hosts, where this used to
+  // know one NEXT_PUBLIC_SITE_URL and therefore treated a partner's domain as
+  // a client site.
+  if (!host || isAppHost(host)) return null;
   if (request.nextUrl.pathname.startsWith("/s/")) return null; // already routed
 
   // Skip the anon/cookie-bound client entirely — a visitor on a client's
@@ -32,12 +25,21 @@ async function rewriteForCustomDomain(request: NextRequest): Promise<NextRespons
   const admin = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
     auth: { persistSession: false },
   });
-  const { data: lead } = await admin.from("leads").select("slug, status").eq("custom_domain", host).maybeSingle();
+  const { data: lead } = await admin
+    .from("leads")
+    .select("slug, status, tenant_slug")
+    .eq("custom_domain", host)
+    .maybeSingle<{ slug: string; status: string; tenant_slug: string | null }>();
   if (!lead || lead.status !== "live") return null;
 
   const url = request.nextUrl.clone();
   url.pathname = `/s/${lead.slug}${request.nextUrl.pathname}`;
-  return NextResponse.rewrite(url);
+  // The brand comes from the LEAD, not the host: a client's own domain belongs
+  // to whoever sold it. Without this the delivered site's portal links, footer
+  // and "powered by" would carry the default brand rather than the seller's.
+  const headers = new Headers(request.headers);
+  headers.set(TENANT_HEADER, lead.tenant_slug ?? DEFAULT_TENANT.slug);
+  return NextResponse.rewrite(url, { request: { headers } });
 }
 
 export async function middleware(request: NextRequest) {
@@ -50,7 +52,12 @@ export async function middleware(request: NextRequest) {
   const customDomainRewrite = await rewriteForCustomDomain(request);
   if (customDomainRewrite) return customDomainRewrite;
 
-  let response = NextResponse.next({ request });
+  // Which brand is this? A static map lookup, no database, no cache to warm.
+  const tenant = resolveTenantByHost(request.headers.get("host"));
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(TENANT_HEADER, tenant.slug);
+
+  let response = NextResponse.next({ request: { headers: requestHeaders } });
 
   // Everything below authenticates, and `/admin` is the only authenticated
   // surface the matcher covers. Calling auth.getUser() unconditionally cost a
@@ -74,7 +81,7 @@ export async function middleware(request: NextRequest) {
         },
         setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request });
+          response = NextResponse.next({ request: { headers: requestHeaders } });
           cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
         },
       },
@@ -94,8 +101,9 @@ export async function middleware(request: NextRequest) {
   // operators directly in Supabase (insert/delete a row by email).
   const { data: account } = await supabase
     .from("accounts")
-    .select("email")
+    .select("email, tenant_slug")
     .eq("email", user.email)
+    .eq("tenant_slug", tenant.slug)
     .maybeSingle();
 
   if (!account) {
@@ -109,7 +117,9 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Excludes /s (public generated lead sites) and /api in addition to the
-  // usual Next.js internals — those routes are never auth-gated.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api|s/).*)"],
+  // /api and /s are included so a route handler and a delivered client site
+  // both know which brand they are serving. They are not auth-gated by this —
+  // the session check below runs only for /admin — so the cost on those paths
+  // is one in-memory host lookup.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

@@ -1,3 +1,4 @@
+import { requireOperator } from "@/lib/tenant-scope";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -11,10 +12,15 @@ import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 // that stays true regardless of what the page happens to import.
 export const dynamic = "force-dynamic";
 export default async function AdminLeadsPage() {
+  // Scoped to the signed-in operator's brand. Middleware has already refused
+  // anyone without an accounts row for this host's tenant, so a null context
+  // here means the session lapsed between the two.
+  const ctx = await requireOperator();
   const supabase = createAdminClient();
   const { data: leads } = await supabase
     .from("leads")
     .select("*")
+    .eq("tenant_slug", ctx?.tenantSlug ?? "__none__")
     .order("created_at", { ascending: false })
     .returns<Lead[]>();
 

@@ -1,5 +1,5 @@
+import { requireOperator } from "@/lib/tenant-scope";
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateUniqueDomainSlug } from "@/lib/domain-slug";
 
@@ -44,11 +44,11 @@ function pickPainPoints(...candidates: unknown[]): string[] {
 }
 
 export async function POST(req: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  // Being signed in is not being an operator: any Supabase user can
+  // complete a magic link. This route then uses the service-role client.
+  if (!(await requireOperator())) {
+    return NextResponse.json({ error: "Operator access required" }, { status: 403 });
+  }
 
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid request body" }, { status: 400 });

@@ -1,14 +1,16 @@
+import { requireOperator } from "@/lib/tenant-scope";
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { cleanupLeadStorage } from "@/lib/supabase/cleanup-storage";
 
 // Bulk delete for the Leads list's "select + delete" flow — same gating and
 // cascade-on-delete behavior as the single-lead DELETE in /api/leads/[id].
 export async function DELETE(req: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  // Being signed in is not being an operator: any Supabase user can
+  // complete a magic link. This route then uses the service-role client.
+  if (!(await requireOperator())) {
+    return NextResponse.json({ error: "Operator access required" }, { status: 403 });
+  }
 
   const body = await req.json().catch(() => null);
   const ids = Array.isArray(body?.ids) ? body.ids.filter((id: unknown): id is string => typeof id === "string") : [];
