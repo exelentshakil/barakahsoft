@@ -79,6 +79,20 @@ export const MIN_DISPLAY_PX = 88;
 const STEPS = 9;
 const BODY_STEP = 2;
 
+// How far above the floor each voice pushes the top of the scale.
+//
+// Pinning display to exactly MIN_SCALE_CONTRAST makes the floor the answer,
+// and two leads that happen to share a body size then share a headline size
+// too — convergence smuggled in through the engine meant to prevent it. The
+// floor stays a floor; voice decides how far past it to go.
+const SCALE_CONTRAST: Record<TypeVoice, number> = {
+  brutal: 11.5,
+  editorial: 9.6,
+  warm: 9,
+  utility: 8.6,
+  clinical: 8,
+};
+
 const BODY_PX: Record<TypeVoice, number> = {
   editorial: 18,
   utility: 17,
@@ -204,7 +218,7 @@ export function buildType(intent: TypeIntent): TypeSystem {
   // top of the scale is pinned to whichever is larger, and the ratio is solved
   // backwards from it. A scale that cannot express a big headline is a scale
   // that guarantees a timid page.
-  const displayPx = Math.max(MIN_DISPLAY_PX, bodyPx * MIN_SCALE_CONTRAST);
+  const displayPx = Math.max(MIN_DISPLAY_PX, bodyPx * Math.max(MIN_SCALE_CONTRAST, SCALE_CONTRAST[voice]));
   const ratio = Math.pow(displayPx / bodyPx, 1 / (STEPS - 1 - BODY_STEP));
 
   const tokens: Record<string, string> = {};

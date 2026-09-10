@@ -6,6 +6,9 @@
 
 import { buildPalette, contrastOf, BODY_RATIO, DISPLAY_RATIO } from "../src/lib/design/colour";
 import { buildType, MIN_SCALE_CONTRAST, MIN_DISPLAY_PX } from "../src/lib/design/type";
+import { buildSpace, MIN_SECTION_PAD_PX } from "../src/lib/design/space";
+import { buildMotion } from "../src/lib/design/motion";
+import { compileDesignSystem } from "../src/lib/design";
 
 let failed = 0;
 const ok = (pass: boolean, message: string) => {
@@ -101,6 +104,44 @@ ok(/size-adjust/.test(gymType.css) && /ascent-override/.test(gymType.css), "fall
 ok(/cap-display::before/.test(gymType.css), "cap-height trim utilities emitted");
 ok(gymType.fontHref.startsWith("https://fonts.googleapis.com/"), "google fonts href built");
 
+console.log("\nspace");
+
+for (const rhythm of ["tight", "generous", "cinematic"] as const) {
+  const sp = buildSpace({ rhythm, density: "regular" });
+  // Every rhythm clears the ambition floor. "tight" still means 112px, because
+  // the timid end of the range is the thing the law exists to prevent.
+  ok(sp.meta.sectionMaxPx >= MIN_SECTION_PAD_PX, `${rhythm} section padding ${sp.meta.sectionMaxPx}px >= ${MIN_SECTION_PAD_PX}px`);
+}
+
+const sp = buildSpace({ rhythm: "cinematic", density: "regular" });
+const halfUnit = sp.meta.unit / 2;
+ok(sp.meta.steps.every((v) => Math.abs(v % halfUnit) < 0.001), `every spacing step lands on the ${halfUnit}px grid: ${sp.meta.steps.join(" ")}`);
+ok(sp.meta.steps.every((v, i) => i === 0 || v > sp.meta.steps[i - 1]), "spacing scale is monotonic");
+ok(
+  [1, 2, 3].every((n) => parseInt(sp.tokens[`--overlap-${n}`], 10) % sp.meta.unit === 0),
+  `overlap offsets are whole units, so a grid break still lands on grid (${sp.tokens["--overlap-1"]} ${sp.tokens["--overlap-2"]} ${sp.tokens["--overlap-3"]})`
+);
+ok(sp.tokens["--split-major"] === "1.618fr 1fr", `split ratios are real proportions, not 1fr 1fr (${sp.tokens["--split-major"]})`);
+ok(/bleed-full/.test(sp.css) && /pull-up-1/.test(sp.css), "bleed levels and overlap utilities emitted");
+ok(/@media\(max-width:860px\)/.test(sp.css), "primitives reflow without per-section media queries");
+
+// Density genuinely changes the system rather than relabelling it.
+const dense = buildSpace({ rhythm: "generous", density: "dense" });
+const airy = buildSpace({ rhythm: "generous", density: "airy" });
+ok(dense.meta.unit !== airy.meta.unit && dense.meta.ratio !== airy.meta.ratio, `density changes unit and ratio: ${dense.meta.unit}/${dense.meta.ratio} vs ${airy.meta.unit}/${airy.meta.ratio}`);
+
+console.log("\nmotion");
+const mo = buildMotion({ character: "dramatic" });
+ok(/prefers-reduced-motion/.test(mo.css), "reduced-motion path present");
+ok(
+  /\[data-reveal-armed\]:not\(\[data-revealed\]\)\{opacity:0/.test(mo.css),
+  "reveal hides on the armed attribute, so a no-JS render and the audit screenshot still show content"
+);
+ok(!/\[data-reveal\]\{opacity:0/.test(mo.css), "reveal does NOT hide on the bare attribute — that ships a blank page");
+ok(/focus-visible/.test(mo.css), "focus ring present");
+const calm = buildMotion({ character: "calm" });
+ok(calm.meta.baseMs !== mo.meta.baseMs, `character changes duration: calm ${calm.meta.baseMs}ms vs dramatic ${mo.meta.baseMs}ms`);
+
 if (process.argv.includes("--sample")) {
   console.log("\ntype sample (Anton / Inter, brutal)");
   console.log(`  ratio ${m.ratio}  body ${m.bodyPx}px  display ${m.displayPx}px  contrast ${m.scaleContrast}x`);
@@ -114,6 +155,50 @@ if (process.argv.includes("--sample")) {
     console.log(`  ${key.padEnd(14)} ${t[key]}`);
   }
 }
+
+console.log("\ncompiler");
+
+const gymSystem = compileDesignSystem({
+  colour: { brandHex: "#ED1C24", chroma: "vivid", warmth: "warm" },
+  type: { displayFamily: "Anton", bodyFamily: "Inter", voice: "brutal", measure: 66 },
+  space: { rhythm: "cinematic", density: "regular" },
+  motion: { character: "dramatic" },
+  radius: "sharp",
+  texture: "grain",
+});
+const dentalSystem = compileDesignSystem({
+  colour: { brandHex: "#0F6E56", chroma: "muted", warmth: "cool" },
+  type: { displayFamily: "Outfit", bodyFamily: "Outfit", voice: "clinical", measure: 72 },
+  space: { rhythm: "generous", density: "airy" },
+  motion: { character: "calm" },
+  radius: "rounded",
+  texture: "grain",
+});
+
+ok(/\.bespoke-page :where\(\*/.test(gymSystem.css), "containment layer present, so host globals cannot leak in");
+ok(gymSystem.css.includes(".on-dark{background:var(--dark);color:var(--on-dark)}"), "ground utilities set background and text together");
+ok(/position:fixed[^}]*background-image:url\("data:image\/svg/.test(gymSystem.css), "grain layer emitted");
+ok(gymSystem.tokens["--radius"] === "0px" && dentalSystem.tokens["--radius"] === "16px", `radius differs: ${gymSystem.tokens["--radius"]} vs ${dentalSystem.tokens["--radius"]}`);
+
+// The whole point: two leads, two genuinely different systems.
+const differing = ["--paper", "--brand", "--ink", "--fs-8", "--s-6", "--dur", "--radius", "--font-body"].filter(
+  (k) => gymSystem.tokens[k] !== dentalSystem.tokens[k]
+);
+ok(differing.length === 8, `two leads diverge across ${differing.length}/8 sampled tokens: ${differing.join(" ")}`);
+
+// Voice must push the scale past the floor rather than sitting on it, or two
+// leads sharing a body size share a headline size.
+const brutal = buildType({ displayFamily: "Anton", bodyFamily: "Inter", voice: "brutal" });
+const clinical = buildType({ displayFamily: "Outfit", bodyFamily: "Outfit", voice: "clinical" });
+ok(brutal.meta.displayPx !== clinical.meta.displayPx, `voice changes display size: brutal ${brutal.meta.displayPx}px vs clinical ${clinical.meta.displayPx}px`);
+ok(brutal.meta.scaleContrast >= MIN_SCALE_CONTRAST && clinical.meta.scaleContrast >= MIN_SCALE_CONTRAST, "both still clear the ambition floor");
+ok(gymSystem.fontHref !== dentalSystem.fontHref, "different font stacks requested");
+
+// No literal colour should escape into the emitted rules outside the token
+// block itself - everything downstream must reference var().
+const rulesOnly = gymSystem.css.split("\n\n").filter((block) => !block.startsWith(".bespoke-page{--")).join("\n");
+const strayHex = rulesOnly.match(/#[0-9a-f]{3,8}\b/gi) ?? [];
+ok(strayHex.length === 0, `no literal colours outside the token block (found ${strayHex.length})`);
 
 console.log(failed ? `\n${failed} check(s) failed\n` : "\nall design engine checks passed\n");
 process.exit(failed ? 1 : 0);
