@@ -1,6 +1,6 @@
 import type { Tenant } from "@/tenants/types";
-import { servicesFromFacts } from "@/lib/build-site-brief";
 "use client";
+import { servicesFromFacts } from "@/lib/build-site-brief";
 
 import { useCallback, useState } from "react";
 import Link from "next/link";
