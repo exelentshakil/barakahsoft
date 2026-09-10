@@ -111,6 +111,15 @@ async function main(): Promise<void> {
   const timid = page.findings.find((finding) => finding.check === "timid");
   ok(!timid, `a page composed to the ambition floor is not reported timid${timid ? ` — ${timid.detail}` : ""}`);
 
+  // Every image the model was given keeps its slot, which is what makes a
+  // later photo swap an attribute rewrite instead of a rebuild.
+  const slotted = page.sections.filter((section) => /data-slot="/.test(section.html)).length;
+  ok(slotted > 0, `${slotted} section(s) carry data-slot, so photos can be swapped without regenerating`);
+  ok(
+    page.bodyHtml.includes('data-slot="hero"'),
+    "the hero image kept its slot through sanitising"
+  );
+
   const contrast = page.findings.find((finding) => finding.check === "contrast");
   ok(!contrast, `no contrast failure${contrast ? ` — ${contrast.detail}` : ""}`);
 

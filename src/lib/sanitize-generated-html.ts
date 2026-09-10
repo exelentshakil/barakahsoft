@@ -37,6 +37,13 @@ const ALLOWED_TAGS = [
 // reviewed script in the application implements it; model-authored <script>
 // is stripped entirely, so this is the only route to interactivity.
 const INTERACTION_ATTRS = [
+  // Not an interaction hook, but it belongs on the same allowlist: every
+  // generated <img> carries the media slot it fills, and that attribute is
+  // what lets a photograph be swapped later by rewriting one src instead of
+  // regenerating the page and getting a different design back. Stripping it
+  // does not break anything visible, which is exactly why it would have gone
+  // unnoticed — the swap would simply stop finding its target.
+  "data-slot",
   "data-reveal",
   "data-reveal-delay",
   "data-count-to",
