@@ -210,6 +210,7 @@ export function renderShell(
       logoUrl: brandLogoUrl,
     }),
     bespokeCss: artifact.bespoke_css ?? null,
+    bespokeJs: artifact.bespoke_js ?? null,
     bespokeChromeHtml: artifact.bespoke_chrome_html ?? null,
     bespokeFooterHtml: artifact.bespoke_footer_html ?? null,
     designTokens: artifact.design_tokens ?? null,

@@ -7,7 +7,17 @@ import { BespokeRuntime } from "@/components/site-shell/BespokeRuntime";
 // here, because the header and footer are styled from the same tokens.
 // Scoping them to this element left the chrome resolving to nothing and
 // rendering as a different design from the page it framed.
-export function BespokePageBody({ html, css, leadSlug }: { html: string; css?: string | null; leadSlug: string }) {
+export function BespokePageBody({
+  html,
+  css,
+  js,
+  leadSlug,
+}: {
+  html: string;
+  css?: string | null;
+  js?: string | null;
+  leadSlug: string;
+}) {
   return (
     <>
       {css && (
@@ -24,6 +34,18 @@ export function BespokePageBody({ html, css, leadSlug }: { html: string; css?: s
       )}
       <div className="bespoke-page" dangerouslySetInnerHTML={{ __html: html }} />
       <BespokeRuntime leadSlug={leadSlug} />
+      {js && (
+        // After BespokeRuntime, deliberately. The runtime owns the quote modal
+        // and the lead form; generated presentation code runs on top of a page
+        // whose mechanisms are already bound, so a throw in a scroll effect
+        // cannot take a form submission with it. The IIFE it is wrapped in
+        // catches anyway — this is the second of the two guards.
+        <script
+          id="bespoke-js"
+          type="text/javascript"
+          dangerouslySetInnerHTML={{ __html: js }}
+        />
+      )}
     </>
   );
 }

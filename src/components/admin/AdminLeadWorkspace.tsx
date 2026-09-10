@@ -74,7 +74,7 @@ import { HandoverPanel } from "@/components/admin/HandoverPanel";
 import { LeadValuePanel, type LeadValueData } from "@/components/admin/LeadValuePanel";
 import { EditLeadDialog } from "@/components/admin/EditLeadDialog";
 import { DeleteLeadButton } from "@/components/admin/DeleteLeadButton";
-import { PagePlanPanel } from "@/components/admin/PagePlanPanel";
+import { DesignBriefPanel } from "@/components/admin/DesignBriefPanel";
 import type { DesignDna } from "@/lib/design-dna";
 import { SocialMockupPanel } from "@/components/admin/SocialMockupPanel";
 import { Badge } from "@/components/ui/badge";
@@ -1597,14 +1597,14 @@ Shaq`,
             </TabPanel>
 
             <TabPanel active={tab === "build"}>
-              {/* What the page will actually be about, before it is built. */}
-              <PagePlanPanel
-                entities={scrapeResults?.entities ?? []}
-                design={(artifact?.inspiration_branding as DesignDna | null) ?? null}
-                hasReviews={reviewCount > 0}
-                hasPhotos={Array.isArray(facts.site_photos) && facts.site_photos.length > 0}
-                serviceCount={servicesFromFacts(facts).length}
-                areaCount={((facts.derived_areas as string[] | undefined) ?? []).length}
+              {/* The brief the build committed to, and what the audit made of it. */}
+              <DesignBriefPanel
+                leadId={lead.id}
+                rationale={artifact?.bespoke_rationale ?? null}
+                audit={(artifact?.audit_report as never) ?? null}
+                missingCount={
+                  ((artifact?.intake_spec as { missing?: unknown[] } | null)?.missing ?? []).length
+                }
               />
 
               {/* STEP 2: BESPOKE GENERATOR STUDIO */}

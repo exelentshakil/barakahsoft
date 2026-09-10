@@ -8,20 +8,7 @@ import { DesignDnaSchema, DEFAULT_DESIGN_DNA } from "@/lib/design-dna";
 import { verifyHomepage } from "@/lib/audit/quality-gate";
 import type { MediaPlan } from "@/lib/media/plan-media";
 import type { Artifact, Lead, ScrapeResults } from "@/types/database";
-import {
-  STANCE,
-  COLOUR_STANDARD,
-  TYPE_STANDARD,
-  SPACE_STANDARD,
-  PSYCHOLOGY_STANDARD,
-  CONVERSION_STANDARD,
-  PREMIUM_COMPOSITION_STANDARD,
-  aboutDirectionFor,
-  HYGIENE_STANDARD,
-  INTERACTION_CONTRACT,
-  truthStandard,
-  PAGE_SHAPE,
-} from "@/lib/generate/standard";
+import { DESIGN_LAW, TOKEN_CONTRACT, MECHANISM_CONTRACT } from "@/lib/design/law";
 
 // One self-contained build prompt for one lead.
 //
@@ -98,7 +85,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     .map(([name, value]) => `  ${name}: ${value};`)
     .join("\n");
 
-  const prompt = `${STANCE}
+  const prompt = `${DESIGN_LAW}
 
 Write the complete homepage for a real ${brief.industry} business in ${brief.city}, and the
 stylesheet that goes with it. The owner opens this page and decides in about four seconds
@@ -145,27 +132,14 @@ Anything else becomes an on-page anchor. Give each service block an id of its sl
 ${brief.phone ? `Phone links: tel:${brief.phone.replace(/[^\d+]/g, "")}` : ""}
 
 ═══ HOW TO WRITE THE MARKUP ═══
-${HYGIENE_STANDARD}
 
 Name classes descriptively and consistently, block-then-element:
   hero, hero__inner, hero__title, hero__actions
   services, services__grid, service-card, service-card__title
 
-${PSYCHOLOGY_STANDARD}
-
-${CONVERSION_STANDARD}
-
-${PREMIUM_COMPOSITION_STANDARD}
-
 ABOUT DIRECTION FOR THIS LEAD
-${aboutDirectionFor(`${brief.businessName}|${brief.industry}|${brief.city}`)}
 
 ═══ HOW TO WRITE THE STYLESHEET ═══
-${COLOUR_STANDARD}
-
-${TYPE_STANDARD}
-
-${SPACE_STANDARD}
 
 - Modern CSS: grid and flex with gap. No floats, no margin hacks.
 - Content sits in a centred container, max-width around 1200px, with a horizontal gutter that
@@ -179,12 +153,12 @@ ${SPACE_STANDARD}
   with script disabled.
 - Never write @import or url() — both are stripped on save.
 
-${INTERACTION_CONTRACT}
+${MECHANISM_CONTRACT}
 
-${truthStandard(brief.rating, brief.reviewCount)}
+${TOKEN_CONTRACT}
 
 ═══ WHAT THE PAGE MUST DO ═══
-${PAGE_SHAPE}
+
 ${
   gate && gate.findings.length > 0
     ? `\n═══ WHAT IS MEASURABLY WRONG WITH THE CURRENT BUILD ═══\nThese are measured, not opinions. Yours must not repeat them.\n${gate.findings.map((f) => `- [${f.severity}] ${f.detail}`).join("\n")}\n`

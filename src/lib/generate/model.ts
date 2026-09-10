@@ -11,6 +11,15 @@ interface BestModelCallOptions {
    * An operator's explicit choice, tried before the house chain.
    */
   model?: string;
+  /**
+   * Overrides the client's default request timeout.
+   *
+   * A page body plus its stylesheet is 30-40k output tokens and reliably takes
+   * longer than the 150s default, so without this every body call timed out
+   * and the build failed after four minutes of work. Gemini clamps it to its
+   * own ceiling.
+   */
+  timeoutMs?: number;
 }
 
 // ------------------------------------------------------------------
@@ -66,6 +75,7 @@ export async function callSmartModel(
       system: options.system,
       temperature: options.temperature,
       maxTokens: options.maxTokens,
+      timeoutMs: options.timeoutMs,
       modelChain: chain,
     });
   }
@@ -97,4 +107,49 @@ export async function callBestVisionModel(
       system: options.system,
       images: [base64ImageUrl]
    });
+}
+
+// ------------------------------------------------------------------
+// 3. CROSS-PROVIDER FALLBACK
+// The generation pipeline's model call.
+// ------------------------------------------------------------------
+
+/**
+ * Try Gemini, then OpenAI, rather than only walking one provider's chain.
+ *
+ * callSmartModel takes a provider and stays inside it, so a degraded Gemini
+ * meant a build spent fifteen minutes walking its chain and then failed
+ * outright — observed live: an intake call that had taken twenty seconds
+ * burned 939 seconds and returned nothing. A model chain is not a fallback if
+ * every entry in it is behind the same endpoint.
+ *
+ * The per-attempt timeout matters as much as the order. Long timeouts are
+ * right for a page body and wrong for a short structured call, because a
+ * provider that has stopped answering should be discovered in a minute rather
+ * than in ten.
+ */
+export async function callDesignModel(
+  prompt: string,
+  options: BestModelCallOptions & { label?: string }
+): Promise<string | null> {
+  const label = options.label ?? "design";
+
+  const gemini = await callSmartModel(prompt, options, "gemini");
+  if (gemini) return gemini;
+
+  console.warn(`[${label}] gemini returned nothing; falling back to openai`);
+  const openai = await callSmartModel(
+    prompt,
+    {
+      ...options,
+      // OpenAI's client has its own ceiling and does not read timeoutMs, so
+      // this is left to it rather than pretended at.
+      model: undefined,
+    },
+    "openai"
+  );
+  if (openai) return openai;
+
+  console.error(`[${label}] both providers failed`);
+  return null;
 }

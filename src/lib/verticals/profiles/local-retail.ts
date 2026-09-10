@@ -36,22 +36,7 @@ export const localRetail: VerticalProfile = {
     work: "order",
   },
 
-  sections: [
-    { id: "hero", enabled: true },
-    { id: "trust", enabled: true, label: "Trust bar" },
-    { id: "services", enabled: true, label: "What we sell" },
-    { id: "gallery", enabled: true, label: "In the shop" },
-    { id: "about", enabled: true, label: "Our story" },
-    { id: "reviews", enabled: true },
-    { id: "cta-band", enabled: true, label: "Conversion band" },
-    { id: "why-us", enabled: true, label: "Why shop with us" },
-    { id: "process", enabled: true, label: "Ordering & delivery" },
-    { id: "faq", enabled: true, label: "FAQ" },
-    { id: "areas", enabled: true, label: "Delivery areas" },
-    { id: "contact", enabled: true, label: "Find us" },
-    // A shop guarantees goods, not workmanship. Ordering covers this.
-    { id: "guarantee", enabled: false },
-  ],
+  sectionBand: [8, 12],
 
   lists: {
     offeringCount: 8,

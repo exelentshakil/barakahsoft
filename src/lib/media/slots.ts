@@ -170,6 +170,77 @@ export async function repointSlot(leadId: string, oldUrl: string, newUrl: string
   return changed;
 }
 
+/**
+ * Point one slot at a new image by its data-slot attribute.
+ *
+ * repointSlot below matches on the old URL, which is right for the case it was
+ * written for — retouching an image the operator can see — but wrong whenever
+ * two slots happen to share a photograph, because swapping one silently swaps
+ * both. Generated pages now carry data-slot on every <img>, so the exact
+ * element can be addressed instead of guessed at.
+ *
+ * Falls back to the URL match for pages built before the attribute existed,
+ * so a delivered site does not lose the ability to have its photos changed.
+ */
+export async function applyMedia(
+  leadId: string,
+  slotKey: string,
+  newUrl: string,
+  note: string,
+  fallbackOldUrl?: string
+): Promise<string[]> {
+  const admin = createAdminClient();
+  const pages = await loadAllPages(leadId);
+  const changed: string[] = [];
+  const nextPages: Record<string, string> = {};
+  let nextHome: string | null = null;
+
+  // Match the whole <img> that carries this slot, then rewrite src inside it.
+  // Attribute order varies, so the tag is located first and edited second.
+  const tagPattern = new RegExp(`<img\\b[^>]*\\bdata-slot=["']${slotKey.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["'][^>]*>`, "gi");
+
+  for (const [key, html] of Object.entries(pages)) {
+    let updated = html.replace(tagPattern, (tag) =>
+      /\bsrc=/.test(tag) ? tag.replace(/\bsrc=(["'])[^"']*\1/i, `src="${newUrl}"`) : tag.replace(/^<img/i, `<img src="${newUrl}"`)
+    );
+
+    if (updated === html && fallbackOldUrl && html.includes(fallbackOldUrl)) {
+      updated = html.split(fallbackOldUrl).join(newUrl);
+    }
+
+    if (updated === html) {
+      if (key !== HOME_KEY) nextPages[key] = html;
+      continue;
+    }
+    changed.push(key);
+    if (key === HOME_KEY) nextHome = updated;
+    else nextPages[key] = updated;
+  }
+
+  if (!changed.length) return [];
+
+  const update: Record<string, unknown> = { bespoke_pages: nextPages, last_edited_at: new Date().toISOString() };
+  if (nextHome) update.bespoke_homepage_html = nextHome;
+  await admin.from("artifacts").update(update).eq("lead_id", leadId);
+
+  await Promise.all(
+    changed.map((key) => recordVersion(leadId, key, key === HOME_KEY ? nextHome! : nextPages[key], "edited", note))
+  );
+
+  const { data: artifact } = await admin
+    .from("artifacts")
+    .select("media_plan")
+    .eq("lead_id", leadId)
+    .single<{ media_plan: MediaPlan | null }>();
+
+  if (artifact?.media_plan) {
+    const nextPlan = artifact.media_plan.map((entry) => (entry.slot === slotKey ? { ...entry, url: newUrl } : entry));
+    await admin.from("artifacts").update({ media_plan: nextPlan }).eq("lead_id", leadId);
+  }
+
+  return changed;
+}
+
 /** Replace a slot with a real photograph the operator supplies. */
 export async function uploadToSlot(
   leadId: string,

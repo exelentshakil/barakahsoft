@@ -37,23 +37,7 @@ export const hospitalityFood: VerticalProfile = {
     work: "booking",
   },
 
-  sections: [
-    { id: "hero", enabled: true },
-    { id: "trust", enabled: true, label: "Trust bar" },
-    { id: "services", enabled: true, label: "The menu" },
-    { id: "gallery", enabled: true, label: "The room & the food" },
-    { id: "about", enabled: true, label: "Our story" },
-    { id: "reviews", enabled: true },
-    { id: "cta-band", enabled: true, label: "Conversion band" },
-    { id: "why-us", enabled: true, label: "What makes it worth the trip" },
-    { id: "process", enabled: true, label: "Booking & visiting" },
-    { id: "faq", enabled: true, label: "FAQ" },
-    { id: "contact", enabled: true, label: "Find us" },
-    // One address, not a catchment.
-    { id: "areas", enabled: false },
-    // Nobody guarantees a meal. The booking block does this job better.
-    { id: "guarantee", enabled: false },
-  ],
+  sectionBand: [8, 12],
 
   lists: {
     offeringCount: 8,
