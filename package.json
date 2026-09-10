@@ -17,6 +17,7 @@
     "check:verticals": "tsx scripts/check-verticals.ts",
     "check:design": "tsx scripts/check-design-engines.ts",
     "check:audit": "tsx scripts/check-audit.ts",
+    "check:pipeline": "tsx scripts/check-pipeline.ts",
     "backfill:verticals": "tsx --env-file=.env.local scripts/backfill-verticals.ts",
     "operator": "tsx --env-file=.env.local scripts/operator.ts"
   },

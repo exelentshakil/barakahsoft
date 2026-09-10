@@ -39,6 +39,8 @@ export interface RenderedMetrics {
   hasTexture: boolean;
   smallTapTargets: number;
   overflowsX: boolean;
+  /** Which element sticks out, so a repair round has something to act on. */
+  widestOffender: string;
 }
 
 const VIEWPORT = { width: 1440, height: 900 };
@@ -144,8 +146,20 @@ function collect(): RenderedMetrics {
       // Body size: the size most of the running copy is actually set in.
       if (text.length > 90 && (bodyPx === 0 || size < bodyPx)) {
         bodyPx = size;
-        const chWidth = size * 0.5;
-        measureChars = Math.round(rect.width / chWidth);
+        // Counted, not estimated. Dividing the box width by half the font size
+        // assumes an average glyph width and was reporting 83 characters for a
+        // paragraph capped at 66ch. A Range gives one client rect per rendered
+        // line, so characters-per-line falls out of the text length directly
+        // and is right for any face.
+        let lines = 1;
+        try {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          lines = Math.max(1, range.getClientRects().length);
+        } catch {
+          lines = Math.max(1, Math.round(rect.height / (size * 1.5)));
+        }
+        measureChars = Math.round(text.length / lines);
       }
     }
 
@@ -215,6 +229,20 @@ function collect(): RenderedMetrics {
     tallestImageVh = Math.max(tallestImageVh, Math.round((rect.height / vh) * 100));
   }
 
+  // Which element actually sticks out. "There is horizontal overflow" is not
+  // something a repair round can act on; "this element is 84px wider than the
+  // viewport" is.
+  let widestOffender = "";
+  let worstOverhang = 0;
+  for (const el of all) {
+    const rect = el.getBoundingClientRect();
+    const overhang = Math.round(rect.right - window.innerWidth);
+    if (overhang > worstOverhang && rect.width > 8) {
+      worstOverhang = overhang;
+      widestOffender = `${label(el)} +${overhang}px`;
+    }
+  }
+
   const motionBound = root.querySelectorAll("[data-reveal], [data-reveal-armed], [data-count-to], [data-review-slider]").length;
   // display:none does not clear backgroundImage, so reading the image alone
   // reports texture on a page whose grain layer has been switched off.
@@ -245,7 +273,8 @@ function collect(): RenderedMetrics {
     motionBound,
     hasTexture,
     smallTapTargets,
-    overflowsX: root.scrollWidth > window.innerWidth + 2,
+    overflowsX: document.documentElement.scrollWidth > window.innerWidth + 2,
+    widestOffender,
   };
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -278,27 +307,44 @@ export async function auditRendered(target: AuditTarget, existing?: Browser): Pr
     const context = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: 1 });
     const page = await context.newPage();
 
-    // esbuild's keepNames transform (which tsx applies) wraps every function
-    // declaration in a __name() call. When collect() is serialised into the
-    // page that helper does not exist there, and every evaluate throws
-    // "__name is not defined". Passed as a string so this line is not itself
-    // transformed.
-    await page.addInitScript("globalThis.__name = globalThis.__name || function (fn) { return fn; };");
-
+    // "load", not "networkidle". networkidle waits for the network to go quiet
+    // for half a second, so one slow CDN or one dead image URL stalls the whole
+    // audit for the full timeout — and every repair round pays it again. A page
+    // being measured for composition does not need every asset settled; it
+    // needs layout and fonts, which are waited for explicitly below.
     if ("url" in target) {
-      await page.goto(target.url, { waitUntil: "networkidle", timeout: 60_000 });
+      await page.goto(target.url, { waitUntil: "load", timeout: 30_000 }).catch(() => {});
     } else {
-      await page.setContent(target.html, { waitUntil: "networkidle", timeout: 60_000 });
+      await page.setContent(target.html, { waitUntil: "load", timeout: 30_000 }).catch(() => {});
     }
     // Fonts decide measure and scale contrast; measuring before they land
-    // reports the fallback's numbers, which is the wrong page.
-    await page.evaluate(() => document.fonts.ready);
+    // reports the fallback's numbers, which is the wrong page. Bounded, because
+    // a webfont that never arrives must not stop the audit either.
+    await Promise.race([
+      page.evaluate(() => document.fonts.ready.then(() => undefined)),
+      page.waitForTimeout(6_000),
+    ]);
+    // A beat for layout to settle after the fonts swap in.
+    await page.waitForTimeout(250);
+
+    // esbuild's keepNames transform (which tsx applies) wraps every function
+    // declaration in a __name() call. When collect() is serialised into the
+    // page that helper does not exist there and every evaluate throws
+    // "__name is not defined".
+    //
+    // Injected after load rather than through addInitScript, because init
+    // scripts only run on navigation and setContent does not trigger one — so
+    // the init-script version worked for a URL and failed for a document.
+    // Passed as a string so this line is not itself transformed.
+    const shim = "globalThis.__name = globalThis.__name || function (fn) { return fn; };";
+    await page.evaluate(shim);
 
     const metrics = (await page.evaluate(collect)) as RenderedMetrics;
     const screenshot = await page.screenshot({ type: "jpeg", quality: 80, fullPage: true });
 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.waitForTimeout(400);
+    await page.evaluate(shim);
     const small = (await page.evaluate(collect)) as RenderedMetrics;
     await context.close();
 
@@ -335,7 +381,10 @@ function judge(m: RenderedMetrics, mobile: RenderedMetrics): AuditFinding[] {
     add("colour-budget", "finding", `Brand colour covers ${m.brandAreaShare}% of painted area. The budget is roughly 10%; past 20% it stops reading as an accent.`);
   }
   if (m.overflowsX || mobile.overflowsX) {
-    add("overflow", "blocker", `Horizontal overflow at ${m.overflowsX ? "1440px" : ""}${m.overflowsX && mobile.overflowsX ? " and " : ""}${mobile.overflowsX ? "390px" : ""}.`);
+    const where = [m.overflowsX ? `1440px (${m.widestOffender || "unknown"})` : "", mobile.overflowsX ? `390px (${mobile.widestOffender || "unknown"})` : ""]
+      .filter(Boolean)
+      .join(" and ");
+    add("overflow", "blocker", `Horizontal overflow at ${where}.`);
   }
   if (mobile.smallTapTargets > 2) {
     add("tap-targets", "finding", `${mobile.smallTapTargets} interactive element(s) under 40px at 390px.`);

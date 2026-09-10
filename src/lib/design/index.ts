@@ -95,13 +95,13 @@ export function compileDesignSystem(intent: DesignIntent): DesignSystem {
 .bespoke-page .on-paper-3{background:var(--paper-3);color:var(--ink);--muted:var(--ink-2);--on-ground:var(--brand-ink);--rule:var(--line-strong)}
 .bespoke-page .on-dark{background:var(--dark);color:var(--on-dark);--muted:var(--on-dark-2);--on-ground:var(--brand-on-dark);--rule:var(--line-on-dark)}
 .bespoke-page .on-dark-2{background:var(--dark-2);color:var(--on-dark);--muted:var(--on-dark-2);--on-ground:var(--brand-on-dark);--rule:var(--line-on-dark)}
-.bespoke-page .on-brand{background:var(--brand);color:var(--on-brand);--muted:var(--on-brand);--on-ground:var(--on-brand);--rule:var(--on-brand)}
+.bespoke-page .on-brand{background:var(--brand-ground);color:var(--on-brand-ground);--muted:var(--brand-ground-muted);--on-ground:var(--on-brand-ground);--rule:var(--brand-ground-muted)}
 .bespoke-page .muted{color:var(--muted)}
 .bespoke-page .accent{color:var(--on-ground)}
 .bespoke-page hr,.bespoke-page .rule{border-top:1px solid var(--rule)}`.trim()
 
   const root = `
-.bespoke-page{position:relative;isolation:isolate;background:var(--paper);color:var(--ink);--muted:var(--ink-2);--on-ground:var(--brand-ink);--rule:var(--line);font-family:var(--font-body);font-size:var(--fs-body);line-height:var(--lh-body);letter-spacing:var(--tr-body);-webkit-font-smoothing:antialiased}
+.bespoke-page{position:relative;isolation:isolate;overflow-x:clip;background:var(--paper);color:var(--ink);--muted:var(--ink-2);--on-ground:var(--brand-ink);--rule:var(--line);font-family:var(--font-body);font-size:var(--fs-body);line-height:var(--lh-body);letter-spacing:var(--tr-body);-webkit-font-smoothing:antialiased}
 .bespoke-page :where(h1,h2,h3){font-family:var(--font-display);letter-spacing:var(--tr-display);line-height:var(--lh-display)}
 .bespoke-page :where(h4,h5,h6){font-family:var(--font-display);line-height:var(--lh-3)}
 .bespoke-page :where(img,video){border-radius:inherit}

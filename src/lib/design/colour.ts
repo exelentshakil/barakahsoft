@@ -168,6 +168,35 @@ export function buildPalette(intent: ColourIntent): Palette {
   tokens["--on-brand"] =
     ratio("#ffffff", brandFill) >= DISPLAY_RATIO ? "#ffffff" : ensureOn(brandFill, 0.15, brandHue, 0, DISPLAY_RATIO, "darker");
 
+  // A brand GROUND is a different problem from a brand fill, and conflating
+  // them is a contrast failure waiting to happen. The fill sits under a button
+  // label — large, bold, 4.5:1 is the right floor. A ground sits under
+  // paragraphs, and body copy needs 7:1, which a vivid mid-lightness hue
+  // cannot give to white OR to black: #ED1C24 at L 0.58 measures 4.84 against
+  // white and about 4.3 against near-black. Neither text colour can fix it,
+  // because the ground itself is in the wrong place.
+  //
+  // So the ground is searched for rather than assumed: walk the brand hue away
+  // from mid-lightness until some on-colour clears the body floor, and pair
+  // them. The band a page paints paragraphs on is a deeper brand than the one
+  // on its buttons, which is what a designer would have done anyway.
+  let groundL = 0.58;
+  let groundHex = brandFill;
+  let onGround = "#ffffff";
+  for (let step = 0; step <= 26; step += 1) {
+    const candidate = hex(0.58 - step * 0.018, brandChroma * (1 - step * 0.012), brandHue);
+    const white = ratio("#ffffff", candidate);
+    if (white >= BODY_RATIO) {
+      groundL = 0.58 - step * 0.018;
+      groundHex = candidate;
+      onGround = "#ffffff";
+      break;
+    }
+  }
+  tokens["--brand-ground"] = groundHex;
+  tokens["--on-brand-ground"] = onGround;
+  tokens["--brand-ground-muted"] = ensureOn(groundHex, Math.min(0.92, groundL + 0.5), brandHue, brandChroma * 0.15, BODY_RATIO, "lighter");
+
   // ── optional second accent ──
   const accent = readHue(intent.accentHex, brandHue);
   if (accent) {
