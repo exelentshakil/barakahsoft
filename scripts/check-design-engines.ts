@@ -9,6 +9,8 @@ import { buildType, MIN_SCALE_CONTRAST, MIN_DISPLAY_PX } from "../src/lib/design
 import { buildSpace, MIN_SECTION_PAD_PX } from "../src/lib/design/space";
 import { buildMotion } from "../src/lib/design/motion";
 import { compileDesignSystem } from "../src/lib/design";
+import { treatImage, ASPECT_RATIOS } from "../src/lib/design/image";
+import sharp from "sharp";
 
 let failed = 0;
 const ok = (pass: boolean, message: string) => {
@@ -200,5 +202,70 @@ const rulesOnly = gymSystem.css.split("\n\n").filter((block) => !block.startsWit
 const strayHex = rulesOnly.match(/#[0-9a-f]{3,8}\b/gi) ?? [];
 ok(strayHex.length === 0, `no literal colours outside the token block (found ${strayHex.length})`);
 
-console.log(failed ? `\n${failed} check(s) failed\n` : "\nall design engine checks passed\n");
-process.exit(failed ? 1 : 0);
+async function imageChecks(): Promise<void> {
+  console.log("\nimage");
+
+  // A synthetic photograph: a colourful subject off-centre, so a centre crop
+  // and a saliency crop cannot produce the same pixels.
+  const source = await sharp({
+    create: { width: 1600, height: 1200, channels: 3, background: { r: 120, g: 122, b: 118 } },
+  })
+    .composite([
+      { input: await sharp({ create: { width: 260, height: 260, channels: 3, background: { r: 220, g: 60, b: 40 } } }).png().toBuffer(), left: 1180, top: 160 },
+      { input: await sharp({ create: { width: 400, height: 300, channels: 3, background: { r: 40, g: 90, b: 150 } } }).png().toBuffer(), left: 80, top: 780 },
+    ])
+    .jpeg()
+    .toBuffer();
+
+  const warm = await treatImage(source, { aspect: "wide", width: 1200 }, { brandHex: "#ED1C24", ground: "light", strength: "moderate" });
+  ok(warm.width === 1200 && warm.height === Math.round(1200 / ASPECT_RATIOS.wide), `wide crop is ${warm.width}x${warm.height}`);
+  ok(warm.webp.length > 0 && warm.avif.length > 0, `both encodings produced (webp ${Math.round(warm.webp.length / 1024)}kb, avif ${Math.round(warm.avif.length / 1024)}kb)`);
+
+  const tall = await treatImage(source, { aspect: "tall", width: 900 }, { brandHex: "#ED1C24", ground: "light" });
+  ok(tall.height > tall.width, `tall aspect is portrait-shaped (${tall.width}x${tall.height})`);
+
+  // The grade must actually depend on the palette, or every site's photography
+  // looks the same regardless of brand.
+  const cool = await treatImage(source, { aspect: "wide", width: 1200 }, { brandHex: "#0F6E56", ground: "light", strength: "moderate" });
+  const warmStats = await sharp(warm.webp).stats();
+  const coolStats = await sharp(cool.webp).stats();
+  const warmBalance = warmStats.channels[0].mean - warmStats.channels[2].mean;
+  const coolBalance = coolStats.channels[0].mean - coolStats.channels[2].mean;
+  ok(
+    Math.abs(warmBalance - coolBalance) > 1.5,
+    `grade follows the brand: red-minus-blue ${warmBalance.toFixed(1)} vs ${coolBalance.toFixed(1)}`
+  );
+
+  // Subtle is the default and has to stay genuinely subtle — the guard against
+  // the grade drifting back into being a look.
+  //
+  // Measured against a neutral-brand baseline rather than against zero. The
+  // saliency crop is drawn to the red square, so the crop itself skews the
+  // channel balance before any grading happens; an absolute threshold here
+  // tests composition, not grade strength.
+  const gentle = await treatImage(source, { aspect: "wide", width: 1200 }, { brandHex: "#ED1C24", ground: "light" });
+  const neutral = await treatImage(source, { aspect: "wide", width: 1200 }, { brandHex: "#808080", ground: "light" });
+  const balanceOf = async (buf: Buffer) => {
+    const st = await sharp(buf).stats();
+    return st.channels[0].mean - st.channels[2].mean;
+  };
+  const shift = Math.abs((await balanceOf(gentle.webp)) - (await balanceOf(neutral.webp)));
+  ok(shift < 6, `default strength shifts balance by only ${shift.toFixed(1)} points against a neutral grade`);
+  ok(shift > 0.5, `...but does shift it (${shift.toFixed(1)}), so the grade is doing something`);
+
+  // And it must still be a photograph, not a duotone. sharp's tint() preserves
+  // luminance and replaces chroma, which would flatten every image on the page
+  // to one hue; a real grade leaves the subject's own colours distinguishable.
+  const spread = warmStats.channels.map((c) => c.stdev);
+  ok(Math.max(...spread) > 12, `image keeps its own colour (channel stdev ${spread.map((v) => v.toFixed(0)).join("/")}) — a duotone would collapse this`);
+}
+
+imageChecks()
+  .then(() => {
+    console.log(failed ? `\n${failed} check(s) failed\n` : "\nall design engine checks passed\n");
+    process.exit(failed ? 1 : 0);
+  })
+  .catch((error) => {
+    console.error("\nimage checks threw:", error);
+    process.exit(1);
+  });
