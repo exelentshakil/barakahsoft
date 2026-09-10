@@ -90,6 +90,17 @@ export interface SitePayload {
   bespokeHomepageHtml: string | null;
   // The page's own stylesheet, scoped to .bespoke-page before storage.
   bespokeCss: string | null;
+  /**
+   * Model-authored presentation JavaScript, already sanitized and wrapped in a
+   * guarded IIFE. Scroll effects, counters, carousels — the things that stop a
+   * page reading as static.
+   *
+   * The quote modal and the lead form are deliberately NOT here. They are the
+   * money path, and a generated script breaking form submission loses the lead
+   * silently while the page still looks perfect, so they stay in
+   * BespokeRuntime where they can be reviewed.
+   */
+  bespokeJs: string | null;
   bespokeChromeHtml: string | null;
   bespokeFooterHtml: string | null;
   // v9 -- CSS custom properties compiled from the lead's inspiration design

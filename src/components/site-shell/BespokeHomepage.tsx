@@ -16,7 +16,12 @@ export function BespokeHomepage({ payload }: { payload: SitePayload }) {
   return (
     <div style={siteRootStyle(payload)} className="pb-20 lg:pb-0">
       <BespokeSiteNav payload={payload} />
-      <BespokePageBody html={payload.bespokeHomepageHtml ?? ""} css={payload.bespokeCss} leadSlug={payload.leadSlug} />
+      <BespokePageBody
+        html={payload.bespokeHomepageHtml ?? ""}
+        css={payload.bespokeCss}
+        js={payload.bespokeJs}
+        leadSlug={payload.leadSlug}
+      />
       <BespokeSiteFooter payload={payload} />
       <StickyMobileCTA payload={payload} />
       {/* The callback assistant the ad promises. It was fully built and
