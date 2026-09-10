@@ -1505,9 +1505,15 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-s--on-brand .bs-muted{color:inherit;opacity:.82}
 
 /* ---- density ------------------------------------------------------------ */
-.bespoke-page .bs-s--tight{padding-block:clamp(44px,5vw,68px)}
-.bespoke-page .bs-s--regular{padding-block:var(--bs-section-y,96px)}
-.bespoke-page .bs-s--airy{padding-block:clamp(96px,10vw,168px)}
+/* Scoped to .bs-s deliberately. groundClasses() puts a density class on the
+   bespoke sections too so they share the page's rhythm, and unscoped these
+   rules also re-padded components that set their own — the trust STRIP, a
+   two-line bar, was given up to 168px of padding top and bottom and became a
+   near-empty screen straight under the fold. Ground and divider still apply
+   to those; their internal spacing stays theirs. */
+.bespoke-page .bs-s.bs-s--tight{padding-block:clamp(44px,5vw,68px)}
+.bespoke-page .bs-s.bs-s--regular{padding-block:var(--bs-section-y,96px)}
+.bespoke-page .bs-s.bs-s--airy{padding-block:clamp(96px,10vw,168px)}
 
 /* ---- layout families ---------------------------------------------------- */
 .bespoke-page .bs-s__body{display:grid;gap:clamp(16px,2vw,28px)}
@@ -1517,10 +1523,18 @@ export const BASE_STYLESHEET = `
 .bespoke-page .bs-s--rail .bs-s__body{grid-auto-flow:column;grid-auto-columns:minmax(260px,1fr);overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px}
 .bespoke-page .bs-s--rail .bs-s__body > *{scroll-snap-align:start}
 .bespoke-page .bs-s--feature .bs-s__body{grid-template-columns:repeat(var(--bs-cols,3),minmax(0,1fr))}
-.bespoke-page .bs-s--feature .bs-s__body > :first-child{grid-column:span 2;grid-row:span 2}
-.bespoke-page .bs-s--mosaic .bs-s__body{grid-template-columns:repeat(var(--bs-cols,3),minmax(0,1fr));grid-auto-rows:minmax(120px,auto)}
-.bespoke-page .bs-s--mosaic .bs-s__body > :nth-child(4n+1){grid-row:span 2}
-.bespoke-page .bs-s--mosaic .bs-s__body > :nth-child(6n+3){grid-column:span 2}
+.bespoke-page .bs-s--feature .bs-s__body{align-items:start}
+.bespoke-page .bs-s--feature .bs-s__body > :first-child{grid-column:span 2}
+.bespoke-page .bs-s--feature .bs-s__body > :first-child .bs-item__media{aspect-ratio:16/9}
+/* Variety across the WIDTH only.
+   Row spans plus a fixed media aspect made a monster: a card two columns wide
+   renders its 4:3 photograph at twice the width and so twice the height, and
+   a row span on top of that produced one card taller than the six around it
+   with a column of dead space beside them. A wide card gets a wide crop
+   instead, so every row still lines up. */
+.bespoke-page .bs-s--mosaic .bs-s__body{grid-template-columns:repeat(var(--bs-cols,3),minmax(0,1fr));align-items:start}
+.bespoke-page .bs-s--mosaic .bs-s__body > :nth-child(5n+3){grid-column:span 2}
+.bespoke-page .bs-s--mosaic .bs-s__body > :nth-child(5n+3) .bs-item__media{aspect-ratio:16/9}
 .bespoke-page .bs-s--band .bs-s__inner{width:100%}
 .bespoke-page .bs-s--band .bs-s__body{grid-auto-flow:column;justify-content:space-between;align-items:center}
 .bespoke-page .bs-s--overlap{padding-top:0}
