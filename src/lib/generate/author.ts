@@ -90,6 +90,28 @@ function contextBlock(input: AuthorInput): string {
     .join("\n");
 }
 
+/**
+ * Why a response could not be used, in enough detail to act on.
+ *
+ * "did not return a usable brief" with an undefined issue list is what a
+ * failed JSON.parse looks like, and it says nothing about whether the model
+ * refused, wrapped the object in prose, or was cut off mid-object. The tail
+ * matters most: a response that ends without its closing brace was truncated,
+ * which is a token budget problem, not a prompt problem.
+ */
+function describeFailure(raw: string | null, issues?: unknown): string {
+  if (!raw) return "no response from the model";
+  const trimmed = raw.trim();
+  if (issues) return `schema: ${JSON.stringify(issues)}`;
+  const truncated = !/[}\]]\s*$/.test(trimmed);
+  return [
+    truncated ? "TRUNCATED — the response does not end on a closing brace, so raise maxTokens" : "did not parse as JSON",
+    `${trimmed.length} chars`,
+    `starts: ${trimmed.slice(0, 120).replace(/\s+/g, " ")}`,
+    `ends: ${trimmed.slice(-120).replace(/\s+/g, " ")}`,
+  ].join(" · ");
+}
+
 export async function authorChrome(input: AuthorInput): Promise<Chrome | null> {
   const prompt = [
     `Write the navigation and footer for one bespoke homepage, and any CSS and JS they need.`,
@@ -120,6 +142,7 @@ export async function authorChrome(input: AuthorInput): Promise<Chrome | null> {
       system: "You are a designer who writes production HTML and CSS. You compose freely and you never type a literal value. You return valid JSON only.",
       maxTokens: 16000,
       temperature: 0.8,
+      timeoutMs: 200_000,
     },
     "gemini"
   );
@@ -127,7 +150,7 @@ export async function authorChrome(input: AuthorInput): Promise<Chrome | null> {
   const parsed = raw ? parseJsonResponse(raw) : null;
   const result = parsed ? ChromeSchema.safeParse(parsed) : null;
   if (!result?.success) {
-    console.warn("[author:chrome] unusable response", result?.error?.issues?.slice(0, 2));
+    console.warn(`[author:chrome] unusable — ${describeFailure(raw, result?.error?.issues?.slice(0, 2))}`);
     return null;
   }
   return result.data;
@@ -165,6 +188,10 @@ export async function authorBody(input: AuthorInput, systemCss: string, chromeCs
     `Put the ground class on the section itself so its text colour comes with it.`,
     `Sections must not all be the same shape. Vary composition, vary ground, and honour the ambition floor — the hero at 85vh with twelve words or fewer, three full-bleed moments, one deliberate grid break, one image at 70vh or taller.`,
     ``,
+    `MOTION IS REQUIRED, not optional. Put data-reveal on at least six elements across the page — section headings, image frames, the rows of any list — with data-reveal-delay on siblings so they stagger. A page with nothing bound to motion reads as static and is sent back as timid. The application implements the behaviour; you only mark what should move.`,
+    ``,
+    `Body copy sits inside class="measure" so it lands at the compiled line length. A paragraph in a narrow column without it comes out at forty characters and reads as a column of fragments.`,
+    ``,
     `Return JSON: {"sections":[{"id","label","html"}],"cssAdditions":"…","js":"…"}`,
     `"html" is the complete <section> element. "cssAdditions" is appended to the stylesheet, so a class you invent is a class you also write a rule for.`,
   ].join("\n");
@@ -175,6 +202,10 @@ export async function authorBody(input: AuthorInput, systemCss: string, chromeCs
       system: "You are a designer who writes production HTML and CSS. You compose freely and you never type a literal value. You return valid JSON only.",
       maxTokens: 32000,
       temperature: 0.82,
+      // The body is the longest generation in the pipeline; the client's 150s
+      // default is not enough for it and every call was timing out after the
+      // PRD and chrome had already been paid for.
+      timeoutMs: 280_000,
     },
     "gemini"
   );
@@ -182,7 +213,7 @@ export async function authorBody(input: AuthorInput, systemCss: string, chromeCs
   const parsed = raw ? parseJsonResponse(raw) : null;
   const result = parsed ? BodySchema.safeParse(parsed) : null;
   if (!result?.success) {
-    console.warn("[author:body] unusable response", result?.error?.issues?.slice(0, 2));
+    console.warn(`[author:body] unusable — ${describeFailure(raw, result?.error?.issues?.slice(0, 2))}`);
     return null;
   }
 

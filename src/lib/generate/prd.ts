@@ -26,22 +26,112 @@ import type { DesignDna } from "@/lib/design-dna";
 import type { VerticalProfile } from "@/lib/verticals/types";
 import type { DesignIntent } from "@/lib/design";
 
+/**
+ * An enum that accepts the answer rather than only the token.
+ *
+ * A model asked for "muted | moderate | vivid" replies "high-contrast accent";
+ * asked for "cool | neutral | warm" it replies "cold and industrial". Both are
+ * the RIGHT answer expressed as prose, and rejecting the whole brief over
+ * vocabulary throws away a good design because of its packaging. Matched on
+ * synonyms, then on substring, then defaulted.
+ *
+ * Deliberately not solved by adding "reply with exactly one of these words" to
+ * the prompt. That instruction is already there; models paraphrase enums under
+ * temperature, and a schema that only accepts perfect output is a schema that
+ * fails a few per cent of builds for no reason.
+ */
+function looseEnum<T extends string>(
+  values: readonly T[],
+  fallback: T,
+  synonyms: Record<string, T> = {}
+): z.ZodType<T, z.ZodTypeDef, unknown> {
+  return z.preprocess((raw) => {
+    if (typeof raw !== "string") return fallback;
+    const text = raw.toLowerCase().trim();
+    const exact = values.find((value) => value === text);
+    if (exact) return exact;
+    for (const [needle, mapped] of Object.entries(synonyms)) {
+      if (text.includes(needle)) return mapped;
+    }
+    const partial = values.find((value) => text.includes(value));
+    return partial ?? fallback;
+  }, z.enum(values as unknown as [T, ...T[]]));
+}
+
+/**
+ * A string with a ceiling it enforces by trimming rather than by rejecting.
+ *
+ * The whole brief was being thrown away because an editorial device came back
+ * at 164 characters against a 160 limit. These caps exist to stop a model
+ * writing an essay into a field, not to adjudicate prose by the character —
+ * and discarding a good design over four characters is the least defensible
+ * failure this pipeline could have.
+ */
+function text(max: number, min = 0): z.ZodType<string, z.ZodTypeDef, unknown> {
+  return z.preprocess((raw) => {
+    if (typeof raw !== "string") return raw;
+    const trimmed = raw.trim();
+    return trimmed.length > max ? `${trimmed.slice(0, max - 1).trimEnd()}…` : trimmed;
+  }, z.string().min(min).max(max));
+}
+
+/** An integer that tolerates arriving as "66", "66ch" or "about 66". */
+function looseInt(min: number, max: number, fallback: number): z.ZodType<number, z.ZodTypeDef, unknown> {
+  return z.preprocess((raw) => {
+    const value = typeof raw === "string" ? Number(raw.match(/\d+/)?.[0]) : raw;
+    if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
+    return Math.min(max, Math.max(min, Math.round(value)));
+  }, z.number().int().min(min).max(max));
+}
+
+/** A number that tolerates arriving as "215" or "215deg". */
+const looseNumber = z.preprocess((raw) => {
+  if (typeof raw === "number") return raw;
+  if (typeof raw === "string") {
+    const match = raw.match(/-?\d+(\.\d+)?/);
+    return match ? Number(match[0]) : null;
+  }
+  return raw ?? null;
+}, z.number().min(0).max(360).nullable().default(null));
+
 const SectionSchema = z.object({
   /** Kebab-case, unique. Per-section repair addresses sections by this. */
-  id: z.string().min(2).max(48),
+  id: text(48, 2),
   /** This industry's own word for it: membership-tiers, menu-by-course. */
-  kind: z.string().min(2).max(48),
-  purpose: z.string().max(240),
+  kind: text(48, 2),
+  purpose: text(240),
   /** Which compiled ground this section sits on. */
-  ground: z.enum(["paper", "paper-2", "paper-3", "dark", "dark-2", "brand"]),
+  ground: looseEnum(["paper", "paper-2", "paper-3", "dark", "dark-2", "brand"] as const, "paper", {
+    light: "paper",
+    white: "paper",
+    alt: "paper-2",
+    tint: "paper-2",
+    black: "dark",
+    ink: "dark",
+    accent: "brand",
+  }),
   /** Prose, not an enum. How this section is composed and why. */
-  composition: z.string().max(320),
+  composition: text(320),
   image: z
     .object({
-      slot: z.string().min(2).max(48),
-      aspect: z.enum(["wide", "square", "portrait", "tall", "cinema"]),
+      /**
+       * Optional, and assigned from the section id below when absent.
+       *
+       * This is our own bookkeeping key — the handle a photograph is later
+       * swapped by — so asking the model to invent one bought nothing and cost
+       * whole briefs when it returned an empty string. Deriving it from the
+       * section id also makes it unique by construction.
+       */
+      slot: text(48).optional().default(""),
+      aspect: looseEnum(["wide", "square", "portrait", "tall", "cinema"] as const, "wide", {
+        landscape: "wide",
+        panoramic: "cinema",
+        cinematic: "cinema",
+        vertical: "tall",
+        full: "tall",
+      }),
       /** Written for this business. Never a template with a noun dropped in. */
-      brief: z.string().min(20).max(400),
+      brief: text(400, 20),
       /** Is this the one image that must run at 70vh or taller? */
       hero: z.boolean().default(false),
     })
@@ -51,34 +141,90 @@ const SectionSchema = z.object({
 
 export const PrdSchema = z.object({
   /** One sentence. Everything else traces back to it. */
-  idea: z.string().min(12).max(240),
+  idea: text(240, 12),
   /** Oversized numerals, a seal, marginalia, an index, a marque. */
-  editorialDevice: z.string().min(4).max(160),
+  editorialDevice: text(160, 4),
   colour: z.object({
-    chroma: z.enum(["muted", "moderate", "vivid"]),
-    warmth: z.enum(["cool", "neutral", "warm"]),
+    chroma: looseEnum(["muted", "moderate", "vivid"] as const, "moderate", {
+      "high-contrast": "vivid",
+      saturated: "vivid",
+      bold: "vivid",
+      intense: "vivid",
+      punchy: "vivid",
+      desaturated: "muted",
+      soft: "muted",
+      subtle: "muted",
+      restrained: "muted",
+    }),
+    warmth: looseEnum(["cool", "neutral", "warm"] as const, "neutral", {
+      cold: "cool",
+      clinical: "cool",
+      industrial: "cool",
+      blue: "cool",
+      earth: "warm",
+      amber: "warm",
+      cream: "warm",
+      substitute: "neutral",
+    }),
     /** Anchor on the client's own brand colour where one was found. */
     useBrandHex: z.boolean().default(true),
-    hue: z.number().min(0).max(360).nullable().default(null),
-    rationale: z.string().max(240).default(""),
+    hue: looseNumber,
+    rationale: text(240).default(""),
   }),
   type: z.object({
-    displayFamily: z.string().min(2).max(60),
-    bodyFamily: z.string().min(2).max(60),
-    voice: z.enum(["editorial", "utility", "clinical", "warm", "brutal"]),
-    measure: z.number().int().min(60).max(75).default(66),
-    rationale: z.string().max(240).default(""),
+    displayFamily: text(60, 2),
+    bodyFamily: text(60, 2),
+    voice: looseEnum(["editorial", "utility", "clinical", "warm", "brutal"] as const, "editorial", {
+      industrial: "brutal",
+      raw: "brutal",
+      bold: "brutal",
+      functional: "utility",
+      technical: "utility",
+      medical: "clinical",
+      precise: "clinical",
+      friendly: "warm",
+      human: "warm",
+    }),
+    measure: looseInt(60, 75, 66).default(66),
+    rationale: text(240).default(""),
   }),
   space: z.object({
-    rhythm: z.enum(["tight", "generous", "cinematic"]),
-    density: z.enum(["dense", "regular", "airy"]),
-    maxWidth: z.number().int().min(1000).max(1440).default(1240),
+    rhythm: looseEnum(["tight", "generous", "cinematic"] as const, "generous", {
+      compact: "tight",
+      spacious: "cinematic",
+      dramatic: "cinematic",
+      expansive: "cinematic",
+    }),
+    density: looseEnum(["dense", "regular", "airy"] as const, "regular", {
+      compact: "dense",
+      tight: "dense",
+      open: "airy",
+      spacious: "airy",
+    }),
+    maxWidth: looseInt(1000, 1440, 1240).default(1240),
   }),
-  motion: z.object({ character: z.enum(["calm", "crisp", "dramatic"]) }),
-  radius: z.enum(["sharp", "soft", "rounded"]),
-  texture: z.enum(["none", "grain"]).default("grain"),
+  motion: z.object({
+    character: looseEnum(["calm", "crisp", "dramatic"] as const, "crisp", {
+      subtle: "calm",
+      gentle: "calm",
+      slow: "calm",
+      snappy: "crisp",
+      quick: "crisp",
+      bold: "dramatic",
+      cinematic: "dramatic",
+    }),
+  }),
+  radius: looseEnum(["sharp", "soft", "rounded"] as const, "soft", {
+    square: "sharp",
+    "0": "sharp",
+    none: "sharp",
+    subtle: "soft",
+    pill: "rounded",
+    full: "rounded",
+  }),
+  texture: looseEnum(["none", "grain"] as const, "grain", { noise: "grain", film: "grain", flat: "none", clean: "none" }).default("grain"),
   sections: z.array(SectionSchema).min(SECTION_BAND[0]).max(SECTION_BAND[1]),
-  seo: z.object({ title: z.string().max(70), description: z.string().max(170) }),
+  seo: z.object({ title: text(70), description: text(170) }),
 });
 
 export type Prd = z.infer<typeof PrdSchema>;
@@ -164,10 +310,32 @@ function buildPrompt(input: PrdInput): string {
     `7. For each section that needs a photograph, an art-direction brief written for THIS business in real sentences. Never a template with a noun dropped into it.`,
     ``,
     `Return JSON only, matching this shape:`,
-    `{"idea","editorialDevice","colour":{"chroma","warmth","useBrandHex","hue","rationale"},"type":{"displayFamily","bodyFamily","voice","measure","rationale"},"space":{"rhythm","density","maxWidth"},"motion":{"character"},"radius","texture","sections":[{"id","kind","purpose","ground","composition","image":{"slot","aspect","brief","hero"}|null}],"seo":{"title","description"}}`,
+    `{"idea","editorialDevice","colour":{"chroma","warmth","useBrandHex","hue","rationale"},"type":{"displayFamily","bodyFamily","voice","measure","rationale"},"space":{"rhythm","density","maxWidth"},"motion":{"character"},"radius","texture","sections":[{"id","kind","purpose","ground","composition","image":{"aspect","brief","hero"}|null}],"seo":{"title","description"}}`,
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+/**
+ * Why a response could not be used, in enough detail to act on.
+ *
+ * "did not return a usable brief" with an undefined issue list is what a
+ * failed JSON.parse looks like, and it says nothing about whether the model
+ * refused, wrapped the object in prose, or was cut off mid-object. The tail
+ * matters most: a response that ends without its closing brace was truncated,
+ * which is a token budget problem, not a prompt problem.
+ */
+function describeFailure(raw: string | null, issues?: unknown): string {
+  if (!raw) return "no response from the model";
+  const trimmed = raw.trim();
+  if (issues) return `schema: ${JSON.stringify(issues)}`;
+  const truncated = !/[}\]]\s*$/.test(trimmed);
+  return [
+    truncated ? "TRUNCATED — the response does not end on a closing brace, so raise maxTokens" : "did not parse as JSON",
+    `${trimmed.length} chars`,
+    `starts: ${trimmed.slice(0, 120).replace(/\s+/g, " ")}`,
+    `ends: ${trimmed.slice(-120).replace(/\s+/g, " ")}`,
+  ].join(" · ");
 }
 
 export async function writePrd(input: PrdInput): Promise<Prd | null> {
@@ -176,7 +344,7 @@ export async function writePrd(input: PrdInput): Promise<Prd | null> {
     {
       system:
         "You are an art director briefing a build. You decide rather than describe, you state intent rather than values, and you return valid JSON only.",
-      maxTokens: 12000,
+      maxTokens: 16000,
       temperature: 0.85,
     },
     "gemini"
@@ -185,42 +353,60 @@ export async function writePrd(input: PrdInput): Promise<Prd | null> {
   const parsed = raw ? parseJsonResponse(raw) : null;
   const result = parsed ? PrdSchema.safeParse(parsed) : null;
   if (!result?.success) {
-    console.warn("[prd] model did not return a usable brief", result?.error?.issues?.slice(0, 3));
+    console.warn(`[prd] unusable — ${describeFailure(raw, result?.error?.issues?.slice(0, 3))}`);
     return null;
   }
 
   // Section ids address sections for per-section repair, so duplicates would
-  // make two different blocks the same target.
+  // make two different blocks the same target. Image slots are derived from the
+  // settled id rather than taken from the model, which makes them unique for
+  // free and removes an entire class of validation failure.
+  // The chrome call renders the navigation and the footer. A PRD that also
+  // lists one as a body section ships the page two of them, which is the exact
+  // double-header the old sanitizer used to strip markup to prevent.
+  const CHROME_KINDS = /^(footer|nav|navigation|header|site-footer|site-header)$/i;
+
   const seen = new Set<string>();
-  const sections = result.data.sections.map((section, index) => {
-    let id = section.id.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
-    if (!id || seen.has(id)) id = `${id || "section"}-${index + 1}`;
-    seen.add(id);
-    return { ...section, id };
-  });
+  const sections = result.data.sections
+    .filter((section) => !CHROME_KINDS.test(section.kind.trim()) && !CHROME_KINDS.test(section.id.trim()))
+    .map((section, index) => {
+      let id = section.id.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+      if (!id || seen.has(id)) id = `${id || "section"}-${index + 1}`;
+      seen.add(id);
+      const image = section.image ? { ...section.image, slot: section.image.slot?.trim() || id } : null;
+      return { ...section, id, image };
+    });
 
   return { ...result.data, sections };
 }
 
 /** The PRD's intent, in the shape the compiler wants. */
 export function intentFrom(prd: Prd, brandHex: string | null): DesignIntent {
+  // The loose enums above validate to exactly the engines' unions, but zod's
+  // inferred type for a preprocessed enum widens to string, so the engine
+  // types are reasserted here rather than loosened at the other end. Anything
+  // reaching this point has already been through looseEnum's fallback.
   return {
     colour: {
       brandHex: prd.colour.useBrandHex ? brandHex : null,
       hue: prd.colour.hue,
-      chroma: prd.colour.chroma,
-      warmth: prd.colour.warmth,
+      chroma: prd.colour.chroma as DesignIntent["colour"]["chroma"],
+      warmth: prd.colour.warmth as DesignIntent["colour"]["warmth"],
     },
     type: {
       displayFamily: prd.type.displayFamily,
       bodyFamily: prd.type.bodyFamily,
-      voice: prd.type.voice,
+      voice: prd.type.voice as DesignIntent["type"]["voice"],
       measure: prd.type.measure,
     },
-    space: { rhythm: prd.space.rhythm, density: prd.space.density, maxWidth: prd.space.maxWidth },
-    motion: { character: prd.motion.character },
-    radius: prd.radius,
-    texture: prd.texture,
+    space: {
+      rhythm: prd.space.rhythm as DesignIntent["space"]["rhythm"],
+      density: prd.space.density as DesignIntent["space"]["density"],
+      maxWidth: prd.space.maxWidth,
+    },
+    motion: { character: prd.motion.character as DesignIntent["motion"]["character"] },
+    radius: prd.radius as DesignIntent["radius"],
+    texture: prd.texture as DesignIntent["texture"],
   };
 }
 

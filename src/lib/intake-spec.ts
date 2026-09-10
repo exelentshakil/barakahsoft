@@ -24,20 +24,45 @@ import { entityKinds, type Entity } from "@/lib/extract-entities";
 import type { VerticalProfile } from "@/lib/verticals/types";
 import type { DesignDna } from "@/lib/design-dna";
 
+/**
+ * A list that tolerates being handed one item.
+ *
+ * Models return `"membership-tiers"` where the schema asks for
+ * `["membership-tiers"]` often enough that rejecting it is a self-inflicted
+ * failure — the answer was right and the punctuation was not. Coercing at the
+ * boundary is cheaper and more honest than another line of prompt telling it
+ * to remember the brackets.
+ */
+const listOf = (item: z.ZodString) =>
+  z.preprocess((value) => {
+    if (typeof value === "string") return value.trim() ? [value] : [];
+    if (value === null || value === undefined) return [];
+    return value;
+  }, z.array(item));
+
+/** Trims to the cap rather than rejecting the brief over a long label. */
+function text(max: number, min = 0): z.ZodType<string, z.ZodTypeDef, unknown> {
+  return z.preprocess((raw) => {
+    if (typeof raw !== "string") return raw;
+    const trimmed = raw.trim();
+    return trimmed.length > max ? `${trimmed.slice(0, max - 1).trimEnd()}…` : trimmed;
+  }, z.string().min(min).max(max));
+}
+
 export const IntakeFieldSchema = z.object({
-  key: z.string().min(2).max(48),
-  label: z.string().min(2).max(80),
+  key: text(48, 2),
+  label: text(80, 2),
   /** "Pricing", "Facilities", "People" — how the Studio groups the form. */
-  group: z.string().min(2).max(40),
+  group: text(40, 2),
   /** Why a great page needs it. Shown to the operator, and fed back into the PRD. */
-  why: z.string().max(220).default(""),
+  why: text(220).default(""),
   type: z.enum(["text", "longtext", "list", "price-table", "people", "hours", "boolean", "url", "number"]),
   /** A real example in this industry's own words, so the shape is obvious. */
-  placeholder: z.string().max(240).default(""),
+  placeholder: text(240).default(""),
   /** Can a genuinely good page be built without this? */
   blocking: z.boolean().default(false),
   /** Section kinds this field brings back into the page. */
-  unlocks: z.array(z.string().max(48)).max(4).default([]),
+  unlocks: listOf(z.string().max(64)).default([]),
 });
 
 export type IntakeField = z.infer<typeof IntakeFieldSchema>;
@@ -155,6 +180,28 @@ function resolve(field: IntakeField, input: IntakeInput): ResolvedField {
   return { ...field, found: false, value: null, source: null };
 }
 
+/**
+ * Why a response could not be used, in enough detail to act on.
+ *
+ * "did not return a usable brief" with an undefined issue list is what a
+ * failed JSON.parse looks like, and it says nothing about whether the model
+ * refused, wrapped the object in prose, or was cut off mid-object. The tail
+ * matters most: a response that ends without its closing brace was truncated,
+ * which is a token budget problem, not a prompt problem.
+ */
+function describeFailure(raw: string | null, issues?: unknown): string {
+  if (!raw) return "no response from the model";
+  const trimmed = raw.trim();
+  if (issues) return `schema: ${JSON.stringify(issues)}`;
+  const truncated = !/[}\]]\s*$/.test(trimmed);
+  return [
+    truncated ? "TRUNCATED — the response does not end on a closing brace, so raise maxTokens" : "did not parse as JSON",
+    `${trimmed.length} chars`,
+    `starts: ${trimmed.slice(0, 120).replace(/\s+/g, " ")}`,
+    `ends: ${trimmed.slice(-120).replace(/\s+/g, " ")}`,
+  ].join(" · ");
+}
+
 export async function buildIntakeSpec(input: IntakeInput): Promise<IntakeSpec | null> {
   const raw = await callSmartModel(
     prompt(input),
@@ -169,7 +216,7 @@ export async function buildIntakeSpec(input: IntakeInput): Promise<IntakeSpec | 
   const parsed = raw ? parseJsonResponse(raw) : null;
   const result = parsed ? IntakeSpecSchema.safeParse(parsed) : null;
   if (!result?.success) {
-    console.warn("[intake-spec] model did not return a usable brief", result?.error?.issues?.[0]);
+    console.warn(`[intake-spec] unusable — ${describeFailure(raw, result?.error?.issues?.slice(0, 3))}`);
     return null;
   }
 

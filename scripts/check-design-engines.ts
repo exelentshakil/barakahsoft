@@ -9,6 +9,7 @@ import { buildType, MIN_SCALE_CONTRAST, MIN_DISPLAY_PX } from "../src/lib/design
 import { buildSpace, MIN_SECTION_PAD_PX } from "../src/lib/design/space";
 import { buildMotion } from "../src/lib/design/motion";
 import { compileDesignSystem } from "../src/lib/design";
+import { remediateCss } from "../src/lib/design/remediate";
 import { treatImage, ASPECT_RATIOS } from "../src/lib/design/image";
 import sharp from "sharp";
 
@@ -210,6 +211,30 @@ ok(gymSystem.fontHref !== dentalSystem.fontHref, "different font stacks requeste
 const rulesOnly = gymSystem.css.split("\n\n").filter((block) => !block.startsWith(".bespoke-page{--")).join("\n");
 const strayHex = rulesOnly.match(/#[0-9a-f]{3,8}\b/gi) ?? [];
 ok(strayHex.length === 0, `no literal colours outside the token block (found ${strayHex.length})`);
+
+console.log("\nremediation");
+
+// The mechanical misuses a live run actually produced, in the order it
+// produced them: a border token as text, the brand fill as text, and an 8px
+// literal font size.
+const messy = remediateCss(
+  ".bespoke-page .roster-time{color:var(--line-strong);font-size:8px}" +
+    ".bespoke-page .nav-index{color:var(--brand)}" +
+    ".bespoke-page .card{border-color:var(--line);background:var(--dark)}" +
+    ".bespoke-page .lede{color:var(--ink-2);font-size:var(--fs-2)}"
+);
+ok(/\.roster-time\{color:var\(--muted\)/.test(messy.css), "a border token used as text becomes the ground-relative muted colour");
+ok(/font-size:var\(--fs-0\)/.test(messy.css), "an 8px literal font size becomes the smallest compiled step");
+ok(/\.nav-index\{color:var\(--on-ground\)/.test(messy.css), "the brand FILL used as text becomes the ground-relative accent");
+ok(/border-color:var\(--line\)/.test(messy.css), "…but a border token used as a BORDER is left alone");
+ok(/background:var\(--dark\)/.test(messy.css), "…and a fill used as a fill is left alone");
+ok(/\.lede\{color:var\(--ink-2\);font-size:var\(--fs-2\)\}/.test(messy.css), "correct declarations are untouched");
+ok(messy.changes.length === 3, `reports exactly what it changed (${messy.changes.length}): ${messy.changes[0]}`);
+
+// The line that separates this from the colour normaliser that was deleted:
+// it must not touch a colour simply for being a colour.
+const authored = remediateCss(".bespoke-page .x{color:var(--ink);background:var(--paper-2);box-shadow:0 1px 2px rgb(var(--ink-rgb) / 8%)}");
+ok(authored.changes.length === 0, "a page written correctly is passed through completely unchanged");
 
 async function imageChecks(): Promise<void> {
   console.log("\nimage");

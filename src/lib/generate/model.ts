@@ -11,6 +11,15 @@ interface BestModelCallOptions {
    * An operator's explicit choice, tried before the house chain.
    */
   model?: string;
+  /**
+   * Overrides the client's default request timeout.
+   *
+   * A page body plus its stylesheet is 30-40k output tokens and reliably takes
+   * longer than the 150s default, so without this every body call timed out
+   * and the build failed after four minutes of work. Gemini clamps it to its
+   * own ceiling.
+   */
+  timeoutMs?: number;
 }
 
 // ------------------------------------------------------------------
@@ -66,6 +75,7 @@ export async function callSmartModel(
       system: options.system,
       temperature: options.temperature,
       maxTokens: options.maxTokens,
+      timeoutMs: options.timeoutMs,
       modelChain: chain,
     });
   }

@@ -75,17 +75,34 @@ Not a hex code, not a pixel size, not a font name, not a duration. Every one of
 those is already solved and waiting in a custom property. A literal in your
 output is a bug the audit reports.
 
-COLOUR   var(--paper) var(--paper-2) var(--paper-3) var(--dark) var(--dark-2)
-         var(--ink) var(--ink-2) var(--ink-3) var(--on-dark) var(--on-dark-2)
-         var(--brand) var(--brand-hover) var(--brand-ink) var(--brand-on-dark)
-         var(--on-brand) var(--brand-wash) var(--line) var(--line-strong)
-         Alpha: rgb(var(--ink-rgb) / 12%), rgb(var(--brand-rgb) / 8%)
+COLOUR — text tokens and fill tokens are different things, and mixing them is
+the single mistake that gets a build rejected.
 
-GROUNDS  Put a ground class on a section and its text colour comes with it:
-         .on-paper .on-paper-2 .on-paper-3 .on-dark .on-dark-2 .on-brand
-         Inside any of them, .muted and .accent resolve correctly on their own.
-         Never set a background and a text colour separately — that is how an
-         unreadable section gets built.
+  TEXT on a light ground     var(--ink) var(--ink-2) var(--ink-3)
+  TEXT on a dark ground      var(--on-dark) var(--on-dark-2)
+  ACCENT TEXT, any ground    class="accent" — it resolves itself, correctly,
+                             on whichever ground it is sitting on
+  MUTED TEXT, any ground     class="muted" — likewise
+
+  FILLS, never text          var(--brand) var(--brand-ground) var(--brand-wash)
+                             var(--dark) var(--dark-2) var(--paper-2) var(--paper-3)
+  TEXT ON A FILL             var(--on-brand) over --brand
+                             var(--on-brand-ground) over --brand-ground
+
+  RULES AND BORDERS          var(--line) var(--line-strong) var(--rule)
+                             border-color and background only. Never color:.
+  ALPHA                      rgb(var(--ink-rgb) / 12%) rgb(var(--brand-rgb) / 8%)
+
+  DECORATIVE TYPE — an oversized watermark numeral, a background letterform,
+  a repeated marque — carries aria-hidden="true". It is not read aloud and it
+  is not held to the reading contrast floor, which is what lets it be as faint
+  as the design wants. Without the attribute it is treated as content and its
+  contrast is measured.
+
+  NEVER write color: var(--brand). It is a fill. As text it measures under 4:1
+  against both the light ground and the dark one, so a page that does it fails
+  the contrast floor and is sent back. If you want brand-coloured text, the
+  answer is always class="accent".
 
 TYPE     var(--fs-0) … var(--fs-8), with var(--tr-N) tracking and var(--lh-N)
          leading to match. var(--font-display) var(--font-body) var(--measure)

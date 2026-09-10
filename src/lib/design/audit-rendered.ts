@@ -89,6 +89,27 @@ function collect(): RenderedMetrics {
     return `${el.tagName.toLowerCase()}${id}${cls}`;
   };
 
+  // Decoration is not content, and holding it to a reading contrast floor is
+  // how the audit started rejecting good pages. An oversized faint numeral
+  // behind a section — the exact editorial device the ambition floor asks for
+  // — measures under 2:1 by design, and so does a watermark, a background
+  // letterform or a rule drawn as a character. WCAG 1.4.3 exempts incidental
+  // and decorative text for the same reason.
+  //
+  // aria-hidden is the marker, because it is the one an author has to set
+  // anyway for a screen reader not to read the thing aloud. If it is hidden
+  // from assistive technology it is decoration; if it is not, it is content
+  // and the floor applies.
+  const isDecorative = (el: HTMLElement): boolean => {
+    let node: HTMLElement | null = el;
+    while (node && node !== root.parentElement) {
+      if (node.getAttribute("aria-hidden") === "true") return true;
+      if (node.getAttribute("role") === "presentation" || node.getAttribute("role") === "none") return true;
+      node = node.parentElement;
+    }
+    return false;
+  };
+
   const contrastFailures: RenderedMetrics["contrastFailures"] = [];
   let displayPx = 0;
   let bodyPx = 0;
@@ -97,6 +118,7 @@ function collect(): RenderedMetrics {
   let darkArea = 0;
   let totalArea = 0;
   let smallTapTargets = 0;
+  const sizeTally = new Map<number, number>();
 
   const viewportArea = window.innerWidth * window.innerHeight;
   const all = Array.from(root.querySelectorAll<HTMLElement>("*"));
@@ -126,15 +148,35 @@ function collect(): RenderedMetrics {
       const size = parseFloat(style.fontSize);
       const weight = Number(style.fontWeight) || 400;
       const colour = parse(style.color);
-      if (colour) {
+      if (colour && !isDecorative(el)) {
         const ground = groundOf(el);
         const r = ratio(colour, ground);
         // WCAG "large text": 24px, or 18.66px at 700+.
         const isLarge = size >= 24 || (size >= 18.66 && weight >= 700);
         const floor = isLarge ? 4.5 : 7;
         if (r < floor) {
+          // Name the cause, not just the symptom. By far the commonest failure
+          // is a .muted or .accent element sitting on a dark background that
+          // was painted directly — background: var(--dark) on the author's own
+          // class — instead of with a ground utility. The custom properties
+          // those classes read are set BY the ground utilities, so without one
+          // they resolve to the light-ground pair over a dark ground. A repair
+          // round can act on that sentence; it cannot act on a ratio.
+          const groundIsDark = luminance(ground) < 0.2;
+          const usesGroundClass = (() => {
+            let node: HTMLElement | null = el;
+            while (node && node !== root.parentElement) {
+              if (/\bon-(paper|paper-2|paper-3|dark|dark-2|brand)\b/.test(node.className || "")) return true;
+              node = node.parentElement;
+            }
+            return false;
+          })();
+          const hint =
+            groundIsDark && !usesGroundClass
+              ? " — this sits on a dark background painted without a ground class, so muted/accent resolved to the light pair. Put class=\"on-dark\" on the element that sets the background."
+              : "";
           contrastFailures.push({
-            selector: label(el),
+            selector: label(el) + hint,
             ratio: Math.round(r * 100) / 100,
             size: Math.round(size),
             colour: style.color,
@@ -143,8 +185,15 @@ function collect(): RenderedMetrics {
         }
       }
       if (size > displayPx) displayPx = size;
-      // Body size: the size most of the running copy is actually set in.
-      if (text.length > 90 && (bodyPx === 0 || size < bodyPx)) {
+      if (size <= 28) sizeTally.set(Math.round(size), (sizeTally.get(Math.round(size)) ?? 0) + 1);
+      // Body size and measure, from actual running copy.
+      //
+      // Restricted to paragraphs in horizontal writing mode. Any long text
+      // node used to qualify, so a vertical-set label or a stack of oversized
+      // numerals — which wrap to one glyph a line — reported a measure of
+      // seven characters and buried the real finding.
+      const isRunningCopy = el.tagName === "P" && !/vertical/.test(style.writingMode || "");
+      if (isRunningCopy && text.length > 90 && (bodyPx === 0 || size < bodyPx)) {
         bodyPx = size;
         // Counted, not estimated. Dividing the box width by half the font size
         // assumes an average glyph width and was reporting 83 characters for a
@@ -253,6 +302,22 @@ function collect(): RenderedMetrics {
     pageStyle.content !== "none" &&
     parseFloat(pageStyle.opacity || "1") > 0.005;
   const hasTexture = grainPainted || root.querySelector("[class*=grain],[class*=noise]") !== null;
+
+  // A page whose running copy is not in <p> tags left bodyPx at zero, which
+  // reported a scale contrast of 0x and called an ambitious page timid. Fall
+  // back to the most common text size on the page, which is what body copy is
+  // by definition.
+  if (bodyPx === 0) {
+    let commonest = 0;
+    let best = 0;
+    for (const [size, count] of sizeTally) {
+      if (count > best) {
+        best = count;
+        commonest = size;
+      }
+    }
+    bodyPx = commonest || 16;
+  }
 
   return {
     contrastFailures: contrastFailures.slice(0, 25),

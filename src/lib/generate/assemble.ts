@@ -14,6 +14,7 @@ import { sanitizeBespokeHtml } from "@/lib/sanitize-generated-html";
 import { sanitizeGeneratedCss } from "@/lib/sanitize-css";
 import { sanitizeGeneratedJs } from "@/lib/sanitize-js";
 import { auditStatic, scoreOf, type AuditFinding } from "@/lib/design/audit";
+import { remediateCss } from "@/lib/design/remediate";
 import { auditRendered } from "@/lib/design/audit-rendered";
 import { callSmartModel } from "@/lib/generate/model";
 import { parseJsonResponse } from "@/lib/parse-json-response";
@@ -91,6 +92,7 @@ async function repair(
       system: "You repair production HTML and CSS against measured findings. You change only what was reported. You never type a literal value. You return valid JSON only.",
       maxTokens: 24000,
       temperature: 0.7,
+      timeoutMs: 280_000,
     },
     "gemini"
   );
@@ -127,9 +129,16 @@ export async function assemble(input: AssembleInput): Promise<AssembledPage> {
   const chromeHtml = sanitizeBespokeHtml(input.chrome.nav);
   const footerHtml = sanitizeBespokeHtml(input.chrome.footer);
 
+  const remediations: string[] = [];
+
   for (let round = 0; round <= maxRepairs; round += 1) {
     const bodyHtml = sections.map((section) => sanitizeBespokeHtml(section.html)).join("\n");
-    const authoredCss = sanitizeGeneratedCss(extraCss, allowed);
+    // Mechanical misuse first, deterministically and for free, so the model's
+    // repair round arrives at the design findings rather than at a caption
+    // painted in a border token.
+    const cleaned = remediateCss(sanitizeGeneratedCss(extraCss, allowed));
+    if (round === 0 && cleaned.changes.length) remediations.push(...cleaned.changes);
+    const authoredCss = cleaned.css;
     const css = `${input.system.css}\n${authoredCss}`;
 
     const staticFindings = auditStatic({
@@ -157,7 +166,7 @@ export async function assemble(input: AssembleInput): Promise<AssembledPage> {
   }
 
   const bodyHtml = sections.map((section) => sanitizeBespokeHtml(section.html)).join("\n");
-  const css = `${input.system.css}\n${sanitizeGeneratedCss(extraCss, allowed)}`;
+  const css = `${input.system.css}\n${remediateCss(sanitizeGeneratedCss(extraCss, allowed)).css}`;
   const js = sanitizeGeneratedJs(`${input.chrome.js}\n${input.body.js}`);
 
   const kindById = new Map(input.prd.sections.map((section) => [section.id, section.kind]));
@@ -175,7 +184,16 @@ export async function assemble(input: AssembleInput): Promise<AssembledPage> {
       html: sanitizeBespokeHtml(section.html),
       locked: false,
     })),
-    findings,
+    findings: remediations.length
+      ? [
+          ...findings,
+          {
+            check: "auto-remediated",
+            severity: "note" as const,
+            detail: `${remediations.length} mechanical token misuse(s) corrected before repair: ${remediations.slice(0, 4).join("; ")}`,
+          },
+        ]
+      : findings,
     score: scoreOf(findings),
     screenshot,
     repairs,
