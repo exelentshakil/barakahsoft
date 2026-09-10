@@ -1,6 +1,7 @@
 import type { SectionId } from "@/lib/section-ids";
 import { composePage } from "@/lib/generate/v2/compose";
 import { layoutPlanFor } from "@/lib/generate/v2/layout-plan";
+import { designPage } from "@/lib/generate/v2/design-page";
 import { compileDesignTokens } from "@/lib/design-tokens";
 import { DEFAULT_DESIGN_DNA } from "@/lib/design-dna";
 import type { Entity } from "@/lib/extract-entities";
@@ -172,7 +173,23 @@ export async function buildPage(args: {
   const layout = layoutPlanFor(design, dna.seed, dna.about.id, Boolean(brief.address));
   console.log(`[build-page] layout from ${layout.source}`);
 
-  const copy = await generatePageCopy(brief, TONES[dna.seed % TONES.length], composition.sections);
+  // The copy and the design are independent — one writes the words, the other
+  // decides the shapes — so they run together rather than one after the other.
+  const [copy, pageDesign] = await Promise.all([
+    generatePageCopy(brief, TONES[dna.seed % TONES.length], composition.sections),
+    designPage({
+      brief,
+      sections: composition.sections,
+      entities,
+      dna: args.design,
+      photoCount: media.length,
+    }),
+  ]);
+  console.log(
+    pageDesign
+      ? `[build-page] designed: ${pageDesign.sections.map((section) => `${section.id}/${section.layout}/${section.ground}`).join(" ")} — ${pageDesign.rationale}`
+      : "[build-page] no design spec; using the layout plan"
+  );
 
   // Before phase 2 the inner routes genuinely do not exist, so linking at them
   // would ship a nav full of 404s on the impression that decides the sale.
@@ -229,6 +246,7 @@ export async function buildPage(args: {
   const ctx: RenderContext = {
     brief,
     copy,
+    design: pageDesign,
     dna,
     logoUrl,
     photos: resolvedPhotos,

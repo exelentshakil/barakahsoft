@@ -1461,4 +1461,144 @@ export const BASE_STYLESHEET = `
   .bespoke-page .bs-footer--split-panel .bs-footer__cols > .bs-footer__col:not(.bs-footer__brand){align-self:start}
 }
 
+/* ================= composable section primitives ==========================
+   Nine orthogonal axes, one class each, chosen per section by the art
+   director model. Replaces named archetypes: the stylesheet implements nine
+   small independent things instead of forty combinations it has to guess in
+   advance, and the combinations multiply out to a space nothing repeats in.
+
+   The safety property is the ground. bs-s--on-* always sets background and
+   text colour TOGETHER, from token pairs the compiler guarantees, so an
+   unreadable section is not something the model can express — it never names
+   a colour at all. ========================================================= */
+
+.bespoke-page .bs-s{position:relative;padding-block:var(--bs-section-y,96px)}
+.bespoke-page .bs-s__inner{width:min(var(--bs-max,1360px),100% - var(--bs-gutter,32px) * 2);margin-inline:auto}
+.bespoke-page .bs-s__head{max-width:62ch;margin-bottom:clamp(24px,3vw,44px)}
+.bespoke-page .bs-s--center .bs-s__head{margin-inline:auto;text-align:center}
+.bespoke-page .bs-s--center .bs-s__body{text-align:center}
+
+/* ---- ground: background and text, always as a pair ---------------------- */
+.bespoke-page .bs-s--on-surface{background:var(--bs-surface,#fff);color:var(--bs-ink,#16181d)}
+.bespoke-page .bs-s--on-alt{background:var(--bs-surface-alt,#f4f5f7);color:var(--bs-ink,#16181d)}
+.bespoke-page .bs-s--on-ink{background:var(--bs-invert-surface,#16181d);color:var(--bs-invert-ink,#fff)}
+.bespoke-page .bs-s--on-brand{background:var(--bs-primary-strong,#b65e16);color:var(--bs-on-primary,#fff)}
+.bespoke-page .bs-s--on-image{background:var(--bs-invert-surface,#16181d);color:var(--bs-invert-ink,#fff)}
+.bespoke-page .bs-s--on-image .bs-s__bg{position:absolute;inset:0;overflow:hidden}
+.bespoke-page .bs-s--on-image .bs-s__bg img{width:100%;height:100%;object-fit:cover}
+/* The scrim is what makes text on a photograph legible whatever the photo is,
+   so it is not optional and not tunable. */
+.bespoke-page .bs-s--on-image .bs-s__bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgb(0 0 0 / .58),rgb(0 0 0 / .74))}
+.bespoke-page .bs-s--on-image .bs-s__inner{position:relative;z-index:1}
+/* Muted text keeps its role on every ground rather than being redefined per
+   section, which is how a "quiet" line became invisible on the dark bands. */
+.bespoke-page .bs-s--on-ink .bs-muted,
+.bespoke-page .bs-s--on-image .bs-muted,
+.bespoke-page .bs-s--on-brand .bs-muted{color:inherit;opacity:.82}
+
+/* ---- density ------------------------------------------------------------ */
+.bespoke-page .bs-s--tight{padding-block:clamp(44px,5vw,68px)}
+.bespoke-page .bs-s--regular{padding-block:var(--bs-section-y,96px)}
+.bespoke-page .bs-s--airy{padding-block:clamp(96px,10vw,168px)}
+
+/* ---- layout families ---------------------------------------------------- */
+.bespoke-page .bs-s__body{display:grid;gap:clamp(16px,2vw,28px)}
+.bespoke-page .bs-s--grid .bs-s__body{grid-template-columns:repeat(var(--bs-cols,3),minmax(0,1fr))}
+.bespoke-page .bs-s--rows .bs-s__body{grid-template-columns:minmax(0,1fr)}
+.bespoke-page .bs-s--stack .bs-s__body{grid-template-columns:minmax(0,1fr);max-width:72ch;margin-inline:auto}
+.bespoke-page .bs-s--rail .bs-s__body{grid-auto-flow:column;grid-auto-columns:minmax(260px,1fr);overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px}
+.bespoke-page .bs-s--rail .bs-s__body > *{scroll-snap-align:start}
+.bespoke-page .bs-s--feature .bs-s__body{grid-template-columns:repeat(var(--bs-cols,3),minmax(0,1fr))}
+.bespoke-page .bs-s--feature .bs-s__body > :first-child{grid-column:span 2;grid-row:span 2}
+.bespoke-page .bs-s--mosaic .bs-s__body{grid-template-columns:repeat(var(--bs-cols,3),minmax(0,1fr));grid-auto-rows:minmax(120px,auto)}
+.bespoke-page .bs-s--mosaic .bs-s__body > :nth-child(4n+1){grid-row:span 2}
+.bespoke-page .bs-s--mosaic .bs-s__body > :nth-child(6n+3){grid-column:span 2}
+.bespoke-page .bs-s--band .bs-s__inner{width:100%}
+.bespoke-page .bs-s--band .bs-s__body{grid-auto-flow:column;justify-content:space-between;align-items:center}
+.bespoke-page .bs-s--overlap{padding-top:0}
+.bespoke-page .bs-s--overlap .bs-s__inner{background:var(--bs-surface,#fff);color:var(--bs-ink,#16181d);border-radius:var(--bs-r-lg,20px);box-shadow:var(--bs-shadow-lg);padding:clamp(28px,4vw,56px);margin-top:calc(var(--bs-section-y,96px) * -0.5);position:relative;z-index:2}
+
+/* ---- split: words one side, media the other ----------------------------- */
+.bespoke-page .bs-s--split .bs-s__inner{display:grid;gap:clamp(28px,4vw,64px);align-items:center;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+/* Words and media are the two grid children; .bs-s__words is inert in every
+   other family, so one skeleton serves all nine. */
+.bespoke-page .bs-s--split .bs-s__words{min-width:0}
+.bespoke-page .bs-s--split .bs-s__head{margin-bottom:clamp(14px,1.6vw,22px)}
+.bespoke-page .bs-s--split.bs-s--media-left .bs-s__media{order:-1}
+.bespoke-page .bs-s--split.bs-s--media-right .bs-s__media{order:2}
+.bespoke-page .bs-s--media-none .bs-s__media{display:none}
+.bespoke-page .bs-s--media-top .bs-s__media{margin-bottom:clamp(20px,3vw,40px)}
+.bespoke-page .bs-s--media-bottom .bs-s__media{margin-top:clamp(20px,3vw,40px)}
+.bespoke-page .bs-s--media-inset .bs-s__media{max-width:min(520px,46%);float:right;margin:0 0 20px 28px}
+
+/* ---- media shapes ------------------------------------------------------- */
+.bespoke-page .bs-s__media{overflow:hidden;border-radius:var(--bs-r-lg,20px)}
+.bespoke-page .bs-s__media img{width:100%;height:100%;object-fit:cover}
+.bespoke-page .bs-s--shape-wide .bs-s__media{aspect-ratio:16/10}
+.bespoke-page .bs-s--shape-square .bs-s__media{aspect-ratio:1}
+.bespoke-page .bs-s--shape-portrait .bs-s__media{aspect-ratio:3/4}
+.bespoke-page .bs-s--shape-arch .bs-s__media{aspect-ratio:3/4;border-radius:50% 50% var(--bs-r-lg,20px) var(--bs-r-lg,20px) / 32% 32% var(--bs-r-lg,20px) var(--bs-r-lg,20px)}
+.bespoke-page .bs-s--shape-circle .bs-s__media{aspect-ratio:1;border-radius:999px}
+.bespoke-page .bs-s--shape-bleed .bs-s__media{aspect-ratio:21/9;border-radius:0}
+
+/* ---- dividers ----------------------------------------------------------- */
+.bespoke-page .bs-s--div-rule{border-top:1px solid var(--bs-line)}
+.bespoke-page .bs-s--div-diagonal{clip-path:polygon(0 3vw,100% 0,100% 100%,0 100%);margin-top:-3vw;padding-top:calc(var(--bs-section-y,96px) + 3vw)}
+.bespoke-page .bs-s--div-curve{border-start-start-radius:50% 3vw;border-start-end-radius:50% 3vw;margin-top:-1px}
+.bespoke-page .bs-s--div-notch::before{content:"";position:absolute;top:0;left:50%;transform:translate(-50%,-50%) rotate(45deg);width:34px;height:34px;background:inherit}
+
+/* ---- emphasis: structure that encodes something ------------------------- */
+.bespoke-page .bs-s--em-numbered .bs-s__body{counter-reset:bs-step}
+.bespoke-page .bs-s--em-numbered .bs-s__body > *{counter-increment:bs-step;position:relative}
+.bespoke-page .bs-s--em-numbered .bs-s__body > *::before{content:counter(bs-step,decimal-leading-zero);display:block;font-family:var(--bs-font-display,inherit);font-weight:var(--bs-display-weight,800);font-size:.85rem;letter-spacing:.1em;opacity:.55;margin-bottom:8px}
+.bespoke-page .bs-s--em-oversized-index .bs-s__body{counter-reset:bs-step}
+.bespoke-page .bs-s--em-oversized-index .bs-s__body > *{counter-increment:bs-step;position:relative;padding-top:clamp(28px,4vw,52px)}
+.bespoke-page .bs-s--em-oversized-index .bs-s__body > *::before{content:counter(bs-step);position:absolute;top:0;left:0;font-family:var(--bs-font-display,inherit);font-weight:900;font-size:clamp(2.6rem,6vw,4.6rem);line-height:.8;opacity:.14}
+.bespoke-page .bs-s--em-accent-rule .bs-s__head{border-left:4px solid var(--bs-primary-strong,#b65e16);padding-left:clamp(14px,1.6vw,22px)}
+.bespoke-page .bs-s--center.bs-s--em-accent-rule .bs-s__head{border-left:0;padding-left:0;border-top:4px solid var(--bs-primary-strong,#b65e16);padding-top:18px;display:inline-block}
+.bespoke-page .bs-s--em-eyebrow-slab .bs-eyebrow{background:var(--bs-primary-strong,#b65e16);color:var(--bs-on-primary,#fff);padding:7px 14px;border-radius:4px;display:inline-block}
+
+/* ---- responsive: every multi-column family collapses the same way ------- */
+@media (max-width:900px){
+  .bespoke-page .bs-s--split .bs-s__inner{grid-template-columns:minmax(0,1fr)}
+  .bespoke-page .bs-s--split .bs-s__media{order:0}
+  .bespoke-page .bs-s--grid .bs-s__body,
+  .bespoke-page .bs-s--feature .bs-s__body,
+  .bespoke-page .bs-s--mosaic .bs-s__body{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+  .bespoke-page .bs-s--feature .bs-s__body > :first-child,
+  .bespoke-page .bs-s--mosaic .bs-s__body > *{grid-column:auto;grid-row:auto}
+  .bespoke-page .bs-s--band .bs-s__body{grid-auto-flow:row}
+  .bespoke-page .bs-s--media-inset .bs-s__media{float:none;max-width:100%;margin:0 0 20px}
+}
+
+/* ---- the items ---------------------------------------------------------- */
+.bespoke-page .bs-item{display:flex;flex-direction:column;gap:10px;min-width:0}
+.bespoke-page .bs-item__text{display:flex;flex-direction:column;gap:10px;min-width:0}
+.bespoke-page .bs-s--grid .bs-item,
+.bespoke-page .bs-s--rail .bs-item,
+.bespoke-page .bs-s--feature .bs-item,
+.bespoke-page .bs-s--mosaic .bs-item{padding:clamp(20px,2.4vw,30px);border-radius:var(--bs-r-lg,20px);border:1px solid var(--bs-line);background:var(--bs-surface,#fff);color:var(--bs-ink,#16181d)}
+/* On a dark or brand band a white card would fight the section, so the card
+   becomes a translucent panel and keeps the band's own text colour. */
+.bespoke-page .bs-s--on-ink .bs-item,
+.bespoke-page .bs-s--on-brand .bs-item,
+.bespoke-page .bs-s--on-image .bs-item{background:rgb(255 255 255 / .08);border-color:rgb(255 255 255 / .18);color:inherit}
+.bespoke-page .bs-s--rows .bs-item{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:clamp(18px,2.4vw,34px);align-items:center;padding-block:clamp(18px,2.4vw,30px);border-top:1px solid var(--bs-line)}
+.bespoke-page .bs-s--rows.bs-s--media-none .bs-item{grid-template-columns:minmax(0,1fr)}
+.bespoke-page .bs-item__media{overflow:hidden;border-radius:var(--bs-r,12px);aspect-ratio:4/3}
+.bespoke-page .bs-item__media img{width:100%;height:100%;object-fit:cover}
+.bespoke-page .bs-s--shape-square .bs-item__media{aspect-ratio:1}
+.bespoke-page .bs-s--shape-portrait .bs-item__media{aspect-ratio:3/4}
+.bespoke-page .bs-s--shape-circle .bs-item__media{aspect-ratio:1;border-radius:999px;max-width:180px}
+.bespoke-page .bs-s--shape-arch .bs-item__media{aspect-ratio:3/4;border-radius:50% 50% var(--bs-r,12px) var(--bs-r,12px) / 30% 30% var(--bs-r,12px) var(--bs-r,12px)}
+.bespoke-page .bs-item__title{font-family:var(--bs-font-display,inherit);font-weight:var(--bs-display-weight,700);font-size:clamp(1.05rem,1.5vw,1.3rem);line-height:1.25}
+.bespoke-page .bs-item__meta{font-family:var(--bs-font-display,inherit);font-weight:var(--bs-display-weight,700);font-size:clamp(1.3rem,2.4vw,1.9rem);line-height:1}
+.bespoke-page .bs-item__glyph{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;background:var(--bs-primary-soft,rgb(0 0 0 / .06));color:var(--bs-primary-strong,#b65e16)}
+.bespoke-page .bs-s--on-ink .bs-item__glyph,
+.bespoke-page .bs-s--on-brand .bs-item__glyph,
+.bespoke-page .bs-s--on-image .bs-item__glyph{background:rgb(255 255 255 / .14);color:inherit}
+@media (max-width:700px){
+  .bespoke-page .bs-s--rows .bs-item{grid-template-columns:minmax(0,1fr)}
+}
+
 `;

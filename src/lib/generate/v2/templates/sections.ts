@@ -19,6 +19,8 @@ import type { SiteBrief } from "@/lib/generate-bespoke-site";
 import type { Entity } from "@/lib/extract-entities";
 import type { SectionId } from "@/lib/section-ids";
 import type { LayoutPlan } from "@/lib/generate/v2/layout-plan";
+import type { PageDesign, SectionDesign } from "@/lib/generate/v2/page-design";
+import { collectionSection } from "@/lib/generate/v2/templates/collection";
 
 /**
  * Which structural variant this lead gets for a given section.
@@ -71,6 +73,43 @@ export interface RenderContext {
    * the operator's chosen direction entirely. See layout-plan.ts.
    */
   layout: LayoutPlan;
+  /**
+   * The art director's spec for this page, when one was authored.
+   *
+   * Null whenever the design call failed or returned something unusable, and
+   * every renderer below still works in that case — it falls back to the
+   * layout plan. A less surprising page is an acceptable failure; a page that
+   * does not render is not.
+   */
+  design: PageDesign | null;
+}
+
+/** This section's design, or null to use the deterministic path. */
+export function designFor(ctx: RenderContext, id: SectionId): SectionDesign | null {
+  return ctx.design?.sections.find((section) => section.id === id) ?? null;
+}
+
+/**
+ * The ground, density and divider classes a section should also carry.
+ *
+ * Sections whose markup is genuinely bespoke — reviews with their stars and
+ * Google mark, areas with its map embed, pricing with its feature ticks — do
+ * not route through the generic collection renderer, because folding them into
+ * a plain card throws away the very thing that makes them worth having. They
+ * still take their ground and rhythm from the design, so the page alternates
+ * properly across them too; returns "" when there is no design, leaving those
+ * sections exactly as they were.
+ */
+export function groundClasses(ctx: RenderContext, id: SectionId): string {
+  const design = designFor(ctx, id);
+  if (!design) return "";
+  return [
+    `bs-s--on-${design.ground}`,
+    `bs-s--${design.density}`,
+    design.divider !== "none" ? `bs-s--div-${design.divider}` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 /**
@@ -242,7 +281,7 @@ export function trustSection(ctx: RenderContext): string {
   // Trimmed to a count that divides evenly, so the row never leaves an orphan.
   const usable = cells.length >= 5 ? cells.slice(0, 5) : cells.slice(0, cells.length >= 4 ? 4 : 3);
 
-  return `<section id="trust" class="bs-trustbar" data-cells="${usable.length}">
+  return `<section id="trust" class="bs-trustbar ${groundClasses(ctx, "trust")}" data-cells="${usable.length}">
   <div class="bs-container">${usable.join("")}</div>
 </section>`;
 }
@@ -405,6 +444,24 @@ export function servicesSection(ctx: RenderContext): string {
   if (services.items.length === 0) return "";
   const pool = ctx.photos.slice(2);
 
+  const design = designFor(ctx, "services");
+  if (design) {
+    return collectionSection({
+      id: "services",
+      design,
+      head: { eyebrow: services.eyebrow, headline: services.headline, headlineMark: services.headlineMark, intro: services.intro },
+      items: services.items.map((item, index) => ({
+        title: item.name,
+        body: item.blurb,
+        photo: pool[index % Math.max(pool.length, 1)] ?? null,
+        photoAlt: `${item.name} in ${brief.city}`,
+        glyph: brief.vertical.glyphs.offering,
+        href: ctx.href(`/${brief.vertical.nouns.offeringPath}/${slug(item.name)}`),
+        linkLabel: `See ${item.name.toLowerCase()}`,
+      })),
+    });
+  }
+
   const rows = services.items
     .map((item, index) => {
       const photo = pool[index % Math.max(pool.length, 1)] ?? null;
@@ -444,6 +501,22 @@ export function whyUsSection(ctx: RenderContext): string {
   const photo = ctx.photos[3] ?? ctx.photos[0] ?? null;
   const glyphs = ctx.brief.vertical.glyphs.why;
 
+  const design = designFor(ctx, "why-us");
+  if (design) {
+    return collectionSection({
+      id: "why-us",
+      design,
+      head: { eyebrow: why.eyebrow, headline: why.headline, intro: why.intro },
+      items: why.points.slice(0, 4).map((point, index) => ({
+        title: point.title,
+        body: point.body,
+        glyph: glyphs[index % glyphs.length],
+      })),
+      sectionPhoto: photo,
+      photoAlt: `The ${brief.businessName} team at work`,
+    });
+  }
+
   return `<section id="why-us" class="bs-section bs-whyus bs-whyus--${ctx.layout.whyUs}">
   <div class="bs-whyus__media">
     ${photo ? `<figure class="bs-media"><img src="${esc(photo)}" alt="The ${esc(brief.businessName)} team at work" width="1200" height="1400" loading="lazy" decoding="async"></figure>` : ""}
@@ -482,6 +555,23 @@ export function processSection(ctx: RenderContext): string {
   const { copy, brief } = ctx;
   const process = copy.process;
   const glyphs = ["phone", "home", "wrench", "check"];
+
+  const design = designFor(ctx, "process");
+  if (design) {
+    return collectionSection({
+      id: "process",
+      design,
+      head: { eyebrow: process.eyebrow, headline: process.headline },
+      items: process.steps.map((step, index) => ({
+        // The design's own numbering renders these, so the model's "Step 1."
+        // prefix would otherwise print the number twice.
+        title: step.title.replace(/^\s*(?:step\s*)?\d+[.):\-\s]+/i, ""),
+        body: step.body,
+        glyph: glyphs[index % glyphs.length],
+      })),
+      actions: `${button(copy.hero.submitLabel, ctx.primaryHref)}${callLink(brief.phone)}`,
+    });
+  }
 
   return `<section id="process" class="bs-section bs-process bs-process--${ctx.layout.process}">
   <div class="bs-container">
@@ -531,6 +621,19 @@ export function gallerySection(ctx: RenderContext): string {
   // a client's photographs away to make a grid tidy is the wrong trade.
   const shown = photos.slice(0, 12);
   const columns = shown.length % 4 === 0 ? 4 : shown.length >= 5 ? 3 : 2;
+
+  const design = designFor(ctx, "gallery");
+  if (design) {
+    return collectionSection({
+      id: "gallery",
+      design,
+      head: { eyebrow: copy.gallery.eyebrow, headline: copy.gallery.headline },
+      items: shown.map((photo, index) => {
+        const caption = copy.gallery.captions[index] ?? services[index % Math.max(services.length, 1)]?.name ?? `${brief.industry} in ${brief.city}`;
+        return { photo, photoAlt: `${caption} by ${brief.businessName}`, title: caption };
+      }),
+    });
+  }
 
   const tiles = shown
     .map((photo, index) => {
@@ -601,7 +704,7 @@ export function reviewsSection(ctx: RenderContext): string {
 
   const showArrows = brief.reviews.length > 3;
 
-  return `<section id="reviews" class="bs-section">
+  return `<section id="reviews" class="bs-section ${groundClasses(ctx, "reviews")}">
   <div class="bs-container">
     <div class="bs-center bs-reviews__head">
       <span class="bs-eyebrow">${esc(copy.reviews.eyebrow)}</span>
@@ -640,7 +743,7 @@ export function areasSection(ctx: RenderContext): string {
     ? `${brief.geo.lat},${brief.geo.lng}`
     : [brief.city.trim() || brief.areas[0] || "", brief.regionHint].filter(Boolean).join(", ");
   const query = encodeURIComponent(place);
-  return `<section id="areas" class="bs-section bs-section--tint bs-areas--${ctx.layout.areas}">
+  return `<section id="areas" class="bs-section bs-section--tint bs-areas--${ctx.layout.areas} ${groundClasses(ctx, "areas")}">
   <div class="bs-container">
     <div class="bs-split bs-split--wide-right bs-areas">
       <div class="bs-stack">
@@ -755,7 +858,7 @@ export function guaranteeSection(ctx: RenderContext): string {
     .filter((point): point is { glyph: string; title: string; body: string } => point !== null)
     .slice(0, 3);
 
-  return `<section id="guarantee" class="bs-section bs-guarantee">
+  return `<section id="guarantee" class="bs-section bs-guarantee ${groundClasses(ctx, "guarantee")}">
   <div class="bs-container">
     <div class="bs-guarantee__grid">
       <div class="bs-stack">
@@ -783,7 +886,7 @@ export function guaranteeSection(ctx: RenderContext): string {
 
 export function faqSection(ctx: RenderContext): string {
   const { copy } = ctx;
-  return `<section id="faq" class="bs-section bs-section--tint">
+  return `<section id="faq" class="bs-section bs-section--tint ${groundClasses(ctx, "faq")}">
   <div class="bs-container bs-container--narrow">
     <div class="bs-center">
       <span class="bs-eyebrow">${esc(copy.faq.eyebrow)}</span>
@@ -920,7 +1023,7 @@ export function pricingSection(ctx: RenderContext): string {
 
   const heading = copy.pricing.headline || `${brief.vertical.nouns.offeringPlural} and prices`;
 
-  return `<section id="pricing" class="bs-section bs-pricing">
+  return `<section id="pricing" class="bs-section bs-pricing ${groundClasses(ctx, "pricing")}">
   <div class="bs-container">
     <div class="bs-sectionhead">
       <div>
@@ -951,6 +1054,19 @@ export function peopleSection(ctx: RenderContext): string {
   const { copy, brief } = ctx;
   const people = ctx.entities.filter((entity) => entity.kind.toLowerCase() === "person").slice(0, 8);
   if (people.length === 0) return "";
+
+  const design = designFor(ctx, "people");
+  if (design) {
+    return collectionSection({
+      id: "people",
+      design,
+      head: { headline: copy.people.headline || `The team at ${brief.businessName}` },
+      items: people.map((person) => ({
+        title: person.label,
+        body: person.detail || person.attributes.slice(0, 3).join(" · ") || undefined,
+      })),
+    });
+  }
 
   // Portraits come from the photo pool only after the hero, about and service
   // slots have taken theirs, and a wrong face is worse than none — so a
