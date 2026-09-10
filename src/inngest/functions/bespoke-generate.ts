@@ -345,14 +345,17 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     // why the media panel showed images marked "not placed on any page".
     const media = (await step.run("plan-media", async () => {
       await touchProgress(admin, lead_id);
-      const wanted = design.sections
-        .filter((section) => section.image)
-        .map((section) => ({
-          key: section.image!.slot,
-          subject: section.image!.brief,
-          fallbackSubject: section.image!.brief,
-          aspect: section.image!.aspect,
-        }));
+      const { slotsFromImageBriefs } = await import("@/lib/media/plan-media");
+      const wanted = slotsFromImageBriefs(
+        design.sections
+          .filter((section) => section.image)
+          .map((section) => ({
+            slot: section.image!.slot,
+            aspect: section.image!.aspect,
+            brief: section.image!.brief,
+            kind: section.kind,
+          }))
+      );
 
       // An existing plan is kept: it was being rebuilt from scratch every run,
       // which overwrote whatever the operator had chosen and regenerated every
@@ -363,7 +366,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
       if (!missing.length) return existing;
 
       const assets = await ingestRealPhotos(lead_id, brief.photos, brief.industry);
-      const added = await planMedia(lead_id, assets, missing as never, dna.mood);
+      const added = await planMedia(lead_id, assets, missing, dna.mood);
       const plan = [...existing, ...added];
       await admin.from("artifacts").update({ media_plan: plan }).eq("lead_id", lead_id);
       return plan;

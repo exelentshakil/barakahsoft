@@ -26,6 +26,63 @@ export interface MediaSlot {
   fallbackSubject: string;
 }
 
+/**
+ * Build real MediaSlots from the PRD's own image requests.
+ *
+ * The PRD names a slot, an aspect and a written art-direction brief. It does
+ * NOT name `prefers` or `shape`, because those are this module's vocabulary
+ * for matching a client's existing photographs — and asking an art director to
+ * think in them would be asking the wrong question.
+ *
+ * Deriving them here is what stopped the Inngest job hand-rolling slot objects
+ * and casting the mismatch away: a slot without `prefers` reached
+ * `slot.prefers.includes(...)` inside the matcher and crashed the build.
+ */
+export function slotsFromImageBriefs(
+  briefs: Array<{ slot: string; aspect: string; brief: string; kind?: string }>
+): MediaSlot[] {
+  return briefs.map((brief) => ({
+    key: brief.slot,
+    prefers: prefersFor(brief.kind ?? brief.slot),
+    shape: shapeFor(brief.aspect),
+    fallbackSubject: brief.brief,
+  }));
+}
+
+/**
+ * Which of the captioner's subjects can fill a section, best first.
+ *
+ * Matched on the section's own vocabulary rather than a fixed slot list, since
+ * section kinds are free strings now — a gym's "coaches-and-services" and a
+ * salon's "our-stylists" should both prefer photographs of people.
+ */
+function prefersFor(kind: string): MediaSubject[] {
+  const name = kind.toLowerCase();
+  if (/team|coach|staff|people|person|stylist|trainer|practitioner|founder|roster/.test(name)) {
+    return ["team", "interior", "work"];
+  }
+  if (/facility|studio|interior|space|salon|gym|clinic|showroom|location|visit|find/.test(name)) {
+    return ["interior", "exterior", "property"];
+  }
+  if (/gallery|work|project|portfolio|before|result|proof|case/.test(name)) {
+    return ["work", "property", "product"];
+  }
+  if (/product|menu|shop|collection|range|stock/.test(name)) {
+    return ["product", "work", "interior"];
+  }
+  if (/van|fleet|vehicle|emergency|callout/.test(name)) {
+    return ["vehicle", "work", "exterior"];
+  }
+  // Hero and anything unrecognised: the widest useful net, best first.
+  return ["work", "interior", "team", "exterior"];
+}
+
+function shapeFor(aspect: string): ImageShape {
+  if (aspect === "portrait" || aspect === "tall") return "portrait";
+  if (aspect === "square") return "square";
+  return "landscape";
+}
+
 export interface PlannedImage {
   slot: string;
   url: string;

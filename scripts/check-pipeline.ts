@@ -14,6 +14,7 @@
 import { PrdSchema, intentFrom, prdToMarkdown } from "../src/lib/generate/prd";
 import { compileDesignSystem } from "../src/lib/design";
 import { assemble } from "../src/lib/generate/assemble";
+import { slotsFromImageBriefs } from "../src/lib/media/plan-media";
 
 let failed = 0;
 const ok = (pass: boolean, message: string) => {
@@ -60,6 +61,44 @@ ok(system.meta.type.scaleContrast >= 8, `scale contrast ${system.meta.type.scale
 
 const markdown = prdToMarkdown(prd);
 ok(markdown.includes(prd.idea) && markdown.includes("membership-tiers"), "PRD renders as something an operator can read");
+
+console.log("\nprd → media slots");
+
+// The PRD names a slot, an aspect and a brief; the media matcher needs
+// `prefers` and `shape` as well. The Inngest job used to hand-roll these and
+// cast the mismatch away, so a slot with no `prefers` reached
+// slot.prefers.includes(...) and crashed the build in production. Asserted at
+// runtime because the cast is exactly what stopped the compiler saying so.
+const slots = slotsFromImageBriefs(
+  prd.sections
+    .filter((section) => section.image)
+    .map((section) => ({
+      slot: section.image!.slot,
+      aspect: section.image!.aspect,
+      brief: section.image!.brief,
+      kind: section.kind,
+    }))
+);
+ok(slots.length > 0, `${slots.length} media slots built from the PRD`);
+ok(
+  slots.every((slot) => Array.isArray(slot.prefers) && slot.prefers.length > 0),
+  "every slot carries a non-empty `prefers`, which the caption matcher dereferences"
+);
+ok(
+  slots.every((slot) => ["landscape", "portrait", "square"].includes(slot.shape)),
+  `every slot carries a valid shape (${[...new Set(slots.map((s) => s.shape))].join(", ")})`
+);
+ok(
+  slots.every((slot) => typeof slot.fallbackSubject === "string" && slot.fallbackSubject.length > 10),
+  "every slot carries the written art-direction brief for generation"
+);
+ok(
+  slots.every((slot) => typeof slot.key === "string" && slot.key.length > 1),
+  "every slot has a key, which is also the data-slot a photo is later swapped by"
+);
+const coaches = slotsFromImageBriefs([{ slot: "coaching", aspect: "portrait", brief: "Two coaches on the gym floor, unposed.", kind: "coaching-team" }]);
+ok(coaches[0].prefers[0] === "team", `a people section prefers photographs of people (${coaches[0].prefers.join(" > ")})`);
+ok(coaches[0].shape === "portrait", "a portrait aspect maps to a portrait shape");
 
 console.log("\nauthor → assemble → audit");
 
