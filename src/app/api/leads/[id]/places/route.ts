@@ -61,6 +61,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   facts.hours = place.opening_hours?.weekday_text ?? facts.hours ?? null;
   facts.business_status = place.business_status ?? null;
   facts.place_id = placeId;
+  // An operator looked at this listing and chose it. The build re-checks every
+  // stored listing against the lead before trusting its rating and reviews,
+  // and a deliberate pin must survive that check — a franchise, a trading
+  // name, or a listing whose website points somewhere else are all cases a
+  // person can settle and a string comparison cannot.
+  facts.place_pinned = true;
   // Third from last comma-separated part of a US formatted address is the town.
   facts.town = place.formatted_address?.split(",").slice(-3, -2)[0]?.trim() ?? facts.town ?? null;
   nap.address = place.formatted_address ?? null;

@@ -547,7 +547,7 @@ export const BASE_STYLESHEET = `
 /* Header strip --------------------------------------------------------- */
 .bespoke-page .bs-utility--split{padding:0;background:none}
 .bespoke-page .bs-utility--split .bs-container{gap:0;padding-inline:0}
-.bespoke-page .bs-utility--split span{padding:9px var(--bs-gutter);background:var(--bs-ink,#16181d)}
+.bespoke-page .bs-utility--split span{padding:9px var(--bs-gutter);background:var(--bs-invert-surface,#16181d);color:var(--bs-invert-ink,#fff)}
 .bespoke-page .bs-utility--split span:last-child{background:var(--bs-accent-strong,var(--bs-accent,#c1273c));color:var(--bs-on-accent,#fff)}
 .bespoke-page .bs-utility--striped{
   background:repeating-linear-gradient(115deg,var(--bs-ink,#16181d) 0 26px,var(--bs-primary-strong,#c2410c) 26px 52px);
@@ -763,12 +763,20 @@ export const BASE_STYLESHEET = `
 }
 
 /* ---------- footer ----------------------------------------------------- */
-.bespoke-page .bs-footer{background:var(--bs-ink,#16181d);color:rgb(255 255 255 / .82);padding-top:clamp(48px,6vw,88px)}
+/* --bs-ink is the TEXT colour on a light surface, and it was being used here
+   as a BACKGROUND with hardcoded white text on top. On any palette that
+   compiles ink light, that is white on white — which is exactly how a footer
+   shipped with its address, phone and links invisible unless you selected
+   them. The invert pair is the one the compiler guarantees a contrast ratio
+   for, and it is what every other dark band on the page already uses. */
+.bespoke-page .bs-footer{background:var(--bs-invert-surface,#16181d);color:var(--bs-invert-ink,#fff);padding-top:clamp(48px,6vw,88px)}
 .bespoke-page .bs-footer a{color:inherit}
 .bespoke-page .bs-footer a:hover{color:#fff}
-.bespoke-page .bs-footer__cols{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:clamp(24px,3vw,48px)}
+.bespoke-page .bs-footer__cols{display:grid;grid-template-columns:1.6fr repeat(3,1fr);gap:clamp(24px,3vw,48px)}
+.bespoke-page .bs-footer__cols[data-cols="3"]{grid-template-columns:1.6fr 1fr 1fr}
+.bespoke-page .bs-footer__cols[data-cols="2"]{grid-template-columns:1.6fr 1fr}
 .bespoke-page .bs-footer__col li{padding:6px 0;font-size:.93rem}
-.bespoke-page .bs-footer h3,.bespoke-page .bs-footer .bs-h4{color:#fff;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;margin-bottom:12px}
+.bespoke-page .bs-footer h3,.bespoke-page .bs-footer .bs-h4{color:var(--bs-invert-ink,#fff);font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;margin-bottom:12px}
 .bespoke-page .bs-footer__col img{max-height:56px;width:auto;object-fit:contain}
 .bespoke-page .bs-footer__bottom{margin-top:clamp(32px,4vw,56px);border-top:1px solid rgb(255 255 255 / .12);padding-block:22px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:14px;font-size:.85rem}
 .bespoke-page .bs-footer-cta{background:var(--bs-primary-strong,var(--bs-primary,#e4761b));color:var(--bs-on-primary,#fff);border-radius:var(--bs-r-lg);padding:clamp(28px,3.4vw,52px);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:24px;box-shadow:var(--bs-shadow-lg);margin-bottom:clamp(32px,4vw,56px)}
@@ -1445,7 +1453,7 @@ export const BASE_STYLESHEET = `
 
 /* Brand block given the width, columns tucked alongside. */
 @media (min-width:901px){
-  .bespoke-page .bs-footer--map-anchored .bs-footer__cols{grid-template-columns:1.6fr repeat(3,1fr)}
+  .bespoke-page .bs-footer--map-anchored .bs-footer__cols[data-cols="4"]{grid-template-columns:1.6fr repeat(3,1fr)}
   .bespoke-page .bs-footer--map-anchored .bs-footer__brand{padding-right:clamp(20px,3vw,48px);border-right:1px solid rgb(255 255 255 / .12)}
 }
 

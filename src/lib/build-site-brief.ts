@@ -1,4 +1,5 @@
 import type { VerticalProfile } from "@/lib/verticals/types";
+import { matchesLead } from "@/lib/google/places";
 import { slugifyText } from "@/lib/slug";
 import { buildRichContext, findRelevantPage } from "@/lib/facts-context";
 import { extractServiceAreas } from "@/lib/scrape/extract-service-areas";
@@ -189,8 +190,44 @@ export function buildSiteBrief(
     ])
   ).filter((u): u is string => typeof u === "string" && /^https?:\/\//i.test(u));
 
-  const rating = typeof facts.rating === "number" ? facts.rating : null;
-  const reviewCount = typeof facts.review_count === "number" ? facts.review_count : null;
+  // The last gate before another company's proof reaches a client's homepage.
+  //
+  // The match guard runs at scrape time, so it protects what is scraped from
+  // now on and does nothing about what is already stored. A lead scraped
+  // before the guard existed — or by any path that skipped it — still carries
+  // whatever Places answered with, and one of them was Welcome Home Properties
+  // of Walla Walla, Washington, attached to a gym in Belfast and ready to ship
+  // its 3.3 rating, its 129 reviews and its address.
+  //
+  // Re-checking here repairs every one of those on the next build without a
+  // migration, because it questions the stored record rather than trusting
+  // that whoever wrote it checked. An operator's pinned choice is exempt:
+  // they looked at the listing and said yes, which is better evidence than
+  // anything computable here.
+  const placesRaw = (scrapeResults.places_raw ?? null) as
+    | { name?: string; website?: string; formatted_phone_number?: string; formatted_address?: string }
+    | null;
+  const pinned = Boolean(lead.place_id && facts.place_id && lead.place_id === facts.place_id && facts.place_pinned);
+  const proofVerdict =
+    placesRaw && !pinned
+      ? matchesLead(placesRaw, {
+          domain: (() => { try { return new URL(lead.source_url).hostname; } catch { return null; } })(),
+          phone: (lead.phone as string | null) ?? null,
+          name: (lead.business_name as string | null) ?? null,
+        })
+      : { ok: true, why: pinned ? "pinned by an operator" : "no stored listing" };
+
+  if (!proofVerdict.ok) {
+    console.error(
+      `[brief] stored Google listing rejected for ${lead.business_name ?? lead.source_url}: ` +
+        `${placesRaw?.name} (${placesRaw?.formatted_address}) — ${proofVerdict.why}. ` +
+        `Building with no rating, reviews or hours rather than another company's.`
+    );
+  }
+  const proofTrusted = proofVerdict.ok;
+
+  const rating = proofTrusted && typeof facts.rating === "number" ? facts.rating : null;
+  const reviewCount = proofTrusted && typeof facts.review_count === "number" ? facts.review_count : null;
 
   const reviews = ((facts.reviews as {
     author_name: string;
@@ -199,6 +236,7 @@ export function buildSiteBrief(
     profile_photo_url?: string | null;
     relative_time_description?: string | null;
   }[] | undefined) ?? [])
+    .filter(() => proofTrusted)
     .filter((r) => r?.text && r.text.trim().length > 20 && (typeof r.rating !== "number" || r.rating >= 4))
     .slice(0, 8)
     .map((r) => ({
@@ -236,7 +274,7 @@ export function buildSiteBrief(
     photos,
     // Places gives us the place_id, so the "read all reviews" link goes to
     // their real review list rather than a search that might land anywhere.
-    googleReviewUrl: lead.place_id ? `https://search.google.com/local/reviews?placeid=${lead.place_id}` : null,
+    googleReviewUrl: proofTrusted && lead.place_id ? `https://search.google.com/local/reviews?placeid=${lead.place_id}` : null,
     facebookRating: overrides.facebookRating ?? null,
     facebookReviewCount: overrides.facebookReviewCount ?? null,
     layoutSalt: overrides.layoutSalt ?? 0,

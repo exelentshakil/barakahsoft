@@ -197,7 +197,11 @@ export function footerMarkup(ctx: RenderContext): string {
         ${callLink(brief.phone, "bs-link-call bs-link-call--invert")}
       </div>
     </div>
-    <div class="bs-footer__cols">
+    <!-- The column count is declared, because it varies. The grid was a fixed
+         1.6fr 1fr 1fr 1fr, and a business with no service-areas section
+         renders three columns into four tracks — leaving the whole right-hand
+         third of the footer empty. -->
+    <div class="bs-footer__cols" data-cols="${ctx.pageSections.includes("areas") ? 4 : 3}">
       <div class="bs-footer__col bs-footer__brand">
         ${logoUrl ? `<img src="${esc(logoUrl)}" alt="${esc(brief.businessName)}" width="180" height="56" loading="lazy">` : `<span class="bs-wordmark">${esc(brief.businessName)}</span>`}
         <p class="bs-body">${esc(copy.footer.blurb)}</p>
