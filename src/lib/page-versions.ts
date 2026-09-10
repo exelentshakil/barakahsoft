@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { updateArtifact } from "@/lib/artifact-write";
 import type { Artifact } from "@/types/database";
 
 // Page version history and restore.
@@ -131,14 +132,15 @@ export async function writeLivePage(
   const admin = createAdminClient();
 
   if (pageKey === HOME_KEY) {
-    await admin
-      .from("artifacts")
-      .update({
+    await updateArtifact(
+      leadId,
+      {
         bespoke_homepage_html: html,
         ...(assets ? { bespoke_css: assets.css, bespoke_sections: assets.sections } : {}),
         last_edited_at: new Date().toISOString(),
-      })
-      .eq("lead_id", leadId);
+      },
+      `writeLivePage:${pageKey}`
+    );
   } else {
     const { data: current } = await admin
       .from("artifacts")
@@ -146,13 +148,14 @@ export async function writeLivePage(
       .eq("lead_id", leadId)
       .single<{ bespoke_pages: Record<string, string> }>();
 
-    await admin
-      .from("artifacts")
-      .update({
+    await updateArtifact(
+      leadId,
+      {
         bespoke_pages: { ...(current?.bespoke_pages ?? {}), [pageKey]: html },
         last_edited_at: new Date().toISOString(),
-      })
-      .eq("lead_id", leadId);
+      },
+      `writeLivePage:${pageKey}`
+    );
   }
 
   return recordVersion(leadId, pageKey, html, source, note, assets);

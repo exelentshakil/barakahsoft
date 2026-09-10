@@ -1,4 +1,5 @@
 import { inngest } from "@/inngest/client";
+import { updateArtifact } from "@/lib/artifact-write";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildSiteBrief, buildKnownPaths, servicesForMatching, type BriefOverrides } from "@/lib/build-site-brief";
 import { resolveVerticalAsync } from "@/lib/verticals/resolve";
@@ -407,9 +408,9 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     };
 
     await step.run("persist-build", async () => {
-      await admin
-        .from("artifacts")
-        .update({
+      await updateArtifact(
+        lead_id,
+        {
           bespoke_homepage_html: built.html,
           bespoke_chrome_html: page.chromeHtml,
           bespoke_footer_html: page.footerHtml,
@@ -422,9 +423,23 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
           // in the registry must not retroactively change the navigation labels
           // and schema.org type of every site already shipped.
           vertical_profile: brief.vertical,
+          // A rebuild is a REPLACEMENT, not a merge. The inner pages belong to
+          // the build that made them — their markup, their classes and their
+          // tokens — so carrying the previous run's copies forward leaves a
+          // site whose homepage is new and whose other pages are old, styled
+          // against a stylesheet that no longer exists. Phase 2 repopulates
+          // this from the build that is running now.
+          bespoke_pages: {},
+          // Cleared WITH bespoke_pages, never apart from it. This flag is what
+          // the nav reads to decide between a real link and an anchor, and a
+          // rebuild of a site that had already reached phase 2 left it true —
+          // so the nav would link at inner pages the line above just removed.
+          // Fresh build, no inner pages, anchors again, until phase 2 reruns.
+          inner_pages_built: false,
           last_edited_at: new Date().toISOString(),
-        })
-        .eq("lead_id", lead_id);
+        },
+        "persist-build"
+      );
     });
 
     const composedHtml = built.html;
@@ -562,9 +577,9 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
       // Split immediately so section-level repair is available the moment
       // the operator first looks at the page, rather than after some later
       // action happens to trigger it.
-      await admin
-        .from("artifacts")
-        .update({
+      await updateArtifact(
+        lead_id,
+        {
            bespoke_rationale: homepage.rationale,
            // The real per-section split, written by the build. It was
            // previously two entries both holding the ENTIRE page, so
@@ -593,8 +608,9 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
             ...built.notes,
           ].join("\n") || null,
           bespoke_css: homepage.css,
-        })
-        .eq("lead_id", lead_id);
+        },
+        "save-homepage"
+      );
       // Reviewable from here. Everything after is depth, not a blocker.
       await admin.from("leads").update({ status: "qa_pending" }).eq("id", lead_id);
     });
@@ -602,9 +618,9 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     await bumpProgress(admin, lead_id, 4);
 
     await step.run("finish-phase-1", async () => {
-      // inner_pages_built stays false: those routes genuinely do not exist
-      // yet, and it is the flag the nav reads to decide between a real link
-      // and an anchor.
+      // inner_pages_built was reset in persist-build, alongside the inner
+      // pages themselves: those routes genuinely do not exist yet, and it is
+      // the flag the nav reads to decide between a real link and an anchor.
       await admin
         .from("artifacts")
         .update({ generation_phase: 1, full_site_status: "complete" })
