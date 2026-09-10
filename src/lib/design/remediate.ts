@@ -37,6 +37,129 @@ const NOT_TEXT: Record<string, string> = {
 /** Below this, text is not readable at any contrast ratio. */
 const MIN_FONT_PX = 11;
 
+/**
+ * The ground contract, as code.
+ *
+ * A ground is a PAIR — a background and the four things that have to change
+ * with it: the text colour, and the three custom properties every supporting
+ * colour reads through. The system ships that pair as utility classes
+ * (.on-dark, .on-paper, .on-brand); a model that instead writes
+ * `background: var(--dark)` on a class of its own gets the background and
+ * none of the rest, so `--muted` still resolves to the LIGHT ground's ink and
+ * paints 2.3:1 grey on near-black.
+ *
+ * That is not a design decision that went wrong. It is half a pair, and the
+ * other half is entirely determined by which background was painted — so it
+ * belongs here, settled for free, rather than in a 25k-token repair round
+ * that has better things to look at.
+ */
+interface Ground {
+  /** Text colour for this ground. */
+  color: string;
+  muted: string;
+  onGround: string;
+  rule: string;
+  /** Text tokens that actually read on this ground. Anything else is the wrong pair. */
+  legalText: string[];
+}
+
+const DARK: Ground = {
+  color: "var(--on-dark)",
+  muted: "var(--on-dark-2)",
+  onGround: "var(--brand-on-dark)",
+  rule: "var(--line-on-dark)",
+  legalText: ["--on-dark", "--on-dark-2", "--brand-on-dark", "--paper", "--paper-2", "--paper-3"],
+};
+
+const PAPER: Ground = {
+  color: "var(--ink)",
+  muted: "var(--ink-2)",
+  onGround: "var(--brand-ink)",
+  rule: "var(--line)",
+  legalText: ["--ink", "--ink-2", "--ink-3", "--brand-ink", "--brand-ink-lg", "--accent-ink", "--dark", "--dark-2"],
+};
+
+const BRAND: Ground = {
+  color: "var(--on-brand-ground)",
+  muted: "var(--brand-ground-muted)",
+  onGround: "var(--on-brand-ground)",
+  rule: "var(--brand-ground-muted)",
+  legalText: ["--on-brand-ground", "--brand-ground-muted"],
+};
+
+/** Which ground a background token paints. */
+const GROUND_OF: Record<string, Ground> = {
+  "--dark": DARK,
+  "--dark-2": DARK,
+  "--ink": DARK,
+  "--paper": PAPER,
+  "--paper-2": PAPER,
+  "--paper-3": PAPER,
+  "--brand-ground": BRAND,
+};
+
+/**
+ * The three properties are set by the ground the element sits in, so they read
+ * correctly whichever ground that turns out to be. Never the wrong pair.
+ */
+const INHERITED_TEXT = ["--muted", "--on-ground", "--rule"];
+
+function groundPainted(value: string): Ground | null {
+  const tokens = [...value.matchAll(/var\(\s*(--[\w-]+)/g)].map((match) => match[1]);
+  const grounds = tokens.filter((token) => token in GROUND_OF);
+  // Exactly one, or this is a gradient or a layered background and which
+  // ground the text ends up over is a real design question, not a slot error.
+  if (grounds.length !== 1) return null;
+  return GROUND_OF[grounds[0]];
+}
+
+/**
+ * Complete the pair on any rule that paints a ground itself.
+ *
+ * Only ever ADDS the halves that are missing, and only ever REPLACES a text
+ * colour that belongs to a different ground's pair — a literal colour, or a
+ * token this ground can carry, is the author's decision and is left alone.
+ */
+function completeGrounds(root: postcss.Root, changes: string[]): void {
+  root.walkRules((rule) => {
+    let ground: Ground | null = null;
+    rule.walkDecls(/^background(-color|-image)?$/, (decl) => {
+      ground = ground ?? groundPainted(decl.value);
+    });
+    if (!ground) return;
+    const pair: Ground = ground;
+
+    const declared = new Set<string>();
+    let colourDecl: Declaration | null = null;
+    rule.walkDecls((decl) => {
+      declared.add(decl.prop);
+      if (decl.prop === "color") colourDecl = decl;
+    });
+
+    if (!colourDecl) {
+      rule.append({ prop: "color", value: pair.color });
+      changes.push(`${rule.selector}: paints a ground without a text colour → color: ${pair.color}`);
+    } else {
+      const decl = colourDecl as Declaration;
+      const token = decl.value.match(/var\(\s*(--[\w-]+)/)?.[1];
+      if (token && !pair.legalText.includes(token) && !INHERITED_TEXT.includes(token)) {
+        changes.push(`${rule.selector}: color: var(${token}) is the wrong ground's pair → ${pair.color}`);
+        decl.value = pair.color;
+      }
+    }
+
+    for (const [prop, value] of [
+      ["--muted", pair.muted],
+      ["--on-ground", pair.onGround],
+      ["--rule", pair.rule],
+    ] as const) {
+      if (declared.has(prop)) continue;
+      rule.append({ prop, value });
+    }
+    changes.push(`${rule.selector}: ground painted directly → supporting colours repointed to its own pair`);
+  });
+}
+
 export interface Remediation {
   css: string;
   changes: string[];
@@ -74,6 +197,10 @@ export function remediateCss(css: string): Remediation {
       }
     }
   });
+
+  // After the per-declaration fixes, so a colour this pass repoints is judged
+  // against the ground its own rule paints rather than the one it inherited.
+  completeGrounds(root, changes);
 
   return { css: root.toString(), changes };
 }
