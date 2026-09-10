@@ -17,7 +17,7 @@
 // list we would have rebuilt the template system one layer down.
 
 import { z } from "zod";
-import { callSmartModel } from "@/lib/generate/model";
+import { callDesignModel } from "@/lib/generate/model";
 import { parseJsonResponse } from "@/lib/parse-json-response";
 import { DESIGN_LAW, SECTION_BAND } from "@/lib/design/law";
 import { answeredForPrompt, missingForPrompt, type IntakeSpec } from "@/lib/intake-spec";
@@ -339,15 +339,16 @@ function describeFailure(raw: string | null, issues?: unknown): string {
 }
 
 export async function writePrd(input: PrdInput): Promise<Prd | null> {
-  const raw = await callSmartModel(
+  const raw = await callDesignModel(
     buildPrompt(input),
     {
       system:
         "You are an art director briefing a build. You decide rather than describe, you state intent rather than values, and you return valid JSON only.",
       maxTokens: 16000,
       temperature: 0.85,
-    },
-    "gemini"
+      timeoutMs: 120_000,
+      label: "prd",
+    }
   );
 
   const parsed = raw ? parseJsonResponse(raw) : null;

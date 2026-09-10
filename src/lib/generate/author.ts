@@ -12,7 +12,7 @@
 // value, because those are already solved; see TOKEN_CONTRACT.
 
 import { z } from "zod";
-import { callSmartModel } from "@/lib/generate/model";
+import { callDesignModel } from "@/lib/generate/model";
 import { parseJsonResponse } from "@/lib/parse-json-response";
 import { DESIGN_LAW, TOKEN_CONTRACT, MECHANISM_CONTRACT } from "@/lib/design/law";
 import { prdToMarkdown, type Prd } from "@/lib/generate/prd";
@@ -136,15 +136,15 @@ export async function authorChrome(input: AuthorInput): Promise<Chrome | null> {
     `Return JSON: {"nav":"<header>…</header>","footer":"<footer>…</footer>","css":"…","js":"…"}`,
   ].join("\n");
 
-  const raw = await callSmartModel(
+  const raw = await callDesignModel(
     prompt,
     {
       system: "You are a designer who writes production HTML and CSS. You compose freely and you never type a literal value. You return valid JSON only.",
       maxTokens: 16000,
       temperature: 0.8,
       timeoutMs: 200_000,
-    },
-    "gemini"
+      label: "author:chrome",
+    }
   );
 
   const parsed = raw ? parseJsonResponse(raw) : null;
@@ -196,7 +196,7 @@ export async function authorBody(input: AuthorInput, systemCss: string, chromeCs
     `"html" is the complete <section> element. "cssAdditions" is appended to the stylesheet, so a class you invent is a class you also write a rule for.`,
   ].join("\n");
 
-  const raw = await callSmartModel(
+  const raw = await callDesignModel(
     prompt,
     {
       system: "You are a designer who writes production HTML and CSS. You compose freely and you never type a literal value. You return valid JSON only.",
@@ -206,8 +206,8 @@ export async function authorBody(input: AuthorInput, systemCss: string, chromeCs
       // default is not enough for it and every call was timing out after the
       // PRD and chrome had already been paid for.
       timeoutMs: 280_000,
-    },
-    "gemini"
+      label: "author:body",
+    }
   );
 
   const parsed = raw ? parseJsonResponse(raw) : null;

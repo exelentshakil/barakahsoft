@@ -18,7 +18,7 @@
 // evidence becomes a question, and answering it brings the section back.
 
 import { z } from "zod";
-import { callSmartModel } from "@/lib/generate/model";
+import { callDesignModel } from "@/lib/generate/model";
 import { parseJsonResponse } from "@/lib/parse-json-response";
 import { entityKinds, type Entity } from "@/lib/extract-entities";
 import type { VerticalProfile } from "@/lib/verticals/types";
@@ -203,14 +203,17 @@ function describeFailure(raw: string | null, issues?: unknown): string {
 }
 
 export async function buildIntakeSpec(input: IntakeInput): Promise<IntakeSpec | null> {
-  const raw = await callSmartModel(
+  const raw = await callDesignModel(
     prompt(input),
     {
       system: "You write intake briefs for local business websites. You ask for what the industry actually shows, never for generic web-form fields. You return valid JSON only.",
       maxTokens: 6000,
       temperature: 0.5,
-    },
-    "gemini"
+      // Short call: a provider that has stopped answering should be found in a
+      // minute, not after a full chain walk. Observed live at 939s.
+      timeoutMs: 70_000,
+      label: "intake",
+    }
   );
 
   const parsed = raw ? parseJsonResponse(raw) : null;

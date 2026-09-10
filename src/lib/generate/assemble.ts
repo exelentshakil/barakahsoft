@@ -16,7 +16,7 @@ import { sanitizeGeneratedJs } from "@/lib/sanitize-js";
 import { auditStatic, scoreOf, type AuditFinding } from "@/lib/design/audit";
 import { remediateCss } from "@/lib/design/remediate";
 import { auditRendered } from "@/lib/design/audit-rendered";
-import { callSmartModel } from "@/lib/generate/model";
+import { callDesignModel } from "@/lib/generate/model";
 import { parseJsonResponse } from "@/lib/parse-json-response";
 import { TOKEN_CONTRACT } from "@/lib/design/law";
 import type { DesignSystem } from "@/lib/design";
@@ -86,15 +86,15 @@ async function repair(
     `Return JSON: {"sections":[{"id","html"}],"cssAdditions":"…"}`,
   ].join("\n");
 
-  const raw = await callSmartModel(
+  const raw = await callDesignModel(
     prompt,
     {
       system: "You repair production HTML and CSS against measured findings. You change only what was reported. You never type a literal value. You return valid JSON only.",
       maxTokens: 24000,
       temperature: 0.7,
       timeoutMs: 280_000,
-    },
-    "gemini"
+      label: "repair",
+    }
   );
 
   const parsed = raw ? parseJsonResponse(raw) : null;
