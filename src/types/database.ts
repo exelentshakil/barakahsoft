@@ -209,6 +209,17 @@ export interface Artifact {
   // leads or a trade with no reference library yet -- those fall back to
   // the existing catalog-based shell.
   bespoke_homepage_html: string | null;
+  /** Model-authored presentation JS, sanitized and wrapped in a guarded IIFE. */
+  bespoke_js: string | null;
+  /** Which questions this industry needs answered, and which sections each unlocks. */
+  intake_spec: Record<string, unknown> | null;
+  /** The PRD plus the compiled design system this page was built against. */
+  design_system: Record<string, unknown> | null;
+  /** Static, rendered and ambition findings, the score, and the queue screenshot. */
+  audit_report: Record<string, unknown> | null;
+  /** pending | approved | rejected — builds land in the queue, not in a prospect's inbox. */
+  review_state: string | null;
+  approved_at: string | null;
   bespoke_rationale: string | null;
   // The page's own stylesheet. Selectors are scoped before storage.
   bespoke_css: string | null;
