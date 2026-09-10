@@ -76,20 +76,32 @@ export function compileDesignSystem(intent: DesignIntent): DesignSystem {
   // keeping from the system being replaced: an unreadable section is not
   // something the page can express, because the model never names either half
   // of the pair separately.
+  // Ground utilities set background and text colour TOGETHER, always from a
+  // pair the colour engine solved. This is the one structural idea worth
+  // keeping from the system being replaced: an unreadable section is not
+  // something the page can express, because the model never names either half
+  // of the pair separately.
+  //
+  // Supporting colours travel as custom properties rather than as descendant
+  // rules. `.on-dark .muted { color: … }` and `.on-paper .muted { color: … }`
+  // have identical specificity, so a dark card sitting inside a light section
+  // resolved by source order and painted its muted text in the LIGHT ground's
+  // ink — 2.26:1, caught by the rendered audit on the first run. Custom
+  // properties inherit from the nearest ancestor that sets them, which is
+  // exactly "nearest ground wins" and holds at any nesting depth.
   const grounds = `
-.bespoke-page .on-paper{background:var(--paper);color:var(--ink)}
-.bespoke-page .on-paper-2{background:var(--paper-2);color:var(--ink)}
-.bespoke-page .on-paper-3{background:var(--paper-3);color:var(--ink)}
-.bespoke-page .on-dark{background:var(--dark);color:var(--on-dark)}
-.bespoke-page .on-dark-2{background:var(--dark-2);color:var(--on-dark)}
-.bespoke-page .on-brand{background:var(--brand);color:var(--on-brand)}
-.bespoke-page .on-dark :where(.muted){color:var(--on-dark-2)}
-.bespoke-page .on-paper :where(.muted),.bespoke-page .on-paper-2 :where(.muted),.bespoke-page .on-paper-3 :where(.muted){color:var(--ink-2)}
-.bespoke-page .on-dark :where(.accent){color:var(--brand-on-dark)}
-.bespoke-page .on-paper :where(.accent),.bespoke-page .on-paper-2 :where(.accent),.bespoke-page .on-paper-3 :where(.accent){color:var(--brand-ink)}`.trim();
+.bespoke-page .on-paper{background:var(--paper);color:var(--ink);--muted:var(--ink-2);--on-ground:var(--brand-ink);--rule:var(--line)}
+.bespoke-page .on-paper-2{background:var(--paper-2);color:var(--ink);--muted:var(--ink-2);--on-ground:var(--brand-ink);--rule:var(--line)}
+.bespoke-page .on-paper-3{background:var(--paper-3);color:var(--ink);--muted:var(--ink-2);--on-ground:var(--brand-ink);--rule:var(--line-strong)}
+.bespoke-page .on-dark{background:var(--dark);color:var(--on-dark);--muted:var(--on-dark-2);--on-ground:var(--brand-on-dark);--rule:var(--line-on-dark)}
+.bespoke-page .on-dark-2{background:var(--dark-2);color:var(--on-dark);--muted:var(--on-dark-2);--on-ground:var(--brand-on-dark);--rule:var(--line-on-dark)}
+.bespoke-page .on-brand{background:var(--brand);color:var(--on-brand);--muted:var(--on-brand);--on-ground:var(--on-brand);--rule:var(--on-brand)}
+.bespoke-page .muted{color:var(--muted)}
+.bespoke-page .accent{color:var(--on-ground)}
+.bespoke-page hr,.bespoke-page .rule{border-top:1px solid var(--rule)}`.trim()
 
   const root = `
-.bespoke-page{position:relative;isolation:isolate;background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:var(--fs-body);line-height:var(--lh-body);letter-spacing:var(--tr-body);-webkit-font-smoothing:antialiased}
+.bespoke-page{position:relative;isolation:isolate;background:var(--paper);color:var(--ink);--muted:var(--ink-2);--on-ground:var(--brand-ink);--rule:var(--line);font-family:var(--font-body);font-size:var(--fs-body);line-height:var(--lh-body);letter-spacing:var(--tr-body);-webkit-font-smoothing:antialiased}
 .bespoke-page :where(h1,h2,h3){font-family:var(--font-display);letter-spacing:var(--tr-display);line-height:var(--lh-display)}
 .bespoke-page :where(h4,h5,h6){font-family:var(--font-display);line-height:var(--lh-3)}
 .bespoke-page :where(img,video){border-radius:inherit}
