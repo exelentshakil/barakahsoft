@@ -13,7 +13,7 @@
 // absence is why safe, flat, obviously-machine-made pages sailed through. A
 // page can satisfy every prohibition and still be timid; timid is a finding.
 
-import { chromium, type Browser } from "playwright";
+import { chromium, type Browser } from "playwright-core";
 import type { AuditFinding } from "./audit";
 import { BODY_RATIO, DISPLAY_RATIO } from "./colour";
 import { MIN_SCALE_CONTRAST, MIN_DISPLAY_PX } from "./type";
@@ -360,14 +360,51 @@ export interface RenderedAudit {
  */
 export type AuditTarget = { url: string } | { html: string };
 
+/**
+ * Where this is running decides which Chromium it can have.
+ *
+ * On a workstation the browser is on disk: `playwright install chromium` put
+ * it there for the visual-QA worker, and channel "chromium" reuses that full
+ * binary rather than the headless shell — a separate ~95MB download, and a
+ * different renderer from the one a visitor gets.
+ *
+ * In a serverless function nothing ever ran `playwright install`, so that same
+ * launch dies with "Executable doesn't exist at ~/.cache/ms-playwright/...".
+ * The binary has to travel with the deployment instead, which is what
+ * @sparticuz/chromium is: a Lambda-shaped Chromium unpacked into /tmp on first
+ * launch.
+ */
+async function launchAuditBrowser(): Promise<Browser> {
+  const serverless = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.VERCEL);
+  if (!serverless) return chromium.launch({ headless: true, channel: "chromium" });
+
+  const packed = (await import("@sparticuz/chromium")).default;
+
+  // Nothing here needs WebGL — the audit measures boxes, colours and text. Off
+  // means swiftshader is never unpacked, which is both faster to start and
+  // smaller in /tmp, and every repair round pays that startup again.
+  packed.setGraphicsMode = false;
+
+  // Two of the packed flags are Puppeteer-shaped and break under Playwright:
+  //
+  //   --single-process   Playwright documents this as unsupported; Chromium
+  //                      hangs or crashes on the first newContext().
+  //   --headless='shell' Playwright decides headlessness itself from the
+  //                      launch option, and a second, quoted copy of the flag
+  //                      fights it.
+  const args = packed.args.filter(
+    (arg) => arg !== "--single-process" && !arg.startsWith("--headless")
+  );
+
+  return chromium.launch({
+    headless: true,
+    args,
+    executablePath: await packed.executablePath(),
+  });
+}
+
 export async function auditRendered(target: AuditTarget, existing?: Browser): Promise<RenderedAudit> {
-  // channel: "chromium" runs the full browser rather than the headless shell.
-  // Playwright defaults headless launches to the shell, which is a separate
-  // ~95MB download; the full binary is already present for the visual-QA
-  // worker, so this reuses it instead of requiring a second one. It also
-  // renders identically to what a visitor sees, which for an audit that
-  // measures composition is the right engine to be measuring in.
-  const browser = existing ?? (await chromium.launch({ headless: true, channel: "chromium" }));
+  const browser = existing ?? (await launchAuditBrowser());
   try {
     const context = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: 1 });
     const page = await context.newPage();

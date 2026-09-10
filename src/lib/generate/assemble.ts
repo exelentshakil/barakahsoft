@@ -147,9 +147,36 @@ export async function assemble(input: AssembleInput): Promise<AssembledPage> {
       spacingScale: input.system.meta.space.steps,
     });
 
-    const rendered = await auditRendered({
-      html: document(css, chromeHtml, bodyHtml, footerHtml, input.system.fontHref),
-    });
+    // The rendered pass needs a browser, and a browser is the one thing in this
+    // pipeline that can be absent rather than wrong — no Chromium in the
+    // function, a launch that times out under load. Letting that throw threw
+    // away an entire build: a finished PRD, a compiled system, a stylesheet and
+    // a body, all of it already paid for in model calls.
+    //
+    // So an unavailable browser degrades the audit instead of ending the run.
+    // The static half still measured the CSS, the page is still the page; what
+    // is lost is the rendered findings, the repair rounds they would have
+    // driven, and the queue screenshot. That loss is recorded as a finding so
+    // it shows up in the notes rather than passing for a clean audit.
+    let rendered: Awaited<ReturnType<typeof auditRendered>> | null = null;
+    try {
+      rendered = await auditRendered({
+        html: document(css, chromeHtml, bodyHtml, footerHtml, input.system.fontHref),
+      });
+    } catch (error) {
+      findings = [
+        ...staticFindings,
+        {
+          check: "rendered-audit-unavailable",
+          severity: "note" as const,
+          detail:
+            "The page was not measured in a browser, so contrast, measure, tap targets and the ambition pass went unchecked: " +
+            (error instanceof Error ? error.message.split("\n")[0] : String(error)),
+        },
+      ];
+      break;
+    }
+
     screenshot = rendered.screenshot;
     findings = [...staticFindings, ...rendered.findings];
 
