@@ -27,11 +27,26 @@ export function PagePlanPanel({
   design,
   hasReviews,
   hasPhotos,
+  serviceCount,
+  areaCount,
 }: {
   entities: Entity[];
   design: DesignDna | null;
   hasReviews: boolean;
   hasPhotos: boolean;
+  /**
+   * The counts the BUILD will use, not zero.
+   *
+   * These were hardcoded to 0 here, so every section a reference asked for
+   * that needed an offering or a service area was struck through as "not on
+   * their site" — including for a gym listing eight services, whose built
+   * page then rendered all eight. The panel exists to tell an operator what
+   * the page will contain, and it was reporting the opposite; a false
+   * "dropped" reads as the engine discarding the reference, which is the one
+   * thing this panel must never get wrong.
+   */
+  serviceCount: number;
+  areaCount: number;
 }) {
   const [openKind, setOpenKind] = useState<string | null>(null);
 
@@ -42,8 +57,8 @@ export function PagePlanPanel({
   }, [entities]);
 
   const available = useMemo(
-    () => availableStems({ entities, hasReviews, hasPhotos, areaCount: 0, serviceCount: 0 }),
-    [entities, hasReviews, hasPhotos]
+    () => availableStems({ entities, hasReviews, hasPhotos, areaCount, serviceCount }),
+    [entities, hasReviews, hasPhotos, areaCount, serviceCount]
   );
 
   const blueprint = design?.blueprint;

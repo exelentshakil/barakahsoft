@@ -1,4 +1,5 @@
 import type { Tenant } from "@/tenants/types";
+import { servicesFromFacts } from "@/lib/build-site-brief";
 "use client";
 
 import { useCallback, useState } from "react";
@@ -1602,6 +1603,8 @@ Shaq`,
                 design={(artifact?.inspiration_branding as DesignDna | null) ?? null}
                 hasReviews={reviewCount > 0}
                 hasPhotos={Array.isArray(facts.site_photos) && facts.site_photos.length > 0}
+                serviceCount={servicesFromFacts(facts).length}
+                areaCount={((facts.derived_areas as string[] | undefined) ?? []).length}
               />
 
               {/* STEP 2: BESPOKE GENERATOR STUDIO */}
