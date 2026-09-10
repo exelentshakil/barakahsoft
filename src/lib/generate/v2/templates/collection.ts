@@ -34,8 +34,15 @@ export interface CollectionHead {
   intro?: string;
 }
 
-function renderItem(item: CollectionItem, design: SectionDesign): string {
-  const wantsMedia = design.media !== "none" && design.media !== "background";
+function renderItem(item: CollectionItem, design: SectionDesign, itemsAreMedia: boolean): string {
+  // Two different things were being decided by one axis.
+  //
+  // `design.media` says where the SECTION's single image sits. An item's own
+  // photograph is not that image, and for a gallery it is the entire point of
+  // the item. Governing both with one flag meant a director who chose
+  // media:"none" for the gallery got four captions and no pictures — a
+  // gallery section containing no photographs at all.
+  const wantsMedia = itemsAreMedia || (design.media !== "none" && design.media !== "background");
   const media =
     wantsMedia && item.photo
       ? `<figure class="bs-item__media"><img src="${esc(item.photo)}" alt="${esc(item.photoAlt ?? item.title ?? "")}" width="640" height="480" loading="lazy" decoding="async"></figure>`
@@ -76,8 +83,17 @@ export function collectionSection(args: {
   photoAlt?: string;
   /** Buttons, rendered under the items. Already-built markup. */
   actions?: string;
+  /**
+   * The items ARE the pictures — a gallery, not a list that happens to carry
+   * thumbnails. Their photographs render whatever the section's media axis
+   * says, and an item without one is dropped rather than shown as an empty
+   * captioned box.
+   */
+  itemsAreMedia?: boolean;
 }): string {
-  const { id, design, head, items, sectionPhoto, actions } = args;
+  const { id, design, head, sectionPhoto, actions } = args;
+  const itemsAreMedia = args.itemsAreMedia ?? false;
+  const items = itemsAreMedia ? args.items.filter((item) => Boolean(item.photo)) : args.items;
   if (items.length === 0 && !sectionPhoto) return "";
 
   const background =
@@ -99,7 +115,7 @@ export function collectionSection(args: {
       </div>`;
 
   const body = items.length
-    ? `<div class="bs-s__body" style="--bs-cols:${design.columns}">${items.map((item) => renderItem(item, design)).join("")}</div>`
+    ? `<div class="bs-s__body" style="--bs-cols:${design.columns}">${items.map((item) => renderItem(item, design, itemsAreMedia)).join("")}</div>`
     : "";
 
   return `<section id="${esc(id)}" class="bs-section ${sectionClasses(design)}">

@@ -25,8 +25,12 @@ export function StickyMobileCTA({ payload }: { payload: SitePayload }) {
           </a>
         </Button>
       )}
+      {/* The label the rest of the page uses. This said "Get a free quote"
+          on every site regardless of trade — the one piece of chrome a gym's
+          visitor sees asking them to request a quote for a membership, while
+          every other button on the same page said "Book now". */}
       <Button size="lg" className="bs-btn bs-btn-primary flex-1" onClick={openQuoteModal}>
-        Get a free quote
+        {payload.primaryActionLabel || "Get in touch"}
       </Button>
     </div>
   );

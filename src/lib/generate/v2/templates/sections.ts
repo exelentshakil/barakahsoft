@@ -263,7 +263,22 @@ export function trustSection(ctx: RenderContext): string {
     </div>`);
   }
 
-  for (const stat of copy.trust.stats.slice(0, 2)) {
+  // The rating cell above is built from the verified Google figures. The model
+  // writes its own stats without knowing that, and reliably spends them on the
+  // same two facts — a bar reading "5.0 from 26 Google reviews", "5 Stars /
+  // Google Rating", "26 / Client Reviews" says one thing three times and
+  // wastes the strip that is meant to carry three DIFFERENT reasons to trust
+  // this business.
+  const ratingShown = Boolean(brief.rating && brief.reviewCount);
+  const restatesRating = (stat: { value: string; label: string }) => {
+    const text = `${stat.value} ${stat.label}`.toLowerCase();
+    if (/\b(google|rating|review|star)\b/.test(text)) return true;
+    const digits = stat.value.replace(/\D/g, "");
+    return digits.length > 0 && (digits === String(brief.reviewCount) || digits === String(brief.rating).replace(/\D/g, ""));
+  };
+  const stats = ratingShown ? copy.trust.stats.filter((stat) => !restatesRating(stat)) : copy.trust.stats;
+
+  for (const stat of stats.slice(0, 2)) {
     cells.push(`<div class="bs-trustbar__cell">
       <span class="bs-trustbar__value">${esc(stat.value)}</span>
       <span class="bs-trustbar__label">${esc(stat.label)}</span>
@@ -632,6 +647,7 @@ export function gallerySection(ctx: RenderContext): string {
         const caption = copy.gallery.captions[index] ?? services[index % Math.max(services.length, 1)]?.name ?? `${brief.industry} in ${brief.city}`;
         return { photo, photoAlt: `${caption} by ${brief.businessName}`, title: caption };
       }),
+      itemsAreMedia: true,
     });
   }
 

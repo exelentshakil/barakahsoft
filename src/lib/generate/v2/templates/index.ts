@@ -108,6 +108,27 @@ const RENDERERS: Record<
   contact: { kind: "contact", label: "Contact", render: contactSection },
 };
 
+/**
+ * Is this URL a photograph, or a piece of interface furniture?
+ *
+ * The filter was a word blacklist — logo|badge|icon|favicon — which let
+ * "instagram.svg" straight through, and a gym shipped with the Instagram
+ * glyph presented as the photograph for its Youth & Kids Programs.
+ *
+ * Vector formats are the reliable tell: a real photograph is never an SVG.
+ * That one rule removes every social glyph, arrow, payment mark and UI sprite
+ * a site carries, without needing to know their names. The word list stays for
+ * the raster cases it does catch, and gains the social networks by name
+ * because those ship as PNGs too.
+ */
+function isPhotograph(url: string): boolean {
+  const path = url.split("?")[0].toLowerCase();
+  if (/\.(svg|svgz|gif|ico)$/.test(path)) return false;
+  if (/logo|badge|icon|favicon|sprite|placeholder|spacer|pixel/i.test(url)) return false;
+  if (/facebook|instagram|twitter|linkedin|tiktok|youtube|whatsapp|pinterest|trustpilot|yelp/i.test(path)) return false;
+  return true;
+}
+
 export async function buildPage(args: {
   brief: SiteBrief;
   logoUrl: string | null;
@@ -240,7 +261,7 @@ export async function buildPage(args: {
       // "our recent work" is a lie about who did the work.
       ...clientPhotos.filter((url) => !spentElsewhere.has(url)),
     ]),
-  ].filter((url) => url !== logoUrl && !/logo|badge|icon|favicon/i.test(url) && !spentElsewhere.has(url));
+  ].filter((url) => url !== logoUrl && isPhotograph(url) && !spentElsewhere.has(url));
   console.log(`[build-page] ${media.length} planned photo(s) from the brief, ${resolvedPhotos.length} usable in total`);
 
   const ctx: RenderContext = {

@@ -447,6 +447,47 @@ function sectionMeanings(brief: SiteBrief, composed: { id: string; kind: string;
   return [...meanings.entries()].map(([slot, meaning]) => `- ${slot}: ${meaning}`).join("\n");
 }
 
+/**
+ * One phone number on the page.
+ *
+ * The model writes prose, and prose about a local business tends to contain
+ * its phone number — "call us on ...". It takes that number from whatever is
+ * in its context, which is not always the number the page's own buttons dial:
+ * a site's scraped footer number and its Google listing number are often
+ * different, and one shipped with 07940381665 in every button and
+ * 07394 091107 in the FAQ and the contact lede.
+ *
+ * A prospect reading two numbers on one page does not conclude that one of
+ * them is stale. They conclude the page is not really theirs, which is the
+ * one thing a mockup cannot afford to say.
+ *
+ * So every phone-shaped run in the copy is rewritten to the number the page
+ * actually dials. Ten digits minimum, so prices, dates, postcodes and "open
+ * 6am to 9pm" are left alone.
+ */
+export function unifyPhoneNumbers<T>(copy: T, canonical: string | null): T {
+  if (!canonical) return copy;
+  const phoneish = /(?:\+?\d[\d\s().-]{8,}\d)/g;
+
+  const fix = (value: string): string =>
+    value.replace(phoneish, (match) => {
+      const digits = match.replace(/\D/g, "");
+      if (digits.length < 10 || digits.length > 15) return match;
+      return digits === canonical.replace(/\D/g, "") ? match : canonical;
+    });
+
+  const walk = (node: unknown): unknown => {
+    if (typeof node === "string") return fix(node);
+    if (Array.isArray(node)) return node.map(walk);
+    if (node && typeof node === "object") {
+      return Object.fromEntries(Object.entries(node as Record<string, unknown>).map(([k, v]) => [k, walk(v)]));
+    }
+    return node;
+  };
+
+  return walk(copy) as T;
+}
+
 export async function generatePageCopy(
   brief: SiteBrief,
   tone: string,
@@ -535,7 +576,11 @@ WHAT EACH SECTION MEANS FOR THIS BUSINESS
 The slot names below are structural. Read them as described here, not as the words suggest.
 ${sectionMeanings(brief, composed)}
 
-faq.items: answer each of these, in this order, in the owner's own voice:
+faq.items: these are the TOPICS to cover, in this order — not the wording to reuse. Each profile serves a
+whole macro-ICP, so a seed is written for the middle of it and will use the wrong nouns for this particular
+business. Re-ask each one the way THIS owner's customers would ask it, in their vocabulary, then answer it
+in the owner's voice. A gym asked "can I request a particular stylist or therapist?" is a page that was
+obviously written for somebody else.
 ${brief.vertical.copy.faqSeeds.map((question, index) => `${index + 1}. ${question}`).join("\n")}
 
 whyUs.points: four. process.steps: three or four.`;
@@ -585,5 +630,6 @@ whyUs.points: four. process.steps: three or four.`;
     }));
   }
 
-  return copy;
+  // Last, so it also covers the vertical fallback lines substituted above.
+  return unifyPhoneNumbers(copy, brief.phone ?? null);
 }
