@@ -20,6 +20,16 @@ interface BestModelCallOptions {
    * own ceiling.
    */
   timeoutMs?: number;
+  /**
+   * Ask for a bare JSON object through the provider's constrained decoding.
+   *
+   * Every structured call in this pipeline wants one, and none of them were
+   * asking: the prompt said "return JSON only" and the parser cleaned up
+   * afterwards. Constraining the decode removes the prose the model would
+   * otherwise spend output budget on, which is most of the distance between a
+   * brief that fits the token limit and one that truncates mid-object.
+   */
+  json?: boolean;
 }
 
 // ------------------------------------------------------------------
@@ -76,6 +86,7 @@ export async function callSmartModel(
       temperature: options.temperature,
       maxTokens: options.maxTokens,
       timeoutMs: options.timeoutMs,
+      json: options.json,
       modelChain: chain,
     });
   }
@@ -84,6 +95,7 @@ export async function callSmartModel(
   return callOpenAI(prompt, {
     maxTokens: options.maxTokens,
     temperature: options.temperature,
+    json: options.json,
     modelChain: pinned ? [pinned, ...houseChain.filter((m) => m !== pinned)] : houseChain,
     system: options.system,
   });
@@ -133,21 +145,15 @@ export async function callDesignModel(
   options: BestModelCallOptions & { label?: string }
 ): Promise<string | null> {
   const label = options.label ?? "design";
+  // Every call here wants a JSON object back, and constrained decoding is a
+  // better way to get one than asking politely and cleaning up afterwards.
+  const shaped = { ...options, json: options.json ?? true };
 
-  const gemini = await callSmartModel(prompt, options, "gemini");
+  const gemini = await callSmartModel(prompt, shaped, "gemini");
   if (gemini) return gemini;
 
   console.warn(`[${label}] gemini returned nothing; falling back to openai`);
-  const openai = await callSmartModel(
-    prompt,
-    {
-      ...options,
-      // OpenAI's client has its own ceiling and does not read timeoutMs, so
-      // this is left to it rather than pretended at.
-      model: undefined,
-    },
-    "openai"
-  );
+  const openai = await callSmartModel(prompt, { ...shaped, model: undefined }, "openai");
   if (openai) return openai;
 
   console.error(`[${label}] both providers failed`);

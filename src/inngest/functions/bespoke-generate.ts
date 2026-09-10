@@ -291,8 +291,8 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     // by accident.
     const prd = (await step.run("write-prd", async () => {
       await touchProgress(admin, lead_id);
-      const { writePrd } = await import("@/lib/generate/prd");
-      return writePrd({
+      const { writePrdWithReason } = await import("@/lib/generate/prd");
+      return writePrdWithReason({
         businessName: brief.businessName,
         industry: brief.industry,
         city: brief.city,
@@ -311,11 +311,22 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
         painInstructions: brief.painInstructions,
         photoCount: photos.length,
       });
-    })) as Awaited<ReturnType<typeof import("@/lib/generate/prd").writePrd>>;
+    })) as Awaited<ReturnType<typeof import("@/lib/generate/prd").writePrdWithReason>>;
 
-    if (!prd) {
-      throw new Error("The design brief could not be written. Nothing was saved; the previous page is untouched.");
+    if (!prd?.prd) {
+      // The reason travels with the failure. A build that stops with only "the
+      // design brief could not be written" sends the operator to a log they are
+      // not looking at, and the cause — a provider timing out, a response
+      // truncated short of the section band — decides whether the answer is to
+      // press the button again or to fix something.
+      throw new Error(
+        `The design brief could not be written after two attempts, so nothing was saved and the previous page is untouched.\n\n` +
+          `Reason: ${prd?.reason ?? "no response from either provider"}`
+      );
     }
+
+    // Bound once, because narrowing does not survive the step boundary above.
+    const design = prd.prd;
 
     await bumpProgress(admin, lead_id, 2);
 
@@ -325,7 +336,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     // it rather than carried across a step boundary as serialized state.
     const { compileDesignSystem } = await import("@/lib/design");
     const { intentFrom, prdToMarkdown } = await import("@/lib/generate/prd");
-    const system = compileDesignSystem(intentFrom(prd, clientBrandHex));
+    const system = compileDesignSystem(intentFrom(design, clientBrandHex));
 
     // ── 4 · photography, from the PRD's own slots ──
     //
@@ -334,7 +345,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     // why the media panel showed images marked "not placed on any page".
     const media = (await step.run("plan-media", async () => {
       await touchProgress(admin, lead_id);
-      const wanted = prd.sections
+      const wanted = design.sections
         .filter((section) => section.image)
         .map((section) => ({
           key: section.image!.slot,
@@ -360,7 +371,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
 
     await bumpProgress(admin, lead_id, 3);
 
-    const mediaAssets = prd.sections
+    const mediaAssets = design.sections
       .filter((section) => section.image)
       .map((section) => {
         const planned = media.find((item) => item.slot === section.image!.slot);
@@ -378,7 +389,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
       .filter((asset): asset is NonNullable<typeof asset> => Boolean(asset));
 
     const authorInput = {
-      prd,
+      prd: design,
       businessName: brief.businessName,
       city: brief.city,
       phone: brief.phone,
@@ -428,7 +439,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     const assembled = (await step.run("assemble-and-audit", async () => {
       await touchProgress(admin, lead_id);
       const { assemble } = await import("@/lib/generate/assemble");
-      const page = await assemble({ prd, system, chrome, body, media: mediaAssets });
+      const page = await assemble({ prd: design, system, chrome, body, media: mediaAssets });
       // The screenshot is a Buffer and would not survive the step boundary;
       // the queue reads it from storage instead.
       const { screenshot, ...rest } = page;
@@ -459,14 +470,14 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     const built = {
       html: assembled.bodyHtml,
       css: assembled.css,
-      rationale: prdToMarkdown(prd),
+      rationale: prdToMarkdown(design),
       sections: assembled.sections,
       notes: assembled.findings.map((finding) => `[${finding.severity}] ${finding.check}: ${finding.detail}`),
     };
 
     // funnel_pages drives the mega menu, the footer and sitemap.xml. Structure,
     // not prose, so it needs the real section list rather than a written plan.
-    const funnelPages: FunnelPageSection[] = prd.sections.map((section) => ({
+    const funnelPages: FunnelPageSection[] = design.sections.map((section) => ({
       slug: section.id,
       kind: section.kind === "hero" ? "hero" : ("service" as const),
       h2: section.kind,
@@ -486,7 +497,7 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
           bespoke_js: assembled.js,
           bespoke_sections: built.sections,
           bespoke_rationale: built.rationale,
-          design_system: { prd, meta: system.meta, fontHref: system.fontHref },
+          design_system: { prd: design, meta: system.meta, fontHref: system.fontHref },
           design_tokens: { vars: system.tokens, fontHref: system.fontHref, mood: dna.mood },
           audit_report: { findings: assembled.findings, score: assembled.score, repairs: assembled.repairs, previewUrl: assembled.previewUrl },
           review_state: "pending",

@@ -13,6 +13,8 @@ export interface GeminiCallOptions {
    * it there threw away the whole build.
    */
   timeoutMs?: number;
+  /** Ask the model for a bare JSON object via constrained decoding. */
+  json?: boolean;
   /**
    * How much of the output budget the model may spend reasoning before it has
    * to start answering. Left unset, a thinking model can consume the entire
@@ -113,6 +115,13 @@ export async function callGemini(
     const budget = options.thinkingBudget ?? Math.floor(Math.min(options.maxTokens, MAX_OUTPUT_TOKENS) / 3);
     generationConfig.thinkingConfig = { thinkingBudget: budget };
   }
+  // Constrained decoding, rather than asking in the prompt and stripping
+  // fences afterwards. A model that cannot emit prose around the object also
+  // cannot spend output budget on it, which is the difference between a brief
+  // that fits in the token limit and one that truncates just before its last
+  // closing brace.
+  if (options?.json) generationConfig.responseMimeType = "application/json";
+
   if (Object.keys(generationConfig).length > 0) requestBody.generationConfig = generationConfig;
 
   const timeoutMs = Math.min(options?.timeoutMs ?? REQUEST_TIMEOUT_MS, MAX_TIMEOUT_MS);

@@ -338,47 +338,80 @@ function describeFailure(raw: string | null, issues?: unknown): string {
   ].join(" · ");
 }
 
-export async function writePrd(input: PrdInput): Promise<Prd | null> {
-  const raw = await callDesignModel(
-    buildPrompt(input),
-    {
-      system:
-        "You are an art director briefing a build. You decide rather than describe, you state intent rather than values, and you return valid JSON only.",
-      maxTokens: 16000,
-      temperature: 0.85,
-      timeoutMs: 120_000,
-      label: "prd",
-    }
-  );
+export interface PrdResult {
+  prd: Prd | null;
+  /** Why it failed, in words an operator can act on. */
+  reason: string | null;
+}
 
-  const parsed = raw ? parseJsonResponse(raw) : null;
-  const result = parsed ? PrdSchema.safeParse(parsed) : null;
-  if (!result?.success) {
-    console.warn(`[prd] unusable — ${describeFailure(raw, result?.error?.issues?.slice(0, 3))}`);
-    return null;
+/**
+ * Write the brief, and try twice.
+ *
+ * One malformed or truncated response used to end the whole build — the
+ * operator saw "the design brief could not be written" and the actual cause
+ * sat in a log they were not looking at. A second attempt costs one call
+ * against a build that is otherwise thrown away, and the two attempts are not
+ * equivalent: the retry drops the temperature and states the failure, so it is
+ * a different sample rather than the same dice roll.
+ */
+export async function writePrdWithReason(input: PrdInput): Promise<PrdResult> {
+  const prompt = buildPrompt(input);
+  let lastReason = "no response from the model";
+
+  for (const attempt of [0, 1]) {
+    const raw = await callDesignModel(
+      attempt === 0 ? prompt : `${prompt}\n\nYour previous reply could not be used: ${lastReason}\nReturn the complete JSON object and nothing else.`,
+      {
+        system:
+          "You are an art director briefing a build. You decide rather than describe, you state intent rather than values, and you return valid JSON only.",
+        maxTokens: 16000,
+        temperature: attempt === 0 ? 0.85 : 0.55,
+        timeoutMs: 120_000,
+        label: "prd",
+      }
+    );
+
+    const parsed = raw ? parseJsonResponse(raw) : null;
+    const result = parsed ? PrdSchema.safeParse(parsed) : null;
+
+    if (result?.success) {
+      // Section ids address sections for per-section repair, so duplicates would
+      // make two different blocks the same target. Image slots are derived from the
+      // settled id rather than taken from the model, which makes them unique for
+      // free and removes an entire class of validation failure.
+      //
+      // The chrome call renders the navigation and the footer. A PRD that also
+      // lists one as a body section ships the page two of them, which is the exact
+      // double-header the old sanitizer used to strip markup to prevent.
+      const CHROME_KINDS = /^(footer|nav|navigation|header|site-footer|site-header)$/i;
+      const seen = new Set<string>();
+      const sections = result.data.sections
+        .filter((section) => !CHROME_KINDS.test(section.kind.trim()) && !CHROME_KINDS.test(section.id.trim()))
+        .map((section, index) => {
+          let id = section.id.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+          if (!id || seen.has(id)) id = `${id || "section"}-${index + 1}`;
+          seen.add(id);
+          const image = section.image ? { ...section.image, slot: section.image.slot?.trim() || id } : null;
+          return { ...section, id, image };
+        });
+
+      if (sections.length >= SECTION_BAND[0] - 2) {
+        return { prd: { ...result.data, sections }, reason: null };
+      }
+      lastReason = `only ${sections.length} usable sections after filtering; the band starts at ${SECTION_BAND[0]}`;
+    } else {
+      lastReason = describeFailure(raw, result?.error?.issues?.slice(0, 3));
+    }
+
+    console.warn(`[prd] attempt ${attempt + 1} unusable — ${lastReason}`);
   }
 
-  // Section ids address sections for per-section repair, so duplicates would
-  // make two different blocks the same target. Image slots are derived from the
-  // settled id rather than taken from the model, which makes them unique for
-  // free and removes an entire class of validation failure.
-  // The chrome call renders the navigation and the footer. A PRD that also
-  // lists one as a body section ships the page two of them, which is the exact
-  // double-header the old sanitizer used to strip markup to prevent.
-  const CHROME_KINDS = /^(footer|nav|navigation|header|site-footer|site-header)$/i;
+  return { prd: null, reason: lastReason };
+}
 
-  const seen = new Set<string>();
-  const sections = result.data.sections
-    .filter((section) => !CHROME_KINDS.test(section.kind.trim()) && !CHROME_KINDS.test(section.id.trim()))
-    .map((section, index) => {
-      let id = section.id.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
-      if (!id || seen.has(id)) id = `${id || "section"}-${index + 1}`;
-      seen.add(id);
-      const image = section.image ? { ...section.image, slot: section.image.slot?.trim() || id } : null;
-      return { ...section, id, image };
-    });
-
-  return { ...result.data, sections };
+/** Backwards-compatible wrapper for callers that only need the brief. */
+export async function writePrd(input: PrdInput): Promise<Prd | null> {
+  return (await writePrdWithReason(input)).prd;
 }
 
 /** The PRD's intent, in the shape the compiler wants. */
