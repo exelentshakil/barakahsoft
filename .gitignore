@@ -17,3 +17,4 @@ supabase/.temp/
 design-reference/**/*.png
 design-reference/**/*.jpg
 design-reference/.scratch/
+.env.local.bak-*
