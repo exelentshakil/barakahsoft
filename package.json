@@ -18,6 +18,7 @@
     "check:design": "tsx scripts/check-design-engines.ts",
     "check:json": "tsx scripts/check-parse-json.ts",
     "check:audit": "tsx scripts/check-audit.ts",
+    "check:grounds": "tsx scripts/check-grounds.ts",
     "check:pipeline": "tsx scripts/check-pipeline.ts",
     "smoke": "tsx --env-file=.env.local scripts/smoke-build.ts",
     "backfill:verticals": "tsx --env-file=.env.local scripts/backfill-verticals.ts",
