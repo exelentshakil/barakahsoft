@@ -47,21 +47,7 @@ export const homeServices: VerticalProfile = {
   },
 
   // The literal section array from templates/index.ts, in the same order.
-  sections: [
-    { id: "hero", enabled: true },
-    { id: "trust", enabled: true, label: "Trust bar" },
-    { id: "about", enabled: true },
-    { id: "services", enabled: true },
-    { id: "why-us", enabled: true, label: "Why choose us" },
-    { id: "process", enabled: true, label: "How it works" },
-    { id: "gallery", enabled: true, label: "Recent work" },
-    { id: "cta-band", enabled: true, label: "Conversion band" },
-    { id: "reviews", enabled: true },
-    { id: "areas", enabled: true, label: "Service areas" },
-    { id: "guarantee", enabled: true, label: "Guarantee & booking" },
-    { id: "faq", enabled: true, label: "FAQ" },
-    { id: "contact", enabled: true },
-  ],
+  sectionBand: [9, 14],
 
   lists: {
     offeringCount: 8,

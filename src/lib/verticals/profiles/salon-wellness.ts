@@ -32,22 +32,7 @@ export const salonWellness: VerticalProfile = {
     work: "appointment",
   },
 
-  sections: [
-    { id: "hero", enabled: true },
-    { id: "trust", enabled: true, label: "Trust bar" },
-    { id: "gallery", enabled: true, label: "Our work" },
-    { id: "services", enabled: true, label: "Services & prices" },
-    { id: "about", enabled: true, label: "The team" },
-    { id: "reviews", enabled: true },
-    { id: "cta-band", enabled: true, label: "Conversion band" },
-    { id: "why-us", enabled: true, label: "Why clients stay" },
-    { id: "process", enabled: true, label: "Your first visit" },
-    { id: "faq", enabled: true, label: "FAQ" },
-    { id: "guarantee", enabled: true, label: "Booking" },
-    { id: "contact", enabled: true },
-    // A salon has a chair, not a catchment.
-    { id: "areas", enabled: false },
-  ],
+  sectionBand: [8, 13],
 
   lists: { offeringCount: 8, areaCount: 0, padOfferings: true, padAreas: false },
 

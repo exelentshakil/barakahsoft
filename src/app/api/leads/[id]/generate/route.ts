@@ -5,7 +5,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminSession } from "@/lib/is-admin-session";
 import { inngest } from "@/inngest/client";
 import { buildSiteBrief, briefReadiness, type BriefOverrides } from "@/lib/build-site-brief";
-import { layoutDnaFor } from "@/lib/generate/v2/layout-dna";
 import { visualQaEnabled } from "@/lib/visual-qa";
 import type { Lead, ScrapeResults } from "@/types/database";
 
@@ -77,63 +76,25 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     // No two leads ship the same composition.
   //
-  // The DNA already spread across ~29,000 skins, but every page was built on
-  // one skeleton, so two roofers read as the same website however different
-  // their heroes were. Recipes vary the skeleton; this makes the result
-  // actually unique rather than merely unlikely to repeat.
+  // A nudge value, not a skeleton selector.
   //
-  // The salt is resolved once and then persisted with the rest of the
-  // overrides, so a rebuild is a rebuild — the client does not open their
-  // site to a different page than the one they approved.
+  // This used to search a catalogue of about a dozen layout recipes for one no
+  // sibling lead had taken, because every page was built on one skeleton and
+  // two roofers otherwise read as the same website. There is no catalogue any
+  // more: structure comes from the PRD in the industry's own vocabulary and
+  // the visual system is compiled per lead, so collision is not the failure
+  // mode it was.
+  //
+  // What survives is the reason the salt was persisted — a rebuild has to be a
+  // rebuild, so the client does not open their site to a different page than
+  // the one they approved. The review queue's "rebuild with a different look"
+  // passes an incremented salt deliberately.
   if (overrides.layoutSalt == null) {
-    const identity = `${lead.slug}|${lead.business_name ?? ""}|${lead.industry ?? ""}|${(scrapeResults.facts as Record<string, unknown> | null)?.town ?? ""}`;
-
-    const { data: siblings } = await admin
-      .from("artifacts")
-      .select("lead_id, extracted_assets, leads!inner(industry)")
-      .neq("lead_id", leadId);
-
-    const takenFingerprints = new Set<string>();
-    const takenFoldsInTrade = new Set<string>();
-    const takenRecipesInTrade = new Set<string>();
-    // The embed comes back as an array even on a to-one relation.
-    for (const row of (siblings ?? []) as unknown as { extracted_assets: Record<string, unknown> | null; leads: { industry: string | null }[] | null }[]) {
-      const composition = (row.extracted_assets?.layout_composition ?? {}) as {
-        fingerprint?: string;
-        heroFingerprint?: string;
-        recipe?: string;
-      };
-      if (composition.fingerprint) takenFingerprints.add(composition.fingerprint);
-      // Within one trade the pages sit side by side in the same inbox, so
-      // they get a different recipe, not merely a different footer.
-      const siblingTrade = row.leads?.[0]?.industry ?? null;
-      if (siblingTrade && lead.industry && siblingTrade === lead.industry) {
-        if (composition.recipe) takenRecipesInTrade.add(composition.recipe);
-        // The launch post shows the fold and nothing else, so two leads in one
-        // trade must differ there and not merely somewhere below it.
-        if (composition.heroFingerprint) takenFoldsInTrade.add(composition.heroFingerprint);
-      }
-    }
-
-    let salt = 0;
-    for (; salt < 64; salt += 1) {
-      const candidate = layoutDnaFor(identity, salt);
-      const fingerprintFree = !takenFingerprints.has(candidate.fingerprint);
-      const foldFree = !takenFoldsInTrade.has(candidate.heroFingerprint);
-      const recipeFree = !takenRecipesInTrade.has(candidate.recipe.id);
-      // Past the catalogue every arrangement is spoken for in this trade, so a
-      // unique fingerprint is the most that can be promised.
-      const exhausted = takenRecipesInTrade.size >= 12;
-      if (fingerprintFree && (exhausted || (foldFree && recipeFree))) break;
-    }
-    overrides.layoutSalt = salt;
+    overrides.layoutSalt =
+      (storedAssets.layout_salt as number | undefined) ?? 0;
   }
 
   const brief = buildSiteBrief(lead, scrapeResults, profileForLead(lead, null), overrides);
-  const resolvedDna = layoutDnaFor(
-    `${brief.leadSlug}|${brief.businessName}|${brief.industry}|${brief.city}`,
-    brief.layoutSalt ?? 0
-  );
   // The fit gate.
   //
   // "Always premium" is only a guarantee if the engine declines the work it
@@ -236,13 +197,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         ...(artifactRow?.extracted_assets ?? {}),
         brief_overrides: overrides,
         // Claims this composition so the next lead cannot land on it.
+        layout_salt: overrides.layoutSalt ?? 0,
         layout_composition: {
-          fingerprint: resolvedDna.fingerprint,
-          heroFingerprint: resolvedDna.heroFingerprint,
-          tone: resolvedDna.tone.id,
-          treatment: resolvedDna.treatment,
-          recipe: resolvedDna.recipe.id,
-          recipeName: resolvedDna.recipe.name,
           salt: overrides.layoutSalt ?? 0,
         },
       },

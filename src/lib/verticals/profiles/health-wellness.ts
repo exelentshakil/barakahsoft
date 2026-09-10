@@ -33,21 +33,7 @@ export const healthWellness: VerticalProfile = {
     work: "appointment",
   },
 
-  sections: [
-    { id: "hero", enabled: true },
-    { id: "trust", enabled: true, label: "Trust bar" },
-    { id: "services", enabled: true, label: "Treatments" },
-    { id: "about", enabled: true, label: "Meet the practice" },
-    { id: "why-us", enabled: true, label: "Why patients choose us" },
-    { id: "process", enabled: true, label: "Your first visit" },
-    { id: "reviews", enabled: true },
-    { id: "cta-band", enabled: true, label: "Conversion band" },
-    { id: "gallery", enabled: true, label: "The practice" },
-    { id: "faq", enabled: true, label: "FAQ" },
-    { id: "areas", enabled: true, label: "Areas served" },
-    { id: "guarantee", enabled: true, label: "Booking" },
-    { id: "contact", enabled: true },
-  ],
+  sectionBand: [9, 14],
 
   lists: {
     offeringCount: 8,

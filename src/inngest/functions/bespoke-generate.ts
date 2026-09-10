@@ -757,8 +757,11 @@ async function runPhaseTwo(
 ): Promise<void> {
   const leadId = ctx.lead.id;
   const profile = ctx.brief.vertical;
-  const hasSection = (id: string) =>
-    profile.sections.some((section) => section.id === id && section.enabled);
+  // Whether this vertical is an area business at all. This used to read the
+  // profile's fixed section list, which no longer exists; areaCount is the
+  // honest signal and its own doc comment says so — 0 means no areas section,
+  // no areas nav and no area pages.
+  const servesAreas = profile.lists.areaCount > 0;
 
   // Only the pages this vertical actually has. A business with no service
   // areas got eight area pages built for towns it does not serve, and each one
@@ -770,9 +773,9 @@ async function runPhaseTwo(
       subject: name,
     })),
     { kind: "about" as const, title: `About ${ctx.brief.businessName}` },
-    ...(hasSection("faq") ? [{ kind: "faq" as const, title: "Frequently asked questions" }] : []),
+    { kind: "faq" as const, title: "Frequently asked questions" },
     { kind: "contact" as const, title: `Contact ${ctx.brief.businessName}` },
-    ...(profile.lists.areaCount > 0 && hasSection("areas")
+    ...(servesAreas
       ? areas.map((area) => ({ kind: "area" as const, title: area, area }))
       : []),
   ];

@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { DesignDnaSchema } from "@/lib/design-dna";
-import { SECTION_IDS } from "@/lib/section-ids";
 
 // What kind of business this is, expressed as everything the generator needs
 // to know that is NOT a fact about this particular client.
@@ -22,8 +21,6 @@ import { SECTION_IDS } from "@/lib/section-ids";
 // profile (see resolve.ts) merges into this same shape and must not be able to
 // reorder a page or invent a schema.org type.
 
-/** Array order in a profile is page order. Defined in section-ids.ts — see the note there. */
-export { SECTION_IDS, type SectionId } from "@/lib/section-ids";
 
 /**
  * schema.org LocalBusiness subtypes, as a closed allowlist.
@@ -151,19 +148,22 @@ export const VerticalProfileSchema = z.object({
   }),
 
   /**
-   * Which sections the page has, in order. Array order IS page order.
-   * Structure is never model-writable — see resolve.ts.
+   * How many sections a homepage in this industry should carry.
+   *
+   * Replaces the fixed, ordered section list. That list was the mechanism by
+   * which every site in a vertical came out the same shape: whenever a lead
+   * could not evidence enough of the reference's own sections, the composer
+   * fell back to this array and rendered the identical page. Structure is now
+   * the PRD's to decide in this industry's own vocabulary; all that survives
+   * here is how long the page should be.
+   *
+   * Five sections is a brochure and forty is filler. A dentist carries more
+   * informational sections than a florist, so the band is per-industry, and
+   * the audit enforces whatever it says.
    */
-  sections: z
-    .array(
-      z.object({
-        id: z.enum(SECTION_IDS),
-        enabled: z.boolean().default(true),
-        /** Studio panel label override. Not page text — headings come from the model. */
-        label: z.string().max(30).optional(),
-      })
-    )
-    .min(4),
+  sectionBand: z
+    .tuple([z.number().int().min(5).max(12), z.number().int().min(8).max(20)])
+    .default([8, 14]),
 
   lists: z.object({
     offeringCount: z.number().int().min(0).max(12),

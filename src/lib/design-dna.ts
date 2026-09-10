@@ -2,7 +2,6 @@ import { z } from "zod";
 import { scrapeWithFirecrawl } from "@/lib/scrape/firecrawl";
 import { callOpenAI } from "@/lib/openai-client";
 import { parseJsonResponse } from "@/lib/parse-json-response";
-import { SECTION_IDS } from "@/lib/section-ids";
 
 // Inspiration Design DNA — the operator researches the best site in the
 // lead's industry, drops its URL in the Studio, and this distils it into a
@@ -93,7 +92,6 @@ export const DesignDnaSchema = z.object({
             /** What the CLIENT must actually have for this to be worth rendering. */
             needs: z.array(z.string().max(40)).max(6).default([]),
             /** Closest existing renderer id, or null when none of them fits. */
-            nearest: z.string().max(30).nullable().default(null),
           })
         )
         .min(3)
@@ -272,7 +270,7 @@ Return ONLY a JSON object in exactly this shape:
         "kind": "short-hyphenated-name-for-this-kind-of-section, e.g. membership-tiers, class-timetable, coach-roster, menu-by-course, practice-areas",
         "purpose": "what this section is for, in one sentence",
         "needs": ["what a business must actually have for this section to be worth building, e.g. pricing-tier, class, person, location"],
-        "nearest": "the closest of these existing section ids, or null if none of them fits: ${SECTION_IDS.join(", ")}"
+        "needs": "what the CLIENT must be able to evidence for this section to be real — pricing-tier, class, person, location, amenity, policy, certification, opening-hours, photo"
       }
     ],
     "rationale": "one sentence on why this page is ordered the way it is"
@@ -289,7 +287,6 @@ BLUEPRINT — read the page structure above and list the sections this reference
 - Between 3 and 16 sections. Skip the navigation bar and the footer; those are built separately.
 - "kind" names the section in this industry's own vocabulary. A gym's pricing block is "membership-tiers", not "pricing". A restaurant's is "menu-by-course". Name it the way someone in that trade would.
 - "needs" is the crucial field, and it is about the CLIENT, not the reference: what facts must a business have on hand before this section is worth building for them? Use short singular nouns — pricing-tier, class, person, location, photo, review, certification, opening-hours. A section whose needs cannot be met will be dropped rather than filled with invented content.
-- "nearest" is how the section gets rendered. Pick the existing id that would do the least violence to the intent, or null when there is genuinely no fit — null is a useful, honest answer and is recorded rather than guessed around.
 - Say nothing about what the reference's sections CONTAIN. "membership-tiers" is structure and crosses over; "three tiers at 25, 40 and 60 a month" is that company's pricing and must not.`;
 
   const raw = await callOpenAI(prompt, {

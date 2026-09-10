@@ -178,7 +178,16 @@ const dentalSystem = compileDesignSystem({
 });
 
 ok(/\.bespoke-page :where\(\*/.test(gymSystem.css), "containment layer present, so host globals cannot leak in");
-ok(gymSystem.css.includes(".on-dark{background:var(--dark);color:var(--on-dark)}"), "ground utilities set background and text together");
+// Every ground utility must set a background AND a text colour AND the
+// supporting colours in the same rule. Asserted structurally rather than as a
+// literal string, so adding a token to the pair does not fail the check that
+// the pair exists.
+const groundRules = [...gymSystem.css.matchAll(/\.bespoke-page \.on-[a-z0-9-]+\{([^}]*)\}/g)].map((m) => m[1]);
+ok(groundRules.length >= 6, `${groundRules.length} ground utilities emitted`);
+ok(
+  groundRules.every((rule) => /background:var\(/.test(rule) && /(^|;)color:var\(/.test(rule) && /--muted:var\(/.test(rule)),
+  "every ground sets background, text and supporting colour together, so an unreadable section is not expressible"
+);
 ok(/position:fixed[^}]*background-image:url\("data:image\/svg/.test(gymSystem.css), "grain layer emitted");
 ok(gymSystem.tokens["--radius"] === "0px" && dentalSystem.tokens["--radius"] === "16px", `radius differs: ${gymSystem.tokens["--radius"]} vs ${dentalSystem.tokens["--radius"]}`);
 

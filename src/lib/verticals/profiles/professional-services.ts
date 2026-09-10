@@ -40,21 +40,7 @@ export const professionalServices: VerticalProfile = {
     work: "matter",
   },
 
-  sections: [
-    { id: "hero", enabled: true },
-    { id: "trust", enabled: true, label: "Trust bar" },
-    { id: "services", enabled: true },
-    { id: "why-us", enabled: true, label: "Why clients choose us" },
-    { id: "about", enabled: true, label: "The team" },
-    { id: "process", enabled: true, label: "How we work" },
-    { id: "reviews", enabled: true },
-    { id: "cta-band", enabled: true, label: "Conversion band" },
-    { id: "gallery", enabled: true, label: "Case studies" },
-    { id: "faq", enabled: true, label: "FAQ" },
-    { id: "areas", enabled: true, label: "Areas served" },
-    { id: "guarantee", enabled: true, label: "Getting started" },
-    { id: "contact", enabled: true },
-  ],
+  sectionBand: [9, 13],
 
   lists: {
     offeringCount: 8,
