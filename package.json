@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "tsc --noEmit && tsx scripts/check-route-auth.ts && tsx scripts/check-branding.ts && tsx scripts/check-verticals.ts && tsx scripts/check-contrast.ts",
+    "lint": "tsc --noEmit && tsx scripts/check-route-auth.ts && tsx scripts/check-branding.ts && tsx scripts/check-verticals.ts && tsx scripts/check-contrast.ts && tsx scripts/check-places-match.ts",
     "visual-qa:install": "playwright install chromium",
     "visual-qa:worker": "tsx --env-file=.env.local scripts/visual-qa-worker.ts",
     "visual-qa:once": "tsx --env-file=.env.local scripts/visual-qa-worker.ts --once",

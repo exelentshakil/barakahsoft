@@ -23,6 +23,10 @@ export interface PlacesResult {
 /**
  * Is this Places record actually the business we asked about?
  *
+ * Exported so the policy can be exercised directly — the cost of getting this
+ * wrong is a stranger's reviews on a client's homepage, which is not something
+ * to discover from production logs.
+ *
  * findplacefromtext always returns its best guess and never says "no". Taking
  * candidates[0] on faith matched Saddle Roofing of Cheyenne, Wyoming to Expert
  * Roofing Services of Stuart, Florida, and shipped that company's 4.9 rating,
@@ -34,10 +38,10 @@ export interface PlacesResult {
  * match is decisive for the same reason. Failing both, the name has to line up
  * closely enough that a different company cannot slip through.
  */
-function matchesLead(
-  place: { name?: string; website?: string; formatted_phone_number?: string },
-  expect: { domain?: string | null; phone?: string | null; name?: string | null }
-): boolean {
+export function matchesLead(
+  place: { name?: string; website?: string; formatted_phone_number?: string; formatted_address?: string },
+  expect: { domain?: string | null; phone?: string | null; name?: string | null; town?: string | null }
+): { ok: boolean; why: string } {
   const host = (url?: string | null) => {
     try {
       return new URL(url!).hostname.replace(/^www\./, "").toLowerCase();
@@ -48,27 +52,67 @@ function matchesLead(
 
   const placeHost = host(place.website);
   const leadHost = expect.domain ? expect.domain.replace(/^www\./, "").toLowerCase() : null;
-  if (placeHost && leadHost) return placeHost === leadHost;
+  if (placeHost && leadHost && placeHost === leadHost) return { ok: true, why: "domain" };
 
   const digits = (value?: string | null) => (value ?? "").replace(/\D/g, "").slice(-10);
   const placePhone = digits(place.formatted_phone_number);
   const leadPhone = digits(expect.phone);
-  if (placePhone.length === 10 && placePhone === leadPhone) return true;
+  if (placePhone.length === 10 && placePhone === leadPhone) return { ok: true, why: "phone" };
 
-  // Last resort. Compared on words rather than characters so "Saddle Roofing"
-  // does not pass as "Expert Roofing Services" on the strength of one shared
-  // word — every roofer shares that word.
+  // Compared on words rather than characters so "Saddle Roofing" does not pass
+  // as "Expert Roofing Services" on the strength of one shared word — every
+  // roofer shares that word.
   const words = (value?: string | null) =>
     new Set((value ?? "").toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter((w) => w.length > 2));
   const placeWords = words(place.name);
   const leadWords = words(expect.name);
-  if (placeWords.size === 0 || leadWords.size === 0) return false;
   const generic = new Set(["roofing", "roofers", "plumbing", "electric", "electrical", "hvac", "heating",
     "cooling", "services", "service", "company", "inc", "llc", "contractors", "contracting", "construction",
     "painting", "painters", "the", "and"]);
   const distinctive = [...leadWords].filter((w) => !generic.has(w));
-  if (distinctive.length === 0) return false;
-  return distinctive.every((w) => placeWords.has(w));
+  const nameAgrees = placeWords.size > 0 && distinctive.length > 0 && distinctive.every((w) => placeWords.has(w));
+
+  if (!nameAgrees) return { ok: false, why: "name does not agree" };
+
+  // A DIFFERENT website on the listing is not proof of a different business.
+  //
+  // This used to veto outright — `if (placeHost && leadHost) return placeHost
+  // === leadHost` — which is why so many builds came back with no profile.
+  // A GBP listing's website field routinely points somewhere other than the
+  // page we scraped: a Facebook page, a booking platform, a campaign landing
+  // page, .co.uk against .com, a tracking domain, or the apex against the www
+  // host we crawled. Every one of those killed a match the name and town
+  // could have proved, and the operator then pasted in by hand the listing we
+  // had already found and thrown away.
+  //
+  // It is still evidence, so it is not ignored: where the two domains
+  // genuinely conflict the name alone is no longer enough, and the town has
+  // to agree as well. That keeps the franchise case out — one trade name in
+  // two states is exactly the shape of the original mis-match — while letting
+  // through the ordinary case of a business whose listing links elsewhere.
+  const domainsConflict = Boolean(placeHost && leadHost && placeHost !== leadHost);
+  if (!domainsConflict) return { ok: true, why: "name" };
+
+  // Corroboration has to come from something we actually hold BEFORE the
+  // Places call. The town does not qualify: it is derived from the listing's
+  // own address, so at match time there is nothing to compare it against.
+  // The lead's phone is scraped from its own site, so it is available, and it
+  // is the one field that can positively contradict a name match — two
+  // businesses of the same name in different states do not share a number.
+  const phonesContradict = placePhone.length === 10 && leadPhone.length === 10 && placePhone !== leadPhone;
+  if (phonesContradict) {
+    return { ok: false, why: `name agrees but both the website (${placeHost} vs ${leadHost}) and the phone differ` };
+  }
+
+  const town = (expect.town ?? "").trim().toLowerCase();
+  if (town && !(place.formatted_address ?? "").toLowerCase().includes(town)) {
+    return { ok: false, why: `name agrees but the listing is in ${place.formatted_address ?? "another town"}, not ${expect.town}` };
+  }
+
+  // Name agrees, nothing contradicts it. The differing website is the
+  // ordinary case — a listing pointing at Facebook or a booking platform —
+  // not evidence of a different company.
+  return { ok: true, why: "name, with no contradicting phone or town" };
 }
 
 export async function callPlacesApi(
@@ -84,18 +128,28 @@ export async function callPlacesApi(
   }
 
   try {
-    const query = encodeURIComponent(`${name} ${addressHint ?? ""}`.trim());
+    // Candidate ids, best first.
+    //
+    // findplacefromtext answers with ONE guess and never says "no", so a
+    // rejected top candidate used to end the search — the right listing
+    // sitting at position two was never looked at. Text Search returns a
+    // ranked list, and it only runs when the first guess has already been
+    // refused, so the ordinary case still costs exactly one search call.
+    const query = `${name} ${addressHint ?? ""}`.trim();
+    const candidateIds: string[] = [];
+
     const searchRes = await fetch(
-      `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${query}&inputtype=textquery&fields=place_id&key=${apiKey}`
+      `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(query)}&inputtype=textquery&fields=place_id&key=${apiKey}`
     );
     const searchData = await searchRes.json();
-    const placeId = searchData.candidates?.[0]?.place_id;
-    if (!placeId) {
+    for (const candidate of searchData.candidates ?? []) {
+      if (candidate?.place_id) candidateIds.push(candidate.place_id);
+    }
+    if (candidateIds.length === 0) {
       // Places returns 200 OK even on failure, with the real reason in
       // `status`/`error_message` — surface it, or a billing/API-not-enabled
       // failure looks identical to "no such business found" in the logs.
       console.error("[places] no candidate found", { status: searchData.status, error_message: searchData.error_message, query });
-      return null;
     }
 
     const fields = [
@@ -112,29 +166,64 @@ export async function callPlacesApi(
       "photos",
       "types",
     ].join(",");
-    const detailsRes = await fetch(
-      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=${fields}&key=${apiKey}`
-    );
-    const detailsData = await detailsRes.json();
-    const result = detailsData.result;
-    if (!result) {
-      console.error("[places] no result from details call", { status: detailsData.status, error_message: detailsData.error_message, placeId });
+
+    const detailsFor = async (id: string) => {
+      const detailsRes = await fetch(
+        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${id}&fields=${fields}&key=${apiKey}`
+      );
+      const detailsData = await detailsRes.json();
+      if (!detailsData.result) {
+        console.error("[places] no result from details call", { status: detailsData.status, error_message: detailsData.error_message, placeId: id });
+        return null;
+      }
+      return detailsData.result;
+    };
+
+    const rejected: string[] = [];
+    const consider = async (ids: string[]) => {
+      for (const id of ids) {
+        const candidate = await detailsFor(id);
+        if (!candidate) continue;
+        // Refuse a mismatch rather than shipping another company's proof. No
+        // rating at all is recoverable; a stranger's reviews on a client's
+        // homepage is not.
+        if (!expect) return { placeId: id, result: candidate };
+        const verdict = matchesLead(candidate, expect);
+        if (verdict.ok) {
+          console.log(`[places] matched ${candidate.name} on ${verdict.why}`);
+          return { placeId: id, result: candidate };
+        }
+        rejected.push(`${candidate.name} (${verdict.why})`);
+      }
       return null;
+    };
+
+    let hit = await consider(candidateIds);
+
+    if (!hit && expect) {
+      // Second pass over a ranked list, for the case the first guess was
+      // simply the wrong one of several businesses sharing a name.
+      const textRes = await fetch(
+        `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${apiKey}`
+      );
+      const textData = await textRes.json();
+      const more = (textData.results ?? [])
+        .map((r: { place_id?: string }) => r.place_id)
+        .filter((id: string | undefined): id is string => Boolean(id) && !candidateIds.includes(id!))
+        .slice(0, 4);
+      if (more.length) hit = await consider(more);
     }
 
-    // Refuse a mismatch rather than shipping another company's proof. No
-    // rating at all is recoverable; a stranger's reviews on a client's
-    // homepage is not.
-    if (expect && !matchesLead(result, expect)) {
-      console.error("[places] candidate rejected — does not match the lead", {
-        asked: expect.name ?? name,
-        expectedDomain: expect.domain ?? null,
-        got: result.name,
-        gotWebsite: result.website ?? null,
-        gotAddress: result.formatted_address ?? null,
+    if (!hit) {
+      console.error("[places] no candidate matched the lead", {
+        asked: expect?.name ?? name,
+        expectedDomain: expect?.domain ?? null,
+        considered: rejected.length ? rejected : "none returned",
       });
       return null;
     }
+
+    const { placeId, result } = hit;
 
     return {
       place_id: placeId,

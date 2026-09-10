@@ -39,7 +39,15 @@ export const rescrapeLead = inngest.createFunction(
       await step.run("light-refresh", async () => {
         const [firecrawl, places] = await Promise.all([
           scrapeWithFirecrawl(lead.source_url),
-          callPlacesApi(lead.business_name ?? new URL(lead.source_url).hostname, lead.phone ?? undefined),
+          // The same guard the first scrape uses. This call passed no
+          // `expect` at all, and the guard is skipped when there is none — so
+          // a refresh could quietly adopt the wrong listing's rating, reviews
+          // and hours onto a lead the original build had correctly refused.
+          callPlacesApi(lead.business_name ?? new URL(lead.source_url).hostname, lead.phone ?? undefined, {
+            domain: new URL(lead.source_url).hostname,
+            phone: lead.phone ?? null,
+            name: lead.business_name ?? null,
+          }),
         ]);
 
         const { data: existing } = await admin
