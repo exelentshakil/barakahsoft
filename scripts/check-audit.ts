@@ -114,8 +114,8 @@ async function main(): Promise<void> {
   writeFileSync(aPath, ambitious);
   writeFileSync(tPath, timid);
 
-  const a = await auditRendered(`file://${aPath}`);
-  const t = await auditRendered(`file://${tPath}`);
+  const a = await auditRendered({ url: `file://${aPath}` });
+  const t = await auditRendered({ url: `file://${tPath}` });
 
   const summarise = (label: string, r: typeof a) => {
     const m = r.metrics;

@@ -257,7 +257,16 @@ export interface RenderedAudit {
   screenshot: Buffer;
 }
 
-export async function auditRendered(url: string, existing?: Browser): Promise<RenderedAudit> {
+/**
+ * What to measure: a live URL, or a document that does not exist anywhere yet.
+ *
+ * The build needs the second. The audit runs before the page is persisted —
+ * auditing after would mean shipping a failure and repairing it in public —
+ * so at that point there is no URL to load.
+ */
+export type AuditTarget = { url: string } | { html: string };
+
+export async function auditRendered(target: AuditTarget, existing?: Browser): Promise<RenderedAudit> {
   // channel: "chromium" runs the full browser rather than the headless shell.
   // Playwright defaults headless launches to the shell, which is a separate
   // ~95MB download; the full binary is already present for the visual-QA
@@ -276,7 +285,11 @@ export async function auditRendered(url: string, existing?: Browser): Promise<Re
     // transformed.
     await page.addInitScript("globalThis.__name = globalThis.__name || function (fn) { return fn; };");
 
-    await page.goto(url, { waitUntil: "networkidle", timeout: 60_000 });
+    if ("url" in target) {
+      await page.goto(target.url, { waitUntil: "networkidle", timeout: 60_000 });
+    } else {
+      await page.setContent(target.html, { waitUntil: "networkidle", timeout: 60_000 });
+    }
     // Fonts decide measure and scale contrast; measuring before they land
     // reports the fallback's numbers, which is the wrong page.
     await page.evaluate(() => document.fonts.ready);

@@ -144,20 +144,30 @@ export function sanitizeGeneratedHtml(rawHtml: string): string {
   return sanitizeHtml(rawHtml, baseOptions());
 }
 
-// Layout-only inline styles. Deliberately excludes every color-bearing
-// property (color, background, border-color, fill, box-shadow) so inline
-// style cannot become a back door around the token palette, and excludes
-// position/z-index so generated markup cannot escape its section or cover
-// the real nav. Grid/flex sizing is genuinely useful for bespoke
-// composition and carries no such risk.
+// Inline styles the page is allowed to carry.
+//
+// Colour-bearing properties USED to be excluded here, on the theory that
+// inline style would become a back door around the token palette. That theory
+// was right about the mechanism and wrong about the consequence: it meant a
+// page could not express a colour at all, so every design decision had to
+// survive a normaliser that rewrote it, and every page came out looking the
+// same. Colour is now solved upstream and the audit reports a literal, so the
+// honest position is to allow the property and measure what is written.
+//
+// position and z-index stay excluded: generated markup escaping its section
+// to cover the real navigation is a layout failure with no upside.
 const SAFE_STYLE_PROPS = new Set([
   "grid-template-columns", "grid-template-rows", "grid-column", "grid-row",
   "gap", "row-gap", "column-gap",
-  "aspect-ratio", "max-width", "min-width", "max-height", "min-height",
-  "order", "flex", "flex-basis", "align-self", "justify-self",
-  "text-align", "letter-spacing", "line-height", "text-transform",
-  "margin-top", "margin-bottom", "margin-inline", "padding-block", "padding-inline",
-  "object-position", "opacity",
+  "aspect-ratio", "max-width", "min-width", "max-height", "min-height", "height", "width",
+  "order", "flex", "flex-basis", "align-self", "justify-self", "align-items", "justify-content",
+  "text-align", "letter-spacing", "line-height", "text-transform", "font-size", "font-weight",
+  "margin-top", "margin-bottom", "margin-inline", "margin-left", "margin-right",
+  "padding", "padding-block", "padding-inline",
+  "object-position", "object-fit", "opacity", "overflow",
+  "color", "background", "background-color", "background-image", "background-size", "background-position",
+  "border", "border-color", "border-top", "border-bottom", "border-left", "border-right", "border-radius",
+  "box-shadow", "transform", "filter", "backdrop-filter", "mix-blend-mode",
 ]);
 
 // CONFIRMED PRODUCTION LEAK: generated pages embedded Google Places photo
@@ -176,7 +186,11 @@ function urlLeaksCredential(url: string): boolean {
 
 // url(), expression(), and CSS escapes are the classic vectors for smuggling
 // a request or a script through a style attribute.
-const UNSAFE_STYLE_VALUE = /url\s*\(|expression\s*\(|javascript:|@import|\\/i;
+// url() is permitted only as an inline data: image — the way a decorative
+// mark or a grain overlay is drawn. A remote URL in a style attribute is a
+// request this build did not plan, so it goes.
+const UNSAFE_STYLE_VALUE = /expression\s*\(|javascript:|@import|\\/i;
+const REMOTE_URL_IN_STYLE = /url\s*\(\s*['"]?(?!data:image\/)/i;
 
 function filterStyle(style: string): string {
   return style
@@ -189,8 +203,8 @@ function filterStyle(style: string): string {
       const prop = decl.slice(0, idx).trim().toLowerCase();
       const value = decl.slice(idx + 1).trim();
       if (!SAFE_STYLE_PROPS.has(prop)) return false;
-      if (UNSAFE_STYLE_VALUE.test(value)) return false;
-      return value.length > 0 && value.length < 120;
+      if (UNSAFE_STYLE_VALUE.test(value) || REMOTE_URL_IN_STYLE.test(value)) return false;
+      return value.length > 0 && value.length < 400;
     })
     .join("; ");
 }
@@ -288,32 +302,4 @@ export function sanitizeBespokeHtml(rawHtml: string): string {
       },
     },
   });
-}
-
-// Retained for the legacy Tailwind-authored generation path (pre-v9 leads
-// whose stored markup uses bg-primary/text-primary utilities). New
-// generation goes through sanitizeBespokeHtml and does not need it: the
-// token vocabulary has no channel through which an off-brand color could
-// be written in the first place.
-const ACCENT_COLOR_CLASS = /\b(bg|text|border|from|to|via|ring|fill|stroke|decoration|divide|outline|accent|caret)-(red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d{2,3}\b/g;
-
-const PROPERTY_TO_PRIMARY_CLASS: Record<string, string> = {
-  bg: "bg-primary",
-  text: "text-primary",
-  border: "border-primary",
-  ring: "ring-primary",
-  fill: "fill-primary",
-  stroke: "stroke-primary",
-  decoration: "decoration-primary",
-  divide: "divide-primary",
-  outline: "outline-primary",
-  accent: "accent-primary",
-  caret: "caret-primary",
-  from: "from-primary",
-  to: "to-primary",
-  via: "via-primary",
-};
-
-export function enforceBrandColor(html: string): string {
-  return html.replace(ACCENT_COLOR_CLASS, (_match, property: string) => PROPERTY_TO_PRIMARY_CLASS[property] ?? "text-primary");
 }
