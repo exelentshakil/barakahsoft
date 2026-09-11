@@ -91,6 +91,29 @@ function buttonDoc(): string {
   );
 }
 
+// The third failure, at 1.02:1: a ground token used as a text colour. The
+// model wrote `color: var(--paper-2)` on a light section — near-white on
+// near-white — and the paper family was the one ground family missing from
+// the NOT_TEXT map.
+const paperAsTextCss = `
+.nav-link{color:var(--paper-2)}
+.kicker{color:var(--paper)}
+`;
+const paperAsTextMarkup = `
+<section class="on-paper"><div class="wrap" style="padding:var(--s-8) 0">
+  <p class="kicker">Serving Belfast since 2018</p>
+  <a class="nav-link" href="#services">Our services</a>
+  <p class="measure">${copy}</p>
+</div></section>`;
+
+function paperDoc(authoredCss: string): string {
+  return (
+    `<!doctype html><html><head><meta charset="utf-8">` +
+    `<style>html,body{margin:0;padding:0}${system.css}\n${authoredCss}</style></head>` +
+    `<body><div class="bespoke-page">${paperAsTextMarkup}</div></body></html>`
+  );
+}
+
 async function main() {
   console.log("\nGround pairs — painted by hand, audited for real\n");
 
@@ -130,6 +153,47 @@ async function main() {
     buttonBlockers.length === 0
       ? "a 12px brand-fill button label passes at the control floor"
       : `brand button STILL blocks the build: ${buttonBlockers[0].detail}`
+  );
+
+  // 4 · a ground token used as text is caught for every ground family
+  const paperBefore = await auditRendered({ html: paperDoc(paperAsTextCss) });
+  ok(
+    contrastBlockers(paperBefore.findings).length > 0,
+    `paper-as-text un-remediated: ${paperBefore.metrics.contrastFailures.length} failing pair(s)`
+  );
+  if (paperBefore.metrics.contrastFailures.length) {
+    const worst = paperBefore.metrics.contrastFailures.slice().sort((a, b) => a.ratio - b.ratio)[0];
+    console.log(`        worst ${worst.ratio}:1 — ${worst.colour} on ${worst.ground}`);
+  }
+
+  const paperFixed = remediateCss(paperAsTextCss);
+  const paperAfter = await auditRendered({ html: paperDoc(paperFixed.css) });
+  ok(
+    contrastBlockers(paperAfter.findings).length === 0,
+    contrastBlockers(paperAfter.findings).length === 0
+      ? "paper-as-text remediated: readable"
+      : `paper-as-text STILL failing: ${paperAfter.metrics.contrastFailures.length} pair(s)`
+  );
+
+  // 5 · the audit hands back a selector a repair can actually use
+  const usable = paperBefore.metrics.contrastFailures.every(
+    (f) => /^[A-Za-z][\w-]*([#.][\w-]+)?$/.test(f.selector)
+  );
+  ok(usable, "every failure carries a clean CSS selector, with the prose hint kept separate");
+
+  // 6 · the last resort: repaint exactly what measured badly, and re-measure.
+  //     Mirrors what assemble() does once the repair rounds are spent, so the
+  //     token choice, the !important and the selector shape are all exercised
+  //     against a real render rather than assumed.
+  const forced = paperBefore.metrics.contrastFailures
+    .map((f) => `.bespoke-page ${f.selector}{color:${f.groundLum < 0.35 ? "var(--on-dark)" : "var(--ink)"} !important}`)
+    .join("\n");
+  const rescued = await auditRendered({ html: paperDoc(`${paperAsTextCss}\n${forced}`) });
+  ok(
+    contrastBlockers(rescued.findings).length === 0,
+    contrastBlockers(rescued.findings).length === 0
+      ? "forced-readable pass rescues an unremediated page — nothing gets discarded"
+      : `forced-readable pass left ${rescued.metrics.contrastFailures.length} pair(s) failing`
   );
 
   console.log(failed ? `\n${failed} check(s) failed\n` : "\nAll checks passed\n");

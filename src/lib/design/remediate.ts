@@ -30,8 +30,21 @@ const NOT_TEXT: Record<string, string> = {
   "--brand": "var(--on-ground)",
   "--brand-ground": "var(--on-ground)",
   "--brand-wash": "var(--on-ground)",
-  "--dark": "var(--ink)",
-  "--dark-2": "var(--ink)",
+  // Every GROUND token, because a ground used as text is the same slot error
+  // whichever end of the scale it sits at. The paper family was missing and
+  // cost a whole build: `color: var(--paper-2)` on a light section measured
+  // rgb(247,248,249) on rgb(246,251,255) — 1.02:1, white on white.
+  //
+  // All of them resolve to --muted rather than to a fixed token. --muted is
+  // set by whichever ground the element actually sits in and is solved to
+  // clear the body floor there, so it is right on a light section and a dark
+  // one alike. --dark and --dark-2 used to map to var(--ink), which is only
+  // correct over paper and painted dark-on-dark everywhere else.
+  "--paper": "var(--muted)",
+  "--paper-2": "var(--muted)",
+  "--paper-3": "var(--muted)",
+  "--dark": "var(--muted)",
+  "--dark-2": "var(--muted)",
 };
 
 /** Below this, text is not readable at any contrast ratio. */

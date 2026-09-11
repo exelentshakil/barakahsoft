@@ -460,12 +460,28 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
       previewUrl: string | null;
     };
 
+    // A page that still measures badly is saved, flagged, and reviewed. It is
+    // not thrown away.
+    //
+    // Discarding it was costing a finished PRD, a compiled design system, a
+    // media plan, chrome and a body — about nine minutes and forty thousand
+    // tokens — every time one caption came out at 2.3:1. Three runs died that
+    // way in a row, each on a different pair, and the operator was left with
+    // nothing to look at and nothing to fix.
+    //
+    // Nothing reaches a client because of this. The lead lands at qa_pending
+    // and sending is gated on a human approving it, which is the check that
+    // was always doing the real work. Saving a flagged page instead of losing
+    // it means the operator can repair it in the section editor in seconds,
+    // or reject it with one press — both better outcomes than an empty studio
+    // and a stack trace.
     const contrastBlockers = assembled.findings.filter(
       (finding) => finding.check === "contrast" && finding.severity === "blocker"
     );
     if (contrastBlockers.length) {
-      throw new Error(
-        `Unreadable after ${assembled.repairs} repair round(s). The page was not saved.\n` +
+      console.warn(
+        `[bespoke-generate] ${lead_id} saved with ${contrastBlockers.length} contrast blocker(s) after ` +
+          `${assembled.repairs} repair round(s) and the forced-readable pass:\n` +
           contrastBlockers.map((finding) => finding.detail).join("\n")
       );
     }
@@ -475,7 +491,12 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
       css: assembled.css,
       rationale: prdToMarkdown(design),
       sections: assembled.sections,
-      notes: assembled.findings.map((finding) => `[${finding.severity}] ${finding.check}: ${finding.detail}`),
+      // Blockers first. They are what decides whether this page can be sent,
+      // and they were previously buried in document order among the notes.
+      notes: [
+        ...assembled.findings.filter((finding) => finding.severity === "blocker"),
+        ...assembled.findings.filter((finding) => finding.severity !== "blocker"),
+      ].map((finding) => `[${finding.severity}] ${finding.check}: ${finding.detail}`),
     };
 
     // funnel_pages drives the mega menu, the footer and sitemap.xml. Structure,

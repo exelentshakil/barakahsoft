@@ -20,7 +20,18 @@ import { MIN_SCALE_CONTRAST, MIN_DISPLAY_PX } from "./type";
 import { MIN_SECTION_PAD_PX } from "./space";
 
 export interface RenderedMetrics {
-  contrastFailures: Array<{ selector: string; ratio: number; size: number; colour: string; ground: string }>;
+  contrastFailures: Array<{
+    /** A real CSS selector, so a deterministic repair can target it. */
+    selector: string;
+    /** Prose for the model's repair round. Never concatenated into the selector. */
+    hint: string;
+    ratio: number;
+    size: number;
+    colour: string;
+    ground: string;
+    /** Relative luminance of the measured ground, for picking a passing token. */
+    groundLum: number;
+  }>;
   measureChars: number;
   brandAreaShare: number;
   darkAreaShare: number;
@@ -207,11 +218,13 @@ function collect(): RenderedMetrics {
                 }:1. The ground is the problem, not the text. Use var(--brand-ground) for anything carrying body copy, and keep var(--brand) for control labels and marks.`
               : "";
           contrastFailures.push({
-            selector: label(el) + hint,
+            selector: label(el),
+            hint,
             ratio: Math.round(r * 100) / 100,
             size: Math.round(size),
             colour: style.color,
             ground: `rgb(${ground.join(",")})`,
+            groundLum: Math.round(luminance(ground) * 1000) / 1000,
           });
         }
       }
@@ -504,7 +517,7 @@ function judge(m: RenderedMetrics, mobile: RenderedMetrics): AuditFinding[] {
       "contrast",
       "blocker",
       `${m.contrastFailures.length} text/ground pair(s) below the floor (body ${BODY_RATIO}:1, large ${DISPLAY_RATIO}:1). ` +
-        `Worst: ${worst.selector} at ${worst.ratio}:1 — ${worst.colour} on ${worst.ground}, ${worst.size}px.`
+        `Worst: ${worst.selector}${worst.hint} at ${worst.ratio}:1 — ${worst.colour} on ${worst.ground}, ${worst.size}px.`
     );
   }
   if (m.measureChars > 0 && (m.measureChars < 55 || m.measureChars > 82)) {

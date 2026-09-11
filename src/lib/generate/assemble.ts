@@ -52,6 +52,56 @@ function assetUrls(media: MediaAsset[]): string[] {
   return media.map((asset) => asset.url);
 }
 
+/** A class or id safe to put back into a stylesheet. */
+const SAFE_IDENT = /^[A-Za-z][\w-]*$/;
+
+/**
+ * The last resort: repaint exactly what measured unreadable.
+ *
+ * This is NOT the colour normaliser that was deleted, and the difference is
+ * the whole point. That one rewrote every colour the model wrote, blindly,
+ * and every page converged on one palette. This one runs only after the
+ * repair rounds are spent, touches only the selectors a browser actually
+ * measured below the floor, and takes the replacement from the compiled
+ * system rather than inventing it.
+ *
+ * The alternative was what shipped before: throw the whole build away. Three
+ * runs died that way — 2.27:1, then 4.81:1, then 1.02:1 — each about nine
+ * minutes and forty thousand tokens of PRD, design system, chrome and body,
+ * discarded over a caption. A page that measured badly and was then repaired
+ * to readable is worth more than no page at all, and the operator still has
+ * to approve it before a client ever sees it.
+ */
+function forceReadable(
+  failures: Array<{ selector: string; groundLum: number }>
+): { css: string; selectors: string[] } {
+  const seen = new Set<string>();
+  const rules: string[] = [];
+
+  for (const failure of failures) {
+    if (seen.has(failure.selector)) continue;
+
+    // label() builds "tag", "tag#id" or "tag.class" — anything else came from
+    // a class with characters a stylesheet cannot carry, and is skipped
+    // rather than guessed at.
+    const parts = failure.selector.split(/([#.])/);
+    const tag = parts[0];
+    if (!SAFE_IDENT.test(tag)) continue;
+    if (parts.length > 1 && !SAFE_IDENT.test(parts[2] ?? "")) continue;
+
+    seen.add(failure.selector);
+    // Chosen from the ground that was actually measured, not from what the
+    // markup claims. Both tokens are solved by the colour engine to clear the
+    // body floor against their own ground.
+    const token = failure.groundLum < 0.35 ? "var(--on-dark)" : "var(--ink)";
+    // !important because the failing colour is often an inline style, and a
+    // readability floor that loses to specificity is not a floor.
+    rules.push(`.bespoke-page ${failure.selector}{color:${token} !important}`);
+  }
+
+  return { css: rules.join("\n"), selectors: [...seen] };
+}
+
 async function repair(
   findings: AuditFinding[],
   sections: Body["sections"],
@@ -125,6 +175,9 @@ export async function assemble(input: AssembleInput): Promise<AssembledPage> {
   let findings: AuditFinding[] = [];
   let screenshot: Buffer | null = null;
   let repairs = 0;
+  let lastFailures: Array<{ selector: string; groundLum: number }> = [];
+  /** Overrides the last-resort pass added, kept so the saved page carries them. */
+  let forcedCss = "";
 
   const chromeHtml = sanitizeBespokeHtml(input.chrome.nav);
   const footerHtml = sanitizeBespokeHtml(input.chrome.footer);
@@ -179,6 +232,7 @@ export async function assemble(input: AssembleInput): Promise<AssembledPage> {
 
     screenshot = rendered.screenshot;
     findings = [...staticFindings, ...rendered.findings];
+    lastFailures = rendered.metrics.contrastFailures;
 
     const worthFixing = findings.filter((finding) => finding.severity !== "note");
     if (!worthFixing.length || round === maxRepairs) break;
@@ -193,7 +247,46 @@ export async function assemble(input: AssembleInput): Promise<AssembledPage> {
   }
 
   const bodyHtml = sections.map((section) => sanitizeBespokeHtml(section.html)).join("\n");
-  const css = `${input.system.css}\n${remediateCss(sanitizeGeneratedCss(extraCss, allowed)).css}`;
+
+  // Everything the model could fix, it has now had two rounds to fix. Whatever
+  // still measures unreadable gets repainted from the compiled system, and the
+  // page is measured once more so the findings describe what is actually being
+  // saved rather than what it looked like before the repaint.
+  if (lastFailures.length) {
+    const forced = forceReadable(lastFailures);
+    if (forced.css) {
+      forcedCss = forced.css;
+      const remeasured = await auditRendered({
+        html: document(
+          `${input.system.css}\n${remediateCss(sanitizeGeneratedCss(extraCss, allowed)).css}\n${forcedCss}`,
+          chromeHtml,
+          bodyHtml,
+          footerHtml,
+          input.system.fontHref
+        ),
+      }).catch(() => null);
+
+      if (remeasured) {
+        screenshot = remeasured.screenshot;
+        findings = [
+          ...findings.filter((finding) => finding.check !== "contrast"),
+          ...remeasured.findings.filter((finding) => finding.check === "contrast"),
+          {
+            check: "forced-readable",
+            severity: "note" as const,
+            detail:
+              `${forced.selectors.length} selector(s) repainted from the compiled system after the repair ` +
+              `rounds were spent: ${forced.selectors.slice(0, 6).join(", ")}. Worth a look — the model chose ` +
+              `a colour the page could not carry, and the fix here is mechanical rather than designed.`,
+          },
+        ];
+      }
+    }
+  }
+
+  const css = `${input.system.css}\n${remediateCss(sanitizeGeneratedCss(extraCss, allowed)).css}${
+    forcedCss ? `\n${forcedCss}` : ""
+  }`;
   const js = sanitizeGeneratedJs(`${input.chrome.js}\n${input.body.js}`);
 
   const kindById = new Map(input.prd.sections.map((section) => [section.id, section.kind]));
