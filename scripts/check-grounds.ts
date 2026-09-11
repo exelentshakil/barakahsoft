@@ -69,6 +69,28 @@ function contrastBlockers(findings: { check: string; severity: string; detail: s
   return findings.filter((f) => f.check === "contrast" && f.severity === "blocker");
 }
 
+// The second failure, and the one that killed the 8m25s T-FIT run: a brand-red
+// button with a 12px white label. No text colour reaches the BODY floor on
+// that red — white scores 4.81:1, black 4.36:1 — so judging a control label as
+// running copy made the build unpassable at any size the model would set. The
+// colour engine already says 4.5:1 is the right floor for a button label; this
+// asserts the audit finally agrees with it.
+const buttonMarkup = `
+<section class="on-paper"><div class="wrap" style="padding:var(--s-8) 0">
+  <h2 style="font-size:var(--fs-7)">Book a free trial</h2>
+  <button class="btn" style="background:var(--brand);color:var(--on-brand);font-size:12px;padding:var(--s-3) var(--s-5);border:0">
+    Start now
+  </button>
+</div></section>`;
+
+function buttonDoc(): string {
+  return (
+    `<!doctype html><html><head><meta charset="utf-8">` +
+    `<style>html,body{margin:0;padding:0}${system.css}</style></head>` +
+    `<body><div class="bespoke-page">${buttonMarkup}</div></body></html>`
+  );
+}
+
 async function main() {
   console.log("\nGround pairs — painted by hand, audited for real\n");
 
@@ -99,6 +121,16 @@ async function main() {
   for (const failure of after.metrics.contrastFailures) {
     console.log(`        left over: ${failure.selector} at ${failure.ratio}:1`);
   }
+
+  // 3 · a control label is judged as a control, not as a paragraph
+  const button = await auditRendered({ html: buttonDoc() });
+  const buttonBlockers = contrastBlockers(button.findings);
+  ok(
+    buttonBlockers.length === 0,
+    buttonBlockers.length === 0
+      ? "a 12px brand-fill button label passes at the control floor"
+      : `brand button STILL blocks the build: ${buttonBlockers[0].detail}`
+  );
 
   console.log(failed ? `\n${failed} check(s) failed\n` : "\nAll checks passed\n");
   process.exit(failed ? 1 : 0);

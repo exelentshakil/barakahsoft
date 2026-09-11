@@ -153,7 +153,24 @@ function collect(): RenderedMetrics {
         const r = ratio(colour, ground);
         // WCAG "large text": 24px, or 18.66px at 700+.
         const isLarge = size >= 24 || (size >= 18.66 && weight >= 700);
-        const floor = isLarge ? 4.5 : 7;
+        // A control label is not running copy, and judging it as if it were
+        // made whole builds impossible. The colour engine solves --on-brand
+        // against --brand for the DISPLAY floor and says so in its own
+        // comment — "the fill sits under a button label, 4.5:1 is the right
+        // floor" — because a vivid mid-lightness hue cannot reach 7:1 with
+        // white OR with black. Measuring that same pair at the body floor
+        // meant a brand-red button could never pass at any size the model
+        // would plausibly set, and the run died after paying for two repair
+        // rounds that had nothing to fix.
+        const tag = el.tagName;
+        const role = el.getAttribute("role") || "";
+        const type = (el.getAttribute("type") || "").toLowerCase();
+        const isControl =
+          tag === "BUTTON" ||
+          role === "button" ||
+          (tag === "INPUT" && ["submit", "button", "reset"].indexOf(type) >= 0) ||
+          /\bbtn\b|\bbutton\b/.test(el.className || "");
+        const floor = isLarge || isControl ? 4.5 : 7;
         if (r < floor) {
           // Name the cause, not just the symptom. By far the commonest failure
           // is a .muted or .accent element sitting on a dark background that
@@ -171,9 +188,23 @@ function collect(): RenderedMetrics {
             }
             return false;
           })();
+          // The wrong-pair bug has a signature: DARK text on a dark ground.
+          // Without that test the hint fired on white-on-brand-red too —
+          // luminance 0.17 counts as dark — and told the repair round to add
+          // class="on-dark" to a red button, which fixes nothing. Two rounds
+          // were spent on that instruction before the run was thrown away.
+          const textIsDark = luminance(colour) < 0.5;
+          // What the best possible text colour could score here. When even
+          // that is under the floor, no colour choice is the answer and the
+          // ground itself is in the wrong slot — so say that instead.
+          const ceiling = Math.max(ratio([255, 255, 255], ground), ratio([0, 0, 0], ground));
           const hint =
-            groundIsDark && !usesGroundClass
+            groundIsDark && textIsDark && !usesGroundClass
               ? " — this sits on a dark background painted without a ground class, so muted/accent resolved to the light pair. Put class=\"on-dark\" on the element that sets the background."
+              : ceiling < floor
+              ? ` — no text colour can pass on this ground: the best any colour scores here is ${
+                  Math.round(ceiling * 100) / 100
+                }:1. The ground is the problem, not the text. Use var(--brand-ground) for anything carrying body copy, and keep var(--brand) for control labels and marks.`
               : "";
           contrastFailures.push({
             selector: label(el) + hint,
