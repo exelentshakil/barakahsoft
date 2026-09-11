@@ -798,8 +798,9 @@ async function buildPages(
   ctx: GenerationContext,
   requests: InnerPageRequest[],
   startedAt: number
-): Promise<number> {
+): Promise<{ done: number; skipped: string[] }> {
   let done = startedAt;
+  const skipped: string[] = [];
 
   for (const request of requests) {
     const key = pageKey(request, ctx.brief.vertical.nouns);
@@ -808,7 +809,18 @@ async function buildPages(
     const html = (await step.run(`page-${stepId}`, async () =>
       generateBespokePage(ctx.brief, ctx.voiceSample, ctx.dna, ctx.media, ctx.knownPaths, request)
     )) as string | null;
-    if (!html) throw new Error(`Generation returned no substantive content for ${key}`);
+
+    // One empty response used to lose the whole deep build. Phase 2 is about
+    // twenty pages — every service, every area, about, FAQ, contact — and
+    // throwing here discarded every page that had already been written
+    // because the nineteenth came back blank. Skip it and keep going; a site
+    // missing one service page is a site, and the operator can see which one
+    // is missing and rebuild just that.
+    if (!html) {
+      skipped.push(key);
+      console.warn(`[bespoke-generate] ${leadId}: no substantive content for ${key} — skipped`);
+      continue;
+    }
 
     done += 1;
 
@@ -820,7 +832,7 @@ async function buildPages(
     });
   }
 
-  return done;
+  return { done, skipped };
 }
 
 function pageKey(request: InnerPageRequest, nouns: VerticalProfile["nouns"]): string {
@@ -887,7 +899,25 @@ async function runPhaseTwo(
     });
   });
 
-  await buildPages(step, admin, leadId, ctx, requests, 0);
+  const { skipped } = await buildPages(step, admin, leadId, ctx, requests, 0);
+  if (skipped.length) {
+    console.warn(`[bespoke-generate] ${leadId}: phase 2 finished with ${skipped.length} page(s) skipped: ${skipped.join(", ")}`);
+    // A log line the operator never reads is not a report. The nav links to
+    // these routes, so a page that was skipped is a 404 waiting to be found
+    // by a client rather than by us.
+    await step.run("record-skipped-pages", async () => {
+      const { data } = await admin
+        .from("artifacts")
+        .select("qa_notes")
+        .eq("lead_id", leadId)
+        .maybeSingle<{ qa_notes: string | null }>();
+      const note = `[phase-2] ${skipped.length} page(s) came back empty and were skipped: ${skipped.join(", ")}. Rebuild phase 2 to retry them.`;
+      await admin
+        .from("artifacts")
+        .update({ qa_notes: [note, data?.qa_notes].filter(Boolean).join("\n") })
+        .eq("lead_id", leadId);
+    });
+  }
 
   await step.run("finish-phase-2", async () => {
     // The chrome spec is recomputed now that area pages exist. Without
