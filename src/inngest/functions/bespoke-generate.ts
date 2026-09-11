@@ -554,6 +554,20 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
     const critique: PremiumCritique = { passes: true, blockers: [], warnings: [] };
 
     let visualReport: VisualQaReport | null = null;
+    // Visual QA advises; it does not decide.
+    //
+    // Every path through this block used to throw, and each throw discarded
+    // the finished build: the worker not answering, the fifteen-minute poll
+    // running out, a worker-side error, a creative score under 50. The worker
+    // runs on an operator's laptop — so a closed lid, a dead .env or a machine
+    // that was simply never started could destroy a cloud build that had
+    // already passed the inline rendered audit.
+    //
+    // The page is now measured in the function itself, in a real browser,
+    // before any of this runs. That is the check that has to hold. Whatever
+    // this block learns is worth recording and worth reading at the QA gate,
+    // and is worth nothing at all if the price is losing the page.
+    const visualNotes: string[] = [];
     if (visualQaEnabled()) {
       const candidate = (await step.run("queue-visual-qa", async () => {
           const { data, error } = await admin
@@ -586,12 +600,22 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
             })
             .select("*")
             .single<GenerationCandidate>();
-           if (error || !data) throw new Error(`Could not queue visual QA: ${error?.message ?? "no candidate returned"}`);
+           if (error || !data) {
+             console.warn(`[bespoke-generate] could not queue visual QA: ${error?.message ?? "no candidate returned"}`);
+             return null;
+           }
            return data;
-      })) as GenerationCandidate;
+      })) as GenerationCandidate | null;
+
+      if (!candidate) {
+        visualNotes.push("Visual QA could not be queued, so the page was not reviewed by the worker.");
+      }
 
       let reviewed: GenerationCandidate | null = null;
-      for (let poll = 1; poll <= 30; poll++) {
+      // Ten polls, not thirty. This is advice now, and five minutes is a
+      // generous wait for advice; fifteen was only ever justified when the
+      // build was being held hostage to it.
+      for (let poll = 1; candidate && poll <= 10; poll++) {
         await step.sleep(`wait-for-visual-qa-${poll}`, "30s");
         reviewed = (await step.run(`poll-visual-qa-${poll}`, async () => {
              const { data, error } = await admin
@@ -599,13 +623,17 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
                .select("*")
               .eq("id", candidate.id)
               .single<GenerationCandidate>();
-             if (error || !data) throw new Error(`Could not poll visual QA result: ${error?.message ?? "candidate missing"}`);
+             if (error || !data) {
+               console.warn(`[bespoke-generate] could not poll visual QA: ${error?.message ?? "candidate missing"}`);
+               return null;
+             }
              return data;
-        })) as GenerationCandidate;
+        })) as GenerationCandidate | null;
+        if (!reviewed) break;
         if (!["queued", "running"].includes(reviewed.visual_status)) break;
       }
 
-      if (!reviewed || ["queued", "running"].includes(reviewed.visual_status)) {
+      if (candidate && (!reviewed || ["queued", "running"].includes(reviewed.visual_status))) {
         const timedOut = await step.run("timeout-visual-qa", async () => {
              const { data, error } = await admin
                .from("generation_candidates")
@@ -614,36 +642,58 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
               .in("visual_status", ["queued", "running"])
               .select("id")
               .maybeSingle();
-             if (error) throw new Error(`Could not time out visual QA: ${error.message}`);
+             if (error) {
+               console.warn(`[bespoke-generate] could not time out visual QA: ${error.message}`);
+               return false;
+             }
              return Boolean(data);
         });
+
         if (timedOut) {
-          throw new Error(`Visual QA worker did not complete candidate ${candidate.id} within 15 minutes. The previous live page was preserved.`);
+          reviewed = null;
+          visualNotes.push(
+            "The visual QA worker did not answer within five minutes, so this page has not had a rendered " +
+              "review. Start it with `npm run visual-qa:worker` and rebuild if you want that pass."
+          );
+        } else {
+          reviewed = (await step.run("load-raced-visual-qa", async () => {
+               const { data, error } = await admin
+                 .from("generation_candidates")
+                 .select("*")
+                .eq("id", candidate.id)
+                .single<GenerationCandidate>();
+               if (error || !data) {
+                 console.warn(`[bespoke-generate] could not load completed visual QA: ${error?.message ?? "candidate missing"}`);
+                 return null;
+               }
+               return data;
+          })) as GenerationCandidate | null;
         }
-
-        reviewed = (await step.run("load-raced-visual-qa", async () => {
-             const { data, error } = await admin
-               .from("generation_candidates")
-               .select("*")
-              .eq("id", candidate.id)
-              .single<GenerationCandidate>();
-             if (error || !data) throw new Error(`Could not load completed visual QA: ${error?.message ?? "candidate missing"}`);
-             return data;
-        })) as GenerationCandidate;
       }
 
-      if (reviewed.visual_status === "error") {
-        throw new Error(`Visual QA worker failed for candidate ${candidate.id}: ${reviewed.visual_report?.error ?? "unknown worker error"}. The previous live page was preserved.`);
+      if (reviewed?.visual_status === "error") {
+        visualNotes.push(`The visual QA worker errored: ${reviewed.visual_report?.error ?? "unknown worker error"}.`);
+        reviewed = null;
       }
-      visualReport = reviewed.visual_report;
-      const visualScore = visualReport?.critique?.score ?? 0;
-      const visualBlockers = visualReport?.critique?.blockers ?? [];
-      if (!visualReport?.deterministic.passes || visualScore < 50 || visualBlockers.length > 0) {
-        const reasons = [
-          ...(visualReport?.deterministic.findings ?? []).filter((finding) => finding.severity === "blocker").map((finding) => finding.detail),
-          ...(visualReport?.critique?.blockers ?? []),
-        ].join("\n");
-        throw new Error(`The rendered page is not yet usable (creative score ${visualScore}/100). The previous live page was preserved.\n${reasons}`);
+
+      if (reviewed) {
+        visualReport = reviewed.visual_report;
+        const visualScore = visualReport?.critique?.score ?? 0;
+        const visualBlockers = visualReport?.critique?.blockers ?? [];
+        if (!visualReport?.deterministic.passes || visualScore < 50 || visualBlockers.length > 0) {
+          // Recorded at the top of the notes rather than thrown. The operator
+          // decides whether a 43/100 page is worth sending; that judgement was
+          // never the build's to make, and making it cost the page.
+          const reasons = [
+            ...(visualReport?.deterministic.findings ?? [])
+              .filter((finding) => finding.severity === "blocker")
+              .map((finding) => finding.detail),
+            ...(visualReport?.critique?.blockers ?? []),
+          ].join("\n");
+          visualNotes.push(
+            `Visual QA says this page is not yet usable (creative score ${visualScore}/100). Look before sending.\n${reasons}`
+          );
+        }
       }
     }
 
@@ -669,6 +719,9 @@ Return valid JSON only in this format: {"areas": ["Area 1", "Area 2", ...]}`;
           // Stored so the operator sees exactly what the gate found rather
           // than trusting that it ran.
           qa_notes: [
+            // First, because these say the page was reviewed less than usual —
+            // which changes how hard the operator should look at it.
+            ...visualNotes.map((note) => `[visual-qa] ${note}`),
             ...verdict.findings.map((finding) => `[${finding.severity}] ${finding.check}: ${finding.detail}`),
             ...critique.blockers.map((blocker) => `[refine] creative-director: ${blocker}`),
             ...critique.warnings.map((warning) => `[warning] creative-director: ${warning}`),
