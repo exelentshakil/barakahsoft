@@ -59,8 +59,18 @@ const VIEWPORT = { width: 1440, height: 900 };
 /** Runs in the page. Everything here must be self-contained. */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function collect(): RenderedMetrics {
-  const page = document.querySelector(".bespoke-page") as HTMLElement | null;
-  const root: HTMLElement = page ?? document.body;
+  // A built page is composed into ONE .bespoke-page before it is audited, but
+  // the delivered route renders chrome, body and footer as three separate
+  // wrappers. querySelector took the first — a sticky nav measuring 0px tall —
+  // so auditing a live URL reported a 18vh hero, a 34px display size and a
+  // measure of zero characters for a page that was actually 8,866px of real
+  // content. Take the tallest: that is the page, whichever way it was served.
+  const pages = Array.from(document.querySelectorAll<HTMLElement>(".bespoke-page"));
+  const tallest = pages.reduce<HTMLElement | null>(
+    (best, el) => (!best || el.getBoundingClientRect().height > best.getBoundingClientRect().height ? el : best),
+    null
+  );
+  const root: HTMLElement = tallest ?? document.body;
 
   const luminance = (rgb: number[]): number => {
     const [r, g, b] = rgb.map((v) => {

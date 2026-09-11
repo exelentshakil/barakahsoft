@@ -125,12 +125,14 @@ async function repair(
     `THE SECTIONS AS THEY STAND`,
     sections.map((section) => `--- id="${section.id}" ---\n${section.html}`).join("\n\n"),
     ``,
-    `YOUR OWN ADDED CSS`,
+    `YOUR OWN ADDED CSS — these rules stay; what you return is appended after them`,
     "```css",
-    css.slice(0, 8000),
+    // 8000 chars was less than half of a real page's stylesheet, so the model
+    // was asked to repair rules it could not see and re-stated ones it could.
+    css.slice(0, 20000),
     "```",
     ``,
-    `Return ONLY the sections you changed, plus replacement CSS additions.`,
+    `Return ONLY the sections you changed, plus any NEW css rules needed. Your CSS is appended to the stylesheet above, so return only what changes — re-stating a rule that is already right is wasted, and omitting one does not delete it.`,
     `A "timid" finding is not a styling bug — it means the composition is safe and flat. Fixing it means changing the composition: bigger type, a taller hero, a real full bleed, a deliberate overlap, more air. Not a tweak.`,
     ``,
     `Return JSON: {"sections":[{"id","html"}],"cssAdditions":"…"}`,
@@ -243,7 +245,20 @@ export async function assemble(input: AssembleInput): Promise<AssembledPage> {
     repairs += 1;
     const byId = new Map(patch.sections.map((section) => [section.id, section.html]));
     sections = sections.map((section) => (byId.has(section.id) ? { ...section, html: byId.get(section.id)! } : section));
-    if (patch.cssAdditions) extraCss = `${input.chrome.css}\n${patch.cssAdditions}`;
+    // APPEND. A repair round adds rules; it does not hand back the stylesheet.
+    //
+    // This used to be `chrome.css + patch.cssAdditions`, which dropped
+    // input.body.cssAdditions — the entire stylesheet the model wrote for the
+    // page — every time a repair returned any CSS at all. Two rounds later the
+    // page still had its ten sections of markup and had lost most of what
+    // styled them, which is why builds came out flat and empty with a primary
+    // CTA rendering as bare text: `.btn-solid` kept its colour override and
+    // lost its background, its padding and its radius.
+    //
+    // Appending is also what the cascade wants: a later rule beats an earlier
+    // one at equal specificity, so a repair overrides what it means to fix and
+    // leaves the rest standing. The field is called cssAdditions.
+    if (patch.cssAdditions) extraCss = `${extraCss}\n${patch.cssAdditions}`;
   }
 
   const bodyHtml = sections.map((section) => sanitizeBespokeHtml(section.html)).join("\n");
@@ -252,36 +267,58 @@ export async function assemble(input: AssembleInput): Promise<AssembledPage> {
   // still measures unreadable gets repainted from the compiled system, and the
   // page is measured once more so the findings describe what is actually being
   // saved rather than what it looked like before the repaint.
-  if (lastFailures.length) {
+  // Two passes, because one is measured against a stylesheet that the pass
+  // itself then changes.
+  //
+  // The first attempt at this repainted from `lastFailures` and stopped. Every
+  // override it wrote picked var(--on-dark) for elements that shipped on a
+  // LIGHT ground — light text on near-white, 1.02:1, worse than what it
+  // replaced — because the ground had been dark when it was measured and was
+  // not dark any more by the time the page was assembled. Re-measuring and
+  // repainting again converges on the document that actually ships.
+  const repainted: string[] = [];
+  for (let pass = 0; pass < 2 && lastFailures.length; pass += 1) {
     const forced = forceReadable(lastFailures);
-    if (forced.css) {
-      forcedCss = forced.css;
-      const remeasured = await auditRendered({
-        html: document(
-          `${input.system.css}\n${remediateCss(sanitizeGeneratedCss(extraCss, allowed)).css}\n${forcedCss}`,
-          chromeHtml,
-          bodyHtml,
-          footerHtml,
-          input.system.fontHref
-        ),
-      }).catch(() => null);
+    if (!forced.css) break;
 
-      if (remeasured) {
-        screenshot = remeasured.screenshot;
-        findings = [
-          ...findings.filter((finding) => finding.check !== "contrast"),
-          ...remeasured.findings.filter((finding) => finding.check === "contrast"),
-          {
-            check: "forced-readable",
-            severity: "note" as const,
-            detail:
-              `${forced.selectors.length} selector(s) repainted from the compiled system after the repair ` +
-              `rounds were spent: ${forced.selectors.slice(0, 6).join(", ")}. Worth a look — the model chose ` +
-              `a colour the page could not carry, and the fix here is mechanical rather than designed.`,
-          },
-        ];
-      }
-    }
+    // Layered, not replaced: a second pass corrects a first-pass choice that
+    // the re-measure proved wrong, and later rules win at equal specificity.
+    forcedCss = forcedCss ? `${forcedCss}\n${forced.css}` : forced.css;
+    for (const selector of forced.selectors) if (!repainted.includes(selector)) repainted.push(selector);
+
+    const remeasured = await auditRendered({
+      html: document(
+        `${input.system.css}\n${remediateCss(sanitizeGeneratedCss(extraCss, allowed)).css}\n${forcedCss}`,
+        chromeHtml,
+        bodyHtml,
+        footerHtml,
+        input.system.fontHref
+      ),
+    }).catch(() => null);
+
+    if (!remeasured) break;
+
+    screenshot = remeasured.screenshot;
+    findings = [
+      ...findings.filter((finding) => finding.check !== "contrast"),
+      ...remeasured.findings.filter((finding) => finding.check === "contrast"),
+    ];
+    lastFailures = remeasured.metrics.contrastFailures;
+    if (!lastFailures.length) break;
+  }
+
+  if (repainted.length) {
+    findings = [
+      ...findings,
+      {
+        check: "forced-readable",
+        severity: "note" as const,
+        detail:
+          `${repainted.length} selector(s) repainted from the compiled system after the repair rounds were ` +
+          `spent: ${repainted.slice(0, 6).join(", ")}. Worth a look — the model chose a colour the page ` +
+          `could not carry, and the fix here is mechanical rather than designed.`,
+      },
+    ];
   }
 
   const css = `${input.system.css}\n${remediateCss(sanitizeGeneratedCss(extraCss, allowed)).css}${
