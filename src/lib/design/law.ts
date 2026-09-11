@@ -31,28 +31,48 @@ TYPOGRAPHY. Two families maximum. Measure between 60 and 75 characters.
 GRID DISCIPLINE. One grid, one max width, everything aligned to it. No
 arbitrary one-off margins.
 
-THE DESIGN LAW — half two, the ambition floor
+THE DESIGN LAW — half two, the balance band
 
-These are requirements, not permissions. A page that misses them is reported
-as timid and sent back.
+Every rule here has a floor AND a ceiling, and the ceiling is not optional.
+A floor on its own is an instruction to maximise, and a page that maximises
+all of them at once is not ambitious, it is unreadable: thirteen screens of
+enormous headings with almost nothing under them. Land inside the band.
 
-- Scale contrast at least 8:1 between display and body; display at least 88px
-  at desktop. Timid type is the loudest amateur tell.
-- The hero fills at least 85vh and carries no more than 12 words.
-- At least three full-bleed moments breaking the content column.
-- At least one deliberate grid break — an overlap, an offset, a rotation, an
-  asymmetry that means something.
-- Section padding at least 96px, and the largest single whitespace gap on the
-  page above 160px. The nerve to leave sixty per cent of a screen empty is
-  what reads as expensive.
-- Photography is the primary material, not decoration: one image at 70vh or
-  taller, one dramatic crop, one bleed off the edge.
-- A motion budget — entrance reveals, one scroll-linked behaviour, hover
-  states on everything interactive.
-- One editorial device carried through the whole page: oversized numerals, a
-  seal, marginalia, an index, vertical rules, a repeated marque. One idea,
-  repeated, is what separates designed from assembled.
-- Texture. A grain or material layer. Nothing is bald flat colour.
+- TYPE. The hero headline is the only thing that may run large: 48-96px.
+  Section headings are 28-48px. Body is 17-19px. The ratio between the hero
+  and the body sits between 3.2 and 5 — past that the page stops being a
+  website and becomes a poster.
+- HERO. 70-92vh, a headline of 4-12 words, and it carries supporting copy and
+  a call to action as well. A screen holding nothing but five giant words is
+  a title slide, not a homepage.
+- FULL BLEED. Two to five moments that break the content column. Nineteen is
+  not emphasis; when everything is full width, nothing is.
+- GRID BREAK. One or two deliberate ones. More reads as a mistake repeated.
+- SPACE. Section padding 72-144px. The largest single gap on the page stays
+  between 120 and 320px. A 600px hole is not confidence, it is a missing
+  section.
+- PHOTOGRAPHY is the primary material: one image between 45 and 90vh, one
+  dramatic crop, one bleed off the edge. Nothing taller than the screen.
+- LENGTH. The whole page is 4 to 9 screens at 1440x900. Past that a visitor
+  is scrolling through filler to reach the phone number.
+- MOTION. Entrance reveals and hover states on everything interactive, but
+  under a third of the page's elements. Everything moving is noise.
+- ONE editorial device carried through: oversized numerals, a seal,
+  marginalia, an index, vertical rules, a repeated marque.
+- TEXTURE. A grain or material layer. Nothing is bald flat colour.
+
+DENSITY — the rule the band exists to protect
+
+A section is not a heading with space around it. Every section carries real
+content: a list of services with what each one covers, prices in a table,
+people with their roles, questions with answers, steps with what happens at
+each. Most sections should hold 40 words or more.
+
+This is what makes a page worth reading and worth paying for. A visitor
+deciding whether to call is looking for what you do, what it costs and who
+turns up — and a page that answers none of those, however beautifully set,
+sells nothing. Aim for the density of a good product marketing page: clear
+sections, real information, generous but not empty.
 
 THE ORGANISING IDEA
 
@@ -106,6 +126,11 @@ the single mistake that gets a build rejected.
 
 TYPE     var(--fs-0) … var(--fs-8), with var(--tr-N) tracking and var(--lh-N)
          leading to match. var(--font-display) var(--font-body) var(--measure)
+
+         var(--fs-8) IS THE HERO HEADLINE AND NOTHING ELSE. Use it once, on
+         the h1. A section heading is var(--fs-5) or var(--fs-6); a card or
+         sub-heading is var(--fs-3) or var(--fs-4). Setting every h2 at the
+         top of the scale is what turns a page into a stack of title slides.
          Shorthands: var(--fs-body) var(--fs-display) var(--lh-body)
 
 SPACE    var(--s-0) … var(--s-9) for every margin, padding and gap.

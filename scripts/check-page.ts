@@ -28,9 +28,16 @@ if (!url) {
 
 const SEVERITY_ORDER = { blocker: 0, finding: 1, note: 2 } as const;
 
-function bar(label: string, value: number, want: number, unit = ""): string {
-  const pass = value >= want;
-  return `  ${pass ? "ok  " : "FAIL"}  ${label.padEnd(24)} ${String(value).padStart(6)}${unit}  (want ${want}${unit})`;
+/**
+ * A band, not a floor.
+ *
+ * This printed "want N" against a >= test, which is how a page with nineteen
+ * full-bleed moments and a 672px hole showed nine green ticks. Every dimension
+ * has a ceiling as well, and the one that is breached is the one worth seeing.
+ */
+function band(label: string, value: number, low: number, high: number, unit = ""): string {
+  const state = value < low ? "LOW " : value > high ? "HIGH" : "ok  ";
+  return `  ${state}  ${label.padEnd(24)} ${String(value).padStart(6)}${unit}  (${low}-${high}${unit})`;
 }
 
 async function main() {
@@ -60,12 +67,15 @@ async function main() {
   }
 
   console.log("  Composition");
-  console.log(bar("hero height", m.heroVh, 80, "vh"));
-  console.log(bar("full-bleed moments", m.fullBleedCount, 3));
-  console.log(bar("grid breaks", m.gridBreaks, 1));
-  console.log(bar("largest whitespace gap", m.largestGapPx, 160, "px"));
-  console.log(bar("tallest image", m.tallestImageVh, 70, "vh"));
-  console.log(bar("elements bound to motion", m.motionBound, 3));
+  console.log(band("hero height", m.heroVh, 70, 92, "vh"));
+  console.log(band("full-bleed moments", m.fullBleedCount, 2, 5));
+  console.log(band("grid breaks", m.gridBreaks, 1, 2));
+  console.log(band("largest whitespace gap", m.largestGapPx, 120, 320, "px"));
+  console.log(band("tallest image", m.tallestImageVh, 45, 90, "vh"));
+  console.log(band("elements bound to motion", m.motionBound, 3, 60));
+  console.log(band("page length", m.pageScreens, 3, 9, " screens"));
+  console.log(band("median words / section", m.medianSectionWords, 40, 400));
+  console.log(`        ${m.thinSections} of ${m.sectionCount} sections carry under 25 words`);
   console.log(`  ${m.hasTexture ? "ok  " : "FAIL"}  ${"texture layer".padEnd(24)} ${m.hasTexture ? "yes" : "no"}`);
 
   console.log("\n  Type");

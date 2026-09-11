@@ -57,7 +57,10 @@ ok(prd.sections.length >= 8 && prd.sections.length <= 14, `${prd.sections.length
 
 const system = compileDesignSystem(intentFrom(prd, "#ED1C24"));
 ok(system.tokens["--brand"] !== undefined, `intent compiles to a system (brand ${system.tokens["--brand"]}, display ${system.meta.type.displayPx}px)`);
-ok(system.meta.type.scaleContrast >= 8, `scale contrast ${system.meta.type.scaleContrast}x clears the floor`);
+ok(
+  system.meta.type.scaleContrast >= 3.2 && system.meta.type.scaleContrast <= 5,
+  `type scale ${system.meta.type.scaleContrast}x sits inside the band (3.2-5x) — a floor on its own is an instruction to maximise`
+);
 
 const markdown = prdToMarkdown(prd);
 ok(markdown.includes(prd.idea) && markdown.includes("membership-tiers"), "PRD renders as something an operator can read");

@@ -229,12 +229,26 @@ ok(/\.nav-index\{color:var\(--on-ground\)/.test(messy.css), "the brand FILL used
 ok(/border-color:var\(--line\)/.test(messy.css), "…but a border token used as a BORDER is left alone");
 ok(/background:var\(--dark\)/.test(messy.css), "…and a fill used as a fill is left alone");
 ok(/\.lede\{color:var\(--ink-2\);font-size:var\(--fs-2\)\}/.test(messy.css), "correct declarations are untouched");
-ok(messy.changes.length === 3, `reports exactly what it changed (${messy.changes.length}): ${messy.changes[0]}`);
+// Five, and each one is named. The fixture carries a border token used as
+// text, an 8px literal, a fill used as text, and a dark ground painted by hand
+// with no text colour on it — which needs both a colour and its supporting
+// pair rebound.
+ok(
+  messy.changes.length === 5,
+  `reports exactly what it changed (${messy.changes.length})${messy.changes.length === 5 ? "" : `:\n      ${messy.changes.join("\n      ")}`}`
+);
 
 // The line that separates this from the colour normaliser that was deleted:
 // it must not touch a colour simply for being a colour.
-const authored = remediateCss(".bespoke-page .x{color:var(--ink);background:var(--paper-2);box-shadow:0 1px 2px rgb(var(--ink-rgb) / 8%)}");
-ok(authored.changes.length === 0, "a page written correctly is passed through completely unchanged");
+//
+// "Correct" here means using a ground class rather than painting a background,
+// which is what the contract asks for. A hand-painted ground IS remediated,
+// at any depth — a light panel inside a dark section inherits the dark pair
+// and its muted text measures 1.54:1 without the repoint.
+const authored = remediateCss(
+  ".bespoke-page .x{color:var(--ink);font-size:var(--fs-2);letter-spacing:var(--tr-2);box-shadow:0 1px 2px rgb(var(--ink-rgb) / 8%)}"
+);
+ok(authored.changes.length === 0, `a page written correctly is passed through completely unchanged (${authored.changes.length} changes)`);
 
 async function imageChecks(): Promise<void> {
   console.log("\nimage");

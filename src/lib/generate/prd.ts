@@ -132,7 +132,7 @@ const SectionSchema = z.object({
       }),
       /** Written for this business. Never a template with a noun dropped in. */
       brief: text(400, 20),
-      /** Is this the one image that must run at 70vh or taller? */
+      /** Is this the one large image, between 45 and 90vh? */
       hero: z.boolean().default(false),
     })
     .nullable()

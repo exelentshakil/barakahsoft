@@ -77,6 +77,27 @@ const timid = doc(`
   // Kill the grain, since a timid page would not have asked for one.
   ".bespoke-page::after{display:none}");
 
+// The page that actually shipped, in miniature: every dimension pushed to its
+// limit at once. Giant type on every section, a bleed everywhere, holes between
+// them, an image taller than the screen, and almost no words anywhere.
+//
+// This fixture is the regression guard the suite was missing. It tested timid
+// against good and never good against overblown, so a build that maximised
+// every floor scored "no blockers" and went out to a real prospect.
+const overblown = doc(`
+<section style="min-height:97vh;display:flex;align-items:center" class="on-dark bleed-full"><div class="wrap">
+  <h1 style="font-size:174px;line-height:1.2">Emergency plumbers</h1>
+</div></section>
+<section class="section on-paper bleed-full" style="padding-block:400px"><div class="wrap">
+  <h2 style="font-size:174px;line-height:1.2">Property protection</h2>
+  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='1600'%3E%3Crect width='800' height='1600' fill='%23555'/%3E%3C/svg%3E" width="800" height="1600" style="height:135vh;object-fit:cover" alt="">
+</div></section>
+<section class="section on-paper-2 bleed-full" style="padding-block:400px"><div class="wrap"><h2 style="font-size:174px;line-height:1.2">Gas safe engineers</h2></div></section>
+<section class="section on-paper bleed-full" style="padding-block:400px"><div class="wrap"><h2 style="font-size:174px;line-height:1.2">Modern heating</h2></div></section>
+<section class="section on-dark bleed-full" style="padding-block:400px"><div class="wrap"><h2 style="font-size:174px;line-height:1.2">Call us today</h2></div></section>
+<section class="section on-paper bleed-full" style="padding-block:400px"><div class="wrap"><h2 style="font-size:174px;line-height:1.2">Our promise</h2></div></section>
+<section class="section on-paper-2 bleed-full" style="padding-block:400px"><div class="wrap"><h2 style="font-size:174px;line-height:1.2">Coverage</h2></div></section>`);
+
 async function main(): Promise<void> {
   console.log("\nstatic audit");
 
@@ -143,6 +164,23 @@ async function main(): Promise<void> {
   ok(a.screenshot.length > 5000, `screenshot captured (${Math.round(a.screenshot.length / 1024)}kb)`);
 
   if (timidFinding(t)) console.log(`\n  reported: ${timidFinding(t)!.detail}`);
+
+  // ── the other direction ──
+  const oPath = join(dir, "overblown.html");
+  writeFileSync(oPath, overblown);
+  const o = await auditRendered({ url: `file://${oPath}` });
+  summarise("overblown", o);
+
+  const over = o.findings.find((f) => f.check === "overblown");
+  ok(!!over, "a page that maximises every floor is caught");
+  ok(over?.severity === "blocker", `…as a blocker, not a note (${over?.severity})`);
+  ok(!timidFinding(o), "and is NOT reported as timid — the opposite failure");
+  ok(
+    o.findings.some((f) => f.check === "density"),
+    "its empty sections are caught as a density failure"
+  );
+  ok(!a.findings.some((f) => f.check === "overblown" && f.severity === "blocker"), "a balanced page is not caught by the ceilings");
+  if (over) console.log(`\n  reported: ${over.detail}`);
 }
 
 main()

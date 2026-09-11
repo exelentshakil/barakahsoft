@@ -16,7 +16,7 @@
 import { chromium, type Browser } from "playwright-core";
 import type { AuditFinding } from "./audit";
 import { BODY_RATIO, DISPLAY_RATIO } from "./colour";
-import { MIN_SCALE_CONTRAST, MIN_DISPLAY_PX } from "./type";
+import { MIN_SCALE_CONTRAST, MAX_SCALE_CONTRAST, MIN_DISPLAY_PX, MAX_DISPLAY_PX } from "./type";
 import { MIN_SECTION_PAD_PX } from "./space";
 
 export interface RenderedMetrics {
@@ -49,6 +49,12 @@ export interface RenderedMetrics {
   motionBound: number;
   hasTexture: boolean;
   smallTapTargets: number;
+  /** How many 900px screens the page runs to. */
+  pageScreens: number;
+  sectionCount: number;
+  /** Sections carrying under 25 words — a heading and little else. */
+  thinSections: number;
+  medianSectionWords: number;
   overflowsX: boolean;
   /** Which element sticks out, so a repair round has something to act on. */
   widestOffender: string;
@@ -326,6 +332,19 @@ function collect(): RenderedMetrics {
     largestGapPx = Math.max(largestGapPx, parseFloat(style.paddingTop) + parseFloat(style.paddingBottom));
   }
 
+  // Density. A section is not a heading with space around it, and nothing in
+  // the old checks noticed when it was — which is how thirteen screens of
+  // title slides scored full marks.
+  const sectionWords = sections.map((section) => {
+    const text = (section.innerText || section.textContent || "").trim();
+    return text ? text.split(/\s+/).filter(Boolean).length : 0;
+  });
+  const sortedWords = [...sectionWords].sort((a, b) => a - b);
+  const medianSectionWords = sortedWords.length
+    ? sortedWords[Math.floor(sortedWords.length / 2)]
+    : 0;
+  const thinSections = sectionWords.filter((count) => count < 25).length;
+
   let tallestImageVh = 0;
   for (const img of Array.from(root.querySelectorAll("img, picture, video"))) {
     const rect = img.getBoundingClientRect();
@@ -392,6 +411,10 @@ function collect(): RenderedMetrics {
     motionBound,
     hasTexture,
     smallTapTargets,
+    pageScreens: Math.round((document.documentElement.scrollHeight / vh) * 10) / 10,
+    sectionCount: sections.length,
+    thinSections,
+    medianSectionWords,
     overflowsX: document.documentElement.scrollWidth > window.innerWidth + 2,
     widestOffender,
   };
@@ -549,27 +572,84 @@ function judge(m: RenderedMetrics, mobile: RenderedMetrics): AuditFinding[] {
     add("alignment", "finding", `${m.offGridEdges} block edge(s) sit within 14px of a dominant column edge without matching it. Near-misses read as drift, not composition.`);
   }
 
-  // ── ambition ──
-  // Reported together, because one timid measurement is a choice and five is a
-  // page nobody will pay for.
+  // ── balance ──
+  //
+  // Both directions, which is the half that was missing. Every check here used
+  // to be a ">=" with nothing above it, so the model maximised all of them at
+  // once and the audit called it a pass: 173px display type, nineteen
+  // full-bleed moments, a 672px gap, an image taller than the screen, and
+  // thirteen screens of headings with nothing underneath. "No blockers" on a
+  // page nobody would buy.
   const timid: string[] = [];
-  if (m.scaleContrast < MIN_SCALE_CONTRAST) timid.push(`scale contrast ${m.scaleContrast}x (want ${MIN_SCALE_CONTRAST}x)`);
-  if (m.displayPx < MIN_DISPLAY_PX) timid.push(`display type ${m.displayPx}px (want ${MIN_DISPLAY_PX}px)`);
-  if (m.heroVh < 85) timid.push(`hero ${m.heroVh}vh (want 85vh)`);
-  if (m.heroWords > 12) timid.push(`hero headline ${m.heroWords} words (want 12 or fewer)`);
-  if (m.fullBleedCount < 3) timid.push(`${m.fullBleedCount} full-bleed moment(s) (want 3)`);
+  const overblown: string[] = [];
+
+  if (m.scaleContrast && m.scaleContrast < MIN_SCALE_CONTRAST) timid.push(`type scale ${m.scaleContrast}x (want at least ${MIN_SCALE_CONTRAST}x)`);
+  if (m.scaleContrast > MAX_SCALE_CONTRAST + 0.6) overblown.push(`type scale ${m.scaleContrast}x — a ${m.displayPx}px heading over ${m.bodyPx}px body (cap ${MAX_SCALE_CONTRAST}x)`);
+  if (m.displayPx && m.displayPx < MIN_DISPLAY_PX) timid.push(`display type ${m.displayPx}px (want ${MIN_DISPLAY_PX}px)`);
+  if (m.displayPx > MAX_DISPLAY_PX) overblown.push(`display type ${m.displayPx}px (cap ${MAX_DISPLAY_PX}px) — poster scale, not page scale`);
+
+  if (m.heroVh && m.heroVh < 70) timid.push(`hero ${m.heroVh}vh (want 70vh)`);
+  if (m.heroVh > 95) overblown.push(`hero ${m.heroVh}vh (cap 92vh)`);
+  if (m.heroWords > 12) overblown.push(`hero headline ${m.heroWords} words (cap 12)`);
+  if (m.heroWords > 0 && m.heroWords < 3) timid.push(`hero headline ${m.heroWords} word(s) — too little to say anything`);
+
+  if (m.fullBleedCount < 2) timid.push(`${m.fullBleedCount} full-bleed moment(s) (want 2)`);
+  if (m.fullBleedCount > 6) overblown.push(`${m.fullBleedCount} full-bleed moments (cap 5) — when everything is full width, nothing is`);
+
   if (m.gridBreaks < 1) timid.push("no deliberate grid break");
-  if (m.sectionPadMinPx < MIN_SECTION_PAD_PX) timid.push(`tightest section padding ${m.sectionPadMinPx}px (want ${MIN_SECTION_PAD_PX}px)`);
-  if (m.largestGapPx < 160) timid.push(`largest whitespace gap ${m.largestGapPx}px (want 160px)`);
-  if (m.tallestImageVh < 70) timid.push(`tallest image ${m.tallestImageVh}vh (want 70vh)`);
+  if (m.gridBreaks > 3) overblown.push(`${m.gridBreaks} grid breaks (cap 2) — repeated, it reads as a mistake`);
+
+  if (m.sectionPadMinPx < 64) timid.push(`tightest section padding ${m.sectionPadMinPx}px (want 72px)`);
+  if (m.largestGapPx && m.largestGapPx < 120) timid.push(`largest whitespace gap ${m.largestGapPx}px (want 120px)`);
+  if (m.largestGapPx > 340) overblown.push(`a ${m.largestGapPx}px gap (cap 320px) — that is a missing section, not confidence`);
+
+  if (m.tallestImageVh && m.tallestImageVh < 45) timid.push(`tallest image ${m.tallestImageVh}vh (want 45vh)`);
+  if (m.tallestImageVh > 95) overblown.push(`an image at ${m.tallestImageVh}vh (cap 90vh) — taller than the screen it is shown on`);
+
   if (m.motionBound < 3) timid.push(`${m.motionBound} element(s) bound to motion`);
   if (!m.hasTexture) timid.push("no texture layer — bald flat colour");
 
-  if (timid.length >= 4) {
-    add("timid", "finding", `Clears every prohibition and is still a safe, flat page. ${timid.length} ambition floors missed: ${timid.join("; ")}.`);
-  } else if (timid.length) {
-    add("ambition", "note", `Ambition floors missed: ${timid.join("; ")}.`);
+  if (m.pageScreens > 9) overblown.push(`the page is ${m.pageScreens} screens long (cap 9) — a visitor scrolls through filler to reach the phone number`);
+  if (m.pageScreens > 0 && m.pageScreens < 3) timid.push(`the page is only ${m.pageScreens} screens long`);
+
+  // ── density ──
+  //
+  // The rule the band exists to protect, and the one whose absence let a stack
+  // of title slides score full marks. A section is not a heading with space
+  // around it: a visitor deciding whether to call wants to know what you do,
+  // what it costs and who turns up.
+  if (m.sectionCount > 0 && m.thinSections > 0) {
+    const share = Math.round((m.thinSections / m.sectionCount) * 100);
+    if (share >= 50) {
+      add(
+        "density",
+        "blocker",
+        `${m.thinSections} of ${m.sectionCount} sections carry under 25 words — a heading and little else. ` +
+          `The median section holds ${m.medianSectionWords} words. This is a stack of title slides, not a page that sells a build.`
+      );
+    } else if (share >= 30) {
+      add(
+        "density",
+        "finding",
+        `${m.thinSections} of ${m.sectionCount} sections are nearly empty (median ${m.medianSectionWords} words). Give them real content: what each service covers, what it costs, who turns up.`
+      );
+    }
   }
 
+  if (overblown.length >= 3) {
+    add(
+      "overblown",
+      "blocker",
+      `Every dimension pushed to its limit at once, which reads as broken rather than bold. ${overblown.length} ceilings exceeded: ${overblown.join("; ")}.`
+    );
+  } else if (overblown.length) {
+    add("overblown", "finding", `Past the band: ${overblown.join("; ")}.`);
+  }
+
+  if (timid.length >= 4) {
+    add("timid", "finding", `Clears every prohibition and is still a safe, flat page. ${timid.length} floors missed: ${timid.join("; ")}.`);
+  } else if (timid.length) {
+    add("ambition", "note", `Floors missed: ${timid.join("; ")}.`);
+  }
   return out;
 }

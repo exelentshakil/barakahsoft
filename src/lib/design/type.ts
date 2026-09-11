@@ -72,25 +72,36 @@ export interface TypeSystem {
 }
 
 /** Half two of the design law: display must be at least this many times body. */
-export const MIN_SCALE_CONTRAST = 8;
+export const MIN_SCALE_CONTRAST = 3.2;
+/** And a ceiling, which is the half that was missing. */
+export const MAX_SCALE_CONTRAST = 5;
 /** And at least this many pixels at desktop. */
-export const MIN_DISPLAY_PX = 88;
+export const MIN_DISPLAY_PX = 44;
+/** Desktop display type above this stops being confident and starts being a poster. */
+export const MAX_DISPLAY_PX = 104;
 
 const STEPS = 9;
 const BODY_STEP = 2;
 
-// How far above the floor each voice pushes the top of the scale.
+// Where each voice sits inside the band.
 //
-// Pinning display to exactly MIN_SCALE_CONTRAST makes the floor the answer,
-// and two leads that happen to share a body size then share a headline size
-// too — convergence smuggled in through the engine meant to prevent it. The
-// floor stays a floor; voice decides how far past it to go.
+// These were 8 to 11.5, and that was simply wrong. The number came from one
+// hand-drawn mockup whose HERO ran at 196px — then it was applied as a rule to
+// every heading on the page, so an 8:1 ratio over 18px body forced 144px onto
+// every h2. The result was thirteen screens of title slides: a giant heading,
+// a small photograph, and almost nothing else, on every section.
+//
+// Real premium work runs 3.5 to 4.5 — a 64px hero over 17px body. The drama
+// comes from what sits AROUND the type, not from the type outgrowing the page.
+//
+// Voice still decides where in the band to sit, so two leads sharing a body
+// size do not share a headline size.
 const SCALE_CONTRAST: Record<TypeVoice, number> = {
-  brutal: 11.5,
-  editorial: 9.6,
-  warm: 9,
-  utility: 8.6,
-  clinical: 8,
+  brutal: 4.6,
+  editorial: 4.1,
+  warm: 3.8,
+  utility: 3.5,
+  clinical: 3.3,
 };
 
 const BODY_PX: Record<TypeVoice, number> = {
@@ -218,8 +229,13 @@ export function buildType(intent: TypeIntent): TypeSystem {
   // top of the scale is pinned to whichever is larger, and the ratio is solved
   // backwards from it. A scale that cannot express a big headline is a scale
   // that guarantees a timid page.
-  const displayPx = Math.max(MIN_DISPLAY_PX, bodyPx * Math.max(MIN_SCALE_CONTRAST, SCALE_CONTRAST[voice]));
-  const ratio = Math.pow(displayPx / bodyPx, 1 / (STEPS - 1 - BODY_STEP));
+  // Clamped at both ends. A floor on its own is an instruction to maximise,
+  // which is exactly what happened: every metric in the old ambition floor was
+  // a ">=" with nothing above it, and the model took all of them to their
+  // limit at once.
+  const ratio = Math.min(MAX_SCALE_CONTRAST, Math.max(MIN_SCALE_CONTRAST, SCALE_CONTRAST[voice]));
+  const displayPx = Math.min(MAX_DISPLAY_PX, Math.max(MIN_DISPLAY_PX, bodyPx * ratio));
+  const stepRatio = Math.pow(displayPx / bodyPx, 1 / (STEPS - 1 - BODY_STEP));
 
   const tokens: Record<string, string> = {};
   const tracking: Array<{ px: number; em: number }> = [];
@@ -229,7 +245,7 @@ export function buildType(intent: TypeIntent): TypeSystem {
   const bodyX = bodyMetrics.xHeight / bodyMetrics.unitsPerEm;
 
   for (let i = 0; i < STEPS; i += 1) {
-    const px = bodyPx * Math.pow(ratio, i - BODY_STEP);
+    const px = bodyPx * Math.pow(stepRatio, i - BODY_STEP);
     const isDisplay = i > BODY_STEP + 1;
 
     // Big type shrinks harder on a phone than small type does; a linear
@@ -299,7 +315,7 @@ export function buildType(intent: TypeIntent): TypeSystem {
     css,
     fontHref,
     meta: {
-      ratio: Number(ratio.toFixed(4)),
+      ratio: Number(stepRatio.toFixed(4)),
       bodyPx,
       displayPx: Math.round(displayPx),
       scaleContrast: Number((displayPx / bodyPx).toFixed(2)),

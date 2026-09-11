@@ -161,6 +161,15 @@ function completeGrounds(root: postcss.Root, changes: string[]): void {
       }
     }
 
+    // Every ground gets its supporting colours rebound, including a light one.
+    //
+    // I briefly skipped paper on the theory that the page root already carries
+    // the light pair, so writing it again was a no-op. That is only true at the
+    // top level: a light panel painted by hand INSIDE a dark section inherits
+    // the dark pair, and its .muted text came out at 1.54:1. check-grounds
+    // caught it immediately. The repoint is what makes a hand-painted ground
+    // safe at any nesting depth, which is the whole point of it.
+    const repointed: string[] = [];
     for (const [prop, value] of [
       ["--muted", pair.muted],
       ["--on-ground", pair.onGround],
@@ -168,8 +177,11 @@ function completeGrounds(root: postcss.Root, changes: string[]): void {
     ] as const) {
       if (declared.has(prop)) continue;
       rule.append({ prop, value });
+      repointed.push(prop);
     }
-    changes.push(`${rule.selector}: ground painted directly → supporting colours repointed to its own pair`);
+    if (repointed.length) {
+      changes.push(`${rule.selector}: ground painted directly → ${repointed.join(", ")} repointed to its own pair`);
+    }
   });
 }
 
