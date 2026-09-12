@@ -1,5 +1,6 @@
 import sharp from "sharp";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { searchPexels } from "@/lib/pexels";
 import { callOpenAI } from "@/lib/openai-client";
 import { parseJsonResponse } from "@/lib/parse-json-response";
 
@@ -32,6 +33,8 @@ export type MediaSubject =
   | "interior"
   | "exterior"
   | "logo"
+  /** Stock, stored only to fill a band or a texture. Never proof. */
+  | "atmosphere"
   | "unusable";
 
 export interface IngestedMedia {
@@ -228,6 +231,7 @@ export async function saveDescriptions(verdicts: Map<string, VisionVerdict>): Pr
 interface StoredAsset {
   id: string;
   public_url: string;
+  storage_path: string;
   caption: string | null;
   subject: MediaSubject | null;
   usable: boolean;
@@ -236,7 +240,7 @@ interface StoredAsset {
   source: string;
 }
 
-const ASSET_COLUMNS = "id, public_url, caption, subject, usable, width, height, source";
+const ASSET_COLUMNS = "id, public_url, storage_path, caption, subject, usable, width, height, source";
 
 /**
  * Bring every real image this lead has into Storage and describe it.
@@ -260,37 +264,45 @@ export async function ingestRealPhotos(
 
   const already = existing ?? [];
 
-  // Only mirror when this lead has nothing stored yet. Re-running should not
-  // duplicate the client's photo library.
-  if (already.length === 0) {
+  // Mirror what is MISSING, not all-or-nothing.
+  //
+  // This used to skip the whole step whenever the lead had any asset at all,
+  // on the reasoning that re-running should not duplicate the photo library.
+  // The effect was worse than a duplicate: a lead that picked up six images on
+  // an early run never received the other eighteen, so a business with
+  // twenty-four photographs on its site had five to build a page from, and the
+  // generator was blamed for a thin page it had no material for. Measured on a
+  // real lead: 24 scraped, 6 stored, 5 usable.
+  //
+  // storagePath embeds the last forty characters of the source URL, so what is
+  // already held can be recognised without a schema change.
+  const heldSeeds = new Set(
+    already.map((a) => a.storage_path.replace(/^.*\/\d+-/, "").replace(/\.webp$/i, ""))
+  );
+  const seedOf = (url: string) => url.replace(/[^a-z0-9]+/gi, "-").slice(-40).toLowerCase();
+  const missing = urls.filter((url) => !heldSeeds.has(seedOf(url))).slice(0, 24);
+
+  if (missing.length > 0) {
     const results = await Promise.all(
-      urls.slice(0, 24).map((url) => {
+      missing.map((url) => {
         const source =
           url.includes("googleapis.com") || url.includes("googleusercontent.com") ? "gbp" : "site";
         return mirrorToStorage(leadId, url, source);
       })
     );
     const stored = results.filter((r): r is NonNullable<typeof r> => r !== null);
-
-    if (stored.length > 0) {
-      const verdicts = await describeImages(
-        stored.map((s) => ({ id: s.id, url: s.publicUrl })),
-        industry
-      );
-      await saveDescriptions(verdicts);
-    }
-
-    const { data: refreshed } = await admin
-      .from("media_assets")
-      .select(ASSET_COLUMNS)
-      .eq("lead_id", leadId)
-      .returns<StoredAsset[]>();
-    return refreshed ?? [];
+    console.log(`[media] ${leadId}: ${missing.length} new urls, ${stored.length} stored`);
   }
 
-  // Anything uploaded through the Studio since the last run has no vision
-  // verdict yet.
-  const undescribed = already.filter((a) => a.subject === null);
+  const { data: current } = await admin
+    .from("media_assets")
+    .select(ASSET_COLUMNS)
+    .eq("lead_id", leadId)
+    .returns<StoredAsset[]>();
+
+  // Anything newly mirrored, or uploaded through the Studio since the last run,
+  // has no vision verdict yet.
+  const undescribed = (current ?? []).filter((a) => a.subject === null);
   if (undescribed.length > 0) {
     const verdicts = await describeImages(
       undescribed.map((a) => ({ id: a.id, url: a.public_url })),
@@ -306,5 +318,61 @@ export async function ingestRealPhotos(
     return refreshed ?? [];
   }
 
-  return already;
+  return current ?? [];
+}
+
+/**
+ * Top up a thin photo library with stock, for atmosphere only.
+ *
+ * A business with three photographs and a twelve-section page leaves dead
+ * space, which is the complaint that prompted this. But stock standing in for
+ * "our team" or "our work" is how the whole pitch loses credibility — the owner
+ * knows that is not his van.
+ *
+ * So stock is stored with source 'pexels', which is what the slot panel reads
+ * to mark it, and the generator is told in the prompt that these may only be
+ * used behind a stat band or as section texture. Never as proof.
+ */
+export async function topUpWithStock(
+  leadId: string,
+  industry: string,
+  city: string,
+  have: number,
+  want = 8
+): Promise<number> {
+  if (have >= want) return 0;
+
+  const trade = (industry || "local business").toLowerCase();
+  const queries = [
+    `${trade} tools flat lay`,
+    `${trade} at work close up`,
+    `${city || "city"} street architecture`,
+    "clean workshop interior",
+    "hands working detail",
+    "modern office texture",
+  ].slice(0, want - have);
+
+  let added = 0;
+  for (const query of queries) {
+    const photo = await searchPexels(query);
+    if (!photo?.sourceUrl) continue;
+    const stored = await mirrorToStorage(leadId, photo.sourceUrl, "pexels", { slotHint: "atmosphere" });
+    if (!stored) continue;
+
+    const admin = createAdminClient();
+    await admin
+      .from("media_assets")
+      .update({
+        caption: `stock photograph — ${photo.alt || query}`,
+        subject: "atmosphere",
+        usable: true,
+        attribution_name: photo.attributionName ?? null,
+        attribution_url: photo.attributionUrl ?? null,
+      })
+      .eq("id", stored.id);
+    added += 1;
+  }
+
+  if (added) console.log(`[media] ${leadId}: topped up with ${added} stock images`);
+  return added;
 }

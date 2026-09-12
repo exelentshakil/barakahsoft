@@ -31,6 +31,8 @@ export interface UsablePhoto {
   subject: string;
   width: number | null;
   height: number | null;
+  /** True for stock. The prompt is told these may only carry atmosphere. */
+  stock: boolean;
 }
 
 /**
@@ -45,10 +47,18 @@ export async function usablePhotos(leadId: string): Promise<UsablePhoto[]> {
   const admin = createAdminClient();
   const { data } = await admin
     .from("media_assets")
-    .select("public_url, caption, subject, width, height, usable")
+    .select("public_url, caption, subject, width, height, usable, source")
     .eq("lead_id", leadId)
     .returns<
-      { public_url: string; caption: string | null; subject: string | null; width: number | null; height: number | null; usable: boolean }[]
+      {
+        public_url: string;
+        caption: string | null;
+        subject: string | null;
+        width: number | null;
+        height: number | null;
+        usable: boolean;
+        source: string;
+      }[]
     >();
 
   return (data ?? [])
@@ -56,36 +66,97 @@ export async function usablePhotos(leadId: string): Promise<UsablePhoto[]> {
     .filter((a) => typeof a.public_url === "string" && /^https?:\/\//i.test(a.public_url))
     // Biggest first: whatever leads the page needs the resolution.
     .sort((a, b) => (b.width ?? 0) * (b.height ?? 0) - (a.width ?? 0) * (a.height ?? 0))
-    .slice(0, 20)
+    .slice(0, 22)
     .map((a) => ({
       url: a.public_url,
       caption: (a.caption ?? "").trim() || "photograph supplied by the client",
       subject: a.subject ?? "unknown",
       width: a.width,
       height: a.height,
+      stock: a.source === "pexels" || a.source === "unsplash" || a.subject === "atmosphere",
     }));
 }
 
 function photoBlock(photos: UsablePhoto[]): string {
-  if (photos.length === 0) {
-    return `NO PHOTOGRAPHS ARE AVAILABLE.
-Design a page that does not contain a single <img>. Carry it on type, space, rule
-lines and the neutral surfaces. Do not link to stock libraries, do not use
-placeholder services, do not emit an <img> with an invented src.`;
-  }
-  const lines = photos
-    .map((p, i) => {
-      const size = p.width && p.height ? `${p.width}x${p.height}` : "size unknown";
-      return `${i + 1}. ${p.url}\n   shows: ${p.caption} (${p.subject}, ${size})`;
-    })
-    .join("\n");
-  return `THE ${photos.length} PHOTOGRAPH(S) YOU MAY USE — these are the client's own:
-${lines}
+  const real = photos.filter((p) => !p.stock);
+  const stock = photos.filter((p) => p.stock);
 
-Use every one of them somewhere on the page. Use no others: no stock URLs, no
-placeholder services, no invented paths. Read each caption and place the image
-where what it actually shows makes sense — a photograph of a van does not belong
-in a section about the team.`;
+  const list = (items: UsablePhoto[]) =>
+    items
+      .map((p, i) => {
+        const size = p.width && p.height ? `${p.width}x${p.height}` : "size unknown";
+        return `${i + 1}. ${p.url}\n   shows: ${p.caption} (${p.subject}, ${size})`;
+      })
+      .join("\n");
+
+  if (real.length === 0 && stock.length === 0) {
+    return `NO PHOTOGRAPHS ARE AVAILABLE.
+Design a page with no <img> at all. Carry it on type, rules, colour bands and
+the neutral surfaces. Do not link stock libraries, placeholder services, or emit
+an <img> with an invented src.`;
+  }
+
+  return `THE CLIENT'S OWN PHOTOGRAPHS — ${real.length}. Use EVERY one of them.
+${real.length ? list(real) : "(none — this business has no usable photographs of its own)"}
+
+${
+    stock.length
+      ? `STOCK, FOR ATMOSPHERE ONLY — ${stock.length}:
+${list(stock)}
+
+These are stock. They may sit behind a statistics band, as a section texture, or
+as a wide break between sections. They may NEVER appear as this business's team,
+their van, their premises, their work, or anything a reader would take as proof.
+If in doubt, leave a stock image out — a page that implies a stranger is their
+electrician is worse than a shorter page.`
+      : ""
+  }
+
+Use no URL that is not listed above. No stock URLs of your own, no placeholder
+services, no invented paths. Read each caption and place the image where what it
+actually shows belongs — a photograph of a consumer unit does not illustrate a
+section about the team.`;
+}
+
+/**
+ * What the hero asks the visitor to do.
+ *
+ * A 2am emergency electrician and a cosmetic dental clinic want opposite
+ * things: one needs the phone answered above everything, the other is a
+ * considered purchase nobody rings a stranger about. Shipping the same hero to
+ * both is how a page converts for neither.
+ */
+function conversionBlock(brief: SiteBrief): string {
+  const urgent = /electric|plumb|drain|locksmith|boiler|heating|hvac|roof|glaz|pest|emergency|flood|damp|garage|towing|restoration/i.test(
+    `${brief.industry} ${brief.services.join(" ")}`
+  );
+  const phone = brief.phone;
+
+  if (urgent && phone) {
+    return `THE HERO'S JOB — this is an urgent trade
+
+The phone is the conversion. Lead with a large primary button that dials
+${phone} (a real tel: link), and put a short form beside or beneath it as the
+second option for people who cannot talk right now.
+
+The form is three fields and nothing more: name, phone, and one line describing
+the problem. Label the button for the outcome, not the mechanism — "Get a free
+estimate", never "Submit". It posts nowhere; give it an onsubmit that shows a
+thank-you message in place of the fields, because this is a mockup and a dead
+form that appears to hang is worse than one that plainly responds.`;
+  }
+
+  return `THE HERO'S JOB — this is a considered purchase
+
+Nobody rings a stranger about this, so the form is the conversion and it belongs
+in the hero, visible without scrolling. Four fields at most: name, phone or
+email, and what they are asking about. Label the button for the outcome —
+"Book a consultation", "Request a callback" — never "Submit".
+${phone ? `Offer ${phone} as the secondary option beneath it, as a real tel: link.` : "There is no phone number, so the form is the only route — do not print one."}
+
+It posts nowhere; give it an onsubmit that replaces the fields with a thank-you
+message, because this is a mockup and a form that appears to hang is worse than
+one that plainly responds.`;
 }
 
 function reviewBlock(brief: SiteBrief): string {
@@ -144,34 +215,92 @@ const TRUTH_RULES = `WHAT IS TRUE
 const MARKUP_RULES = `HARD RULES — MARKUP
 
 1. Return ONE complete HTML document: <!doctype html> through </html>. It has a
-   <head> with charset, viewport, title, meta description, the Google Fonts
-   link given to you, and a single EMPTY <style></style> element. Put no CSS
+   <head> with charset, viewport, title, meta description, the Google Fonts link
+   given to you, and a single EMPTY <style></style> element. Put no CSS
    anywhere. A stylesheet is written separately against this exact markup, so
    every rule you write here would be thrown away.
 
 2. STRUCTURE IS THE PRODUCT HERE. Ten to fourteen <section> elements, each with
-   a class naming what it is — class="hero", class="proof-band",
-   class="services", class="areas", class="faq". Those class names are the
-   contract the stylesheet is written against, so make them descriptive and
-   give every meaningful element one. Use real landmarks, one <h1>, sane
-   heading order.
+   a class naming what it is — class="hero", class="trust-band", class="services",
+   class="areas", class="reviews", class="faq". Those class names are the
+   contract the stylesheet is written against, so make them descriptive and give
+   every meaningful element one.
 
-3. EVERY SECTION EARNS ITS PLACE. Each needs a real heading, at least forty
-   words of real body copy, and a concrete detail from the brief — a service by
-   name, an area by name, a review in the customer's own words, their hours,
-   their phone, a number they published. A section that could sit on a
-   competitor's page has failed; replace it with one that could not.
+3. THE HEADER. Logo (or wordmark), navigation anchoring to real sections on this
+   page, the phone as a tel: link, AND a primary call-to-action button. A header
+   whose only action is a phone number in grey text has no call to action. It
+   must work as a mobile menu with a real button toggle.
 
-4. Every <img> carries data-slot with a short stable name — data-slot="hero",
+4. THE FOOTER IS A REAL FOOTER, NOT A COPYRIGHT LINE. Four columns: the services
+   by name as anchor links, the areas served as anchor links, the company (about,
+   reviews, FAQ), and contact (address, tel: link, hours). Then the legal line.
+   A footer holding only a logo and a copyright is a defect.
+
+5. NEVER PRINT A DATE YOU WERE NOT GIVEN. Not a founding year, not a copyright
+   year — models write "© 2024" from habit and it is wrong and visibly careless.
+   Write the copyright with no year at all unless the brief contains one.
+
+6. EVERY SECTION EARNS ITS PLACE. Each needs a real heading, at least forty words
+   of body copy, and a concrete detail from the brief — a service by name, an
+   area by name, a review in the customer's own words, their hours, their phone.
+   A section that could sit on a competitor's page has failed.
+
+7. BALANCE EVERY SPLIT. A two-column section must have enough on BOTH sides to
+   fill it — image left, then a heading plus real paragraphs plus a list or a
+   stat row plus a button on the right. An image beside two short sentences
+   leaves a dead column, which is the single most common way these pages look
+   unfinished. If one side has nothing more to say, make the section full-width
+   instead.
+
+8. Repeated things are one object. Service cards, review cards, area tiles: each
+   carries the SAME elements in the same order — heading, body, and where one has
+   a link or an image they all do. Do not give one card three bullet points and
+   its neighbour none; the stylesheet will equalise their heights and the short
+   one will be visibly padded.
+
+9. REVIEWS ARE A SLIDER. A horizontal track of review cards with the reviewer's
+   real name, their star rating, and their words verbatim, plus previous/next
+   buttons that work. Quote only the reviews you were given.
+
+10. Every <img> carries data-slot with a short stable name — data-slot="hero",
    data-slot="service-0" — an src copied EXACTLY from the supplied list, real
-   width and height, loading="lazy" except the first, and an alt written from
-   its caption. SPEND EVERY PHOTOGRAPH: if you have more than you have obvious
-   homes for, build a gallery, a full-bleed band or a split to hold them.
-
-5. Any JavaScript goes in one <script> before </body> — a mobile menu, an
-   accordion. Nothing else loads from anywhere.
+   width and height attributes (this prevents layout shift), loading="lazy"
+   except the first, and an alt written from its caption.
 
 ${TRUTH_RULES}
+
+WRITTEN FOR AI SEARCH AS WELL AS PEOPLE
+
+11. ANSWER FIRST. Open every section with the direct answer in the first two
+   sentences, then expand. A section that warms up for a paragraph before saying
+   anything is a section an AI summariser will skip.
+
+12. HEADINGS ARE THE QUESTIONS REAL PEOPLE ASK. "What does an emergency
+   call-out cost?" beats "Pricing". "Which areas do you cover?" beats "Service
+   Areas". "Are you licensed and insured?" beats "Credentials". This is what
+   gets a business quoted in an AI answer.
+
+13. SAY WHAT, WHO, WHERE AND WHY PLAINLY. Somewhere in the first screen a reader
+   — human or machine — must be able to extract exactly what this business does,
+   who it serves, which town, and what makes it credible. No slogans standing in
+   for facts.
+
+14. INCLUDE ONE REAL TABLE. A service-and-what-is-included table, a
+   response-time table, an areas-and-coverage table — whatever the brief actually
+   supports. AI answers lift structured comparisons far more readily than prose.
+   Do not invent figures to fill it.
+
+15. FAQ ANSWERS ARE VISIBLE TEXT. Use <details>/<summary> if you want them
+   collapsible, but the answer must be real text in the document, never injected
+   by script. Six to eight questions, in the words a customer would use.
+
+16. STRUCTURED DATA, in one <script type="application/ld+json"> before </body>:
+   LocalBusiness (name, telephone, address, url, openingHours, and
+   aggregateRating ONLY if you were given a real rating), FAQPage matching your
+   FAQ section exactly, and Service entries for the named services. Add sameAs
+   with the social profiles if the brief lists any. Every value must match
+   visible text on the page — schema that contradicts the page is worse than no
+   schema.
 
 OUTPUT SHAPE
 
@@ -191,28 +320,52 @@ const DESIGN_RULES = `HARD RULES — STYLESHEET
 
 2. Build on the custom properties supplied and introduce no colour outside them.
    Body copy is var(--ink) on var(--bg), or var(--invert) on var(--ink) — never
-   anything else, and never on a coloured background. var(--brand) is for
-   accents only: buttons, an eyebrow label, a rating mark, a link, an underline,
-   a sliver of a logotype. Filling a large area with var(--brand) is a mistake.
-   Text sitting on var(--brand) is always var(--on-brand).
+   anything else, and never on a coloured background. var(--brand) is for accents
+   only: buttons, an eyebrow label, a rating mark, a link, an underline, a sliver
+   of a logotype. Filling a large area with var(--brand) is a mistake. Text
+   sitting on var(--brand) is always var(--on-brand).
 
-3. THIS IS WHERE THE PAGE IS WON. Style EVERY class in the markup above — do not
-   leave sections to default browser styling. A generous, deliberate stylesheet
-   is the entire difference between a page that reads as expensive and one that
-   reads as generated. Expect to write a lot of CSS; a thin stylesheet is the
-   failure mode.
+3. THIS IS WHERE THE PAGE IS WON. Style EVERY class in the markup — leave nothing
+   to default browser styling. A generous, deliberate stylesheet is the whole
+   difference between a page that reads as expensive and one that reads as
+   generated. Expect to write a lot of CSS; a thin stylesheet is the failure.
 
-4. Give it real design: a type scale with clamp(), rhythm and vertical spacing
-   that varies by section, full-bleed bands alternating with contained ones,
-   asymmetric grids rather than three equal cards every time, considered
-   hover and focus states, hairline rules, generous line-height on body copy
-   and tight tracking on display type.
+4. NO DEAD SPACE. This is the most common way these pages fail. Specifically:
+   - Two-column sections use \`align-items: center\` so the shorter column is
+     centred against the taller one rather than stranded at the top.
+   - An image column gets \`height: 100%\` with \`object-fit: cover\` so it fills
+     its side instead of leaving a gap beneath it.
+   - Section padding is proportional to what the section holds. A band with one
+     line of text does not get the same vertical padding as a twelve-item grid.
+   - Never centre a short paragraph in a wide container and let it float in
+     white space — constrain the measure (\`max-width: 62ch\`) and align it.
 
-5. Responsive to 360px with real breakpoints, a working mobile navigation, and
-   @media (prefers-reduced-motion: reduce) honoured. Motion is subtle or absent
-   — no carousels, no parallax, nothing that moves without being asked.
+5. CARDS IN A ROW ARE THE SAME HEIGHT, ALWAYS. Grid rows stretch by default —
+   keep that, and make the card itself \`display: flex; flex-direction: column\`
+   with the button or link pushed down by \`margin-top: auto\`. Every card's inner
+   padding, heading size and image aspect ratio is identical to its neighbours.
+   A row of cards with ragged bottoms is a defect.
 
-6. Selectors must match the markup you were given, exactly. Do not invent class
+6. THE REVIEWS SLIDER. A horizontal flex track with
+   \`overflow-x: auto; scroll-snap-type: x mandatory\`, each card
+   \`scroll-snap-align: start\` and a fixed width (about 340px, full width on
+   mobile). Hide the scrollbar, style the previous/next buttons properly, and
+   give the track \`scroll-behavior: smooth\` outside reduced-motion.
+
+7. Give it real design: a type scale with clamp(), vertical rhythm that varies by
+   section, full-bleed bands alternating with contained ones, asymmetric grids
+   rather than three equal cards every time, considered hover and focus states,
+   hairline rules, generous line-height on body copy and tight tracking on
+   display type.
+
+8. The header is sticky, with a solid background and a real shadow or hairline
+   once scrolled. Its primary button is visibly a button.
+
+9. Responsive to 360px with real breakpoints, a working mobile navigation, and
+   @media (prefers-reduced-motion: reduce) honoured. Motion is subtle or absent —
+   no carousels that move by themselves, no parallax.
+
+10. Selectors must match the markup you were given, exactly. Do not invent class
    names that are not in it.`;
 
 /**
@@ -283,10 +436,17 @@ function contextBlock(
 ): string {
   return `You are building the homepage of ${brief.businessName}, a ${brief.industry} business in ${brief.city}.
 
-This page is a mockup shown to the owner to win a full website build. It has to
-look more expensive than what they have now and it has to be about THEM — their
-services, their reviews, their photographs, their town. A page that could belong
-to any business in this trade has failed.
+This page is a mockup shown to the owner to win a full website build, and it has
+to carry itself as the work of an expensive agency that looked at their business
+properly. Three things follow from that:
+
+- It looks more considered than what they have now.
+- It is unmistakably about THEM: their service names, their reviews, their
+  photographs, their town. A page that could belong to any business in this
+  trade has failed.
+- It is built to be found. Structured data, question-shaped headings and direct
+  answers are not decoration here — being quotable by an AI search engine is
+  most of what this rebuild is worth to them.
 
 THE BUSINESS
 Name: ${brief.businessName}
@@ -315,6 +475,8 @@ ${brief.painInstructions.length ? `WHAT THE OWNER SAID IS WRONG WITH THEIR CURRE
 ${photoBlock(photos)}
 
 ${brandBlock(marks)}
+
+${conversionBlock(brief)}
 
 ${currentSiteBlock(current)}`;
 }

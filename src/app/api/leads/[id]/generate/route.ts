@@ -4,6 +4,7 @@ import { isAdminSession } from "@/lib/is-admin-session";
 import { buildSiteBrief, briefReadiness, type BriefOverrides } from "@/lib/build-site-brief";
 import { generateHomepage, usablePhotos, type CurrentSite, type BrandMarks } from "@/lib/generate-homepage";
 import { resolveLogoUrl, resolveFooterLogoUrl } from "@/lib/brand-assets";
+import { topUpWithStock } from "@/lib/media/ingest";
 import { updateArtifact } from "@/lib/artifact-write";
 import { recordVersion, HOME_KEY } from "@/lib/page-versions";
 import type { Lead, ScrapeResults } from "@/types/database";
@@ -95,9 +96,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     .update({ extracted_assets: { ...storedAssets, brief_overrides: overrides } })
     .eq("lead_id", leadId);
 
-  // Curated at scrape time, not here. If the operator deleted a photo it is
-  // already gone, and nothing in this request goes looking for more.
-  const photos = await usablePhotos(leadId);
+  // Curated at scrape time, not here — if the operator deleted a photo it is
+  // already gone. The one exception is a business with almost no photography:
+  // a twelve-section page built from three images leaves dead space, so stock
+  // tops it up for atmosphere only, clearly flagged, and never as proof.
+  let photos = await usablePhotos(leadId);
+  if (photos.length < 8) {
+    await topUpWithStock(leadId, brief.industry, brief.city, photos.length);
+    photos = await usablePhotos(leadId);
+  }
 
   const brandHex =
     overrides.brandHex?.trim() ||

@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { scrapeBusiness } from "@/lib/scrape";
 import { classifyBusiness } from "@/lib/classify-business";
 import { extractEntities } from "@/lib/extract-entities";
-import { ingestRealPhotos } from "@/lib/media/ingest";
+import { ingestRealPhotos, topUpWithStock } from "@/lib/media/ingest";
 import { buildSiteBrief, realPhotos, briefReadiness } from "@/lib/build-site-brief";
 import { generateHomepage, usablePhotos, type CurrentSite } from "@/lib/generate-homepage";
 import { resolveLogoUrl, resolveFooterLogoUrl } from "@/lib/brand-assets";
@@ -190,7 +190,14 @@ export const buildNextLead = inngest.createFunction(
           ((artifact?.inspiration_branding as { colors?: { primary?: string } } | null)?.colors?.primary ?? "");
 
         const assets = (artifact?.extracted_assets ?? {}) as Record<string, unknown>;
-        const photos = await usablePhotos(leadId);
+
+        // Stock only when the client is genuinely short of photographs, and
+        // only ever for atmosphere — see topUpWithStock.
+        let photos = await usablePhotos(leadId);
+        if (photos.length < 8) {
+          await topUpWithStock(leadId, brief.industry, brief.city, photos.length);
+          photos = await usablePhotos(leadId);
+        }
         const result = await generateHomepage(
           brief,
           photos,
