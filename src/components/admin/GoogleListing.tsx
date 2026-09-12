@@ -137,12 +137,12 @@ export function GoogleListing({ leadId, listing }: { leadId: string; listing: Li
             </button>
           </div>
           <a
-            href="https://developers.google.com/maps/documentation/places/web-service/place-id"
+            href="https://developers.google.com/maps/documentation/javascript/examples/places-placeid-finder"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
           >
-            Find a place ID <ExternalLink className="h-3 w-3" />
+            Look up their place ID <ExternalLink className="h-3 w-3" />
           </a>
         </div>
       )}
