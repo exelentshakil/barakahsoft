@@ -279,7 +279,6 @@ export interface BuildJob {
   updated_at: string;
 }
 
-export type { GenerationCandidate, VisualQaStatus, VisualQaReport } from "@/lib/visual-qa";
 
 export interface ClosePlanStep {
   id: string;

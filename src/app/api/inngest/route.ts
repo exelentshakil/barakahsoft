@@ -2,11 +2,9 @@ import { serve } from "inngest/next";
 import { inngest } from "@/inngest/client";
 import { scrapeRun } from "@/inngest/functions/scrape-run";
 import { deliverSend } from "@/inngest/functions/deliver-send";
-import { rebuildInnerPages } from "@/inngest/functions/rebuild-inner-pages";
 import { goLive } from "@/inngest/functions/go-live";
 import { syncAdSpend } from "@/inngest/functions/sync-ad-spend";
 import { revalidateHotlinks } from "@/inngest/functions/revalidate-hotlinks";
-import { bespokeGenerate } from "@/inngest/functions/bespoke-generate";
 import { rescrapeLead } from "@/inngest/functions/rescrape";
 import { measureVisibility } from "@/inngest/functions/measure-visibility";
 import { socialMotionGenerate } from "@/inngest/functions/social-motion";
@@ -26,5 +24,5 @@ export const maxDuration = 300;
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [scrapeRun, bespokeGenerate, socialMotionGenerate, rescrapeLead, measureVisibility, deliverSend, rebuildInnerPages, goLive, revalidateHotlinks, syncAdSpend],
+  functions: [scrapeRun, socialMotionGenerate, rescrapeLead, measureVisibility, deliverSend, goLive, revalidateHotlinks, syncAdSpend],
 });

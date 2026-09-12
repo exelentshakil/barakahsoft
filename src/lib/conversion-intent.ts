@@ -1,20 +1,15 @@
-import type { VerticalProfile } from "@/lib/verticals/types";
-
-// What this business's website is actually for.
+// What the owner told us is wrong with their current site.
 //
-// Every generated page used the same call to action — "Get a free quote" —
-// regardless of trade. That is right for a roofer and wrong for almost
-// everything else: a dentist takes bookings, a shop sells, an emergency
-// plumber needs the phone answered above all. The action a visitor is meant
-// to take is the single most important decision on the page, and it was a
-// constant.
+// They tick boxes on the intake form — "Visitors don't convert into calls",
+// "Nobody finds us on Google" — and for a long time none of it reached
+// generation. Those answers say what the rebuilt page has to fix, in the
+// client's own words, and using them is what makes the result feel addressed to
+// them rather than produced for them.
 //
-// The lead's own stated problems matter here too. They tick boxes on the
-// intake form — "Visitors don't convert into calls", "Nobody finds us on
-// Google" — and none of it reached generation. Those answers say what the
-// rebuilt page has to fix, in the client's own words, and using them is
-// what makes the result feel addressed to them rather than produced for
-// them.
+// What used to sit alongside this was a conversion-intent table that picked the
+// page's call to action per trade. The model decides that now, from the brief:
+// it knows a dentist takes bookings and an emergency plumber wants the phone
+// answered, and it does not need a lookup table to be told.
 
 export type ConversionAction =
   | "call-now"
@@ -119,28 +114,11 @@ const DEFAULT_INTENT = (hasPhone: boolean): ConversionIntent => ({
  */
 export function conversionIntentFor(
   industry: string | null | undefined,
-  hasPhone: boolean,
-  profile?: VerticalProfile
+  hasPhone: boolean
 ): ConversionIntent {
   const trade = (industry ?? "").trim();
   const rule = trade ? RULES.find((r) => r.match.test(trade)) : undefined;
-  if (rule) return rule.intent(hasPhone);
-  if (profile) return fromProfile(profile, hasPhone);
-  return DEFAULT_INTENT(hasPhone);
-}
-
-function fromProfile(profile: VerticalProfile, hasPhone: boolean): ConversionIntent {
-  const { cta } = profile;
-  // A profile may ask for the phone as the primary action; without a real
-  // number to dial there is nothing to put behind the button.
-  const callWithoutPhone = cta.intent === "call-now" && !hasPhone;
-  return {
-    primary: callWithoutPhone ? "quote-form" : cta.intent,
-    primaryLabel: callWithoutPhone ? "Request a callback" : cta.primaryLabel,
-    secondary: cta.secondaryIntent,
-    secondaryLabel: cta.secondaryLabel,
-    guidance: cta.guidance,
-  };
+  return rule ? rule.intent(hasPhone) : DEFAULT_INTENT(hasPhone);
 }
 
 // The intake options, mapped to what the rebuilt page must demonstrably fix.

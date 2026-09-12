@@ -4,10 +4,9 @@ import { scrapeBusiness } from "@/lib/scrape";
 import { autoSelectOrResearch, presetFor } from "@/lib/inspiration-library";
 import { classifyBusiness } from "@/lib/classify-business";
 import { extractEntities } from "@/lib/extract-entities";
-import { classifyIcp } from "@/lib/verticals/icp";
-import { resolveVerticalAsync } from "@/lib/verticals/resolve";
-import { compileDesignTokens } from "@/lib/design-tokens";
 import { evaluateLeadValue } from "@/lib/audit/lead-value";
+import { ingestRealPhotos } from "@/lib/media/ingest";
+import { realPhotos } from "@/lib/build-site-brief";
 
 // lead/analyse.requested — step 1 of the operator flow.
 //
@@ -73,41 +72,6 @@ export const scrapeRun = inngest.createFunction(
       const nameIsMachineDerived = !lead.business_name || lead.business_name === previousDerived;
       if (identity.businessName && nameIsMachineDerived) updates.business_name = identity.businessName;
 
-      // Step 0 of the router: which of the nine macro-ICPs is this, and can
-      // this engine serve it well? Recorded on the lead so coverage is a
-      // measured number rather than an estimate, and read by the generate
-      // route, which refuses to build a page for a business whose proof and
-      // conversion model this engine has nothing to fill.
-      //
-      // Free: no model call, just patterns over what classifyBusiness already
-      // returned plus the two facts that decide whether a page can be thick.
-      const places = (scrape.facts.places as { rating?: number | null } | undefined) ?? undefined;
-      const nap = (scrape.facts.nap as { phones?: string[] } | undefined) ?? undefined;
-      const icp = classifyIcp({
-        industry: identity.industry,
-        businessName: identity.businessName,
-        services: identity.services,
-        isLocal: identity.isLocal,
-        hasPhone: Boolean(nap?.phones?.length || lead.phone),
-        hasReviews: Boolean(places?.rating),
-      });
-      updates.icp_category = icp.category.slug;
-      updates.icp_fit = icp.fit;
-      // Only fills a vertical the operator has not already chosen.
-      //
-      // An industry nothing curated recognises gets its own profile written
-      // here, once, and cached for every business in that industry after it.
-      // Doing it at scrape time rather than at build time means the operator
-      // sees the real vertical on the brief screen before they generate,
-      // instead of discovering it in the finished page.
-      if (!lead.vertical_slug) {
-        const resolved = await resolveVerticalAsync(
-          { ...lead, icp_category: icp.category.slug, vertical_slug: null },
-          null,
-          identity.services
-        );
-        updates.vertical_slug = resolved.profile.slug;
-      }
       if (Object.keys(updates).length > 0) {
         await admin.from("leads").update(updates).eq("id", lead_id);
       }
@@ -158,6 +122,43 @@ export const scrapeRun = inngest.createFunction(
       return { kept: entities.length, dropped: dropped.length };
     });
 
+    // Every photograph this lead has, mirrored into Storage and captioned by
+    // vision — BEFORE anyone opens the Studio.
+    //
+    // This used to happen inside the build, which meant the operator first saw
+    // the client's photographs in a page that had already been designed around
+    // them. A bad photo could only be fixed by rebuilding. Now the set is on
+    // screen the moment the scrape finishes: delete what is wrong, upload what
+    // is missing, then generate once against a curated library.
+    //
+    // Its own step because it is slow and costs vision calls, and because a
+    // failure here must not lose the entity extraction above — a lead with no
+    // photos still builds, from type and space alone.
+    await step.run("ingest-photos", async () => {
+      const { data: scrape } = await admin
+        .from("scrape_results")
+        .select("facts")
+        .eq("lead_id", lead_id)
+        .maybeSingle<{ facts: Record<string, unknown> }>();
+      if (!scrape?.facts) return { skipped: "no facts" };
+
+      const { data: fresh } = await admin
+        .from("leads")
+        .select("industry")
+        .eq("id", lead_id)
+        .maybeSingle<{ industry: string | null }>();
+
+      const urls = realPhotos(scrape.facts);
+      if (urls.length === 0) return { skipped: "no photos on the scrape" };
+
+      const assets = await ingestRealPhotos(lead_id, urls, fresh?.industry ?? lead.industry ?? "");
+      const usable = assets.filter((a) => a.usable).length;
+      console.log(
+        `[scrape-run] photos for ${lead_id}: ${assets.length} stored, ${usable} usable`
+      );
+      return { stored: assets.length, usable };
+    });
+
     // A design direction is chosen automatically the moment the facts land,
     // so opening a lead already shows a committed look rather than an empty
     // box waiting for the operator to go and find a reference site. The
@@ -202,17 +203,9 @@ export const scrapeRun = inngest.createFunction(
         !!artifact?.inspiration_url || (!!existingSource && !existingSource.startsWith("House "));
       if (alreadyChosen) return;
 
-      const { data: scrapeRes } = await admin
-        .from("scrape_results")
-        .select("facts")
-        .eq("lead_id", lead_id)
-        .maybeSingle<{ facts: Record<string, unknown> }>();
-      const clientHex = (scrapeRes?.facts?.brand_color_hex as string | undefined) ?? null;
-
       const patch = {
         inspiration_branding: dna,
         inspiration_url: sourceUrl,
-        design_tokens: compileDesignTokens(dna, { clientBrandHex: clientHex }),
       };
 
       if (artifact) {

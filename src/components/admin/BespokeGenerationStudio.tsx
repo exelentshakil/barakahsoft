@@ -189,11 +189,9 @@ export function BespokeGenerationStudio({
     const [model, setModel] = useState("");
       
   const [generating, setGenerating] = useState(false);
-  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   // Whether the SERVER thinks a build is in flight. Local `generating` is lost
   // on any refresh, so the button came back enabled while Inngest was still
   // mid-build and a second click queued a second run over the first.
-  const [jobRunning, setJobRunning] = useState(false);
   const [jobError, setJobError] = useState<string | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
   const [genWarnings, setGenWarnings] = useState<string[]>([]);
@@ -234,103 +232,18 @@ export function BespokeGenerationStudio({
   }
 
   
-  // When this operator last asked for a build, and whether that request is
-  // still in flight.
+  // Whether a build is in flight.
   //
-  // The poll below cannot otherwise tell "Inngest has not created the job row
-  // yet" from "no build is running", and those need opposite handling: the
-  // first must keep the button disabled, the second must release it.
-  const requestedAt = useRef<number | null>(null);
+  // There is no job table to poll any more. The generate route does the work
+  // inline and answers with the finished page, so the request itself is the
+  // progress indicator: in flight until it returns, and then either a page or
+  // an error. A build takes 60-180 seconds.
   const submitting = useRef(false);
 
   const notAnalysed = !scrapeResults;
   const isScraping = lead.status === "scraping";
 
-  // Poll the build job. GET /api/leads/[id]/generate has always reported
-  // status and pages_done; nothing was reading it, so the progress bar sat at
-  // its initial value for the whole run and the button never knew when to
-  // re-enable.
-  useEffect(() => {
-    let cancelled = false;
-
-    async function poll() {
-      try {
-        const res = await fetch(`/api/leads/${lead.id}/generate`, { cache: "no-store" });
-
-        // Swallowing a non-OK response meant a 401 or a 500 looked exactly
-        // like "no build running": the panel sat on its default text and there
-        // was no way to tell the difference from the outside.
-        if (!res.ok) {
-          if (!cancelled) setJobError(`Cannot read the build status (HTTP ${res.status}).`);
-          return;
-        }
-
-        const data = (await res.json()) as {
-          job: {
-            status: string;
-            pages_done: number | null;
-            pages_total: number | null;
-            error_message: string | null;
-            updated_at: string | null;
-          } | null;
-        };
-        if (cancelled) return;
-
-        const job = data.job;
-
-        // A row can be left saying "running" by a run that died without its
-        // failure handler firing. Treating that as live would disable the
-        // rebuild button forever, which is worse than the original problem.
-        const ageMs = job?.updated_at ? Date.now() - new Date(job.updated_at).getTime() : 0;
-        const stalled = job?.status === "running" && ageMs > 15 * 60 * 1000;
-        const running = job?.status === "running" && !stalled;
-
-        setJobRunning(running);
-        setJobError(
-          job?.status === "failed"
-            ? job.error_message ?? "The build failed."
-            : stalled
-              ? `The last run stopped responding ${Math.round(ageMs / 60000)} minutes ago. Rebuilding is safe.`
-              : null
-        );
-        if (job) setProgress({ done: job.pages_done ?? 0, total: Math.max(job.pages_total ?? 1, 1) });
-
-        if (!running) {
-          // A build takes a few seconds to appear here: the POST returns as
-          // soon as the event is queued, and the build_jobs row is written by
-          // a later Inngest step. This poll fires the instant `generating`
-          // flips, so it used to find nothing, conclude no build was running
-          // and re-enable the button within a tick of the click — which is why
-          // a second click was easy, and a second click is a second full build
-          // at full model cost.
-          //
-          // So an in-flight request only stands down once the server has
-          // actually reported on it, or once it has had long enough that
-          // silence means the request never landed.
-          const asked = requestedAt.current;
-          const reported =
-            job?.updated_at != null && asked != null && new Date(job.updated_at).getTime() >= asked - 2000;
-          if (asked == null || reported || Date.now() - asked > 90_000) {
-            requestedAt.current = null;
-            setGenerating(false);
-          }
-        }
-      } catch (err) {
-        if (!cancelled) setJobError(err instanceof Error ? `Build status unavailable: ${err.message}` : "Build status unavailable.");
-      }
-    }
-
-    void poll();
-    // Fast while a build is in flight, slow otherwise — this component stays
-    // mounted for as long as the operator has the tab open.
-    const interval = setInterval(poll, generating || jobRunning ? 4000 : 20000);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [lead.id, generating, jobRunning]);
-
-  const busy = generating || jobRunning;
+  const busy = generating;
 
   async function handleGenerate(e: React.FormEvent) {
     e.preventDefault();
@@ -339,11 +252,9 @@ export function BespokeGenerationStudio({
     // through is an entire duplicate build.
     if (busy || submitting.current) return;
     submitting.current = true;
-    requestedAt.current = Date.now();
     setGenerating(true);
     setGenError(null);
     setGenWarnings([]);
-    setProgress({ done: 0, total: 1 });
 
     try {
       const res = await fetch(`/api/leads/${lead.id}/generate`, {
@@ -372,15 +283,14 @@ export function BespokeGenerationStudio({
       }
 
       setGenWarnings(data.warnings ?? []);
-      
+      // The page exists the moment this resolves, so the surrounding screen is
+      // reloaded rather than left showing the previous build.
+      router.refresh();
     } catch (err) {
       setGenError(err instanceof Error ? err.message : "Generation failed");
-      requestedAt.current = null;
-      setGenerating(false);
     } finally {
-      // Only the in-flight guard. `generating` stays true until the poll sees
-      // the job, because the build is still starting.
       submitting.current = false;
+      setGenerating(false);
     }
   }
 
@@ -866,30 +776,18 @@ export function BespokeGenerationStudio({
             </ul>
           )}
 
-          {/* Progress Bar */}
-          {busy && progress && (
-            <div className="space-y-2 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-900">
-                <span>
-                  {visualQa?.visual_status === "queued"
-                    ? `Waiting for local visual QA — candidate ${visualQa.attempt}`
-                    : visualQa?.visual_status === "running"
-                      ? `Rendering desktop, tablet and mobile — candidate ${visualQa.attempt}`
-                      : visualQa?.visual_status === "failed"
-                        ? `Revising after rendered visual QA — candidate ${visualQa.attempt}`
-                        : progress.done === 0
-                          ? "Designing the homepage — high-effort batch pass..."
-                          : `Building pages — ${progress.done} of ${progress.total} complete`}
-                </span>
-                <span className="text-indigo-700">
-                  {Math.round((progress.done / Math.max(progress.total, 1)) * 100)}%
-                </span>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-indigo-100">
-                <div
-                  className="h-full rounded-full bg-[#533afd] transition-all duration-500 shadow-sm"
-                  style={{ width: `${Math.round((progress.done / Math.max(progress.total, 1)) * 100)}%` }}
-                />
+          {/* In flight.
+              There are no steps to report any more — one request writes one
+              page — so this says what is true rather than animating a bar
+              against a number nothing updates. */}
+          {busy && (
+            <div className="flex items-center gap-3 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-[#533afd]" />
+              <div>
+                <p className="text-xs font-bold text-slate-900">Designing the homepage</p>
+                <p className="text-[11px] text-slate-500">
+                  One pass, writing the whole page. Usually 60–180 seconds — keep this tab open.
+                </p>
               </div>
             </div>
           )}
@@ -897,13 +795,9 @@ export function BespokeGenerationStudio({
           {/* Bottom Action Strip */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-100 pt-5">
             <span className="text-[11px] text-slate-500">
-              {jobError ? (
-                <span className="font-semibold text-rose-600">{jobError}</span>
-              ) : busy ? (
-                "Running. This page can be closed — the build continues on the server."
-              ) : (
-                "Builds the complete homepage from this brief and the selected design archetype."
-              )}
+              {busy
+                ? "Writing the page. This tab has to stay open — the request is the build."
+                : "Builds the complete homepage from this brief, the curated photos and their brand colour."}
             </span>
 
             <Button
@@ -915,9 +809,7 @@ export function BespokeGenerationStudio({
               {busy ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin text-white" />
-                  {progress && progress.total > 1
-                    ? `Building — step ${progress.done} of ${progress.total}`
-                    : "Building the homepage..."}
+                  Building the homepage...
                 </>
               ) : (
                 <>
@@ -930,69 +822,6 @@ export function BespokeGenerationStudio({
         </form>
       </div>
 
-      {/* Inner Pages Card */}
-      <div className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-700 font-black text-xs">
-            <Layers className="h-4 w-4" />
-          </div>
-          <div>
-            <h4 className="text-xs font-bold text-slate-900">Build the rest of the pages</h4>
-            <p className="text-[11px] text-slate-500">
-              A page for every service and area they serve (about, contact, FAQ) matching the approved homepage.
-            </p>
-          </div>
-        </div>
-
-        <Button
-          type="button"
-          variant="outline"
-          disabled={busy}
-          aria-busy={busy}
-          onClick={async () => {
-            if (!artifact?.bespoke_homepage_html) {
-              alert("Homepage must be generated first before building inner pages.");
-              return;
-            }
-            // Same guards as the homepage build, and the stakes are higher:
-            // phase 2 writes eighteen pages, so a duplicate is eighteen more.
-            if (busy || submitting.current) return;
-            submitting.current = true;
-            requestedAt.current = Date.now();
-            setGenerating(true);
-            setGenError(null);
-
-            try {
-              const res = await fetch(`/api/leads/${lead.id}/generate`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ phase: 2 }),
-              });
-              const data = await res.json();
-              if (!res.ok) throw new Error(data.error || "Failed to start generation");
-            } catch (err) {
-              setGenError(err instanceof Error ? err.message : "Failed to start inner page generation");
-              requestedAt.current = null;
-              setGenerating(false);
-            } finally {
-              submitting.current = false;
-            }
-          }}
-          className="rounded-xl border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {busy ? (
-            <>
-              <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <FolderTree className="h-3.5 w-3.5 mr-1.5" />
-              Build All Pages
-            </>
-          )}
-        </Button>
-      </div>
     </div>
   );
 }

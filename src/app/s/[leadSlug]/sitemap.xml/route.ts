@@ -29,15 +29,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ leadSlug
   const base = onCustomDomain
     ? `https://${result.lead.custom_domain}`
     : `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/s/${leadSlug}`;
+  // One page, one URL. The inner-page routes this used to advertise no longer
+  // exist, and a sitemap that lists 404s is worse than no sitemap.
   const urls = [base];
-
-  if (result.payload.innerPagesBuilt) {
-    for (const service of result.payload.navigation.services) urls.push(`${base}${service.path}`);
-    for (const area of result.payload.navigation.areas) urls.push(`${base}${area.path}`);
-    for (const page of ["about", "faq", "contact"]) {
-      if (result.payload.bespokePages[page]) urls.push(`${base}/${page}`);
-    }
-  }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

@@ -7,16 +7,14 @@
 // no 1 MB wall to trip over as the tenant and vertical registries grow.
 import { tenantBySlug } from "@/tenants";
 import { isLiveClientSite } from "@/lib/tenant";
-import { frozenSchema } from "@/lib/verticals/frozen";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSiteData, getLeadProgress } from "@/lib/get-site-data";
 import { PortalPending } from "@/components/portal/PortalPending";
-import { BespokeHomepage } from "@/components/site-shell/BespokeHomepage";
+import { BespokeFrame } from "@/components/site-shell/BespokeFrame";
 import { NotBuiltYet } from "@/components/site-shell/NotBuiltYet";
 import { LiveClientProposal } from "@/components/portal/LiveClientProposal";
 import { isAdminSession } from "@/lib/is-admin-session";
-import { OperatorSectionEditor } from "@/components/site-shell/OperatorSectionEditor";
 import { verifyPortalToken } from "@/lib/portal-token";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -132,7 +130,7 @@ export default async function LeadSitePage({
     // client on the platform being a generic LocalBusiness.
     const localBusinessSchema = {
       "@context": "https://schema.org",
-      "@type": frozenSchema(artifact).localBusinessType,
+      "@type": "LocalBusiness",
       name: payload.businessName,
       telephone: payload.nap.phone ?? undefined,
       email: payload.nap.email ?? undefined,
@@ -161,24 +159,11 @@ export default async function LeadSitePage({
       <>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
         {faqSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
-                {payload.bespokeHomepageHtml ? (
-          <BespokeHomepage
-            payload={{
-              ...payload,
-              previewMode: !liveSite,
-              // On the client's own domain the site IS the root: linking at
-              // /s/<slug>/about would leak our path structure into their
-              // navigation and their canonical URLs. basePath was never set,
-              // so it defaulted to /s/<slug> everywhere.
-              ...(liveSite ? { basePath: "" } : {}),
-            }}
-          />
+        {payload.bespokeHomepageHtml ? (
+          <BespokeFrame html={payload.bespokeHomepageHtml} title={payload.businessName} />
         ) : (
           <NotBuiltYet businessName={payload.businessName} />
         )}
-        {/* Operator-only, and resolved on the server — a client opening the
-            same URL never receives this component at all. */}
-        {operator && payload.bespokeHomepageHtml && <OperatorSectionEditor leadId={lead.id} />}
       </>
     );
   }

@@ -1,36 +1,34 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { mirrorToStorage } from "@/lib/media/ingest";
-import { generateSiteImage, type ImageShape } from "@/lib/media/generate-image";
 import { recordVersion, HOME_KEY } from "@/lib/page-versions";
-import type { MediaPlan } from "@/lib/media/plan-media";
 
-// Image slots — the human refinement layer over generated photography.
+// Image slots — the operator's fix for a photograph that landed badly.
 //
-// Generated imagery is a placeholder, never the deliverable. A page whose
-// hero is an AI image is a page that is not finished, and the Studio has to
-// say so plainly rather than presenting it as done.
+// Swapping an image rewrites the stored markup rather than adding a render-time
+// indirection. That keeps one representation of a page: what is in the database
+// is exactly what renders, and exactly what a standalone export produces. A
+// render-time lookup would mean the exported site and the previewed site could
+// disagree.
 //
-// Swapping an image rewrites the stored markup rather than adding a
-// render-time indirection. That keeps one representation of a page: what is
-// in the database is exactly what renders, and exactly what the standalone
-// export produces. A render-time lookup would have meant the exported site
-// and the previewed site could diverge.
+// The slot list is now read out of the markup itself rather than out of a
+// planning table written during the build. There is no build-time media plan
+// any more — photographs are curated before a build, not arranged during one —
+// and reading the document means the Studio can never show a slot the page does
+// not actually contain, or miss one it does.
 
 export interface SlotView {
   key: string;
   label: string;
   url: string;
-  caption: string;
   origin: "real" | "generated" | "uploaded";
-  /** Page keys whose markup currently references this image. */
-  usedOn: string[];
-  shape: ImageShape;
 }
 
 const SLOT_LABELS: Record<string, string> = {
   hero: "Hero",
   about: "About / team",
   proof: "Proof / finished work",
+  team: "Team",
+  gallery: "Gallery",
 };
 
 function slotLabel(key: string, serviceNames: string[]): string {
@@ -43,43 +41,37 @@ function slotLabel(key: string, serviceNames: string[]): string {
   return key.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-/** Every page's markup, keyed the same way page_versions keys them. */
-async function loadAllPages(leadId: string): Promise<Record<string, string>> {
+async function loadHomepage(leadId: string): Promise<string> {
   const admin = createAdminClient();
   const { data } = await admin
     .from("artifacts")
-    .select("bespoke_homepage_html, bespoke_pages")
+    .select("bespoke_homepage_html")
     .eq("lead_id", leadId)
-    .single<{ bespoke_homepage_html: string | null; bespoke_pages: Record<string, string> }>();
-
-  const pages: Record<string, string> = { ...(data?.bespoke_pages ?? {}) };
-  if (data?.bespoke_homepage_html) pages[HOME_KEY] = data.bespoke_homepage_html;
-  return pages;
+    .maybeSingle<{ bespoke_homepage_html: string | null }>();
+  return data?.bespoke_homepage_html ?? "";
 }
 
-/**
- * The slot list the Studio renders.
- *
- * `usedOn` is computed by looking for each URL in the real stored markup
- * rather than trusting the plan, because the markup is what a visitor
- * actually sees — a slot the generator planned but never placed would
- * otherwise show as filled.
- */
-export async function listSlots(leadId: string, serviceNames: string[]): Promise<SlotView[]> {
+const IMG_TAG = /<img\b[^>]*>/gi;
+
+function attr(tag: string, name: string): string | null {
+  return tag.match(new RegExp(`\\b${name}\\s*=\\s*["']([^"']*)["']`, "i"))?.[1] ?? null;
+}
+
+/** Every slotted image in the page, in document order, first occurrence wins. */
+export async function listSlots(leadId: string, serviceNames: string[] = []): Promise<SlotView[]> {
+  const html = await loadHomepage(leadId);
+  if (!html) return [];
+
+  const found = new Map<string, string>();
+  for (const tag of html.match(IMG_TAG) ?? []) {
+    const slot = attr(tag, "data-slot");
+    const src = attr(tag, "src");
+    if (!slot || !src || found.has(slot)) continue;
+    found.set(slot, src);
+  }
+  if (found.size === 0) return [];
+
   const admin = createAdminClient();
-
-  const [{ data: artifact }, pages] = await Promise.all([
-    admin
-      .from("artifacts")
-      .select("media_plan")
-      .eq("lead_id", leadId)
-      .single<{ media_plan: MediaPlan | null }>(),
-    loadAllPages(leadId),
-  ]);
-
-  const plan = artifact?.media_plan ?? [];
-  if (plan.length === 0) return [];
-
   const { data: assets } = await admin
     .from("media_assets")
     .select("public_url, source")
@@ -88,157 +80,55 @@ export async function listSlots(leadId: string, serviceNames: string[]): Promise
 
   const sourceByUrl = new Map((assets ?? []).map((a) => [a.public_url, a.source]));
 
-  return plan.map((entry) => {
-    const usedOn = Object.entries(pages)
-      .filter(([, html]) => html.includes(entry.url))
-      .map(([key]) => key);
-
-    const assetSource = sourceByUrl.get(entry.url);
-    const origin: SlotView["origin"] =
-      assetSource === "upload" ? "uploaded" : assetSource === "generated" ? "generated" : "real";
-
+  return [...found.entries()].map(([key, url]) => {
+    const assetSource = sourceByUrl.get(url);
     return {
-      key: entry.slot,
-      label: slotLabel(entry.slot, serviceNames),
-      url: entry.url,
-      caption: entry.caption,
-      origin,
-      usedOn,
-      shape: entry.slot === "hero" ? "landscape" : "landscape",
+      key,
+      label: slotLabel(key, serviceNames),
+      url,
+      origin:
+        assetSource === "upload" ? "uploaded" : assetSource === "generated" ? "generated" : "real",
     };
   });
 }
 
 /**
- * Point a slot at a new image across every page that references it.
+ * Point one slot at a new image.
  *
- * Returns the pages that changed. Each one is written through the version
- * recorder, so swapping a photo is undoable exactly like a copy edit.
- */
-export async function repointSlot(leadId: string, oldUrl: string, newUrl: string, note: string): Promise<string[]> {
-  const admin = createAdminClient();
-  const pages = await loadAllPages(leadId);
-  const changed: string[] = [];
-
-  const nextPages: Record<string, string> = {};
-  let nextHome: string | null = null;
-
-  for (const [key, html] of Object.entries(pages)) {
-    if (!html.includes(oldUrl)) {
-      if (key !== HOME_KEY) nextPages[key] = html;
-      continue;
-    }
-    const updated = html.split(oldUrl).join(newUrl);
-    changed.push(key);
-    if (key === HOME_KEY) nextHome = updated;
-    else nextPages[key] = updated;
-  }
-
-  if (changed.length === 0) return [];
-
-  const update: Record<string, unknown> = {
-    bespoke_pages: nextPages,
-    last_edited_at: new Date().toISOString(),
-  };
-  if (nextHome) update.bespoke_homepage_html = nextHome;
-
-  await admin.from("artifacts").update(update).eq("lead_id", leadId);
-
-  // History is recorded per page so a restore brings back that page's exact
-  // prior markup, including whichever image it was pointing at.
-  await Promise.all(
-    changed.map((key) =>
-      recordVersion(leadId, key, key === HOME_KEY ? nextHome! : nextPages[key], "edited", note)
-    )
-  );
-
-  // Keep the plan in step, so the Studio and any later generation agree on
-  // which image occupies this slot.
-  const { data: artifact } = await admin
-    .from("artifacts")
-    .select("media_plan")
-    .eq("lead_id", leadId)
-    .single<{ media_plan: MediaPlan | null }>();
-
-  if (artifact?.media_plan) {
-    const nextPlan = artifact.media_plan.map((entry) =>
-      entry.url === oldUrl ? { ...entry, url: newUrl } : entry
-    );
-    await admin.from("artifacts").update({ media_plan: nextPlan }).eq("lead_id", leadId);
-  }
-
-  return changed;
-}
-
-/**
- * Point one slot at a new image by its data-slot attribute.
- *
- * repointSlot below matches on the old URL, which is right for the case it was
- * written for — retouching an image the operator can see — but wrong whenever
- * two slots happen to share a photograph, because swapping one silently swaps
- * both. Generated pages now carry data-slot on every <img>, so the exact
- * element can be addressed instead of guessed at.
- *
- * Falls back to the URL match for pages built before the attribute existed,
- * so a delivered site does not lose the ability to have its photos changed.
+ * Matched on the data-slot attribute rather than on the current URL, because
+ * two slots can legitimately share a photograph and matching by URL swapped
+ * both of them. The whole <img> is located first and its src rewritten second,
+ * since attribute order varies.
  */
 export async function applyMedia(
   leadId: string,
   slotKey: string,
   newUrl: string,
-  note: string,
-  fallbackOldUrl?: string
-): Promise<string[]> {
-  const admin = createAdminClient();
-  const pages = await loadAllPages(leadId);
-  const changed: string[] = [];
-  const nextPages: Record<string, string> = {};
-  let nextHome: string | null = null;
+  note: string
+): Promise<boolean> {
+  const html = await loadHomepage(leadId);
+  if (!html) return false;
 
-  // Match the whole <img> that carries this slot, then rewrite src inside it.
-  // Attribute order varies, so the tag is located first and edited second.
-  const tagPattern = new RegExp(`<img\\b[^>]*\\bdata-slot=["']${slotKey.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["'][^>]*>`, "gi");
+  const escaped = slotKey.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(`<img\\b[^>]*\\bdata-slot=["']${escaped}["'][^>]*>`, "gi");
 
-  for (const [key, html] of Object.entries(pages)) {
-    let updated = html.replace(tagPattern, (tag) =>
-      /\bsrc=/.test(tag) ? tag.replace(/\bsrc=(["'])[^"']*\1/i, `src="${newUrl}"`) : tag.replace(/^<img/i, `<img src="${newUrl}"`)
-    );
-
-    if (updated === html && fallbackOldUrl && html.includes(fallbackOldUrl)) {
-      updated = html.split(fallbackOldUrl).join(newUrl);
-    }
-
-    if (updated === html) {
-      if (key !== HOME_KEY) nextPages[key] = html;
-      continue;
-    }
-    changed.push(key);
-    if (key === HOME_KEY) nextHome = updated;
-    else nextPages[key] = updated;
-  }
-
-  if (!changed.length) return [];
-
-  const update: Record<string, unknown> = { bespoke_pages: nextPages, last_edited_at: new Date().toISOString() };
-  if (nextHome) update.bespoke_homepage_html = nextHome;
-  await admin.from("artifacts").update(update).eq("lead_id", leadId);
-
-  await Promise.all(
-    changed.map((key) => recordVersion(leadId, key, key === HOME_KEY ? nextHome! : nextPages[key], "edited", note))
+  const updated = html.replace(pattern, (tag) =>
+    /\bsrc\s*=/.test(tag)
+      ? tag.replace(/\bsrc\s*=\s*(["'])[^"']*\1/i, `src="${newUrl}"`)
+      : tag.replace(/^<img/i, `<img src="${newUrl}"`)
   );
 
-  const { data: artifact } = await admin
+  if (updated === html) return false;
+
+  const admin = createAdminClient();
+  await admin
     .from("artifacts")
-    .select("media_plan")
-    .eq("lead_id", leadId)
-    .single<{ media_plan: MediaPlan | null }>();
+    .update({ bespoke_homepage_html: updated, last_edited_at: new Date().toISOString() })
+    .eq("lead_id", leadId);
 
-  if (artifact?.media_plan) {
-    const nextPlan = artifact.media_plan.map((entry) => (entry.slot === slotKey ? { ...entry, url: newUrl } : entry));
-    await admin.from("artifacts").update({ media_plan: nextPlan }).eq("lead_id", leadId);
-  }
-
-  return changed;
+  // Recorded so swapping a photo is undoable exactly like a copy edit.
+  await recordVersion(leadId, HOME_KEY, updated, "edited", note);
+  return true;
 }
 
 /** Replace a slot with a real photograph the operator supplies. */
@@ -247,57 +137,19 @@ export async function uploadToSlot(
   slotKey: string,
   file: Buffer,
   caption: string
-): Promise<{ url: string; pagesUpdated: string[] } | null> {
-  const admin = createAdminClient();
-  const { data: artifact } = await admin
-    .from("artifacts")
-    .select("media_plan")
-    .eq("lead_id", leadId)
-    .single<{ media_plan: MediaPlan | null }>();
-
-  const entry = artifact?.media_plan?.find((e) => e.slot === slotKey);
-  if (!entry) return null;
-
-  const stored = await mirrorToStorage(leadId, `upload:${slotKey}`, "upload", {
+): Promise<{ url: string; applied: boolean } | null> {
+  const stored = await mirrorToStorage(leadId, `upload:${slotKey}:${Date.now()}`, "upload", {
     slotHint: slotKey,
     buffer: file,
   });
   if (!stored) return null;
 
+  const admin = createAdminClient();
   await admin
     .from("media_assets")
-    .update({ caption: caption || entry.caption, subject: "work", usable: true })
+    .update({ caption: caption || null, subject: "work", usable: true })
     .eq("id", stored.id);
 
-  const pagesUpdated = await repointSlot(leadId, entry.url, stored.publicUrl, `Real photo added to ${slotKey}`);
-  return { url: stored.publicUrl, pagesUpdated };
-}
-
-/** Regenerate a slot's image from a fresh prompt, for slots with no real photo. */
-export async function regenerateSlot(
-  leadId: string,
-  slotKey: string,
-  subject: string,
-  mood: string
-): Promise<{ url: string; pagesUpdated: string[] } | null> {
-  const admin = createAdminClient();
-  const { data: artifact } = await admin
-    .from("artifacts")
-    .select("media_plan")
-    .eq("lead_id", leadId)
-    .single<{ media_plan: MediaPlan | null }>();
-
-  const entry = artifact?.media_plan?.find((e) => e.slot === slotKey);
-  if (!entry) return null;
-
-  const image = await generateSiteImage(leadId, {
-    subject,
-    shape: slotKey === "hero" ? "landscape" : "landscape",
-    mood,
-    slotHint: slotKey,
-  });
-  if (!image) return null;
-
-  const pagesUpdated = await repointSlot(leadId, entry.url, image.publicUrl, `Regenerated ${slotKey}`);
-  return { url: image.publicUrl, pagesUpdated };
+  const applied = await applyMedia(leadId, slotKey, stored.publicUrl, `Real photo added to ${slotKey}`);
+  return { url: stored.publicUrl, applied };
 }

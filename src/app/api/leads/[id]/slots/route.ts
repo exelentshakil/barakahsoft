@@ -1,21 +1,25 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminSession } from "@/lib/is-admin-session";
-import { listSlots, uploadToSlot, regenerateSlot } from "@/lib/media/slots";
-import { retouchSlotPhoto } from "@/lib/media/retouch-photo";
-import { DesignDnaSchema } from "@/lib/design-dna";
-import type { CopyPlan } from "@/lib/generate-copy-plan";
+import { listSlots, uploadToSlot, applyMedia } from "@/lib/media/slots";
 
-export const maxDuration = 120;
+// The operator's image-swap surface.
+//
+// Generating a replacement image is gone: photographs are curated before a
+// build now, and an AI-generated hero was never something we would send to a
+// client anyway. What remains is the honest pair — point a slot at another
+// photo this lead already has, or upload a real one.
+export const maxDuration = 60;
 
 async function serviceNames(leadId: string): Promise<string[]> {
   const admin = createAdminClient();
   const { data } = await admin
     .from("artifacts")
-    .select("copy_plan")
+    .select("extracted_assets")
     .eq("lead_id", leadId)
-    .single<{ copy_plan: CopyPlan | null }>();
-  return (data?.copy_plan?.services ?? []).map((s) => s.name);
+    .maybeSingle<{ extracted_assets: Record<string, unknown> | null }>();
+  const overrides = (data?.extracted_assets?.brief_overrides ?? {}) as { services?: string[] };
+  return overrides.services ?? [];
 }
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -23,12 +27,22 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (!(await isAdminSession())) return NextResponse.json({ error: "Not authorised" }, { status: 401 });
 
   const slots = await listSlots(leadId, await serviceNames(leadId));
-  return NextResponse.json({
-    slots,
-    // The count the operator actually cares about before sending: how many
-    // positions are still holding a placeholder rather than a real photo.
-    placeholders: slots.filter((s) => s.origin === "generated").length,
-  });
+
+  // Everything else this lead has that is not currently on the page — the
+  // swap-to list.
+  const admin = createAdminClient();
+  const { data: assets } = await admin
+    .from("media_assets")
+    .select("public_url, caption, subject, usable")
+    .eq("lead_id", leadId)
+    .returns<{ public_url: string; caption: string | null; subject: string | null; usable: boolean }[]>();
+
+  const onPage = new Set(slots.map((s) => s.url));
+  const spare = (assets ?? [])
+    .filter((a) => a.usable !== false && !onPage.has(a.public_url) && a.subject !== "logo")
+    .map((a) => ({ url: a.public_url, caption: a.caption ?? "", subject: a.subject ?? "" }));
+
+  return NextResponse.json({ slots, spare });
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -37,8 +51,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const contentType = req.headers.get("content-type") ?? "";
 
-  // A real photograph the operator supplies always wins over anything
-  // generated, so this path takes precedence and does no AI work at all.
   if (contentType.includes("multipart/form-data")) {
     const form = await req.formData();
     const slotKey = String(form.get("slot") ?? "");
@@ -51,42 +63,27 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const result = await uploadToSlot(leadId, slotKey, buffer, caption);
-    if (!result) return NextResponse.json({ error: "That slot does not exist, or the image could not be read" }, { status: 400 });
-
+    if (!result) return NextResponse.json({ error: "The image could not be read" }, { status: 400 });
+    if (!result.applied) {
+      return NextResponse.json(
+        { error: `Uploaded, but no image on the page carries data-slot="${slotKey}".`, url: result.url },
+        { status: 409 }
+      );
+    }
     return NextResponse.json({ ok: true, ...result });
   }
 
-  const body = await req.json().catch(() => ({}));
+  const body = (await req.json().catch(() => ({}))) as { slot?: string; url?: string };
   const slotKey = typeof body.slot === "string" ? body.slot : "";
+  const url = typeof body.url === "string" ? body.url : "";
 
-  if (!slotKey) {
-    return NextResponse.json({ error: "Provide a slot key" }, { status: 400 });
+  if (!slotKey || !/^https?:\/\//i.test(url)) {
+    return NextResponse.json({ error: "Provide a slot key and an image URL" }, { status: 400 });
   }
 
-  // 1. Direct retouch of the real existing photo in the slot (preserves original composition & crew)
-  if (body.retouch === true) {
-    const result = await retouchSlotPhoto(leadId, slotKey);
-    if (!result) return NextResponse.json({ error: "Photo retouching failed" }, { status: 500 });
-    return NextResponse.json({ ok: true, ...result });
+  const applied = await applyMedia(leadId, slotKey, url, `Swapped ${slotKey}`);
+  if (!applied) {
+    return NextResponse.json({ error: `No image on the page carries data-slot="${slotKey}".` }, { status: 404 });
   }
-
-  const subject = typeof body.subject === "string" ? body.subject.trim() : "";
-  if (!subject) {
-    return NextResponse.json({ error: "Describe the image you want for this slot" }, { status: 400 });
-  }
-
-  const admin = createAdminClient();
-  const { data: artifact } = await admin
-    .from("artifacts")
-    .select("inspiration_branding")
-    .eq("lead_id", leadId)
-    .single<{ inspiration_branding: unknown }>();
-
-  const parsed = artifact?.inspiration_branding ? DesignDnaSchema.safeParse(artifact.inspiration_branding) : null;
-  const mood = parsed?.success ? parsed.data.mood : "bold-utility";
-
-  const result = await regenerateSlot(leadId, slotKey, subject, mood);
-  if (!result) return NextResponse.json({ error: "Image generation failed" }, { status: 500 });
-
-  return NextResponse.json({ ok: true, ...result });
+  return NextResponse.json({ ok: true, slot: slotKey, url });
 }

@@ -1,12 +1,10 @@
-import type { VerticalProfile } from "@/lib/verticals/types";
 import { matchesLead } from "@/lib/google/places";
 import { slugifyText } from "@/lib/slug";
 import { buildRichContext, findRelevantPage } from "@/lib/facts-context";
 import { extractServiceAreas } from "@/lib/scrape/extract-service-areas";
 import { displayPhone } from "@/lib/phone";
 import { findLicenseInsuranceMention } from "@/lib/trust-signals";
-import { conversionIntentFor, painPointInstructions } from "@/lib/conversion-intent";
-import type { SiteBrief } from "@/lib/generate-bespoke-site";
+import { painPointInstructions } from "@/lib/conversion-intent";
 import type { PageInventory } from "@/lib/scrape/extract-text";
 import type { Lead, ScrapeResults } from "@/types/database";
 import { resolveBusinessContact } from "@/lib/business-contact";
@@ -23,6 +21,61 @@ import type { Entity } from "@/lib/extract-entities";
 // defaulted to a hardcoded phone number and a hardcoded electrician
 // service list, which is precisely how unrelated businesses ended up with
 // the same "bespoke" page.)
+
+/**
+ * Everything one generation run is allowed to know.
+ *
+ * Every field is a REAL value from this lead's own scrape, or an operator
+ * override. Nothing here invents a fallback: a missing phone stays null and the
+ * generator is told there is no phone, rather than being handed a placeholder
+ * that would ship to a client as if it were theirs.
+ */
+export interface SiteBrief {
+  businessName: string;
+  industry: string;
+  city: string;
+  founder: string | null;
+  phone: string | null;
+  email: string | null;
+  aboutContent: string | null;
+  services: string[];
+  areas: string[];
+  rating: number | null;
+  reviewCount: number | null;
+  reviews: { author: string; rating: number; text: string; avatar?: string | null; when?: string | null }[];
+  /** Social profiles found during the scrape. */
+  socials: string[];
+  /** Where to read this business's real Google reviews, when we know. */
+  googleReviewUrl: string | null;
+  /** Facebook proof, entered by the operator — it cannot be scraped. */
+  facebookRating: number | null;
+  facebookReviewCount: number | null;
+  /** The verified street address, from the Google listing. */
+  address: string | null;
+  /**
+   * Manufacturer and trade accreditations — GAF Master Elite, BBB, Which?
+   * Trusted Trader. Never inferred: a certification a business does not hold is
+   * the worst possible thing to print on their homepage, so this stays empty
+   * until an operator types it in.
+   */
+  certifications: string[];
+  /** Real photo URLs from the client's own site and Google profile. */
+  photos: string[];
+  heroImage: string | null;
+  /** Compact digest of the lead's real scraped page content. */
+  factsDigest: string;
+  /**
+   * The specific things this business has, each verified against the page it
+   * was read from: membership tiers, classes, staff, amenities, policies. This
+   * is what stops a page being generic — `services` and `areas` are two flat
+   * lists of nouns, while this is the gym's ten real classes by name.
+   */
+  entities: Entity[];
+  licensedInsured: boolean;
+  leadSlug: string;
+  /** What the client ticked on the intake form, as build instructions. */
+  painInstructions: string[];
+}
 
 export interface BriefOverrides {
   businessName?: string;
@@ -44,35 +97,18 @@ export interface BriefOverrides {
   layoutSalt?: number | null;
   /** Operator-entered accreditations. Never inferred — see SiteBrief. */
   certifications?: string[];
+  /**
+   * The client's own colour, as `#rrggbb`.
+   *
+   * Falls back to what the scrape read off their site, then to the reference
+   * branding, then to the house ink. It only ever reaches accents, so a wrong
+   * value here is a cosmetic fix rather than an unreadable page.
+   */
+  brandHex?: string;
 }
 
-/**
- * Routes that exist for a lead, so generated links always resolve.
- *
- * Phase 1 only knows about the sellable core. Passing phase 2's routes
- * before they are built would let the homepage link at pages that 404
- * during the exact window the client is evaluating the work.
- */
-export function buildKnownPaths(
-  services: string[],
-  areas: string[],
-  nouns: VerticalProfile["nouns"],
-  extras: { locationServices?: { service: string; area: string }[] } = {}
-): string[] {
-  return [
-    "/",
-    ...services.map((s) => `/${nouns.offeringPath}/${slugifyText(s)}`),
-    ...areas.map((a) => `/${nouns.areaPath}/${slugifyText(a)}`),
-    ...(extras.locationServices ?? []).map((p) => `/locations/${slugifyText(`${p.service}-${p.area}`)}`),
-    "/about",
-    "/faq",
-    "/contact",
-    "/privacy",
-    "/terms",
-  ];
-}
-
-function realPhotos(facts: Record<string, unknown>): string[] {
+/** Every real image URL this lead's scrape found, deduped. */
+export function realPhotos(facts: Record<string, unknown>): string[] {
   const sitePhotos = (facts.site_photos as { url: string }[] | undefined) ?? [];
   const gbpPhotos = (facts.gbp_photo_urls as string[] | undefined) ?? [];
   const all = [...sitePhotos.map((p) => p.url), ...gbpPhotos].filter(
@@ -161,7 +197,6 @@ function cityFromFacts(facts: Record<string, unknown>): string | null {
 export function buildSiteBrief(
   lead: Lead,
   scrapeResults: ScrapeResults,
-  vertical: VerticalProfile,
   overrides: BriefOverrides = {}
 ): SiteBrief {
   const facts = (scrapeResults.facts ?? {}) as Record<string, unknown>;
@@ -248,7 +283,6 @@ export function buildSiteBrief(
     }));
 
   return {
-    vertical,
     businessName:
       overrides.businessName?.trim() ||
       (typeof facts.business_name === "string" ? facts.business_name : "") ||
@@ -277,25 +311,9 @@ export function buildSiteBrief(
     googleReviewUrl: proofTrusted && lead.place_id ? `https://search.google.com/local/reviews?placeid=${lead.place_id}` : null,
     facebookRating: overrides.facebookRating ?? null,
     facebookReviewCount: overrides.facebookReviewCount ?? null,
-    layoutSalt: overrides.layoutSalt ?? 0,
-    geo: (() => {
-      const loc = (scrapeResults.places_raw as { geometry?: { location?: { lat?: number; lng?: number } } } | null)
-        ?.geometry?.location;
-      return typeof loc?.lat === "number" && typeof loc?.lng === "number" ? { lat: loc.lat, lng: loc.lng } : null;
-    })(),
     address:
       (scrapeResults.places_raw as { formatted_address?: string } | null)?.formatted_address ??
       ((facts.nap as { address?: string } | undefined)?.address ?? null),
-    regionHint: (() => {
-      // "4585 WY-22, Wilson, WY 83014, USA" -> "WY, USA"
-      const address = (scrapeResults.places_raw as { formatted_address?: string } | null)?.formatted_address;
-      if (!address) return null;
-      const parts = address.split(",").map((x) => x.trim()).filter(Boolean);
-      if (parts.length < 2) return null;
-      const country = parts[parts.length - 1];
-      const state = (parts[parts.length - 2] ?? "").replace(/\s*\d{4,}\s*$/, "").trim();
-      return state ? `${state}, ${country}` : country;
-    })(),
     certifications: (overrides.certifications ?? (facts?.certifications as string[] | undefined) ?? [])
       .filter((name): name is string => typeof name === "string" && name.trim().length > 0)
       .slice(0, 3),
@@ -314,11 +332,6 @@ export function buildSiteBrief(
     // reached generation before, so the rebuilt page had no idea what the
     // client actually wanted fixed.
     painInstructions: painPointInstructions(lead.pain_points),
-    intent: conversionIntentFor(
-      overrides.industry?.trim() || lead.industry,
-      !!(overrides.phone?.trim() || nap.phones?.[0] || lead.phone),
-      vertical
-    ),
   };
 }
 

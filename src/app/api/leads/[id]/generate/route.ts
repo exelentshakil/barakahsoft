@@ -1,28 +1,29 @@
-import { profileForLead } from "@/lib/verticals/resolve";
-import { classifyIcp } from "@/lib/verticals/icp";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminSession } from "@/lib/is-admin-session";
-import { inngest } from "@/inngest/client";
 import { buildSiteBrief, briefReadiness, type BriefOverrides } from "@/lib/build-site-brief";
-import { visualQaEnabled } from "@/lib/visual-qa";
+import { generateHomepage, usablePhotos } from "@/lib/generate-homepage";
+import { updateArtifact } from "@/lib/artifact-write";
+import { recordVersion, HOME_KEY } from "@/lib/page-versions";
 import type { Lead, ScrapeResults } from "@/types/database";
 
-// The Studio's generate button.
+// The Studio's generate button, and the entire build.
 //
-// This route used to build the page itself out of hardcoded strings — an
-// electrician's service list and a fixed phone number were baked in as
-// fallbacks, which is why unrelated businesses received near-identical
-// "bespoke" sites. It now does what a request should do: validate, hand off
-// to the background generator, and return immediately. All real generation
-// happens in src/inngest/functions/bespoke-generate.ts.
+// This used to validate and hand off to a fourteen-step Inngest job. The job is
+// gone: one model call does not need a queue, a progress table, a polling loop
+// or a local dev worker, and every one of those was a place a build could
+// silently stall with nothing to read but logs.
+//
+// 300 seconds is the platform default and comfortably covers a call that takes
+// 60-180. If a page ever genuinely needs longer than that, the honest fix is to
+// make the page smaller, not to hide the wait behind a queue.
+export const maxDuration = 300;
+
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: leadId } = await params;
   if (!(await isAdminSession())) return NextResponse.json({ error: "Not authorised" }, { status: 401 });
 
-  const body = (await req.json().catch(() => ({}))) as BriefOverrides & { phase?: 1 | 2 };
-  const phase = body.phase === 2 ? 2 : 1;
-  const { phase: _phase, ...supplied } = body;
+  const supplied = (await req.json().catch(() => ({}))) as BriefOverrides;
   const admin = createAdminClient();
 
   const [{ data: lead }, { data: scrapeResults }, { data: priorArtifact }] = await Promise.all([
@@ -30,41 +31,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     admin.from("scrape_results").select("*").eq("lead_id", leadId).single<ScrapeResults>(),
     admin
       .from("artifacts")
-      .select("id, extracted_assets")
+      .select("id, extracted_assets, inspiration_branding")
       .eq("lead_id", leadId)
-      .maybeSingle<{ id: string; extracted_assets: Record<string, unknown> | null }>(),
+      .maybeSingle<{
+        id: string;
+        extracted_assets: Record<string, unknown> | null;
+        inspiration_branding: Record<string, unknown> | null;
+      }>(),
   ]);
-
-  // Brief overrides are operator truth, and they have to outlive the request
-  // that carried them.
-  //
-  // They were read straight off the body and thrown away afterwards. The
-  // Studio re-mounted from server state with the fields blank, so the
-  // Facebook rating and count — which no scraper can read, because Facebook
-  // hides them, and which therefore exist nowhere else — had to be retyped
-  // before every single rebuild. Worse, the phase 2 button posts `{phase:2}`
-  // and nothing else, so the deep build re-derived its brief from the scrape
-  // alone and silently discarded every correction: founder, city, services,
-  // areas, logo, hero image, along with the Facebook proof.
-  //
-  // What the operator last set is stored on the artifact and merged under
-  // whatever this request supplies. A key the request omits keeps its stored
-  // value; a key it sends as null is an operator clearing the field, and
-  // that is honoured.
-  const storedAssets = (priorArtifact?.extracted_assets ?? {}) as Record<string, unknown>;
-  const storedOverrides = (storedAssets.brief_overrides ?? {}) as Partial<BriefOverrides>;
-  const legacyMockup = (storedAssets.mockup ?? {}) as Record<string, unknown>;
-
-  const overrides: BriefOverrides = { ...storedOverrides };
-  // Facebook proof previously lived under `mockup`, where the Studio still
-  // reads it. Carry it forward once so nobody has to retype it again.
-  if (overrides.facebookRating == null && typeof legacyMockup.facebookRating === "number") {
-    overrides.facebookRating = legacyMockup.facebookRating;
-  }
-  if (overrides.facebookReviewCount == null && typeof legacyMockup.facebookReviewCount === "number") {
-    overrides.facebookReviewCount = legacyMockup.facebookReviewCount;
-  }
-  Object.assign(overrides, supplied);
 
   if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
   if (!scrapeResults) {
@@ -74,181 +48,94 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     );
   }
 
-    // No two leads ship the same composition.
+  // Brief overrides are operator truth, and they have to outlive the request
+  // that carried them.
   //
-  // A nudge value, not a skeleton selector.
-  //
-  // This used to search a catalogue of about a dozen layout recipes for one no
-  // sibling lead had taken, because every page was built on one skeleton and
-  // two roofers otherwise read as the same website. There is no catalogue any
-  // more: structure comes from the PRD in the industry's own vocabulary and
-  // the visual system is compiled per lead, so collision is not the failure
-  // mode it was.
-  //
-  // What survives is the reason the salt was persisted — a rebuild has to be a
-  // rebuild, so the client does not open their site to a different page than
-  // the one they approved. The review queue's "rebuild with a different look"
-  // passes an incremented salt deliberately.
-  if (overrides.layoutSalt == null) {
-    overrides.layoutSalt =
-      (storedAssets.layout_salt as number | undefined) ?? 0;
-  }
+  // Facebook's rating and count sit behind a login wall, so no scraper can read
+  // them — the operator types them in, and without this they had to be retyped
+  // before every rebuild. A key this request omits keeps its stored value; a key
+  // it sends as null is the operator clearing the field, and that is honoured.
+  const storedAssets = (priorArtifact?.extracted_assets ?? {}) as Record<string, unknown>;
+  const overrides: BriefOverrides = {
+    ...((storedAssets.brief_overrides ?? {}) as Partial<BriefOverrides>),
+    ...supplied,
+  };
 
-  const brief = buildSiteBrief(lead, scrapeResults, profileForLead(lead, null), overrides);
-  // The fit gate.
-  //
-  // "Always premium" is only a guarantee if the engine declines the work it
-  // cannot do well. This is a local-business lead-generation site builder: it
-  // proves with Google reviews, converts on a call or a form, and ranks on a
-  // named service area. A SaaS startup has none of those, so it would get a
-  // page with an empty reviews block, a Service Areas section listing nothing
-  // real, and a "Get a free quote" button — visibly worse than what we sell,
-  // on exactly the sort of lead most likely to judge us on design.
-  //
-  // Refused rather than built, with the reason, and overridable: an operator
-  // who knows better sets the vertical on the brief screen, which counts as
-  // the deliberate decision this is protecting against making by accident.
-  if (lead.icp_fit === "unsupported" && !lead.vertical_slug) {
-    const icp = classifyIcp({
-      industry: lead.industry,
-      businessName: lead.business_name,
-      services: brief.services,
-    });
-    return NextResponse.json(
-      {
-        error:
-          icp.reason ??
-          "This business is outside what this engine builds well, so it has not been generated.",
-        icpCategory: lead.icp_category,
-        icpFit: lead.icp_fit,
-        override: "Set a vertical on the brief screen to build anyway.",
-      },
-      { status: 422 }
-    );
-  }
+  const brief = buildSiteBrief(lead, scrapeResults, overrides);
 
+  // Generating from a brief this thin produces exactly the generic page the
+  // rebuild exists to eliminate, so it is refused rather than silently padded
+  // with invented services.
   const { ready, warnings } = briefReadiness(brief);
-
-  // Generating from a brief this thin produces exactly the generic page
-  // this rebuild exists to eliminate, so it is refused rather than silently
-  // padded with invented services.
   if (!ready) {
     return NextResponse.json(
       {
-        error: "Not enough real information to build a high-value site. Add the real services in the brief, or re-scrape the client's site first.",
+        error:
+          "Not enough real information to build a page worth sending. Add the real services in the brief, or re-scrape the client's site first.",
         warnings,
       },
       { status: 422 }
     );
   }
 
-  // An artifact row must exist before the job starts, since every step
-  // updates it in place.
-  const existing = priorArtifact;
-  if (!existing) {
+  // An artifact row must exist before the write lands — updateArtifact throws
+  // on a filter that matches nothing, which is the whole point of it.
+  if (!priorArtifact) {
     const { data: shell } = await admin.from("template_shells").select("id").limit(1).single();
     if (!shell) return NextResponse.json({ error: "No template shell found in database" }, { status: 500 });
-
-    const { error: insertErr } = await admin.from("artifacts").insert({
-      lead_id: leadId,
-      template_shell_id: shell.id,
-      funnel_pages: [],
-      qa_status: "pending",
-    });
+    const { error: insertErr } = await admin
+      .from("artifacts")
+      .insert({ lead_id: leadId, template_shell_id: shell.id, funnel_pages: [], qa_status: "pending" });
     if (insertErr) return NextResponse.json({ error: insertErr.message }, { status: 500 });
   }
 
-  // Phase 2 builds the deep site (location pages, areas, blog) and is only
-  // meaningful once phase 1's copy plan exists and the client has approved
-  // it. Refusing here gives a clear reason rather than a failed background
-  // run the operator has to go and read logs to understand.
-  if (phase === 2) {
-    // The approved homepage is what phase 2 builds against — it is the voice
-    // and design reference every inner page is matched to. This used to
-    // require copy_plan, which nothing has written since the separate copy
-    // pass was removed, so the check could never pass and the whole deep
-    // build was unreachable. It now asks for the thing phase 2 actually
-    // needs, which is also exactly what the job itself checks.
-    const { data: artifact } = await admin
-      .from("artifacts")
-      .select("bespoke_homepage_html, generation_phase")
-      .eq("lead_id", leadId)
-      .maybeSingle<{ bespoke_homepage_html: string | null; generation_phase: number }>();
-
-    if (!artifact?.bespoke_homepage_html || (artifact.generation_phase ?? 0) < 1) {
-      return NextResponse.json(
-        { error: "Build the homepage first — every inner page is written to match it." },
-        { status: 409 }
-      );
-    }
-  }
-
-  // Persist before handing off, so a rebuild started from anywhere — the
-  // phase 2 button, a retry, another session — inherits the same brief.
-  const { data: artifactRow } = await admin
-    .from("artifacts")
-    .select("extracted_assets")
-    .eq("lead_id", leadId)
-    .maybeSingle<{ extracted_assets: Record<string, unknown> | null }>();
   await admin
     .from("artifacts")
-    .update({
-      extracted_assets: {
-        ...(artifactRow?.extracted_assets ?? {}),
-        brief_overrides: overrides,
-        // Claims this composition so the next lead cannot land on it.
-        layout_salt: overrides.layoutSalt ?? 0,
-        layout_composition: {
-          salt: overrides.layoutSalt ?? 0,
-        },
-      },
-    })
+    .update({ extracted_assets: { ...storedAssets, brief_overrides: overrides } })
     .eq("lead_id", leadId);
 
-  await inngest.send({
-    name: "bespoke/generate.requested",
-    data: { lead_id: leadId, overrides, phase },
-  });
+  // Curated at scrape time, not here. If the operator deleted a photo it is
+  // already gone, and nothing in this request goes looking for more.
+  const photos = await usablePhotos(leadId);
 
-  return NextResponse.json({
-    ok: true,
-    leadId,
-    slug: lead.slug,
-    started: true,
-    phase,
-    warnings,
-    plan: {
-      services: brief.services,
-      areas: brief.areas,
-      photos: brief.photos.length,
-      pages: Math.min(brief.services.length, 6) + 4,
-    },
-  });
-}
+  const brandHex =
+    overrides.brandHex?.trim() ||
+    (scrapeResults.facts as Record<string, unknown> | null)?.brand_color_hex as string | undefined ||
+    ((priorArtifact?.inspiration_branding as { colors?: { primary?: string } } | null)?.colors?.primary ?? null);
 
-/** Live progress for the Studio's generation panel. */
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id: leadId } = await params;
-  if (!(await isAdminSession())) return NextResponse.json({ error: "Not authorised" }, { status: 401 });
+  try {
+    const result = await generateHomepage(brief, photos, brandHex ?? "", priorArtifact?.inspiration_branding ?? null);
 
-  const admin = createAdminClient();
-  const [{ data: job }, visualQa] = await Promise.all([
-    admin
-      .from("build_jobs")
-      .select("status, pages_done, pages_total, error_message, updated_at")
-      .eq("lead_id", leadId)
-      .eq("stage", "bespoke")
-      .maybeSingle(),
-    visualQaEnabled()
-      ? admin
-          .from("generation_candidates")
-          .select("id, attempt, visual_status, visual_report, created_at")
-          .eq("lead_id", leadId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-  ]);
+    await updateArtifact(
+      leadId,
+      {
+        bespoke_homepage_html: result.html,
+        bespoke_rationale: result.plan,
+        colour_source: brandHex ? "client" : "house",
+        generation_phase: 1,
+        last_edited_at: new Date().toISOString(),
+      },
+      "homepage"
+    );
 
-  return NextResponse.json({ job: job ?? null, visualQa: visualQa.data ?? null });
+    // History, so an image swap or a rebuild stays undoable.
+    await recordVersion(leadId, HOME_KEY, result.html, "generated", "Homepage generated");
+
+    await admin.from("leads").update({ status: "qa_pending" }).eq("id", leadId);
+
+    return NextResponse.json({
+      ok: true,
+      leadId,
+      slug: lead.slug,
+      warnings,
+      photosSupplied: photos.length,
+      photosUsed: result.photosUsed,
+      continued: result.continued,
+      plan: result.plan,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`[generate] ${leadId}: ${message}`);
+    return NextResponse.json({ error: message }, { status: 502 });
+  }
 }

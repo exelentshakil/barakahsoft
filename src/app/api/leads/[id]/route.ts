@@ -1,4 +1,3 @@
-import { getCuratedProfile } from "@/lib/verticals";
 import { assertLeadInTenant } from "@/lib/tenant-scope";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -43,19 +42,6 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (typeof body?.facebook_pixel_id === "string") updates.facebook_pixel_id = body.facebook_pixel_id.trim() || null;
   if (typeof body?.google_site_verification === "string") updates.google_site_verification = body.google_site_verification.trim() || null;
   if (Array.isArray(body?.pain_points)) updates.pain_points = body.pain_points.filter((p: any) => typeof p === "string" && p.trim() !== "");
-  // The operator's vertical override. Also the documented way past the fit
-  // gate: choosing one deliberately is the judgement the gate exists to stop
-  // the engine making by accident.
-  if (typeof body?.vertical_slug === "string") {
-    const chosen = body.vertical_slug.trim();
-    if (!chosen) {
-      updates.vertical_slug = null;
-    } else if (getCuratedProfile(chosen)) {
-      updates.vertical_slug = chosen;
-    } else {
-      return NextResponse.json({ error: `Unknown vertical "${chosen}"` }, { status: 400 });
-    }
-  }
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
   }

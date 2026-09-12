@@ -212,3 +212,99 @@ export async function saveDescriptions(verdicts: Map<string, VisionVerdict>): Pr
     )
   );
 }
+
+// ---------------------------------------------------------------- scrape-time ingest
+//
+// This used to run inside the build, which meant a lead's photographs did not
+// exist until someone had already generated a page from them. The operator
+// could not delete a bad photo or add a missing one BEFORE the model saw the
+// set — only after, by which point the page had already been designed around
+// it.
+//
+// Running it at scrape time inverts that: by the time the Studio opens, every
+// image is mirrored, captioned and flagged, and curation happens before a
+// single token is spent.
+
+interface StoredAsset {
+  id: string;
+  public_url: string;
+  caption: string | null;
+  subject: MediaSubject | null;
+  usable: boolean;
+  width: number | null;
+  height: number | null;
+  source: string;
+}
+
+const ASSET_COLUMNS = "id, public_url, caption, subject, usable, width, height, source";
+
+/**
+ * Bring every real image this lead has into Storage and describe it.
+ *
+ * Idempotent: assets already mirrored are not fetched again, so re-analysing a
+ * lead costs nothing here. This is also the step that eliminates
+ * credential-bearing Google Places URLs from the system entirely.
+ */
+export async function ingestRealPhotos(
+  leadId: string,
+  urls: string[],
+  industry: string
+): Promise<StoredAsset[]> {
+  const admin = createAdminClient();
+
+  const { data: existing } = await admin
+    .from("media_assets")
+    .select(ASSET_COLUMNS)
+    .eq("lead_id", leadId)
+    .returns<StoredAsset[]>();
+
+  const already = existing ?? [];
+
+  // Only mirror when this lead has nothing stored yet. Re-running should not
+  // duplicate the client's photo library.
+  if (already.length === 0) {
+    const results = await Promise.all(
+      urls.slice(0, 24).map((url) => {
+        const source =
+          url.includes("googleapis.com") || url.includes("googleusercontent.com") ? "gbp" : "site";
+        return mirrorToStorage(leadId, url, source);
+      })
+    );
+    const stored = results.filter((r): r is NonNullable<typeof r> => r !== null);
+
+    if (stored.length > 0) {
+      const verdicts = await describeImages(
+        stored.map((s) => ({ id: s.id, url: s.publicUrl })),
+        industry
+      );
+      await saveDescriptions(verdicts);
+    }
+
+    const { data: refreshed } = await admin
+      .from("media_assets")
+      .select(ASSET_COLUMNS)
+      .eq("lead_id", leadId)
+      .returns<StoredAsset[]>();
+    return refreshed ?? [];
+  }
+
+  // Anything uploaded through the Studio since the last run has no vision
+  // verdict yet.
+  const undescribed = already.filter((a) => a.subject === null);
+  if (undescribed.length > 0) {
+    const verdicts = await describeImages(
+      undescribed.map((a) => ({ id: a.id, url: a.public_url })),
+      industry
+    );
+    await saveDescriptions(verdicts);
+
+    const { data: refreshed } = await admin
+      .from("media_assets")
+      .select(ASSET_COLUMNS)
+      .eq("lead_id", leadId)
+      .returns<StoredAsset[]>();
+    return refreshed ?? [];
+  }
+
+  return already;
+}

@@ -58,14 +58,13 @@ import { WorkspaceTabs, WorkspaceTabHint, TabPanel, type WorkspaceStep } from "@
 import { DeliverySlaTimer } from "@/components/admin/DeliverySlaTimer";
 import { ShowcaseApprovalControl } from "@/components/portal/sections/ShowcaseApprovalControl";
 import { BespokeGenerationStudio } from "@/components/admin/BespokeGenerationStudio";
-import { RefinePanel } from "@/components/admin/RefinePanel";
 import { ManualPhotoUpload } from "@/components/admin/ManualPhotoUpload";
+import { SlotPanel } from "@/components/admin/SlotPanel";
 import { HandBuildPanel } from "@/components/admin/HandBuildPanel";
 import { OutreachSequencePanel } from "@/components/admin/OutreachSequencePanel";
 import { PeriodPulsePanel } from "@/components/admin/PeriodPulsePanel";
 import { AddUrlDialog } from "@/components/admin/AddUrlDialog";
 import { VisibilityPanel } from "@/components/admin/VisibilityPanel";
-import { AuditPanel } from "@/components/admin/AuditPanel";
 import { CompetitorPanel } from "@/components/admin/CompetitorPanel";
 import { ApprovalGate } from "@/components/admin/ApprovalGate";
 import { useLeadLive } from "@/hooks/use-lead-live";
@@ -1627,16 +1626,12 @@ Shaq`,
               />
 
               {artifact?.bespoke_homepage_html && (
-                <RefinePanel key={`slots-${reloadKey}`} leadId={lead.id} />
+                <SlotPanel key={`slots-${reloadKey}`} leadId={lead.id} />
               )}
 
               {scrapeResults && (
                 <HandBuildPanel leadId={lead.id} hasPage={!!artifact?.bespoke_homepage_html} />
               )}
-            </TabPanel>
-
-            <TabPanel active={tab === "audit"}>
-              {scrapeResults && <AuditPanel key={`audit-${reloadKey}`} leadId={lead.id} />}
             </TabPanel>
 
             <TabPanel active={tab === "rivals"}>
