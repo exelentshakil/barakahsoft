@@ -1,6 +1,7 @@
 import sharp from "sharp";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { searchPexels } from "@/lib/pexels";
+import { searchUnsplash } from "@/lib/unsplash";
 import { callOpenAI } from "@/lib/openai-client";
 import { parseJsonResponse } from "@/lib/parse-json-response";
 
@@ -333,6 +334,43 @@ export async function ingestRealPhotos(
  * to mark it, and the generator is told in the prompt that these may only be
  * used behind a stat band or as section texture. Never as proof.
  */
+/**
+ * One stock photograph, from whichever library answers.
+ *
+ * Both helpers return null for every failure — no key, a rate limit, no
+ * results — so the waterfall cannot tell those apart and does not try to. It
+ * asks Pexels, then Unsplash, then gives up on that query and moves to the next
+ * one. That also means either key working on its own is enough: an operator who
+ * has set only one is not a degraded case.
+ */
+async function stockPhoto(
+  query: string
+): Promise<{ photo: { sourceUrl: string; alt: string; attributionName: string; attributionUrl: string }; source: "pexels" | "unsplash" } | null> {
+  const pexels = await searchPexels(query);
+  if (pexels) return { photo: pexels, source: "pexels" };
+
+  const unsplash = await searchUnsplash(query);
+  if (unsplash) return { photo: unsplash, source: "unsplash" };
+
+  return null;
+}
+
+/**
+ * Top up a thin photo library with stock, for atmosphere only.
+ *
+ * A business with three photographs and a twelve-section page leaves dead
+ * space, which is the complaint that prompted this. But stock standing in for
+ * "our team" or "our work" is how the whole pitch loses credibility — the owner
+ * knows that is not his van.
+ *
+ * So stock is stored with its real source, which is what the slot panel reads
+ * to mark it, and the generator is told in the prompt that these may only sit
+ * behind a stat band or carry section texture. Never as proof.
+ *
+ * Attribution is written onto every row because both libraries' API terms ask
+ * for it, and because a credit line is the honest thing on a page that is
+ * otherwise claiming to be about one business.
+ */
 export async function topUpWithStock(
   leadId: string,
   industry: string,
@@ -350,24 +388,34 @@ export async function topUpWithStock(
     "clean workshop interior",
     "hands working detail",
     "modern office texture",
-  ].slice(0, want - have);
+    "blueprint desk overhead",
+    "warm interior natural light",
+  ].slice(0, Math.min(want - have, 8));
 
+  const admin = createAdminClient();
+  const seen = new Set<string>();
   let added = 0;
+
   for (const query of queries) {
-    const photo = await searchPexels(query);
-    if (!photo?.sourceUrl) continue;
-    const stored = await mirrorToStorage(leadId, photo.sourceUrl, "pexels", { slotHint: "atmosphere" });
+    const found = await stockPhoto(query);
+    // The same photograph coming back for two related queries would put one
+    // image on the page twice, which reads worse than one fewer section.
+    if (!found || seen.has(found.photo.sourceUrl)) continue;
+    seen.add(found.photo.sourceUrl);
+
+    const stored = await mirrorToStorage(leadId, found.photo.sourceUrl, found.source, {
+      slotHint: "atmosphere",
+    });
     if (!stored) continue;
 
-    const admin = createAdminClient();
     await admin
       .from("media_assets")
       .update({
-        caption: `stock photograph — ${photo.alt || query}`,
+        caption: `stock photograph — ${found.photo.alt || query}`,
         subject: "atmosphere",
         usable: true,
-        attribution_name: photo.attributionName ?? null,
-        attribution_url: photo.attributionUrl ?? null,
+        attribution_name: found.photo.attributionName ?? null,
+        attribution_url: found.photo.attributionUrl ?? null,
       })
       .eq("id", stored.id);
     added += 1;

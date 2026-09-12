@@ -20,7 +20,7 @@ export interface SlotView {
   key: string;
   label: string;
   url: string;
-  origin: "real" | "generated" | "uploaded";
+  origin: "real" | "stock" | "uploaded";
 }
 
 const SLOT_LABELS: Record<string, string> = {
@@ -86,8 +86,15 @@ export async function listSlots(leadId: string, serviceNames: string[] = []): Pr
       key,
       label: slotLabel(key, serviceNames),
       url,
+      // Stock is called stock. An operator scanning the grid needs to see at a
+      // glance which pictures are not the client's, because those are the ones
+      // worth replacing before anything is sent.
       origin:
-        assetSource === "upload" ? "uploaded" : assetSource === "generated" ? "generated" : "real",
+        assetSource === "upload"
+          ? "uploaded"
+          : assetSource === "pexels" || assetSource === "unsplash"
+            ? "stock"
+            : "real",
     };
   });
 }

@@ -33,6 +33,8 @@ export interface UsablePhoto {
   height: number | null;
   /** True for stock. The prompt is told these may only carry atmosphere. */
   stock: boolean;
+  /** Photographer and library, for the credit line both licences ask for. */
+  credit: string | null;
 }
 
 /**
@@ -47,7 +49,7 @@ export async function usablePhotos(leadId: string): Promise<UsablePhoto[]> {
   const admin = createAdminClient();
   const { data } = await admin
     .from("media_assets")
-    .select("public_url, caption, subject, width, height, usable, source")
+    .select("public_url, caption, subject, width, height, usable, source, attribution_name")
     .eq("lead_id", leadId)
     .returns<
       {
@@ -58,6 +60,7 @@ export async function usablePhotos(leadId: string): Promise<UsablePhoto[]> {
         height: number | null;
         usable: boolean;
         source: string;
+        attribution_name: string | null;
       }[]
     >();
 
@@ -74,6 +77,10 @@ export async function usablePhotos(leadId: string): Promise<UsablePhoto[]> {
       width: a.width,
       height: a.height,
       stock: a.source === "pexels" || a.source === "unsplash" || a.subject === "atmosphere",
+      credit:
+        a.source === "pexels" || a.source === "unsplash"
+          ? `${a.attribution_name ?? "Unknown"} / ${a.source === "pexels" ? "Pexels" : "Unsplash"}`
+          : null,
     }));
 }
 
@@ -111,7 +118,12 @@ These are stock. They may sit behind a statistics band, as a section texture, or
 as a wide break between sections. They may NEVER appear as this business's team,
 their van, their premises, their work, or anything a reader would take as proof.
 If in doubt, leave a stock image out — a page that implies a stranger is their
-electrician is worse than a shorter page.`
+electrician is worse than a shorter page.
+
+If you use ANY of them, put one small credit line in the footer legal row,
+exactly: "Stock photography: ${Array.from(new Set(stock.map((p) => p.credit).filter(Boolean))).join(", ")}".
+Both libraries ask for it, and a page otherwise claiming to be about one
+business should say which pictures are not theirs.`
       : ""
   }
 

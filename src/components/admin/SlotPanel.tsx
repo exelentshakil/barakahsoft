@@ -20,7 +20,7 @@ interface SlotView {
   key: string;
   label: string;
   url: string;
-  origin: "real" | "generated" | "uploaded";
+  origin: "real" | "stock" | "uploaded";
 }
 
 interface SparePhoto {
@@ -152,6 +152,11 @@ export function SlotPanel({ leadId }: { leadId: string }) {
               {slot.origin === "uploaded" && (
                 <span className="absolute left-2 top-2 rounded border border-emerald-300 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
                   Uploaded
+                </span>
+              )}
+              {slot.origin === "stock" && (
+                <span className="absolute left-2 top-2 rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                  Stock — swap if you can
                 </span>
               )}
             </div>
