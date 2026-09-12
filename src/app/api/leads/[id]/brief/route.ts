@@ -42,6 +42,33 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   assign("about_content", typeof body.aboutContent === "string" ? body.aboutContent : undefined);
   assign("services_list", Array.isArray(body.services) ? body.services.filter(Boolean) : undefined);
   assign("areas_list", Array.isArray(body.areas) ? body.areas.filter(Boolean) : undefined);
+  assign("brand_hex", typeof body.brandHex === "string" ? body.brandHex : undefined);
+
+  // The same values in the shape the generator actually reads.
+  //
+  // A second confirmed loss, and the same species as the four-key logo bug
+  // above: this route wrote snake_case keys at the top of extracted_assets,
+  // while buildSiteBrief only ever reads extracted_assets.brief_overrides in
+  // camelCase. So an operator could correct the services, the town, the founder
+  // or the brand colour, watch it save, and have every one of those corrections
+  // ignored by the next build unless they happened to be re-typed into the
+  // generate request itself. One writer, both readers.
+  const overrides = { ...((brief.brief_overrides ?? {}) as Record<string, unknown>) };
+  const carry = (key: string, value: unknown) => {
+    if (value !== undefined && value !== null) overrides[key] = value;
+  };
+  carry("businessName", typeof body.businessName === "string" ? body.businessName : undefined);
+  carry("founder", typeof body.founder === "string" ? body.founder : undefined);
+  carry("city", typeof body.city === "string" ? body.city : undefined);
+  carry("industry", typeof body.industry === "string" ? body.industry : undefined);
+  carry("heroImage", typeof body.heroImage === "string" ? body.heroImage : undefined);
+  carry("logoUrl", typeof body.logoUrl === "string" ? body.logoUrl : undefined);
+  carry("footerLogoUrl", typeof body.footerLogoUrl === "string" ? body.footerLogoUrl : undefined);
+  carry("aboutContent", typeof body.aboutContent === "string" ? body.aboutContent : undefined);
+  carry("brandHex", typeof body.brandHex === "string" ? body.brandHex : undefined);
+  carry("services", Array.isArray(body.services) ? body.services.filter(Boolean) : undefined);
+  carry("areas", Array.isArray(body.areas) ? body.areas.filter(Boolean) : undefined);
+  brief.brief_overrides = overrides;
 
   brief.brief_updated_at = new Date().toISOString();
 

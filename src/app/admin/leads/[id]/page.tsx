@@ -4,6 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { LeadDetail } from "@/components/admin/LeadDetail";
 import { leadCost } from "@/lib/cost/lead-cost";
 import { buildSiteBrief } from "@/lib/build-site-brief";
+import { resolveLogoUrl, resolveFooterLogoUrl } from "@/lib/brand-assets";
+import type { BriefFields } from "@/components/admin/BriefPanel";
 import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 
 // One lead, top to bottom, no tabs.
@@ -32,8 +34,28 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
   if (!lead) notFound();
 
-  const overrides = ((artifact?.extracted_assets as Record<string, unknown> | null)?.brief_overrides ?? {}) as Record<string, unknown>;
+  const assets = (artifact?.extracted_assets ?? {}) as Record<string, unknown>;
+  const overrides = (assets.brief_overrides ?? {}) as Record<string, unknown>;
   const brief = scrapeResults ? buildSiteBrief(lead, scrapeResults, overrides) : null;
+  const facts = (scrapeResults?.facts ?? {}) as Record<string, unknown>;
+
+  // Pre-filled from what the brief actually resolved to, not from the override
+  // alone — so the operator sees the real value the page would be built with
+  // and only has to touch the ones that are wrong.
+  const briefFields: BriefFields = {
+    businessName: brief?.businessName ?? lead.business_name ?? "",
+    founder: brief?.founder ?? "",
+    city: brief?.city === "the local area" ? "" : brief?.city ?? "",
+    industry: brief?.industry ?? lead.industry ?? "",
+    aboutContent: brief?.aboutContent ?? "",
+    services: (brief?.services ?? []).join("\n"),
+    areas: (brief?.areas ?? []).join("\n"),
+    logoUrl: resolveLogoUrl(assets, facts) ?? "",
+    footerLogoUrl: resolveFooterLogoUrl(assets, facts) ?? "",
+    brandHex:
+      (typeof overrides.brandHex === "string" ? overrides.brandHex : "") ||
+      (typeof facts.brand_color_hex === "string" ? facts.brand_color_hex : ""),
+  };
 
   return (
     <LeadDetail
@@ -46,6 +68,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
         status: lead.status,
         draft: (lead.outreach_draft ?? null) as Record<string, unknown> | null,
       }}
+      briefFields={briefFields}
       hasPage={!!artifact?.bespoke_homepage_html}
       rationale={artifact?.bespoke_rationale ?? null}
       analysed={!!scrapeResults}

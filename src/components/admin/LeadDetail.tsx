@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, RefreshCw, ExternalLink, Send, ArrowLeft, Search } from "lucide-react";
 import { ManualPhotoUpload } from "@/components/admin/ManualPhotoUpload";
 import { SlotPanel } from "@/components/admin/SlotPanel";
+import { BriefPanel, type BriefFields } from "@/components/admin/BriefPanel";
 
 // One lead, read top to bottom.
 //
@@ -28,6 +29,7 @@ interface BriefSummary {
 
 export function LeadDetail({
   lead,
+  briefFields,
   hasPage,
   rationale,
   analysed,
@@ -43,6 +45,7 @@ export function LeadDetail({
     status: string;
     draft: Record<string, unknown> | null;
   };
+  briefFields: BriefFields;
   hasPage: boolean;
   rationale: string | null;
   analysed: boolean;
@@ -164,10 +167,12 @@ export function LeadDetail({
         </div>
       )}
 
+      <BriefPanel leadId={lead.id} initial={briefFields} />
+
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="rounded-xl border border-border bg-card p-4">
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            What it was built from
+            What the last build used
           </h2>
           {brief ? (
             <dl className="space-y-2 text-sm">
