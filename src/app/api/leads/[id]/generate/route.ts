@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminSession } from "@/lib/is-admin-session";
 import { buildSiteBrief, briefReadiness, type BriefOverrides } from "@/lib/build-site-brief";
-import { generateHomepage, usablePhotos } from "@/lib/generate-homepage";
+import { generateHomepage, usablePhotos, type CurrentSite } from "@/lib/generate-homepage";
 import { updateArtifact } from "@/lib/artifact-write";
 import { recordVersion, HOME_KEY } from "@/lib/page-versions";
 import type { Lead, ScrapeResults } from "@/types/database";
@@ -103,8 +103,29 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     (scrapeResults.facts as Record<string, unknown> | null)?.brand_color_hex as string | undefined ||
     ((priorArtifact?.inspiration_branding as { colors?: { primary?: string } } | null)?.colors?.primary ?? null);
 
+  // The site this page has to beat. A redesign generated without ever seeing
+  // what it replaces is aiming at nothing.
+  const facts = (scrapeResults.facts ?? {}) as Record<string, unknown>;
+  const current: CurrentSite = {
+    url: lead.source_url,
+    pagespeedMobile:
+      typeof scrapeResults.pagespeed_mobile?.score === "number"
+        ? (scrapeResults.pagespeed_mobile.score as number)
+        : null,
+    // The <title> of their real homepage — usually the tagline they chose for
+    // themselves, which is the clearest statement of what they think they sell.
+    headline:
+      (facts.pages as { title?: string }[] | undefined)?.[0]?.title?.trim() || null,
+  };
+
   try {
-    const result = await generateHomepage(brief, photos, brandHex ?? "", priorArtifact?.inspiration_branding ?? null);
+    const result = await generateHomepage(
+      brief,
+      photos,
+      brandHex ?? "",
+      priorArtifact?.inspiration_branding ?? null,
+      current
+    );
 
     await updateArtifact(
       leadId,
@@ -131,6 +152,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       photosSupplied: photos.length,
       photosUsed: result.photosUsed,
       continued: result.continued,
+      bytes: result.bytes,
+      sections: result.sections,
       plan: result.plan,
     });
   } catch (err) {

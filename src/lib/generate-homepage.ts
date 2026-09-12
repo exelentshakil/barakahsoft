@@ -150,18 +150,72 @@ const RULES = `HARD RULES
    one <h1>, meaningful heading order, focus states on every interactive
    element, and prefers-reduced-motion respected.
 
+7. BUILD A FULL PAGE, NOT A LANDING SKELETON. Nine to twelve sections. A page
+   with a hero, three service cards, one testimonial and a footer is the page
+   every template generator produces and it will not win this business. The
+   owner has to scroll and keep finding things about their own company.
+
+8. EVERY SECTION EARNS ITS PLACE. Each one needs a real heading, at least forty
+   words of real body copy, and a concrete detail taken from the brief — a
+   service by name, an area by name, a review in their customer's own words,
+   their hours, their phone, a number they actually published. A section that
+   could appear on a competitor's page has failed and should be replaced with
+   one that could not.
+
+9. SPEND EVERY PHOTOGRAPH. If you have more photographs than obvious homes for
+   them, build somewhere for them to live: a gallery, a full-bleed band, a
+   two-column split, a before-and-after. An unused photograph is a wasted
+   section.
+
 OUTPUT SHAPE
 
 First, a short plan, exactly this and nothing more:
 
 PLAN
 - <section name> — <what it proves> — <which photo, or none>
-(one line per section, six to ten sections)
+(one line per section, NINE TO TWELVE sections)
 
 Then, immediately, the document, beginning <!doctype html>. No markdown fences,
 no commentary before or after, no explanation of your choices.`;
 
-function buildPrompt(brief: SiteBrief, photos: UsablePhoto[], brandHex: string, branding: unknown): string {
+/**
+ * What this page has to beat.
+ *
+ * The generator has never been shown the site it is replacing, which is an odd
+ * omission for a redesign: "make it better" is unanswerable without "than
+ * what". A mobile PageSpeed score and the owner's own current copy are enough
+ * for the model to aim above them rather than at nothing.
+ */
+function currentSiteBlock(current: CurrentSite | null): string {
+  if (!current) return "";
+  const lines: string[] = [];
+  if (current.url) lines.push(`Their site today: ${current.url}`);
+  if (typeof current.pagespeedMobile === "number") {
+    lines.push(`It scores ${current.pagespeedMobile}/100 on mobile PageSpeed.`);
+  }
+  if (current.headline) lines.push(`Its headline is: "${current.headline}"`);
+  if (lines.length === 0) return "";
+  return `WHAT YOU ARE REPLACING
+${lines.join("\n")}
+
+The owner is going to open your page next to that one. Yours has to look like it
+cost more, say more, and prove more. Do not mimic its structure — it is the
+reason they need a new site.`;
+}
+
+export interface CurrentSite {
+  url: string | null;
+  pagespeedMobile: number | null;
+  headline: string | null;
+}
+
+function buildPrompt(
+  brief: SiteBrief,
+  photos: UsablePhoto[],
+  brandHex: string,
+  branding: unknown,
+  current: CurrentSite | null
+): string {
   const font = fontPairFor(brief.industry, brief.services);
   const brand = resolveBrand(brandHex);
 
@@ -197,6 +251,8 @@ ${brief.aboutContent ? `IN THEIR OWN WORDS\n${brief.aboutContent.slice(0, 1400)}
 ${brief.factsDigest ? `SCRAPED CONTENT (source of truth — everything on the page must trace back to here or to the fields above)\n${brief.factsDigest.slice(0, 5000)}\n` : ""}
 ${brief.painInstructions.length ? `WHAT THE OWNER SAID IS WRONG WITH THEIR CURRENT SITE — fix each of these\n${brief.painInstructions.map((p) => `- ${p}`).join("\n")}\n` : ""}
 ${photoBlock(photos)}
+
+${currentSiteBlock(current)}
 
 ${brandingBlock(branding)}
 
@@ -301,21 +357,26 @@ export interface GeneratedHomepage {
   plan: string;
   photosUsed: number;
   continued: boolean;
+  /** Surfaced to the operator: a thin page is visible as a number, not a vibe. */
+  bytes: number;
+  sections: number;
 }
 
 export async function generateHomepage(
   brief: SiteBrief,
   photos: UsablePhoto[],
   brandHex: string,
-  branding: unknown = null
+  branding: unknown = null,
+  current: CurrentSite | null = null
 ): Promise<GeneratedHomepage> {
-  const prompt = buildPrompt(brief, photos, brandHex, branding);
+  const prompt = buildPrompt(brief, photos, brandHex, branding, current);
 
   const raw = await callDesignModel(prompt, {
     json: false,
-    // A full homepage plus its stylesheet sits at 30-40k. Asking for less is
-    // asking for a page that stops halfway down.
-    maxTokens: 64000,
+    // A twelve-section page plus its stylesheet runs past 40k output tokens.
+    // Asking for less is asking for a page that stops halfway down, and the
+    // truncation guard below exists precisely for the ones that still do.
+    maxTokens: 96000,
     temperature: 0.75,
     timeoutMs: 600_000,
     label: "homepage",
@@ -340,7 +401,13 @@ export async function generateHomepage(
     console.warn(`[homepage] ${photos.length} photos supplied, none placed`);
   }
 
-  return { html: document, plan, photosUsed: used, continued };
+  const sections = (document.match(/<section\b/gi) ?? []).length;
+  console.log(
+    `[homepage] ${Math.round(document.length / 1024)}KB · ${sections} sections · ` +
+      `${used}/${photos.length} photos${continued ? " · continued" : ""}`
+  );
+
+  return { html: document, plan, photosUsed: used, continued, bytes: document.length, sections };
 }
 
 /** The neutral scale, for anything that needs to match the generated page. */
