@@ -103,7 +103,14 @@ the neutral surfaces. Do not link stock libraries, placeholder services, or emit
 an <img> with an invented src.`;
   }
 
-  const chosen = heroUrl && photos.find((p) => p.url === heroUrl);
+  // The operator picks a hero from the client's live site, so the value is that
+  // site's URL — while everything here has been mirrored into Storage under a
+  // different one. A direct comparison never matched, so the choice was silently
+  // ignored on every build. storagePath keeps the last forty characters of the
+  // original URL, so the two can still be recognised as the same picture.
+  const slug = (url: string) => url.replace(/[^a-z0-9]+/gi, "-").slice(-40).toLowerCase();
+  const chosen =
+    heroUrl && (photos.find((p) => p.url === heroUrl) ?? photos.find((p) => p.url.includes(slug(heroUrl))));
 
   return `THE CLIENT'S OWN PHOTOGRAPHS — ${real.length}. Use EVERY one of them.
 ${real.length ? list(real) : "(none — this business has no usable photographs of its own)"}
@@ -115,8 +122,16 @@ ${
 ${list(stock)}
 
 These are stock. They may sit behind a statistics band, as a section texture, or
-as a wide break between sections. They may NEVER appear as this business's team,
-their van, their premises, their work, or anything a reader would take as proof.
+as a wide break between sections.
+
+STOCK MAY NEVER BE THE HERO. The first photograph on the page is the one the
+owner judges everything else by, and a stock city street where his own work
+should be is the single fastest way to lose him. If this business has even one
+photograph of its own, that is the hero. Only a business with NO photographs at
+all gets a stock hero.
+
+They may NEVER appear as this business's team, their van, their premises, their
+work, or anything a reader would take as proof.
 If in doubt, leave a stock image out — a page that implies a stranger is their
 electrician is worse than a shorter page.
 
@@ -345,41 +360,67 @@ no commentary before or after.`;
 
 const DESIGN_RULES = `WHAT SEPARATES THIS FROM A TEMPLATE
 
-Before the rules: the last version of this page was correct and forgettable.
-Every section the same width, every heading the same size, every row three equal
-cards, uniform padding top to bottom. Nothing was wrong with it and nobody would
-pay for it. An expensive agency's work is recognisable in five seconds, and
-these are the five things doing that work:
+Look at what keeps coming back, because it is not a missing feature — it is a
+missing idea. Header. Eyebrow, centred heading, centred paragraph. Three cards.
+Image left, text right. Eyebrow, centred heading, centred paragraph. Image
+right, text left. Cards. Footer. Every section the same width, the same padding,
+the same centred stack, in alternating white and pale grey. Nothing is wrong
+with it. Nobody would pay twenty thousand dollars for it, because it is a
+brochure with the right words in it.
 
-A. TYPE THAT COMMITS. The display face is the loudest thing on the page. Hero
-   heading at \`clamp(2.75rem, 6.5vw, 5.5rem)\` with tight tracking
-   (\`letter-spacing: -0.03em\`) and \`line-height: 1.02\`. Section headings at
-   \`clamp(1.9rem, 3.4vw, 3rem)\`. If your largest heading is under 44px on a
-   desktop you have built a brochure, not a homepage.
+An expensive page is recognisable in five seconds, and this is what does it.
 
-B. SCALE CONTRAST. Put an 11px uppercase tracked label directly above a 72px
-   heading. That jump is most of what reads as designed. Small type must be
-   genuinely small and confident — never a timid 15px everywhere.
+A. COMPOSE IN VARIED TREATMENTS, NEVER ONE REPEATED
+   Pick each section's treatment from this set, and NEVER use the same one
+   twice in a row:
+     1. Full-bleed image band, text laid over it with a scrim
+     2. Editorial split — asymmetric, the image running off one edge of the
+        viewport rather than stopping at the container
+     3. Contained card grid
+     4. Narrow measure — one column of prose at about 62ch, left-aligned, set
+        large, with real air around it
+     5. Inverted band — full-bleed dark, breaking the light rhythm
+     6. Data — the table or a stat row, set precisely, tabular figures
+     7. Oversized pull quote from a real review, given a whole section
+   AT MOST THREE CENTRED HEADINGS ON THE ENTIRE PAGE. Left-aligned headings
+   against an asymmetric grid are what separate designed from assembled.
+   AT LEAST TWO sections must bleed to the viewport edge. A page where every
+   element obeys one max-width is flat, whatever else is right about it.
 
-C. ONE FULL-BLEED MOMENT, AT LEAST. Something must escape the container: a
-   photograph running edge to edge, a dark band bleeding past the measure, a
-   heading larger than the column it sits in. A page where every element obeys
-   the same max-width has no depth.
+B. TYPE THAT COMMITS
+   Hero heading \`clamp(3rem, 7vw, 5.75rem)\`, \`letter-spacing: -0.035em\`,
+   \`line-height: 1.0\`. Section headings \`clamp(2rem, 3.6vw, 3.25rem)\`. If your
+   largest heading renders under 56px on a desktop you have built a brochure.
+   Body copy at 17-18px with \`line-height: 1.7\`. Never 15px everywhere.
 
-D. ASYMMETRY. Two-column sections are not 50/50 — use \`grid-template-columns:
-   1.15fr 1fr\` or \`5fr 7fr\`. Let an image overlap the section boundary or sit
-   lower than its text. Equal halves are the default and defaults read as
-   generated.
+C. SCALE CONTRAST
+   An 11px uppercase label with \`letter-spacing: .14em\` sitting directly above
+   a 76px heading. That jump is most of what reads as designed. Small type must
+   be genuinely small and confident, not timid.
 
-E. ONE SIGNATURE DETAIL, REPEATED. Pick a single move and use it throughout —
-   a hairline rule above every eyebrow, oversized tabular section numbers in the
-   margin, a consistent corner treatment, a thin accent bar that only ever
-   appears under a heading. Repetition of one idea is what makes a page feel
-   authored rather than assembled.
+D. LET THINGS OVERLAP
+   One image should cross a section boundary — pulled up with a negative margin
+   over the band above, or extending below its own section. One card or panel
+   should sit over the edge of an image. Flat pages have no overlaps; expensive
+   pages always have one or two.
 
-Vary the vertical rhythm too. A dense twelve-item grid and a single pull quote
-must not get the same section padding — the quote wants air, the grid does not.
+E. ONE SIGNATURE DETAIL, REPEATED
+   Choose a single move and use it everywhere: a hairline rule above every
+   eyebrow, oversized tabular section numbers in the left margin, one corner
+   squared while the rest are round, a thin accent bar under every heading.
+   Repeating one idea is what makes a page feel authored.
 
+F. VERTICAL RHYTHM VARIES
+   A twelve-item grid and a single pull quote must not share a padding value.
+   The quote wants air — \`clamp(7rem, 12vw, 11rem)\` — and the grid does not.
+   Uniform section padding is the clearest fingerprint of generated work.
+
+G. THE HERO IS NOT A BOX ON A COLOUR
+   Full-bleed photograph with a scrim, or a split where the image runs to the
+   viewport edge. The headline sits large and left over it. A form or a button
+   group floats on top — never a centred stack on a flat colour field.
+
+HARD RULES — STYLESHEET
 HARD RULES — STYLESHEET
 
 1. Return CSS ONLY. No markdown fences, no HTML, no commentary, no explanation.
@@ -494,7 +535,9 @@ invent an icon, do not put initials in a coloured circle.`;
 ${marks.logoUrl}
 ${marks.footerLogoUrl && marks.footerLogoUrl !== marks.logoUrl ? `Footer version (transparent, for a dark band): ${marks.footerLogoUrl}` : "Reuse the same file in the footer."}
 Give it a sensible height (28-40px in the header), width auto, and a real alt.
-It is a brand mark, not a photograph: no data-slot, no crop, no filter.`;
+It is a brand mark, not a photograph. Give it NO data-slot attribute — that
+attribute marks swappable photography, and a logo appearing in the operator's
+photo grid as something to replace is a defect. No crop, no filter, no rounding.`;
 }
 
 /** Everything both passes need to know about the business. */

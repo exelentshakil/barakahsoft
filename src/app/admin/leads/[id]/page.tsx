@@ -59,6 +59,18 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
       (typeof facts.brand_color_hex === "string" ? facts.brand_color_hex : ""),
   };
 
+  // What is actually available to build with, not how many URLs the scrape saw.
+  //
+  // The panel reported brief.photos.length — every image URL found on the site,
+  // most of them thumbnails too small to use. It said "24 usable" for a lead
+  // that had eight, which is exactly the wrong direction for a number whose job
+  // is to warn you the page will be thin.
+  const { count: photoCount } = await supabase
+    .from("media_assets")
+    .select("id", { count: "exact", head: true })
+    .eq("lead_id", id)
+    .eq("usable", true);
+
   const places = (scrapeResults?.places_raw ?? null) as {
     name?: string;
     formatted_address?: string;
@@ -104,7 +116,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           areas: brief.areas,
           rating: brief.rating,
           reviewCount: brief.reviewCount,
-          photos: brief.photos.length,
+          photos: photoCount ?? 0,
         }
       }
       costUsd={(await leadCost(lead.id)).costUsd}

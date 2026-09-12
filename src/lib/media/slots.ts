@@ -67,6 +67,10 @@ export async function listSlots(leadId: string, serviceNames: string[] = []): Pr
     const slot = attr(tag, "data-slot");
     const src = attr(tag, "src");
     if (!slot || !src || found.has(slot)) continue;
+    // A logo is a brand mark, not swappable photography. Models tag it anyway,
+    // and it then occupies two tiles in the operator's photo grid as something
+    // to replace — which is both wrong and the first thing the eye lands on.
+    if (/logo|wordmark|brand-?mark/i.test(slot)) continue;
     found.set(slot, src);
   }
   if (found.size === 0) return [];
