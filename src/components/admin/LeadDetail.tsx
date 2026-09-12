@@ -7,6 +7,7 @@ import { Loader2, RefreshCw, ExternalLink, Send, ArrowLeft, Search } from "lucid
 import { ManualPhotoUpload } from "@/components/admin/ManualPhotoUpload";
 import { SlotPanel } from "@/components/admin/SlotPanel";
 import { BriefPanel, type BriefFields } from "@/components/admin/BriefPanel";
+import { GoogleListing, type ListingState } from "@/components/admin/GoogleListing";
 
 // One lead, read top to bottom.
 //
@@ -30,6 +31,7 @@ interface BriefSummary {
 export function LeadDetail({
   lead,
   briefFields,
+  listing,
   hasPage,
   rationale,
   analysed,
@@ -46,6 +48,7 @@ export function LeadDetail({
     draft: Record<string, unknown> | null;
   };
   briefFields: BriefFields;
+  listing: ListingState;
   hasPage: boolean;
   rationale: string | null;
   analysed: boolean;
@@ -167,7 +170,7 @@ export function LeadDetail({
         </div>
       )}
 
-      <BriefPanel leadId={lead.id} initial={briefFields} />
+      <BriefPanel leadId={lead.id} initial={briefFields} listing={listing} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="rounded-xl border border-border bg-card p-4">

@@ -6,6 +6,7 @@ import { leadCost } from "@/lib/cost/lead-cost";
 import { buildSiteBrief } from "@/lib/build-site-brief";
 import { resolveLogoUrl, resolveFooterLogoUrl } from "@/lib/brand-assets";
 import type { BriefFields } from "@/components/admin/BriefPanel";
+import type { ListingState } from "@/components/admin/GoogleListing";
 import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 
 // One lead, top to bottom, no tabs.
@@ -57,6 +58,25 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
       (typeof facts.brand_color_hex === "string" ? facts.brand_color_hex : ""),
   };
 
+  const places = (scrapeResults?.places_raw ?? null) as {
+    name?: string;
+    formatted_address?: string;
+    rating?: number;
+    user_ratings_total?: number;
+    reviews?: unknown[];
+  } | null;
+
+  const listing: ListingState = {
+    placeId: (typeof facts.place_id === "string" ? facts.place_id : null) ?? lead.place_id ?? null,
+    name: places?.name ?? null,
+    address: places?.formatted_address ?? null,
+    rating: typeof facts.rating === "number" ? facts.rating : places?.rating ?? null,
+    reviewCount:
+      typeof facts.review_count === "number" ? facts.review_count : places?.user_ratings_total ?? null,
+    reviewsPulled: Array.isArray(facts.reviews) ? facts.reviews.length : 0,
+    pinned: facts.place_pinned === true,
+  };
+
   return (
     <LeadDetail
       lead={{
@@ -69,6 +89,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
         draft: (lead.outreach_draft ?? null) as Record<string, unknown> | null,
       }}
       briefFields={briefFields}
+      listing={listing}
       hasPage={!!artifact?.bespoke_homepage_html}
       rationale={artifact?.bespoke_rationale ?? null}
       analysed={!!scrapeResults}

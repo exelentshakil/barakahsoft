@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, Check, Palette, ImageIcon } from "lucide-react";
+import { GoogleListing, type ListingState } from "@/components/admin/GoogleListing";
 
 // What the page gets built from, and the only place a human can change it.
 //
@@ -27,7 +28,15 @@ export interface BriefFields {
   brandHex: string;
 }
 
-export function BriefPanel({ leadId, initial }: { leadId: string; initial: BriefFields }) {
+export function BriefPanel({
+  leadId,
+  initial,
+  listing,
+}: {
+  leadId: string;
+  initial: BriefFields;
+  listing: ListingState;
+}) {
   const [fields, setFields] = useState<BriefFields>(initial);
   const [state, setState] = useState<"idle" | "saving" | "saved">("idle");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -123,6 +132,10 @@ export function BriefPanel({ leadId, initial }: { leadId: string; initial: Brief
           placeholder="Pasted from their site, or written from what you know. Never invented."
           className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-sm"
         />
+      </div>
+
+      <div className="mt-4 border-t border-border pt-4">
+        <GoogleListing leadId={leadId} listing={listing} />
       </div>
 
       <div className="mt-4 border-t border-border pt-4">

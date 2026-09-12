@@ -93,3 +93,43 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     },
   });
 }
+
+/**
+ * Detaching a listing that is not this business.
+ *
+ * The verifier refuses what it cannot match, but it cannot catch everything —
+ * a plausible-looking listing for a different branch passes every string test
+ * there is. When an operator can see it is wrong, the fix has to be one click,
+ * because the alternative is a client's homepage carrying another company's
+ * rating, review count, address and five of their customers' words.
+ *
+ * Everything the listing supplied is removed together. Leaving the reviews
+ * behind while clearing the rating is how a page ends up quoting strangers
+ * under a number that no longer matches them.
+ */
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id: leadId } = await params;
+  if (!(await isAdminSession())) return NextResponse.json({ error: "Not authorised" }, { status: 401 });
+
+  const admin = createAdminClient();
+  const { data: scrape } = await admin
+    .from("scrape_results")
+    .select("facts")
+    .eq("lead_id", leadId)
+    .maybeSingle<{ facts: Record<string, unknown> }>();
+
+  if (scrape?.facts) {
+    const facts = { ...scrape.facts };
+    delete facts.rating;
+    delete facts.review_count;
+    delete facts.reviews;
+    delete facts.place_id;
+    delete facts.place_pinned;
+    delete facts.hours;
+    delete facts.business_status;
+    await admin.from("scrape_results").update({ facts, places_raw: null }).eq("lead_id", leadId);
+  }
+
+  await admin.from("leads").update({ place_id: null }).eq("id", leadId);
+  return NextResponse.json({ ok: true, detached: true });
+}
