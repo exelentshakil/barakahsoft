@@ -117,55 +117,61 @@ client:
 ${json}`;
 }
 
-const RULES = `HARD RULES
+// Two calls, not one — and not fourteen.
+//
+// The pipeline this replaced wrote its stylesheet in a separate pass, which is
+// why `artifacts.bespoke_css` exists and why those pages carried 124KB of CSS.
+// Collapsing everything into a single call produced pages with about 8KB: one
+// call given one budget spends it on structure and starves the styling, and a
+// starved stylesheet is exactly what "looks like AI made it" means.
+//
+// So the markup pass writes semantic HTML with real class names and no styling
+// at all, and the design pass is handed that exact markup and asked for nothing
+// but CSS. Each gets a full output budget for one job. Roughly $0.85 a page
+// against $0.61, which is the cheapest quality has ever been bought.
 
-1. Return ONE complete HTML document. It starts with <!doctype html> and ends
-   with </html>. All CSS goes in a single <style> in the <head>. Any JavaScript
-   goes in one <script> before </body>. Nothing is loaded from anywhere except
-   the Google Fonts link given to you and the photograph URLs given to you.
+const TRUTH_RULES = `WHAT IS TRUE
 
-2. Build on the CSS custom properties supplied below and do not introduce
-   colours outside them. Body copy is var(--ink) on var(--bg) or var(--invert)
-   on var(--ink) — never anything else, and never on a coloured background.
-   var(--brand) is for accents only: buttons, an eyebrow label, a rating mark,
-   a link, an underline, a small piece of a logotype. If you fill a large area
-   with var(--brand), you have made a mistake. Text sitting on var(--brand) is
-   always var(--on-brand).
-
-3. Every <img> carries a data-slot attribute with a short stable name —
-   data-slot="hero", data-slot="about", data-slot="service-0" — and the src is
-   copied EXACTLY from the supplied list. Every <img> also needs width, height,
-   loading="lazy" (except the first) and a real alt written from its caption.
-
-4. Invent nothing. No review you were not given, no rating, no price, no year
+1. Invent nothing. No review you were not given, no rating, no price, no year
    founded, no accreditation, no statistic, no team member, no address. If you
    want a fact the brief does not contain, write the section without it. A
    sentence that cannot be sourced from this brief does not go on the page.
 
-5. Write like the business, not like a brochure. No "unlock", "seamless",
+2. Write like the business, not like a brochure. No "unlock", "seamless",
    "elevate", "in today's fast-paced world", "we pride ourselves". Short
-   sentences. Say the specific true thing.
+   sentences. Say the specific true thing.`;
 
-6. Responsive down to 360px, with a real mobile navigation. Semantic landmarks,
-   one <h1>, meaningful heading order, focus states on every interactive
-   element, and prefers-reduced-motion respected.
+const MARKUP_RULES = `HARD RULES — MARKUP
 
-7. BUILD A FULL PAGE, NOT A LANDING SKELETON. Nine to twelve sections. A page
-   with a hero, three service cards, one testimonial and a footer is the page
-   every template generator produces and it will not win this business. The
-   owner has to scroll and keep finding things about their own company.
+1. Return ONE complete HTML document: <!doctype html> through </html>. It has a
+   <head> with charset, viewport, title, meta description, the Google Fonts
+   link given to you, and a single EMPTY <style></style> element. Put no CSS
+   anywhere. A stylesheet is written separately against this exact markup, so
+   every rule you write here would be thrown away.
 
-8. EVERY SECTION EARNS ITS PLACE. Each one needs a real heading, at least forty
-   words of real body copy, and a concrete detail taken from the brief — a
-   service by name, an area by name, a review in their customer's own words,
-   their hours, their phone, a number they actually published. A section that
-   could appear on a competitor's page has failed and should be replaced with
-   one that could not.
+2. STRUCTURE IS THE PRODUCT HERE. Ten to fourteen <section> elements, each with
+   a class naming what it is — class="hero", class="proof-band",
+   class="services", class="areas", class="faq". Those class names are the
+   contract the stylesheet is written against, so make them descriptive and
+   give every meaningful element one. Use real landmarks, one <h1>, sane
+   heading order.
 
-9. SPEND EVERY PHOTOGRAPH. If you have more photographs than obvious homes for
-   them, build somewhere for them to live: a gallery, a full-bleed band, a
-   two-column split, a before-and-after. An unused photograph is a wasted
-   section.
+3. EVERY SECTION EARNS ITS PLACE. Each needs a real heading, at least forty
+   words of real body copy, and a concrete detail from the brief — a service by
+   name, an area by name, a review in the customer's own words, their hours,
+   their phone, a number they published. A section that could sit on a
+   competitor's page has failed; replace it with one that could not.
+
+4. Every <img> carries data-slot with a short stable name — data-slot="hero",
+   data-slot="service-0" — an src copied EXACTLY from the supplied list, real
+   width and height, loading="lazy" except the first, and an alt written from
+   its caption. SPEND EVERY PHOTOGRAPH: if you have more than you have obvious
+   homes for, build a gallery, a full-bleed band or a split to hold them.
+
+5. Any JavaScript goes in one <script> before </body> — a mobile menu, an
+   accordion. Nothing else loads from anywhere.
+
+${TRUTH_RULES}
 
 OUTPUT SHAPE
 
@@ -173,10 +179,41 @@ First, a short plan, exactly this and nothing more:
 
 PLAN
 - <section name> — <what it proves> — <which photo, or none>
-(one line per section, NINE TO TWELVE sections)
+(one line per section, TEN TO FOURTEEN sections)
 
 Then, immediately, the document, beginning <!doctype html>. No markdown fences,
-no commentary before or after, no explanation of your choices.`;
+no commentary before or after.`;
+
+const DESIGN_RULES = `HARD RULES — STYLESHEET
+
+1. Return CSS ONLY. No markdown fences, no HTML, no commentary, no explanation.
+   Your entire answer is dropped verbatim between <style> and </style>.
+
+2. Build on the custom properties supplied and introduce no colour outside them.
+   Body copy is var(--ink) on var(--bg), or var(--invert) on var(--ink) — never
+   anything else, and never on a coloured background. var(--brand) is for
+   accents only: buttons, an eyebrow label, a rating mark, a link, an underline,
+   a sliver of a logotype. Filling a large area with var(--brand) is a mistake.
+   Text sitting on var(--brand) is always var(--on-brand).
+
+3. THIS IS WHERE THE PAGE IS WON. Style EVERY class in the markup above — do not
+   leave sections to default browser styling. A generous, deliberate stylesheet
+   is the entire difference between a page that reads as expensive and one that
+   reads as generated. Expect to write a lot of CSS; a thin stylesheet is the
+   failure mode.
+
+4. Give it real design: a type scale with clamp(), rhythm and vertical spacing
+   that varies by section, full-bleed bands alternating with contained ones,
+   asymmetric grids rather than three equal cards every time, considered
+   hover and focus states, hairline rules, generous line-height on body copy
+   and tight tracking on display type.
+
+5. Responsive to 360px with real breakpoints, a working mobile navigation, and
+   @media (prefers-reduced-motion: reduce) honoured. Motion is subtle or absent
+   — no carousels, no parallax, nothing that moves without being asked.
+
+6. Selectors must match the markup you were given, exactly. Do not invent class
+   names that are not in it.`;
 
 /**
  * What this page has to beat.
@@ -209,17 +246,42 @@ export interface CurrentSite {
   headline: string | null;
 }
 
-function buildPrompt(
+/**
+ * The client's own marks.
+ *
+ * Resolved by lib/brand-assets.ts and then, for a while, passed to nobody: the
+ * generator had no idea a logo existed, so every page it wrote set the business
+ * name in type and called it a logotype. A real mark in the header is most of
+ * the difference between "a redesign of my site" and "a template with my name
+ * in it".
+ */
+export interface BrandMarks {
+  logoUrl: string | null;
+  /** A transparent version for dark footers, when the operator supplied one. */
+  footerLogoUrl: string | null;
+}
+
+function brandBlock(marks: BrandMarks | null): string {
+  if (!marks?.logoUrl) {
+    return `NO LOGO IS AVAILABLE. Set the business name as a wordmark — real
+typography, tracked and weighted deliberately. Do not draw a fake logo, do not
+invent an icon, do not put initials in a coloured circle.`;
+  }
+  return `THEIR LOGO — use this exact URL in the header, never a text substitute:
+${marks.logoUrl}
+${marks.footerLogoUrl && marks.footerLogoUrl !== marks.logoUrl ? `Footer version (transparent, for a dark band): ${marks.footerLogoUrl}` : "Reuse the same file in the footer."}
+Give it a sensible height (28-40px in the header), width auto, and a real alt.
+It is a brand mark, not a photograph: no data-slot, no crop, no filter.`;
+}
+
+/** Everything both passes need to know about the business. */
+function contextBlock(
   brief: SiteBrief,
   photos: UsablePhoto[],
-  brandHex: string,
-  branding: unknown,
-  current: CurrentSite | null
+  current: CurrentSite | null,
+  marks: BrandMarks | null
 ): string {
-  const font = fontPairFor(brief.industry, brief.services);
-  const brand = resolveBrand(brandHex);
-
-  return `You are designing the homepage of ${brief.businessName}, a ${brief.industry} business in ${brief.city}.
+  return `You are building the homepage of ${brief.businessName}, a ${brief.industry} business in ${brief.city}.
 
 This page is a mockup shown to the owner to win a full website build. It has to
 look more expensive than what they have now and it has to be about THEM — their
@@ -252,24 +314,60 @@ ${brief.factsDigest ? `SCRAPED CONTENT (source of truth — everything on the pa
 ${brief.painInstructions.length ? `WHAT THE OWNER SAID IS WRONG WITH THEIR CURRENT SITE — fix each of these\n${brief.painInstructions.map((p) => `- ${p}`).join("\n")}\n` : ""}
 ${photoBlock(photos)}
 
-${currentSiteBlock(current)}
+${brandBlock(marks)}
+
+${currentSiteBlock(current)}`;
+}
+
+function markupPrompt(
+  brief: SiteBrief,
+  photos: UsablePhoto[],
+  current: CurrentSite | null,
+  marks: BrandMarks | null
+): string {
+  const font = fontPairFor(brief.industry, brief.services);
+  return `${contextBlock(brief, photos, current, marks)}
+
+TYPE — put exactly this in the <head>, nothing else:
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="${font.href}" rel="stylesheet">
+
+${MARKUP_RULES}`;
+}
+
+function designPrompt(
+  brief: SiteBrief,
+  brandHex: string,
+  branding: unknown,
+  markup: string
+): string {
+  const font = fontPairFor(brief.industry, brief.services);
+  const brand = resolveBrand(brandHex);
+
+  return `Write the stylesheet for the homepage of ${brief.businessName}, a ${brief.industry} business in ${brief.city}.
+
+This page is a mockup shown to the owner to win a full website build. The markup
+is already written and is below. Your stylesheet is the whole of the design, and
+it is the only thing standing between this and looking like every other page a
+model has ever produced.
 
 ${brandingBlock(branding)}
 
-TYPE — use exactly this pairing, nothing else:
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="${font.href}" rel="stylesheet">
+TYPE — already linked in the markup, use exactly these:
 Headings: "${font.display}". Body, buttons and labels: "${font.text}".
-Always give both a real fallback stack.
+Give both a real fallback stack.
 
-COLOUR — paste this into your stylesheet verbatim and build on it:
+COLOUR — open your stylesheet with this verbatim and build on it:
 ${themeCss(brand)}
 
 The palette is deliberately almost entirely neutral. ${brand} is this client's
-own colour and it appears in small, deliberate places. This is not a limitation
-to work around, it is the reason the page will look expensive.
+own colour and it belongs in small, deliberate places. That restraint is not a
+limitation to work around — it is the reason the page will look expensive.
 
-${RULES}`;
+THE MARKUP YOU ARE STYLING
+${markup}
+
+${DESIGN_RULES}`;
 }
 
 /** Everything from <!doctype html> onward, with the plan and any fencing removed. */
@@ -357,9 +455,31 @@ export interface GeneratedHomepage {
   plan: string;
   photosUsed: number;
   continued: boolean;
-  /** Surfaced to the operator: a thin page is visible as a number, not a vibe. */
+  /** Surfaced to the operator: a thin page is a number, not a vibe. */
   bytes: number;
+  cssBytes: number;
   sections: number;
+}
+
+/** Drop the model's CSS into the empty <style> the markup pass left for it. */
+function injectStylesheet(document: string, css: string): string {
+  const clean = css
+    .replace(/^\s*```(?:css)?\s*/i, "")
+    .replace(/```\s*$/i, "")
+    // A model told "CSS only" occasionally opens with a <style> tag anyway.
+    .replace(/^\s*<style[^>]*>/i, "")
+    .replace(/<\/style>\s*$/i, "")
+    .trim();
+
+  if (!clean) return document;
+  if (/<style[^>]*>\s*<\/style>/i.test(document)) {
+    return document.replace(/<style([^>]*)>\s*<\/style>/i, `<style$1>\n${clean}\n</style>`);
+  }
+  // No empty element to fill: append one rather than lose the stylesheet.
+  if (/<\/head>/i.test(document)) {
+    return document.replace(/<\/head>/i, `<style>\n${clean}\n</style>\n</head>`);
+  }
+  return `<style>\n${clean}\n</style>\n${document}`;
 }
 
 export async function generateHomepage(
@@ -367,22 +487,18 @@ export async function generateHomepage(
   photos: UsablePhoto[],
   brandHex: string,
   branding: unknown = null,
-  current: CurrentSite | null = null
+  current: CurrentSite | null = null,
+  marks: BrandMarks | null = null
 ): Promise<GeneratedHomepage> {
-  const prompt = buildPrompt(brief, photos, brandHex, branding, current);
-
-  const raw = await callDesignModel(prompt, {
+  // ---- pass 1: what the page says and how it is organised -----------------
+  const raw = await callDesignModel(markupPrompt(brief, photos, current, marks), {
     json: false,
-    // A twelve-section page plus its stylesheet runs past 40k output tokens.
-    // Asking for less is asking for a page that stops halfway down, and the
-    // truncation guard below exists precisely for the ones that still do.
-    maxTokens: 96000,
-    temperature: 0.75,
+    maxTokens: 48000,
+    temperature: 0.8,
     timeoutMs: 600_000,
-    label: "homepage",
+    label: "homepage-markup",
   });
-
-  if (!raw) throw new Error("Both providers returned nothing for the homepage.");
+  if (!raw) throw new Error("Both providers returned nothing for the markup.");
 
   const { plan, html } = extractDocument(raw);
   if (!html) throw new Error("The model returned no markup.");
@@ -390,11 +506,28 @@ export async function generateHomepage(
   let document = ensureDocument(html, brief, brandHex);
   let continued = false;
   if (!isComplete(document)) {
-    console.warn(`[homepage] truncated at ${document.length} chars — continuing`);
+    console.warn(`[homepage] markup truncated at ${document.length} chars — continuing`);
     document = await continueDocument(document, brief);
     continued = true;
     if (!isComplete(document)) document += "\n</body>\n</html>";
   }
+
+  // ---- pass 2: the design ---------------------------------------------------
+  //
+  // Its own call and its own budget, because that is the whole point. A failure
+  // here is not fatal: the markup already carries the font link and the theme
+  // custom properties, so an unstyled page is recoverable by rebuilding rather
+  // than a lost build.
+  const css = await callDesignModel(designPrompt(brief, brandHex, branding, document), {
+    json: false,
+    maxTokens: 64000,
+    temperature: 0.7,
+    timeoutMs: 600_000,
+    label: "homepage-design",
+  });
+
+  if (css) document = injectStylesheet(document, css);
+  else console.error("[homepage] the design pass returned nothing — page is unstyled");
 
   const used = photos.filter((p) => document.includes(p.url)).length;
   if (photos.length > 0 && used === 0) {
@@ -402,13 +535,11 @@ export async function generateHomepage(
   }
 
   const sections = (document.match(/<section\b/gi) ?? []).length;
+  const cssBytes = (document.match(/<style[^>]*>([\s\S]*?)<\/style>/i)?.[1] ?? "").length;
   console.log(
-    `[homepage] ${Math.round(document.length / 1024)}KB · ${sections} sections · ` +
-      `${used}/${photos.length} photos${continued ? " · continued" : ""}`
+    `[homepage] ${Math.round(document.length / 1024)}KB · ${Math.round(cssBytes / 1024)}KB css · ` +
+      `${sections} sections · ${used}/${photos.length} photos${continued ? " · continued" : ""}`
   );
 
-  return { html: document, plan, photosUsed: used, continued, bytes: document.length, sections };
+  return { html: document, plan, photosUsed: used, continued, bytes: document.length, cssBytes, sections };
 }
-
-/** The neutral scale, for anything that needs to match the generated page. */
-export { NEUTRALS };

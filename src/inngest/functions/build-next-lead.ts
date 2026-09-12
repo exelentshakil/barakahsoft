@@ -6,6 +6,7 @@ import { extractEntities } from "@/lib/extract-entities";
 import { ingestRealPhotos } from "@/lib/media/ingest";
 import { buildSiteBrief, realPhotos, briefReadiness } from "@/lib/build-site-brief";
 import { generateHomepage, usablePhotos, type CurrentSite } from "@/lib/generate-homepage";
+import { resolveLogoUrl, resolveFooterLogoUrl } from "@/lib/brand-assets";
 import { generateOutreachDraft } from "@/lib/outreach/personalise";
 import { resolveBusinessContact } from "@/lib/business-contact";
 import { updateArtifact } from "@/lib/artifact-write";
@@ -188,8 +189,16 @@ export const buildNextLead = inngest.createFunction(
           (facts.brand_color_hex as string | undefined) ??
           ((artifact?.inspiration_branding as { colors?: { primary?: string } } | null)?.colors?.primary ?? "");
 
+        const assets = (artifact?.extracted_assets ?? {}) as Record<string, unknown>;
         const photos = await usablePhotos(leadId);
-        const result = await generateHomepage(brief, photos, brandHex, artifact?.inspiration_branding ?? null, current);
+        const result = await generateHomepage(
+          brief,
+          photos,
+          brandHex,
+          artifact?.inspiration_branding ?? null,
+          current,
+          { logoUrl: resolveLogoUrl(assets, facts), footerLogoUrl: resolveFooterLogoUrl(assets, facts) }
+        );
 
         await updateArtifact(
           leadId,
@@ -204,7 +213,12 @@ export const buildNextLead = inngest.createFunction(
         );
         await recordVersion(leadId, HOME_KEY, result.html, "generated", "Built by the hourly run");
 
-        return { kb: Math.round(result.bytes / 1024), sections: result.sections, photos: result.photosUsed };
+        return {
+          kb: Math.round(result.bytes / 1024),
+          cssKb: Math.round(result.cssBytes / 1024),
+          sections: result.sections,
+          photos: result.photosUsed,
+        };
       });
 
       // ---- 5. the email -----------------------------------------------------

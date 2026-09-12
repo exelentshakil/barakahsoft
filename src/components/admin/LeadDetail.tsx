@@ -70,7 +70,13 @@ export function LeadDetail({
         return;
       }
       if (typeof data.bytes === "number") {
-        setNote(`${Math.round(data.bytes / 1024)}KB · ${data.sections} sections · ${data.photosUsed}/${data.photosSupplied} photos used`);
+        // The numbers that tell you whether the page is thin before you look.
+        // A stylesheet under about 25KB is the shape of a generated-looking
+        // page, whatever the screenshot says.
+        setNote(
+          `${Math.round(data.bytes / 1024)}KB · ${Math.round((data.cssBytes ?? 0) / 1024)}KB css · ` +
+            `${data.sections} sections · ${data.photosUsed}/${data.photosSupplied} photos`
+        );
       }
       router.refresh();
     } catch {

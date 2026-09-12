@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminSession } from "@/lib/is-admin-session";
 import { buildSiteBrief, briefReadiness, type BriefOverrides } from "@/lib/build-site-brief";
-import { generateHomepage, usablePhotos, type CurrentSite } from "@/lib/generate-homepage";
+import { generateHomepage, usablePhotos, type CurrentSite, type BrandMarks } from "@/lib/generate-homepage";
+import { resolveLogoUrl, resolveFooterLogoUrl } from "@/lib/brand-assets";
 import { updateArtifact } from "@/lib/artifact-write";
 import { recordVersion, HOME_KEY } from "@/lib/page-versions";
 import type { Lead, ScrapeResults } from "@/types/database";
@@ -118,13 +119,21 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       (facts.pages as { title?: string }[] | undefined)?.[0]?.title?.trim() || null,
   };
 
+  // Their own mark, which the generator was never given — so every page it
+  // wrote set the business name in type and called that a logotype.
+  const marks: BrandMarks = {
+    logoUrl: resolveLogoUrl(storedAssets, facts),
+    footerLogoUrl: resolveFooterLogoUrl(storedAssets, facts),
+  };
+
   try {
     const result = await generateHomepage(
       brief,
       photos,
       brandHex ?? "",
       priorArtifact?.inspiration_branding ?? null,
-      current
+      current,
+      marks
     );
 
     await updateArtifact(
@@ -153,6 +162,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       photosUsed: result.photosUsed,
       continued: result.continued,
       bytes: result.bytes,
+      cssBytes: result.cssBytes,
       sections: result.sections,
       plan: result.plan,
     });
