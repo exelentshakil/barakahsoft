@@ -53,6 +53,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
     areas: (brief?.areas ?? []).join("\n"),
     logoUrl: resolveLogoUrl(assets, facts) ?? "",
     footerLogoUrl: resolveFooterLogoUrl(assets, facts) ?? "",
+    heroImage: brief?.heroImage ?? "",
     brandHex:
       (typeof overrides.brandHex === "string" ? overrides.brandHex : "") ||
       (typeof facts.brand_color_hex === "string" ? facts.brand_color_hex : ""),

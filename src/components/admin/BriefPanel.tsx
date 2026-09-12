@@ -25,6 +25,7 @@ export interface BriefFields {
   areas: string;
   logoUrl: string;
   footerLogoUrl: string;
+  heroImage: string;
   brandHex: string;
 }
 
@@ -58,6 +59,7 @@ export function BriefPanel({
           aboutContent: f.aboutContent.trim(),
           logoUrl: f.logoUrl.trim(),
           footerLogoUrl: f.footerLogoUrl.trim(),
+          heroImage: f.heroImage.trim(),
           brandHex: f.brandHex.trim(),
           services: f.services.split("\n").map((s) => s.trim()).filter(Boolean),
           areas: f.areas.split("\n").map((s) => s.trim()).filter(Boolean),
@@ -175,6 +177,14 @@ export function BriefPanel({
             <div>
               <Label>Footer logo — transparent, for dark bands</Label>
               <ImageField value={fields.footerLogoUrl} onChange={(v) => set("footerLogoUrl", v)} />
+            </div>
+            <div>
+              <Label>Hero image — the photograph the page opens on</Label>
+              <ImageField value={fields.heroImage} onChange={(v) => set("heroImage", v)} />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Leave empty and the strongest photo is chosen automatically. Set it when you know which
+                one should lead.
+              </p>
             </div>
           </div>
         </div>

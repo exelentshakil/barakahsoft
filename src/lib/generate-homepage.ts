@@ -77,7 +77,7 @@ export async function usablePhotos(leadId: string): Promise<UsablePhoto[]> {
     }));
 }
 
-function photoBlock(photos: UsablePhoto[]): string {
+function photoBlock(photos: UsablePhoto[], heroUrl: string | null): string {
   const real = photos.filter((p) => !p.stock);
   const stock = photos.filter((p) => p.stock);
 
@@ -96,8 +96,11 @@ the neutral surfaces. Do not link stock libraries, placeholder services, or emit
 an <img> with an invented src.`;
   }
 
+  const chosen = heroUrl && photos.find((p) => p.url === heroUrl);
+
   return `THE CLIENT'S OWN PHOTOGRAPHS — ${real.length}. Use EVERY one of them.
 ${real.length ? list(real) : "(none — this business has no usable photographs of its own)"}
+${chosen ? `\nTHE OPERATOR CHOSE THE HERO PHOTOGRAPH: ${chosen.url}\nIt leads the page. Do not use it anywhere else.` : ""}
 
 ${
     stock.length
@@ -139,6 +142,12 @@ The phone is the conversion. Lead with a large primary button that dials
 ${phone} (a real tel: link), and put a short form beside or beneath it as the
 second option for people who cannot talk right now.
 
+THE HERO STILL CARRIES A PHOTOGRAPH. A form floating in a coloured box with no
+image is the single cheapest-looking hero there is. Use the strongest photograph
+full-bleed behind the whole hero with a dark scrim over it, or split the hero
+with the photograph filling one side edge to edge. The form sits on top of that,
+never instead of it.
+
 The form is three fields and nothing more: name, phone, and one line describing
 the problem. Label the button for the outcome, not the mechanism — "Get a free
 estimate", never "Submit". It posts nowhere; give it an onsubmit that shows a
@@ -149,7 +158,9 @@ form that appears to hang is worse than one that plainly responds.`;
   return `THE HERO'S JOB — this is a considered purchase
 
 Nobody rings a stranger about this, so the form is the conversion and it belongs
-in the hero, visible without scrolling. Four fields at most: name, phone or
+in the hero, visible without scrolling — but the hero still carries a
+photograph, full-bleed behind it with a scrim, or filling one half of a split. A
+form alone in a coloured box is the cheapest-looking hero there is. Four fields at most: name, phone or
 email, and what they are asking about. Label the button for the outcome —
 "Book a consultation", "Request a callback" — never "Submit".
 ${phone ? `Offer ${phone} as the secondary option beneath it, as a real tel: link.` : "There is no phone number, so the form is the only route — do not print one."}
@@ -258,9 +269,16 @@ const MARKUP_RULES = `HARD RULES — MARKUP
    its neighbour none; the stylesheet will equalise their heights and the short
    one will be visibly padded.
 
-9. REVIEWS ARE A SLIDER. A horizontal track of review cards with the reviewer's
-   real name, their star rating, and their words verbatim, plus previous/next
-   buttons that work. Quote only the reviews you were given.
+9. REVIEWS ARE A SLIDER WITH VISIBLE ARROWS. A horizontal track of review cards
+   carrying the reviewer's real name, their star rating and their words
+   verbatim. Above or beside the track, two round arrow buttons — a left and a
+   right — each with an inline SVG chevron, a real aria-label, and a click
+   handler that scrolls the track by one card
+   (\`track.scrollBy({left: card.offsetWidth + gap, behavior: "smooth"})\`).
+   Arrows are not optional: a track that only scrolls by dragging reads as
+   broken on a desktop, and most people will never discover it. Disable the
+   arrow at each end rather than hiding it. Quote only the reviews you were
+   given.
 
 10. Every <img> carries data-slot with a short stable name — data-slot="hero",
    data-slot="service-0" — an src copied EXACTLY from the supplied list, real
@@ -313,7 +331,44 @@ PLAN
 Then, immediately, the document, beginning <!doctype html>. No markdown fences,
 no commentary before or after.`;
 
-const DESIGN_RULES = `HARD RULES — STYLESHEET
+const DESIGN_RULES = `WHAT SEPARATES THIS FROM A TEMPLATE
+
+Before the rules: the last version of this page was correct and forgettable.
+Every section the same width, every heading the same size, every row three equal
+cards, uniform padding top to bottom. Nothing was wrong with it and nobody would
+pay for it. An expensive agency's work is recognisable in five seconds, and
+these are the five things doing that work:
+
+A. TYPE THAT COMMITS. The display face is the loudest thing on the page. Hero
+   heading at \`clamp(2.75rem, 6.5vw, 5.5rem)\` with tight tracking
+   (\`letter-spacing: -0.03em\`) and \`line-height: 1.02\`. Section headings at
+   \`clamp(1.9rem, 3.4vw, 3rem)\`. If your largest heading is under 44px on a
+   desktop you have built a brochure, not a homepage.
+
+B. SCALE CONTRAST. Put an 11px uppercase tracked label directly above a 72px
+   heading. That jump is most of what reads as designed. Small type must be
+   genuinely small and confident — never a timid 15px everywhere.
+
+C. ONE FULL-BLEED MOMENT, AT LEAST. Something must escape the container: a
+   photograph running edge to edge, a dark band bleeding past the measure, a
+   heading larger than the column it sits in. A page where every element obeys
+   the same max-width has no depth.
+
+D. ASYMMETRY. Two-column sections are not 50/50 — use \`grid-template-columns:
+   1.15fr 1fr\` or \`5fr 7fr\`. Let an image overlap the section boundary or sit
+   lower than its text. Equal halves are the default and defaults read as
+   generated.
+
+E. ONE SIGNATURE DETAIL, REPEATED. Pick a single move and use it throughout —
+   a hairline rule above every eyebrow, oversized tabular section numbers in the
+   margin, a consistent corner treatment, a thin accent bar that only ever
+   appears under a heading. Repetition of one idea is what makes a page feel
+   authored rather than assembled.
+
+Vary the vertical rhythm too. A dense twelve-item grid and a single pull quote
+must not get the same section padding — the quote wants air, the grid does not.
+
+HARD RULES — STYLESHEET
 
 1. Return CSS ONLY. No markdown fences, no HTML, no commentary, no explanation.
    Your entire answer is dropped verbatim between <style> and </style>.
@@ -325,10 +380,13 @@ const DESIGN_RULES = `HARD RULES — STYLESHEET
    of a logotype. Filling a large area with var(--brand) is a mistake. Text
    sitting on var(--brand) is always var(--on-brand).
 
-3. THIS IS WHERE THE PAGE IS WON. Style EVERY class in the markup — leave nothing
-   to default browser styling. A generous, deliberate stylesheet is the whole
-   difference between a page that reads as expensive and one that reads as
-   generated. Expect to write a lot of CSS; a thin stylesheet is the failure.
+3. THIS IS WHERE THE PAGE IS WON. Style EVERY class in the markup — leave
+   nothing to default browser styling. Measured against real builds: a
+   stylesheet under 16KB produces the forgettable page described above; the ones
+   that read as expensive run past 30KB. That is not padding, it is the
+   difference between styling the twelve obvious elements and styling all of
+   them — hover states, focus rings, the mobile menu, the slider arrows, the
+   table, the FAQ markers, every breakpoint. Write the long version.
 
 4. NO DEAD SPACE. This is the most common way these pages fail. Specifically:
    - Two-column sections use \`align-items: center\` so the shorter column is
@@ -472,7 +530,7 @@ ${brief.entities.length ? `SPECIFIC THINGS THIS BUSINESS HAS (each read from the
 ${brief.aboutContent ? `IN THEIR OWN WORDS\n${brief.aboutContent.slice(0, 1400)}\n` : ""}
 ${brief.factsDigest ? `SCRAPED CONTENT (source of truth — everything on the page must trace back to here or to the fields above)\n${brief.factsDigest.slice(0, 5000)}\n` : ""}
 ${brief.painInstructions.length ? `WHAT THE OWNER SAID IS WRONG WITH THEIR CURRENT SITE — fix each of these\n${brief.painInstructions.map((p) => `- ${p}`).join("\n")}\n` : ""}
-${photoBlock(photos)}
+${photoBlock(photos, brief.heroImage)}
 
 ${brandBlock(marks)}
 
@@ -523,8 +581,15 @@ COLOUR — open your stylesheet with this verbatim and build on it:
 ${themeCss(brand)}
 
 The palette is deliberately almost entirely neutral. ${brand} is this client's
-own colour and it belongs in small, deliberate places. That restraint is not a
-limitation to work around — it is the reason the page will look expensive.
+own colour and it belongs in small, deliberate places.
+
+But restraint is not the same as timidity, and this is where these pages keep
+failing. A page of white sections alternating with pale grey, modest headings,
+neat rows of equal cards and a blue button every few screens is CORRECT and
+completely forgettable. It reads as a template with the right words in it. The
+restraint is in the PALETTE — it is not permission for the layout and the
+typography to be safe as well. Spend nothing on colour and everything on scale,
+weight and composition.
 
 THE MARKUP YOU ARE STYLING
 ${markup}

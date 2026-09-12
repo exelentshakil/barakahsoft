@@ -4,7 +4,8 @@ import { isAdminSession } from "@/lib/is-admin-session";
 import { buildSiteBrief, briefReadiness, type BriefOverrides } from "@/lib/build-site-brief";
 import { generateHomepage, usablePhotos, type CurrentSite, type BrandMarks } from "@/lib/generate-homepage";
 import { resolveLogoUrl, resolveFooterLogoUrl } from "@/lib/brand-assets";
-import { topUpWithStock } from "@/lib/media/ingest";
+import { ingestRealPhotos, topUpWithStock } from "@/lib/media/ingest";
+import { realPhotos } from "@/lib/build-site-brief";
 import { updateArtifact } from "@/lib/artifact-write";
 import { recordVersion, HOME_KEY } from "@/lib/page-versions";
 import type { Lead, ScrapeResults } from "@/types/database";
@@ -96,12 +97,22 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     .update({ extracted_assets: { ...storedAssets, brief_overrides: overrides } })
     .eq("lead_id", leadId);
 
-  // Curated at scrape time, not here — if the operator deleted a photo it is
-  // already gone. The one exception is a business with almost no photography:
-  // a twelve-section page built from three images leaves dead space, so stock
-  // tops it up for atmosphere only, clearly flagged, and never as proof.
+  const facts = (scrapeResults.facts ?? {}) as Record<string, unknown>;
+
+  // Pick up any photograph the scrape found that is not yet stored.
+  //
+  // Ingest belongs to scrape time, and this route deliberately does not go
+  // hunting for new imagery. But a lead scraped before the all-or-nothing
+  // ingest bug was fixed holds six of its twenty-four photographs, and pressing
+  // Rebuild — the obvious thing to do about a thin page — did nothing to
+  // change that. This is idempotent and costs nothing when there is nothing
+  // missing, so the button now actually repairs what it looks like it repairs.
+  await ingestRealPhotos(leadId, realPhotos(facts), brief.industry);
+
   let photos = await usablePhotos(leadId);
   if (photos.length < 8) {
+    // A twelve-section page built from three photographs leaves dead space, so
+    // stock tops it up — for atmosphere only, flagged, and never as proof.
     await topUpWithStock(leadId, brief.industry, brief.city, photos.length);
     photos = await usablePhotos(leadId);
   }
@@ -113,7 +124,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   // The site this page has to beat. A redesign generated without ever seeing
   // what it replaces is aiming at nothing.
-  const facts = (scrapeResults.facts ?? {}) as Record<string, unknown>;
   const current: CurrentSite = {
     url: lead.source_url,
     pagespeedMobile:
