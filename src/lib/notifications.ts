@@ -25,6 +25,8 @@ export async function sendEmail({
   to,
   subject,
   html,
+  text,
+  headers,
   replyTo,
   from,
   fromName,
@@ -32,6 +34,22 @@ export async function sendEmail({
   to: string;
   subject: string;
   html: string;
+  /**
+   * The plain-text part.
+   *
+   * A cold first contact sent as HTML only is scored as bulk marketing before
+   * anyone reads a word of it. Supplying both parts makes the message a normal
+   * multipart email — which is what a person typing in their mail client
+   * actually produces.
+   */
+  text?: string;
+  /**
+   * Extra SMTP headers. The one that matters is List-Unsubscribe, paired with
+   * List-Unsubscribe-Post for RFC 8058 one-click: Gmail and Yahoo render their
+   * own unsubscribe control when both are present, and someone who can leave
+   * in one click does not reach for the spam button instead.
+   */
+  headers?: Record<string, string>;
   replyTo?: string;
   /**
    * The sending identity, when it is not the platform's.
@@ -57,6 +75,8 @@ export async function sendEmail({
           to: [{ email: to }],
           subject,
           htmlContent: html,
+          ...(text ? { textContent: text } : {}),
+          ...(headers && Object.keys(headers).length ? { headers } : {}),
           replyTo: replyTo ? { email: replyTo } : undefined,
         }),
       });
@@ -76,6 +96,8 @@ export async function sendEmail({
         to,
         subject,
         html,
+        ...(text ? { text } : {}),
+        ...(headers && Object.keys(headers).length ? { headers } : {}),
         replyTo,
       });
       if (error) {

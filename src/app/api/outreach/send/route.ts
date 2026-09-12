@@ -5,6 +5,7 @@ import { sendEmail } from "@/lib/notifications";
 import { stageFor, isDue, signOff, type OutreachContext, type SequenceTrack } from "@/lib/outreach/sequence";
 import { tenantBySlug } from "@/tenants";
 import { signalsFor, type OutreachDraft } from "@/lib/outreach/personalise";
+import { unsubscribeUrl } from "@/lib/outreach/unsubscribe-token";
 import type { Lead, ScrapeResults } from "@/types/database";
 
 // Send one touch of the cold sequence to a selected set of prospects.
@@ -22,6 +23,40 @@ import type { Lead, ScrapeResults } from "@/types/database";
 const MAX_BATCH = 50;
 
 export const maxDuration = 300;
+
+/**
+ * How many cold emails may leave this domain today.
+ *
+ * A domain that has never sent volume gets filtered if it suddenly does, so the
+ * ceiling climbs rather than starting at its target. Enforced here rather than
+ * in the review screen, because a cap the operator has to remember is not a cap
+ * — and the whole reason this exists is that a burnt sending domain takes
+ * months to recover and costs the business its real inbox.
+ *
+ * Week 1 · 8/day → week 2 · 18/day → week 3 onwards · 30/day.
+ */
+const RAMP_START = process.env.OUTREACH_RAMP_START ?? "";
+
+function dailyCap(now = new Date()): number {
+  const started = RAMP_START ? Date.parse(RAMP_START) : NaN;
+  if (!Number.isFinite(started)) return 8; // No start date set: assume day one.
+  const days = Math.floor((now.getTime() - started) / 86_400_000);
+  if (days < 7) return 8;
+  if (days < 14) return 18;
+  return 30;
+}
+
+/** Cold sends already made today, counted from the leads themselves. */
+async function sentToday(admin: ReturnType<typeof createAdminClient>, tenantSlug: string): Promise<number> {
+  const midnight = new Date();
+  midnight.setHours(0, 0, 0, 0);
+  const { count } = await admin
+    .from("leads")
+    .select("id", { count: "exact", head: true })
+    .eq("tenant_slug", tenantSlug)
+    .gte("outreach_last_sent_at", midnight.toISOString());
+  return count ?? 0;
+}
 
 /**
  * The sequence is written as plain text on purpose — a cold first contact
@@ -102,8 +137,24 @@ export async function POST(req: Request) {
   const sent: string[] = [];
   const skipped: { id: string; business: string; reason: string }[] = [];
 
+  // The day's budget, counted before the loop and spent inside it. The review
+  // screen chunks a large selection into several requests, so the ceiling has
+  // to be re-read per request rather than assumed to be the whole allowance.
+  const cap = dailyCap();
+  const already = await sentToday(admin, (leads ?? [])[0]?.tenant_slug ?? "__none__");
+  let budget = Math.max(0, cap - already);
+
   for (const lead of leads ?? []) {
     const name = lead.business_name ?? lead.source_url;
+
+    if (budget <= 0) {
+      skipped.push({
+        id: lead.id,
+        business: name,
+        reason: `today's limit of ${cap} is used up — the rest keep their place in the queue`,
+      });
+      continue;
+    }
 
     if (lead.outreach_stopped_at) {
       skipped.push({ id: lead.id, business: name, reason: "sequence stopped for this prospect" });
@@ -153,6 +204,11 @@ export async function POST(req: Request) {
     // sendEmail reports failure by returning false rather than throwing, so
     // both paths have to be handled or a bounced send would still advance
     // the stage and the prospect would never receive that touch.
+    // One click, and it is over. The header pair is what makes Gmail and Yahoo
+    // render their own unsubscribe control instead of leaving the spam button
+    // as the only obvious exit.
+    const optOut = unsubscribeUrl(tenant.portalBaseUrl, lead.id);
+
     let delivered = false;
     try {
       delivered = await sendEmail({
@@ -161,6 +217,11 @@ export async function POST(req: Request) {
         fromName: tenant.brand.senderName,
         subject,
         html: asHtml(text),
+        text,
+        headers: {
+          "List-Unsubscribe": `<${optOut}>`,
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        },
       });
     } catch (err) {
       skipped.push({ id: lead.id, business: name, reason: err instanceof Error ? err.message : "send failed" });
@@ -185,7 +246,16 @@ export async function POST(req: Request) {
       .eq("id", lead.id);
 
     sent.push(lead.id);
+    budget -= 1;
   }
 
-  return NextResponse.json({ track, stage: stage.stage, label: stage.label, sent: sent.length, skipped });
+  return NextResponse.json({
+    track,
+    stage: stage.stage,
+    label: stage.label,
+    sent: sent.length,
+    skipped,
+    cap,
+    remainingToday: Math.max(0, budget),
+  });
 }

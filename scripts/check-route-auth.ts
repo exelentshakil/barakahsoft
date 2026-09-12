@@ -38,12 +38,11 @@ const PUBLIC_ROUTES: Record<string, string> = {
   "image-proxy/route.ts": "public asset proxy, SSRF-hardened in fetch-site.ts",
   "logout/route.ts": "clears a session; nothing to protect",
   "auth/callback/route.ts": "the magic-link exchange itself",
+  "unsubscribe/route.ts":
+    "opting out must never require a login — the token in the link is the authorisation, and it only ever sets outreach_stopped_at",
   "s/[leadSlug]/assistant/route.ts": "public delivered client site",
   "s/[leadSlug]/events/route.ts": "public delivered client site",
   "s/[leadSlug]/quote-request/route.ts": "public delivered client site",
-  "s/[leadSlug]/purchase-enquiry/route.ts": "public proposal enquiry form",
-  "stripe/checkout/route.ts": "client pays from their own proposal link",
-  "stripe/webhook/route.ts": "verified by Stripe signature",
 };
 
 function routeFiles(dir: string): string[] {

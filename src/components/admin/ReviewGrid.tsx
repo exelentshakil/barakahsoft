@@ -52,6 +52,8 @@ export function ReviewGrid({ cards }: { cards: ReviewCard[] }) {
     // Chunked because the sender caps a request at fifty, and because a daily
     // send is worth watching move rather than staring at one long spinner.
     let sent = 0;
+    let capped = false;
+    let remaining: number | null = null;
     const skipped: string[] = [];
     try {
       for (let i = 0; i < ids.length; i += 50) {
@@ -63,9 +65,23 @@ export function ReviewGrid({ cards }: { cards: ReviewCard[] }) {
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error ?? "The send failed.");
         sent += data.sent ?? 0;
-        for (const s of data.skipped ?? []) skipped.push(typeof s === "string" ? s : s.reason ?? "skipped");
+        if (typeof data.remainingToday === "number") remaining = data.remainingToday;
+        for (const s of data.skipped ?? []) {
+          const reason = typeof s === "string" ? s : s.reason ?? "skipped";
+          if (reason.includes("limit")) capped = true;
+          skipped.push(reason);
+        }
+        // The day's budget is spent; the rest keep their place for tomorrow and
+        // there is no point issuing the remaining chunks.
+        if (remaining === 0) { capped = true; break; }
       }
-      setResult(`Sent ${sent}.${skipped.length ? ` ${skipped.length} skipped.` : ""}`);
+      setResult(
+        capped
+          ? `Sent ${sent}. That is today's limit — the rest stay here and can go tomorrow. ` +
+            `The cap protects the sending domain, so it is deliberate.`
+          : `Sent ${sent}.${skipped.length ? ` ${skipped.length} skipped.` : ""}` +
+            `${remaining != null ? ` ${remaining} more can go today.` : ""}`
+      );
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "The send failed.");
