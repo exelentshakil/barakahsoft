@@ -22,21 +22,44 @@ import type { Lead, ScrapeResults } from "@/types/database";
 // pressed twice. An hour is also a long time to get a single lead wrong in, so
 // a failure here costs one lead and the next hour fixes itself.
 //
-// Roughly $0.61 a lead on Gemini 3.1 Pro, so a full month of this is about $550
+// Roughly $0.85 a lead on Gemini 3.1 Pro, so a full month of this is about $770
 // — which is the reason it is paced rather than greedy.
+//
+// TWO TRIGGERS, ONE FUNCTION. The cron takes the oldest queued lead; the
+// Rebuild button names one. They were briefly separate, with Rebuild doing the
+// work inline in the request — which meant closing the tab, navigating to
+// another lead, or refreshing could abandon a build halfway, after the model
+// calls had already been paid for and before anything was written. Work worth
+// eighty-five cents and three minutes does not belong in a request the user can
+// walk away from.
 export const buildNextLead = inngest.createFunction(
   { id: "build-next-lead" },
-  { cron: "0 * * * *" },
-  async ({ step }) => {
+  [{ cron: "0 * * * *" }, { event: "lead/build.requested" }],
+  async ({ event, step }) => {
     const admin = createAdminClient();
+    const asked = (event?.data as { lead_id?: string } | undefined)?.lead_id ?? null;
 
     // Claim before working.
     //
     // Flipping status to 'scraping' first is what stops the next hour's run —
-    // or a manual Build now — picking up the same lead. The claim is a single
-    // conditional update rather than a read-then-write, so two runners racing
-    // cannot both win it.
+    // or a second press of Rebuild — picking up the same lead. The claim is a
+    // single conditional update rather than a read-then-write, so two runners
+    // racing cannot both win it.
+    //
+    // A named lead is claimed whatever state it is in, because the operator
+    // pressing Rebuild on a finished page is deliberately asking for it again.
     const claimed = await step.run("claim-a-lead", async () => {
+      if (asked) {
+        const { data } = await admin
+          .from("leads")
+          .select("id, source_url, business_name, industry")
+          .eq("id", asked)
+          .maybeSingle<Pick<Lead, "id" | "source_url" | "business_name" | "industry">>();
+        if (!data?.source_url) return null;
+        await admin.from("leads").update({ status: "scraping" }).eq("id", asked);
+        return data;
+      }
+
       const { data: candidates } = await admin
         .from("leads")
         .select("id, source_url, business_name, industry")
@@ -215,8 +238,24 @@ export const buildNextLead = inngest.createFunction(
             colour_source: brandHex ? "client" : "house",
             generation_phase: 1,
             last_edited_at: new Date().toISOString(),
+            // Stored rather than returned, because the build no longer runs
+            // inside a request there is anything to return to. Merged into the
+            // existing assets so the operator's brief overrides, which live in
+            // the same column, are not wiped by a rebuild.
+            extracted_assets: {
+              ...assets,
+              build_stats: {
+                bytes: result.bytes,
+                cssBytes: result.cssBytes,
+                sections: result.sections,
+                photosUsed: result.photosUsed,
+                photosSupplied: photos.length,
+                continued: result.continued,
+                at: new Date().toISOString(),
+              },
+            },
           },
-          "hourly-build"
+          "build"
         );
         await recordVersion(leadId, HOME_KEY, result.html, "generated", "Built by the hourly run");
 

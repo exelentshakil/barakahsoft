@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, RefreshCw, ExternalLink, Send, ArrowLeft, Search } from "lucide-react";
@@ -58,12 +58,38 @@ export function LeadDetail({
   const router = useRouter();
   const [busy, setBusy] = useState<null | "analyse" | "build" | "send">(null);
   const [error, setError] = useState<string | null>(null);
-  const [note, setNote] = useState<string | null>(null);
+  const [building, setBuilding] = useState(false);
+  const [stats, setStats] = useState<Record<string, number | boolean | string> | null>(null);
+
+  // The build runs as a job now, so this screen reads its progress rather than
+  // holding it. That is the whole point: closing the tab or opening another
+  // lead no longer abandons three minutes of paid work.
+  const poll = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/leads/${lead.id}/generate`, { cache: "no-store" });
+      if (!res.ok) return;
+      const data = await res.json();
+      setStats(data.stats ?? null);
+      setBuilding((wasBuilding) => {
+        // A build that has just finished is a build whose page is now on screen
+        // only after a re-render.
+        if (wasBuilding && !data.building) router.refresh();
+        return Boolean(data.building);
+      });
+    } catch {
+      // A missed poll is not worth a banner; the next one is two seconds away.
+    }
+  }, [lead.id, router]);
+
+  useEffect(() => {
+    void poll();
+    const id = setInterval(poll, building ? 4000 : 20000);
+    return () => clearInterval(id);
+  }, [poll, building]);
 
   async function post(path: string, body: unknown, kind: "analyse" | "build" | "send") {
     setBusy(kind);
     setError(null);
-    setNote(null);
     try {
       const res = await fetch(path, {
         method: "POST",
@@ -75,15 +101,7 @@ export function LeadDetail({
         setError(data.error ?? "That did not work.");
         return;
       }
-      if (typeof data.bytes === "number") {
-        // The numbers that tell you whether the page is thin before you look.
-        // A stylesheet under about 25KB is the shape of a generated-looking
-        // page, whatever the screenshot says.
-        setNote(
-          `${Math.round(data.bytes / 1024)}KB · ${Math.round((data.cssBytes ?? 0) / 1024)}KB css · ` +
-            `${data.sections} sections · ${data.photosUsed}/${data.photosSupplied} photos`
-        );
-      }
+      if (data.started) setBuilding(true);
       router.refresh();
     } catch {
       setError("Could not reach the server.");
@@ -93,6 +111,8 @@ export function LeadDetail({
   }
 
   const draft = lead.draft as { subject?: string; body?: string; hook?: string } | null;
+  const cssKb = stats ? Math.round(Number(stats.cssBytes ?? 0) / 1024) : 0;
+  const thin = Boolean(stats) && cssKb < 25;
 
   return (
     <div className="space-y-5">
@@ -125,12 +145,16 @@ export function LeadDetail({
           )}
           <button
             type="button"
-            disabled={busy !== null || !analysed}
+            disabled={busy !== null || building || !analysed}
             onClick={() => void post(`/api/leads/${lead.id}/generate`, {}, "build")}
             className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-xs font-semibold text-background hover:opacity-90 disabled:opacity-40"
           >
-            {busy === "build" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
-            {busy === "build" ? "Building — 60 to 180 seconds…" : hasPage ? "Rebuild" : "Build the page"}
+            {busy === "build" || building ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="h-3.5 w-3.5" />
+            )}
+            {building ? "Building…" : hasPage ? "Rebuild" : "Build the page"}
           </button>
         </div>
       </div>
@@ -138,8 +162,27 @@ export function LeadDetail({
       {error && (
         <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">{error}</p>
       )}
-      {note && (
-        <p className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">{note}</p>
+      {building && (
+        <p className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs text-indigo-900">
+          Building — three to four minutes. This runs on the server, so you can close this tab, open
+          another lead, or refresh. It will be here when it finishes.
+        </p>
+      )}
+
+      {stats && !building && (
+        <p
+          className={`rounded-lg border px-3 py-2 text-xs ${
+            thin
+              ? "border-amber-300 bg-amber-50 text-amber-900"
+              : "border-emerald-300 bg-emerald-50 text-emerald-800"
+          }`}
+        >
+          {Math.round(Number(stats.bytes ?? 0) / 1024)}KB · <strong>{cssKb}KB css</strong> ·{" "}
+          {String(stats.sections ?? 0)} sections · {String(stats.photosUsed ?? 0)}/
+          {String(stats.photosSupplied ?? 0)} photos
+          {stats.continued ? " · continued" : ""}
+          {thin && " — the stylesheet is thin, so the page will read as generated. Rebuild."}
+        </p>
       )}
 
       {hasPage ? (

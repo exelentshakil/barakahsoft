@@ -2,25 +2,23 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminSession } from "@/lib/is-admin-session";
 import { buildSiteBrief, briefReadiness, type BriefOverrides } from "@/lib/build-site-brief";
-import { generateHomepage, usablePhotos, type CurrentSite, type BrandMarks } from "@/lib/generate-homepage";
-import { resolveLogoUrl, resolveFooterLogoUrl } from "@/lib/brand-assets";
-import { ingestRealPhotos, topUpWithStock } from "@/lib/media/ingest";
-import { realPhotos } from "@/lib/build-site-brief";
-import { updateArtifact } from "@/lib/artifact-write";
-import { recordVersion, HOME_KEY } from "@/lib/page-versions";
+import { inngest } from "@/inngest/client";
 import type { Lead, ScrapeResults } from "@/types/database";
 
-// The Studio's generate button, and the entire build.
+// The Rebuild button: validate, then hand the work to the same job the hourly
+// cron runs.
 //
-// This used to validate and hand off to a fourteen-step Inngest job. The job is
-// gone: one model call does not need a queue, a progress table, a polling loop
-// or a local dev worker, and every one of those was a place a build could
-// silently stall with nothing to read but logs.
+// This did the build inline for a while, which was fine when it was one model
+// call and stopped being fine at two. A build is now three or four minutes of
+// scraping, ingesting and generating, and holding that inside a request meant
+// closing the tab, opening another lead or hitting refresh could abandon it
+// halfway — after the model calls had been paid for and before anything was
+// written. Work worth eighty-five cents does not belong somewhere a refresh can
+// kill it.
 //
-// 300 seconds is the platform default and comfortably covers a call that takes
-// 60-180. If a page ever genuinely needs longer than that, the honest fix is to
-// make the page smaller, not to hide the wait behind a queue.
-export const maxDuration = 300;
+// The build's shape is written onto the artifact instead of returned, and the
+// GET below reads it back, so the operator still sees exactly what came out.
+export const maxDuration = 60;
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: leadId } = await params;
@@ -97,95 +95,38 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     .update({ extracted_assets: { ...storedAssets, brief_overrides: overrides } })
     .eq("lead_id", leadId);
 
-  const facts = (scrapeResults.facts ?? {}) as Record<string, unknown>;
+  // Everything past here belongs to the job.
+  await inngest.send({ name: "lead/build.requested", data: { lead_id: leadId } });
 
-  // Pick up any photograph the scrape found that is not yet stored.
-  //
-  // Ingest belongs to scrape time, and this route deliberately does not go
-  // hunting for new imagery. But a lead scraped before the all-or-nothing
-  // ingest bug was fixed holds six of its twenty-four photographs, and pressing
-  // Rebuild — the obvious thing to do about a thin page — did nothing to
-  // change that. This is idempotent and costs nothing when there is nothing
-  // missing, so the button now actually repairs what it looks like it repairs.
-  await ingestRealPhotos(leadId, realPhotos(facts), brief.industry);
+  return NextResponse.json({
+    ok: true,
+    leadId,
+    slug: lead.slug,
+    started: true,
+    warnings,
+  });
+}
 
-  let photos = await usablePhotos(leadId);
-  if (photos.length < 8) {
-    // A twelve-section page built from three photographs leaves dead space, so
-    // stock tops it up — for atmosphere only, flagged, and never as proof.
-    await topUpWithStock(leadId, brief.industry, brief.city, photos.length);
-    photos = await usablePhotos(leadId);
-  }
+/** Where a build has got to, and what the last one produced. */
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id: leadId } = await params;
+  if (!(await isAdminSession())) return NextResponse.json({ error: "Not authorised" }, { status: 401 });
 
-  const brandHex =
-    overrides.brandHex?.trim() ||
-    (scrapeResults.facts as Record<string, unknown> | null)?.brand_color_hex as string | undefined ||
-    ((priorArtifact?.inspiration_branding as { colors?: { primary?: string } } | null)?.colors?.primary ?? null);
+  const admin = createAdminClient();
+  const [{ data: lead }, { data: artifact }] = await Promise.all([
+    admin.from("leads").select("status").eq("id", leadId).maybeSingle<{ status: string }>(),
+    admin
+      .from("artifacts")
+      .select("extracted_assets, last_edited_at")
+      .eq("lead_id", leadId)
+      .maybeSingle<{ extracted_assets: Record<string, unknown> | null; last_edited_at: string | null }>(),
+  ]);
 
-  // The site this page has to beat. A redesign generated without ever seeing
-  // what it replaces is aiming at nothing.
-  const current: CurrentSite = {
-    url: lead.source_url,
-    pagespeedMobile:
-      typeof scrapeResults.pagespeed_mobile?.score === "number"
-        ? (scrapeResults.pagespeed_mobile.score as number)
-        : null,
-    // The <title> of their real homepage — usually the tagline they chose for
-    // themselves, which is the clearest statement of what they think they sell.
-    headline:
-      (facts.pages as { title?: string }[] | undefined)?.[0]?.title?.trim() || null,
-  };
+  const stats = (artifact?.extracted_assets?.build_stats ?? null) as Record<string, unknown> | null;
 
-  // Their own mark, which the generator was never given — so every page it
-  // wrote set the business name in type and called that a logotype.
-  const marks: BrandMarks = {
-    logoUrl: resolveLogoUrl(storedAssets, facts),
-    footerLogoUrl: resolveFooterLogoUrl(storedAssets, facts),
-  };
-
-  try {
-    const result = await generateHomepage(
-      brief,
-      photos,
-      brandHex ?? "",
-      priorArtifact?.inspiration_branding ?? null,
-      current,
-      marks
-    );
-
-    await updateArtifact(
-      leadId,
-      {
-        bespoke_homepage_html: result.html,
-        bespoke_rationale: result.plan,
-        colour_source: brandHex ? "client" : "house",
-        generation_phase: 1,
-        last_edited_at: new Date().toISOString(),
-      },
-      "homepage"
-    );
-
-    // History, so an image swap or a rebuild stays undoable.
-    await recordVersion(leadId, HOME_KEY, result.html, "generated", "Homepage generated");
-
-    await admin.from("leads").update({ status: "qa_pending" }).eq("id", leadId);
-
-    return NextResponse.json({
-      ok: true,
-      leadId,
-      slug: lead.slug,
-      warnings,
-      photosSupplied: photos.length,
-      photosUsed: result.photosUsed,
-      continued: result.continued,
-      bytes: result.bytes,
-      cssBytes: result.cssBytes,
-      sections: result.sections,
-      plan: result.plan,
-    });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error(`[generate] ${leadId}: ${message}`);
-    return NextResponse.json({ error: message }, { status: 502 });
-  }
+  return NextResponse.json({
+    status: lead?.status ?? null,
+    building: ["scraping", "enriching", "rendering"].includes(lead?.status ?? ""),
+    stats,
+  });
 }

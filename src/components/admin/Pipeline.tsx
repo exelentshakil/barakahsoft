@@ -68,7 +68,11 @@ export function Pipeline({ rows }: { rows: PipelineRow[] }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) setError(data.error ?? "That build did not start.");
-      else router.refresh();
+      else {
+        // Queued, not finished — the row moves to Building and the job carries
+        // on whether or not this tab stays open.
+        router.refresh();
+      }
     } catch {
       setError("Could not reach the server.");
     } finally {
@@ -186,7 +190,7 @@ export function Pipeline({ rows }: { rows: PipelineRow[] }) {
                       >
                         {busy === row.id ? (
                           <>
-                            <Loader2 className="h-3 w-3 animate-spin" /> Building…
+                            <Loader2 className="h-3 w-3 animate-spin" /> Queued…
                           </>
                         ) : (
                           <>
