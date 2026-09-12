@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PERSONAS, type PersonaSlug } from "@/lib/personas";
-import { trackPixelEvent } from "@/lib/meta-pixel";
 import { isValidUrl } from "@/lib/validate-url";
 
 const BRAND_BUTTON = "w-full rounded-lg bg-[#ffd12d] text-[#111] hover:bg-[#f5c400]";
@@ -47,7 +46,6 @@ export function IntakeFlow({ ctaLabel }: { ctaLabel: string }) {
         }
         throw new Error(data.error || "Something went wrong — please try again.");
       }
-      trackPixelEvent("Lead", eventId, { content_name: "managed_lead_engine_qualification" });
       setModalOpen(false);
       setSuccess(true);
     } catch (submissionError) {

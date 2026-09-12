@@ -7,7 +7,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { trackPixelEvent } from "@/lib/meta-pixel";
 import { isValidUrl } from "@/lib/validate-url";
 import { LEAD_PROBLEMS } from "@/lib/lead-problems";
 
@@ -79,7 +78,6 @@ export function RedesignIntakeFlow({
         }
         throw new Error(data.error || "Something went wrong — please try again.");
       }
-      trackPixelEvent("Lead", eventId, { content_name: "free_homepage_redesign" });
       setOpen(false);
       setSuccess(true);
     } catch (submissionError) {

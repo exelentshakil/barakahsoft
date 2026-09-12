@@ -40,10 +40,8 @@ import { RedesignIntakeFlow } from "@/components/landing/RedesignIntakeFlow";
 import { Footer } from "@/components/landing/Footer";
 import { FAQAccordion } from "@/components/landing/FAQAccordion";
 import { Nav } from "@/components/landing/Nav";
-import { LandingTeamShowcase } from "@/components/landing/LandingTeamShowcase";
 import { LandingIndustries } from "@/components/landing/LandingIndustries";
 import { Marquee } from "@/components/landing/primitives/Marquee";
-import { ShowcaseComparisons } from "@/components/landing/ShowcaseComparisons";
 import { CrispChat } from "@/components/CrispChat";
 
 // The standard the Design Quality Bar section commits to, kept next to the
@@ -364,7 +362,6 @@ export function LeadEngineLanding() {
         </div>
 
         {/* Approved client rebuilds, as draggable before/after comparisons. */}
-        <ShowcaseComparisons />
 
         {/* Row 1: Scrolling Left */}
         <div className="relative space-y-6">
@@ -546,7 +543,6 @@ export function LeadEngineLanding() {
       <LandingIndustries />
 
       {/* 8. TEAM SHOWCASE */}
-      <LandingTeamShowcase />
 
       {/* 9. FAQ ACCORDION */}
       <FAQAccordion />

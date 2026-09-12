@@ -4,7 +4,6 @@ import { getTenant } from "@/lib/tenant";
 // milliseconds cost nothing that matters.
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { fireMetaCapiEvent } from "@/lib/meta-pixel-server";
 
 export async function POST(req: Request, { params }: { params: Promise<{ leadSlug: string }> }) {
   const { leadSlug } = await params;
@@ -24,21 +23,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ leadSlu
       .update({ last_viewed_at: new Date().toISOString() })
       .eq("id", lead.id);
 
-    // Server half of the pair. Carries the same event id as the browser's
-    // ViewContent so Meta counts one event, and lands even where an ad
-    // blocker ate the client-side pixel — which on a cold prospect's laptop
-    // is a large share of them.
-    if (typeof body.event_id === "string") {
-      await fireMetaCapiEvent({
-        eventName: "ViewContent",
-        eventId: body.event_id,
-        // Falls back to the tenant's own portal, not the platform's: Meta
-        // matches events on source URL, so attributing a partner's pageview to
-        // a domain their pixel has never seen makes it unmatchable.
-        sourceUrl:
-          req.headers.get("referer") || `${(await getTenant()).portalBaseUrl}/s/${leadSlug}`,
-      }).catch(() => {});
-    }
   }
 
   const city = req.headers.get("x-vercel-ip-city") || req.headers.get("x-real-ip-city");

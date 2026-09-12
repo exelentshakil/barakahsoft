@@ -13,7 +13,6 @@ import { ReportCompetitors } from "@/components/portal/sections/ReportCompetitor
 import { buildReportModules } from "@/lib/report-modules";
 import { ProposalPricingSection } from "@/components/portal/sections/ProposalPricingSection";
 import { ProposalDecisionBox } from "@/components/portal/sections/ProposalDecisionBox";
-import { ProposalCheckoutModal } from "@/components/portal/sections/ProposalCheckoutModal";
 import { ProposalFooter } from "@/components/portal/sections/ProposalFooter";
 import { ProposalAbout } from "@/components/portal/sections/ProposalAbout";
 import { ProposalWebsitePreview } from "@/components/portal/sections/ProposalWebsitePreview";
@@ -22,7 +21,6 @@ import { SocialLaunchMockup } from "@/components/mockup/SocialLaunchMockup";
 import { extractMockupData } from "@/lib/mockup-data";
 import { buildOfferOptions, type OfferOption } from "@/lib/audit/lead-value";
 import { CrispChat } from "@/components/CrispChat";
-import { trackPixelEvent } from "@/lib/meta-pixel";
 
 interface LiveClientProposalProps {
   lead: Lead;
@@ -60,10 +58,6 @@ export function LiveClientProposal({
     // having. ViewContent names the lead, and the same id goes to the server
     // so the Pixel and CAPI copies dedupe into one event.
     const eventId = crypto.randomUUID();
-    trackPixelEvent("ViewContent", eventId, {
-      content_name: lead.slug,
-      content_category: "proposal_view",
-    });
 
     fetch(`/api/s/${lead.slug}/events`, {
       method: "POST",
@@ -280,29 +274,6 @@ export function LiveClientProposal({
           primaryActionLabel={tenant.commerce.primaryActionLabel ?? "Start my selected plan"}
           hasChat={Boolean(tenant.brand.analytics?.crispId)}
         />
-
-        {showCheckout && (
-          <ProposalCheckoutModal
-            businessName={businessName}
-            setupPrice={setupPrice}
-            monthlyPrice={monthlyPrice}
-            priceFormattedLabel={priceFormattedLabel}
-            scopeItems={scopeItems}
-            checkoutLoading={checkoutLoading}
-            commerceMode={tenant.commerce.mode}
-            legalEntity={tenant.brand.legalEntity}
-            primaryActionLabel={tenant.commerce.primaryActionLabel ?? "Start my selected plan"}
-            onEnquiry={async (input) => {
-              await fetch(`/api/s/${lead.slug}/purchase-enquiry`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(input),
-              });
-            }}
-            onClose={() => setShowCheckout(false)}
-            onCheckout={handleCheckout}
-          />
-        )}
       </main>
 
       <ProposalFooter tenant={tenant} />

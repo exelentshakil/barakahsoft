@@ -1,77 +1,68 @@
-import { tenantBySlug } from "@/tenants";
 import { requireOperator } from "@/lib/tenant-scope";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { AdminLeadWorkspace } from "@/components/admin/AdminLeadWorkspace";
+import { LeadDetail } from "@/components/admin/LeadDetail";
 import { leadCost } from "@/lib/cost/lead-cost";
+import { buildSiteBrief } from "@/lib/build-site-brief";
 import type { Lead, Artifact, ScrapeResults } from "@/types/database";
 
-// Live operator data, and the workspace reads its active tab from the query
-// string — both make a prerendered copy wrong. Marked dynamic explicitly so
-// that stays true regardless of what the page happens to import.
+// One lead, top to bottom, no tabs.
+//
+// The mockup, the brief it was built from, the photographs, a rebuild button
+// and the email that will go out. What stood here was the same eight-tab
+// workspace as /admin, which meant the two screens were indistinguishable and
+// neither one told you what to do next.
 export const dynamic = "force-dynamic";
+
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  // Both queries are scoped to the operator's own brand.
-  //
-  // The sidebar list was not, so opening any lead on a partner's dashboard
-  // listed every lead on the platform beside it — the exact cross-tenant leak
-  // the rest of this work exists to prevent, in the most visible place there
-  // is. operatorLead does the same for the lead itself and 404s rather than
-  // 403s, because a 403 confirms the row exists.
+  // 404 rather than 403 on a cross-tenant id: a 403 confirms the row exists.
   const ctx = await requireOperator();
   if (!ctx) notFound();
 
   const supabase = createAdminClient();
-
-  const [{ data: lead }, { data: otherLeads }, { data: artifact }, { data: scrapeResults }] = await Promise.all([
+  const [{ data: lead }, { data: artifact }, { data: scrapeResults }] = await Promise.all([
     supabase.from("leads").select("*").eq("id", id).eq("tenant_slug", ctx.tenantSlug).maybeSingle<Lead>(),
-    supabase
-      .from("leads")
-      .select("*")
-      .eq("tenant_slug", ctx.tenantSlug)
-      .order("created_at", { ascending: false })
-      .limit(20)
-      .returns<Lead[]>(),
-    // maybeSingle, not single: a lead that has not been analysed yet has
-    // neither row, and .single() throws — which turned every brand-new lead
-    // into a 500 on its own detail page.
+    // maybeSingle, not single: a lead that has not been built yet has neither
+    // row, and .single() turned every new lead into a 500 on its own page.
     supabase.from("artifacts").select("*").eq("lead_id", id).maybeSingle<Artifact>(),
     supabase.from("scrape_results").select("*").eq("lead_id", id).maybeSingle<ScrapeResults>(),
   ]);
 
   if (!lead) notFound();
 
-  const all = otherLeads ?? [];
-  const sortedLeads = [
-    ...all.filter((l) => l.source !== "outreach" && l.source !== "manual"),
-    ...all.filter((l) => l.source === "outreach" || l.source === "manual"),
-  ];
-
-  const cost = await leadCost(lead.id);
-
-  const { data: viewsData } = await supabase.from("lead_inquiries")
-    .select("id, created_at, metadata")
-    .eq("lead_id", id)
-    .eq("channel", "proposal_view")
-    .order("created_at", { ascending: false });
-
-  const proposalViews = viewsData?.map(v => ({
-    id: v.id,
-    created_at: v.created_at,
-    location: (v.metadata as any)?.location as string | undefined,
-  })) || [];
+  const overrides = ((artifact?.extracted_assets as Record<string, unknown> | null)?.brief_overrides ?? {}) as Record<string, unknown>;
+  const brief = scrapeResults ? buildSiteBrief(lead, scrapeResults, overrides) : null;
 
   return (
-    <AdminLeadWorkspace
-      tenant={tenantBySlug(lead.tenant_slug)}
-      lead={lead}
-      artifact={artifact ?? null}
-      scrapeResults={scrapeResults ?? null}
-      otherLeads={sortedLeads}
-      cost={cost}
-      proposalViews={proposalViews}
+    <LeadDetail
+      lead={{
+        id: lead.id,
+        name: lead.business_name,
+        sourceUrl: lead.source_url,
+        email: lead.email,
+        industry: lead.industry,
+        status: lead.status,
+        draft: (lead.outreach_draft ?? null) as Record<string, unknown> | null,
+      }}
+      hasPage={!!artifact?.bespoke_homepage_html}
+      rationale={artifact?.bespoke_rationale ?? null}
+      analysed={!!scrapeResults}
+      brief={
+        brief && {
+          businessName: brief.businessName,
+          city: brief.city,
+          industry: brief.industry,
+          phone: brief.phone,
+          services: brief.services,
+          areas: brief.areas,
+          rating: brief.rating,
+          reviewCount: brief.reviewCount,
+          photos: brief.photos.length,
+        }
+      }
+      costUsd={(await leadCost(lead.id)).costUsd}
     />
   );
 }

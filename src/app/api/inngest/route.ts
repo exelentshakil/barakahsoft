@@ -1,13 +1,10 @@
 import { serve } from "inngest/next";
 import { inngest } from "@/inngest/client";
+import { buildNextLead } from "@/inngest/functions/build-next-lead";
 import { scrapeRun } from "@/inngest/functions/scrape-run";
-import { deliverSend } from "@/inngest/functions/deliver-send";
-import { goLive } from "@/inngest/functions/go-live";
-import { syncAdSpend } from "@/inngest/functions/sync-ad-spend";
 import { revalidateHotlinks } from "@/inngest/functions/revalidate-hotlinks";
 import { rescrapeLead } from "@/inngest/functions/rescrape";
 import { measureVisibility } from "@/inngest/functions/measure-visibility";
-import { socialMotionGenerate } from "@/inngest/functions/social-motion";
 
 // Each Inngest step executes as its own invocation of THIS route, and 300
 // seconds is the ceiling the platform enforces on one invocation.
@@ -24,5 +21,5 @@ export const maxDuration = 300;
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [scrapeRun, socialMotionGenerate, rescrapeLead, measureVisibility, deliverSend, goLive, revalidateHotlinks, syncAdSpend],
+  functions: [buildNextLead, scrapeRun, rescrapeLead, measureVisibility, revalidateHotlinks],
 });

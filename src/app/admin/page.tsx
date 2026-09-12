@@ -1,72 +1,61 @@
-import { tenantBySlug } from "@/tenants";
 import { requireOperator } from "@/lib/tenant-scope";
-import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { EmptyState } from "@/components/ui/empty-state";
-import { AddUrlDialog } from "@/components/admin/AddUrlDialog";
-import { AdminLeadWorkspace } from "@/components/admin/AdminLeadWorkspace";
-import { leadCost } from "@/lib/cost/lead-cost";
-import type { Lead, Artifact, ScrapeResults } from "@/types/database";
+import { Pipeline, type PipelineRow } from "@/components/admin/Pipeline";
+import type { Lead } from "@/types/database";
 
-// Live operator data, and the workspace reads its active tab from the query
-// string — both make a prerendered copy wrong. Marked dynamic explicitly so
-// that stays true regardless of what the page happens to import.
+// The pipeline.
+//
+// One table, one job: see where every lead is, and push one along if you do not
+// want to wait for the hour. What stood here was an eight-tab workspace that
+// loaded the first lead in the list and hid everything else behind a query
+// string — a screen that could only ever be about one lead, on a page whose
+// name is plural.
 export const dynamic = "force-dynamic";
-export default async function AdminLeadsPage() {
-  // Scoped to the signed-in operator's brand. Middleware has already refused
-  // anyone without an accounts row for this host's tenant, so a null context
-  // here means the session lapsed between the two.
+
+export default async function AdminPipelinePage() {
   const ctx = await requireOperator();
   const supabase = createAdminClient();
+  const tenant = ctx?.tenantSlug ?? "__none__";
+
   const { data: leads } = await supabase
     .from("leads")
-    .select("*")
-    .eq("tenant_slug", ctx?.tenantSlug ?? "__none__")
+    .select("id, business_name, source_url, email, status, created_at, delivered_at, outreach_stage")
+    .eq("tenant_slug", tenant)
     .order("created_at", { ascending: false })
-    .returns<Lead[]>();
+    .limit(500)
+    .returns<Pick<Lead, "id" | "business_name" | "source_url" | "email" | "status" | "created_at" | "delivered_at" | "outreach_stage">[]>();
 
-  const all = leads ?? [];
-  // Show inbound submissions at the top; manual outreach at the bottom
-  const rows = [
-    ...all.filter((l) => l.source !== "outreach" && l.source !== "manual"),
-    ...all.filter((l) => l.source === "outreach" || l.source === "manual"),
-  ];
+  const rows = leads ?? [];
 
-  if (rows.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-semibold">Leads Workspace</h1>
-            <p className="mt-1 text-sm text-muted-foreground">No leads submitted yet. Submit a URL on the landing page or add one manually below.</p>
-          </div>
-          <AddUrlDialog />
-        </div>
-        <EmptyState
-          title="No leads yet"
-          body="Leads land here the moment someone submits the intake form."
-        />
-      </div>
-    );
+  // Which leads actually have a page. Selected as ids rather than joined, so a
+  // list of five hundred never pulls five hundred generated documents.
+  const { data: built } = await supabase
+    .from("artifacts")
+    .select("lead_id")
+    .not("bespoke_homepage_html", "is", null)
+    .returns<{ lead_id: string }[]>();
+
+  const hasPage = new Set((built ?? []).map((b) => b.lead_id));
+
+  const pipeline: PipelineRow[] = rows.map((lead) => ({
+    id: lead.id,
+    name: lead.business_name || hostOf(lead.source_url),
+    host: hostOf(lead.source_url),
+    sourceUrl: lead.source_url,
+    email: lead.email,
+    status: lead.status,
+    built: hasPage.has(lead.id),
+    sentAt: lead.delivered_at,
+    createdAt: lead.created_at,
+  }));
+
+  return <Pipeline rows={pipeline} />;
+}
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
   }
-
-  // Load active first lead's artifacts & scrape facts for the linear studio
-  const activeLead = rows[0];
-  const [{ data: artifact }, { data: scrapeResults }] = await Promise.all([
-    supabase.from("artifacts").select("*").eq("lead_id", activeLead.id).maybeSingle<Artifact>(),
-    supabase.from("scrape_results").select("*").eq("lead_id", activeLead.id).maybeSingle<ScrapeResults>(),
-  ]);
-
-  const cost = await leadCost(activeLead.id);
-
-  return (
-    <AdminLeadWorkspace
-      tenant={tenantBySlug(activeLead.tenant_slug)}
-      lead={activeLead}
-      artifact={artifact ?? null}
-      scrapeResults={scrapeResults ?? null}
-      otherLeads={rows}
-      cost={cost}
-    />
-  );
 }

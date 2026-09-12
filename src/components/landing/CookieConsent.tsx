@@ -50,15 +50,6 @@ export function CookieConsent() {
   function applyConsent(prefs: CookiePreferences) {
     if (typeof window === "undefined") return;
 
-    // Meta Pixel Consent Mode
-    if (window.fbq) {
-      if (prefs.marketing) {
-        window.fbq("consent", "grant");
-      } else {
-        window.fbq("consent", "revoke");
-      }
-    }
-
     // Microsoft Clarity Consent
     if (window.clarity) {
       if (prefs.analytics) {

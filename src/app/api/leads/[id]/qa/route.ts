@@ -2,11 +2,12 @@ import { operatorAccountId } from "@/lib/is-admin-session";
 import { assertLeadInTenant } from "@/lib/tenant-scope";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { inngest } from "@/inngest/client";
 
 // The permanent human QA gate (PRD §7 stage 5) — one-tap approve/reject
-// from QAReviewPanel. Approve flips the lead to qa_approved and fires
-// "lead/qa.approved", which deliver-send.ts picks up to send the preview
+// Approve flips the lead to qa_approved, which is all it does now — the
+// close-plan scheduler that used to listen on "lead/qa.approved" is gone, and
+// sending is an explicit operator action from the review queue rather than a
+// side effect of approving
 // link and schedule the closing sequence.
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: leadId } = await params;
@@ -36,7 +37,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   if (body.decision === "approved") {
     await admin.from("leads").update({ status: "qa_approved" }).eq("id", leadId);
-    await inngest.send({ name: "lead/qa.approved", data: { lead_id: leadId } });
   }
 
   return NextResponse.json({ decision: body.decision });

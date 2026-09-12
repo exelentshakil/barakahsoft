@@ -3,7 +3,6 @@ import { getTenant } from "@/lib/tenant";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendInstantLeadAlert, sendInstantLeadConfirmationEmail } from "@/lib/notifications";
-import { fireMetaCapiEvent } from "@/lib/meta-pixel-server";
 import { isPersonaSlug } from "@/lib/personas";
 import { isLeadProblem } from "@/lib/lead-problems";
 import { inngest } from "@/inngest/client";
@@ -107,13 +106,6 @@ export async function POST(req: Request) {
       // it triggers is something a spam submission can spend: Firecrawl
       // credits, Places calls, PageSpeed runs. Analysis begins when an
       // operator looks at the lead and chooses to start it.
-      fireMetaCapiEvent({
-        eventName: "Lead",
-        eventId: body.event_id ?? crypto.randomUUID(),
-        email: body.email,
-        phone: typeof body.phone === "string" ? body.phone : undefined,
-        sourceUrl: body.source_url,
-      }),
     ]);
     results.forEach((r) => {
       if (r.status === "rejected") console.error("[intake] side effect failed", r.reason);

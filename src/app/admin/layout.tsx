@@ -2,7 +2,8 @@ import { getTenant } from "@/lib/tenant";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Globe2, Zap, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
+import { AdminNav } from "@/components/admin/AdminNav";
 import { CrispChat } from "@/components/CrispChat";
 import { NewLeadWatcher } from "@/components/admin/NewLeadWatcher";
 import { AddUrlDialog } from "@/components/admin/AddUrlDialog";
@@ -33,19 +34,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={tenant.brand.logoUrl} alt={tenant.brand.name} className="h-7 w-auto" />
             </Link>
-            <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#f0f3ff] px-3 py-1 text-xs font-bold text-[#533afd] shrink-0">
-              <Zap className="h-3 w-3" /> Lead Fulfillment Engine
-            </span>
+            <AdminNav />
           </div>
 
           <div className="flex items-center gap-4">
             <AddUrlDialog />
-            <Link
-              href="/admin"
-              className="text-xs font-semibold text-[#0d1738] hover:text-[#533afd] transition"
-            >
-              Leads Workspace
-            </Link>
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#533afd] text-xs font-bold text-white shadow-sm">
               {initials}
             </div>
@@ -61,10 +54,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </header>
 
-      {/* Full width: the workspace is a three-column tool, and a 1600px
-          cap left the middle column narrow enough to wrap on a laptop while
-          the sides sat in whitespace. */}
-      <main className="w-full px-6 py-6">{children}</main>
+      {/* Two screens now, both of them lists — a reading width beats the
+          full-bleed the old three-column workspace needed. */}
+      <main className="mx-auto w-full max-w-[1500px] px-6 py-6">{children}</main>
       <CrispChat websiteId={tenant.brand.analytics?.crispId} />
     </div>
   );
