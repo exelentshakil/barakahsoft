@@ -296,6 +296,12 @@ const MARKUP_RULES = `HARD RULES — MARKUP
    its neighbour none; the stylesheet will equalise their heights and the short
    one will be visibly padded.
 
+   COUNT THEM SO THEY FILL THEIR ROWS. Six cards read as three across and two
+   down, or two across and three down — never four across leaving two holes. If
+   the brief gives you seven services, show six and fold the seventh into
+   another section, or write an eighth that is genuinely true. A grid with a gap
+   in it is the first thing anyone notices.
+
 9. REVIEWS ARE A SLIDER WITH VISIBLE ARROWS. A horizontal track of review cards
    carrying the reviewer's real name, their star rating and their words
    verbatim. Above or beside the track, two round arrow buttons — a left and a
@@ -420,7 +426,50 @@ G. THE HERO IS NOT A BOX ON A COLOUR
    viewport edge. The headline sits large and left over it. A form or a button
    group floats on top — never a centred stack on a flat colour field.
 
-HARD RULES — STYLESHEET
+GEOMETRY — WHERE THESE PAGES ACTUALLY BREAK
+
+Every one of these has shipped on a real build. They are mechanical, so there is
+no excuse for any of them.
+
+H. THE COLUMN COUNT MUST DIVIDE THE ITEM COUNT.
+   Six service cards in a four-column grid leaves two empty cells, and those
+   cells are visible. Six items take THREE columns or two. Eight take four or
+   two. Five do not go in a rigid grid at all — give the first item a wider
+   span, or use a different treatment. Count the items, then choose the
+   columns. Never the other way round.
+   Do not reach for \`repeat(auto-fit, minmax(...))\` on a countable set: it
+   produces exactly this orphan at the wrong viewport width.
+   The BACKGROUND AND BORDER BELONG TO THE CARD, never to the grid. An empty
+   cell must be invisible even when one exists.
+
+I. NO SECTION EXISTS ONLY TO HOLD A BUTTON.
+   A small image and a button floating in a tall white box is not a
+   call-to-action, it is a hole. A mid-page CTA is a full-bleed band — dark or
+   accent-toned — carrying a heading, a line of copy and the button, filled
+   properly. If you do not have enough to fill a band, attach the button to the
+   end of the section above it instead.
+
+J. A SECTION IS FILLED BY ITS CONTENT OR IT IS NARROWER.
+   A heading and a list of service areas occupying the left half of a
+   twelve-hundred-pixel container, with nothing at all on the right, is the
+   commonest dead-space failure there is. Either put something real on the other
+   side — a map, a photograph, a stat block — or constrain the whole section to
+   the measure its content actually needs and compose it deliberately at that
+   width. Never let content default to one side of a container it cannot fill.
+
+K. THE SLIDER TRACK STARTS WHERE EVERY OTHER SECTION STARTS.
+   A review track indented from the container's left edge while every heading
+   above it is flush reads as broken. Align the first card to the container, let
+   the track bleed off the RIGHT edge only, and use \`scroll-padding-inline-start\`
+   so snapping keeps that alignment.
+
+L. THE ACCENT RULE ABOVE A HEADING IS DESIGNED OR ABSENT.
+   A short line above a section title is a real decision: give it a stated width
+   (40-56px), a stated weight (2-3px), the accent colour, and the same
+   margin-bottom everywhere it appears. A stub of indeterminate length floating
+   near a heading looks like a mistake, and one mistake repeated eleven times
+   looks like nobody cared.
+
 HARD RULES — STYLESHEET
 
 1. Return CSS ONLY. No markdown fences, no HTML, no commentary, no explanation.
